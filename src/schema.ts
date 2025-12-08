@@ -5,28 +5,40 @@
 
 import { Group, co, z } from "jazz-tools";
 
+/** Product link data */
+export const ProductLink = co.map({
+  url: z.string(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+  price: z.string().optional(),
+  addedAt: z.date(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+});
+
+/** Collection for organizing product links */
+export const Collection = co.map({
+  name: z.string(),
+  description: z.string().optional(),
+  color: z.string().optional(),
+  links: co.list(ProductLink),
+  createdAt: z.date(),
+});
+
 /** The account profile is an app-specific per-user public `CoMap`
  *  where you can store top-level objects for that user */
 export const JazzProfile = co.profile({
-  /**
-   * Learn about CoValue field/item types here:
-   * https://jazz.tools/docs/react/schemas/covalues#covalue-fielditem-types
-   */
   firstName: z.string(),
-
-  // Add public fields here
 });
 
 /** The account root is an app-specific per-user private `CoMap`
  *  where you can store top-level objects for that user */
 export const AccountRoot = co.map({
-  dateOfBirth: z.date(),
+  links: co.list(ProductLink),
+  collections: co.list(Collection),
+  defaultCollectionId: z.string().optional(),
 });
-
-export function getUserAge(root: co.loaded<typeof AccountRoot> | undefined) {
-  if (!root) return null;
-  return new Date().getFullYear() - root.dateOfBirth.getFullYear();
-}
 
 export const JazzAccount = co
   .account({
@@ -38,9 +50,54 @@ export const JazzAccount = co
      *  You can use it to set up the account root and any other initial CoValues you need.
      */
     if (!account.$jazz.has("root")) {
+      // Create default "My Links" collection
+      const defaultCollection = Collection.create(
+        {
+          name: "My Links",
+          description: "Your personal collection of product links",
+          color: "#6366f1",
+          links: [],
+          createdAt: new Date(),
+        },
+        account.$jazz,
+      );
+
       account.$jazz.set("root", {
-        dateOfBirth: new Date("1/1/1990"),
+        links: [],
+        collections: [defaultCollection],
+        defaultCollectionId: defaultCollection.$jazz.id,
       });
+    } else {
+      // Migrate existing accounts
+      const root = account.root;
+      if (root && root.$isLoaded) {
+        // Add collections array if missing
+        if (!root.collections) {
+          root.collections = [];
+        }
+
+        // Create default collection if none exists
+        if (root.collections.$isLoaded && root.collections.length === 0) {
+          const defaultCollection = Collection.create(
+            {
+              name: "My Links",
+              description: "Your personal collection of product links",
+              color: "#6366f1",
+              links: [],
+              createdAt: new Date(),
+            },
+            account.$jazz,
+          );
+          root.collections.$jazz.push(defaultCollection);
+          root.defaultCollectionId = defaultCollection.$jazz.id;
+        } else if (!root.defaultCollectionId && root.collections.$isLoaded && root.collections.length > 0) {
+          // Set first collection as default if no default is set
+          const firstCollection = root.collections[0];
+          if (firstCollection && firstCollection.$isLoaded) {
+            root.defaultCollectionId = firstCollection.$jazz.id;
+          }
+        }
+      }
     }
 
     if (!account.$jazz.has("profile")) {

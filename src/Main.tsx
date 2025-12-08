@@ -6,9 +6,10 @@ import "./index.css";
 import { JazzInspector } from "jazz-tools/inspector";
 import { apiKey } from "./apiKey.ts";
 import { JazzAccount } from "./schema.ts";
+import { ToastProvider } from "./components/ToastNotification";
 
 // This identifies the app in the passkey auth
-export const APPLICATION_NAME = "jazz-react-tailwind-starter";
+export const APPLICATION_NAME = "tote";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -18,9 +19,10 @@ createRoot(document.getElementById("root")!).render(
       }}
       AccountSchema={JazzAccount}
     >
-      <App />
-
-      <JazzInspector />
+      <ToastProvider>
+        <App />
+        <JazzInspector />
+      </ToastProvider>
     </JazzReactProvider>
   </StrictMode>,
 );

@@ -1,38 +1,69 @@
-# Jazz React starter with Tailwind and Passkey Auth
+# Tote - Product Wishlist App
 
-A minimal starter template for building apps with **[Jazz](https://jazz.tools)**, React, TailwindCSS, and Passkey Auth.
+A snazzy product link collection app built with **[Jazz](https://jazz.tools)** (distributed database), React, Next.js, and TypeScript. Save, organize, and track products you want to remember with rich metadata, visual displays, and collections.
 
-## Creating an app
+**Live URL:** https://tote.tools
 
-Create a new Jazz app.
-```bash
-npx create-jazz-app@latest
-```
+## Tech Stack
+
+- **Jazz** - Distributed database with real-time sync
+- **Next.js** - React framework with App Router
+- **TypeScript** - Type safety
+- **CSS Modules** - Scoped styling
+- **Radix UI** - Accessible component primitives
+- **Formik + Yup** - Form validation
 
 ## Running locally
 
 Install dependencies:
 
 ```bash
-npm i
+npm install
 # or
-yarn
+pnpm install
 ```
 
 Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-## Learning Jazz
+## Key Features
 
-You can start by playing with the form, adding a new field in [./src/schema.ts](./src/schema.ts),
-and seeing how easy it is to structure your data, and perform basic operations.
+- ✅ **Collections** - Organize product links into visual collections
+- ✅ **Rich Metadata** - Automatically extract title, description, images from URLs
+- ✅ **Product Cards** - Beautiful visual cards with hover animations
+- ✅ **Real-time Sync** - Jazz handles cross-device synchronization
+- ✅ **Offline Support** - Works offline, syncs when reconnected
+- 🚧 **Improved Metadata Extraction** - Custom extraction for indie e-commerce sites (in progress)
+
+## Project Documentation
+
+→ **[METADATA_DOCS_INDEX.md](./METADATA_DOCS_INDEX.md)** - Complete documentation index
+
+**Key Documents:**
+- **[PLAN.md](./PLAN.md)** - Project roadmap and architecture
+- **[QUICK_START_TESTING.md](./QUICK_START_TESTING.md)** - Start testing metadata extraction
+- **[METADATA_TESTING_SETUP.md](./METADATA_TESTING_SETUP.md)** - Testing infrastructure overview
+- **[METADATA_INVESTIGATION.md](./METADATA_INVESTIGATION.md)** - Research plan for metadata improvements
+
+## Development Tools
+
+### Metadata Test Lab (Localhost Only)
+
+When running on localhost, you'll see a **"🧪 Test Lab"** button in the header. This opens the Metadata Test Lab at `/dev/metadata-test`.
+
+**Features:**
+- Test product URLs with current metadata extraction
+- Document expected vs actual results
+- Track issues and severity
+- Save test cases to file for version control
+- Re-test URLs after making improvements
+
+**Learn more:** [app/dev/metadata-test/README.md](./app/dev/metadata-test/README.md)
 
 ## Questions / problems / feedback
 

@@ -1,1 +1,7 @@
-@import "tailwindcss";
+@import './styles/reset.css';
+@import './styles/variables.css';
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}

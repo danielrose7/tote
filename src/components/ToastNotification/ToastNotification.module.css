@@ -1,0 +1,134 @@
+.viewport {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg);
+  gap: var(--spacing-md);
+  max-width: 420px;
+  margin: 0;
+  list-style: none;
+  z-index: 2000;
+  outline: none;
+}
+
+.root {
+  background-color: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  position: relative;
+  border: 1px solid var(--color-border);
+  animation: slideIn var(--transition-normal);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(calc(100% + var(--spacing-lg)));
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.root[data-state="closed"] {
+  animation: slideOut var(--transition-fast);
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% + var(--spacing-lg)));
+  }
+}
+
+.root[data-swipe="move"] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}
+
+.root[data-swipe="cancel"] {
+  transform: translateX(0);
+  transition: transform 200ms ease-out;
+}
+
+.root[data-swipe="end"] {
+  animation: slideOut var(--transition-fast);
+}
+
+.title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding-right: var(--spacing-xl);
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.close {
+  position: absolute;
+  top: var(--spacing-md);
+  right: var(--spacing-md);
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
+}
+
+/* Variants */
+.success {
+  border-left: 4px solid var(--color-success);
+}
+
+.success .title {
+  color: var(--color-success);
+}
+
+.error {
+  border-left: 4px solid var(--color-danger);
+}
+
+.error .title {
+  color: var(--color-danger);
+}
+
+.info {
+  border-left: 4px solid var(--color-accent);
+}
+
+.info .title {
+  color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+  .viewport {
+    max-width: 100%;
+    padding: var(--spacing-md);
+  }
+
+  .root {
+    width: 100%;
+  }
+}

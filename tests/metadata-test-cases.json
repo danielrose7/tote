@@ -1,0 +1,135 @@
+{
+  "$schema": "./metadata-test-schema.json",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-07",
+  "testCases": [
+    {
+      "id": "example-amazon-1",
+      "url": "https://www.amazon.com/example-product",
+      "siteName": "Amazon",
+      "category": "e-commerce",
+      "status": "pending",
+      "microlinkResult": {},
+      "expectedResult": {
+        "title": "",
+        "description": "",
+        "imageUrl": "",
+        "price": "",
+        "currency": "USD"
+      },
+      "issues": [],
+      "severity": "unknown",
+      "notes": "Template test case - replace with real URLs"
+    }
+  ],
+  "categories": {
+    "shopify-indie": {
+      "description": "Independent/small business Shopify stores",
+      "priority": "high",
+      "themes": [
+        "Dawn",
+        "Debut",
+        "Brooklyn",
+        "Minimal",
+        "Prestige",
+        "Custom"
+      ]
+    },
+    "squarespace-indie": {
+      "description": "Independent/small business Squarespace stores",
+      "priority": "high",
+      "templates": [
+        "Bedford",
+        "Brine",
+        "Avenue",
+        "Five",
+        "Unknown"
+      ]
+    },
+    "indie-platforms": {
+      "description": "Other indie e-commerce platforms",
+      "priority": "high",
+      "platforms": [
+        "Big Cartel",
+        "Gumroad",
+        "Ko-fi",
+        "Wix",
+        "Webflow",
+        "Custom"
+      ]
+    },
+    "e-commerce-major": {
+      "description": "Large e-commerce platforms (baseline)",
+      "priority": "medium",
+      "sites": [
+        "Amazon",
+        "Etsy",
+        "eBay",
+        "Target",
+        "Walmart",
+        "Best Buy"
+      ]
+    },
+    "fashion": {
+      "description": "Fashion/apparel sites",
+      "priority": "medium",
+      "sites": [
+        "Zara",
+        "H&M",
+        "Nordstrom",
+        "ASOS"
+      ]
+    },
+    "marketplace": {
+      "description": "Peer-to-peer marketplaces",
+      "priority": "medium",
+      "sites": [
+        "eBay",
+        "Etsy",
+        "Poshmark",
+        "Depop"
+      ]
+    },
+    "crowdfunding": {
+      "description": "Crowdfunding platforms",
+      "priority": "low",
+      "sites": [
+        "Kickstarter",
+        "Indiegogo"
+      ]
+    },
+    "direct-to-consumer": {
+      "description": "DTC brands with custom sites",
+      "priority": "medium",
+      "sites": [
+        "Warby Parker",
+        "Casper",
+        "Allbirds"
+      ]
+    }
+  },
+  "failureModes": {
+    "missing-data": {
+      "no-price": 0,
+      "no-image": 0,
+      "no-description": 0,
+      "no-title": 0
+    },
+    "wrong-data": {
+      "logo-instead-of-product": 0,
+      "site-name-instead-of-title": 0,
+      "wrong-currency": 0
+    },
+    "incomplete-data": {
+      "truncated-description": 0,
+      "low-res-image": 0,
+      "missing-availability": 0
+    },
+    "technical-issues": {
+      "cors-error": 0,
+      "csp-blocking": 0,
+      "js-required": 0,
+      "rate-limited": 0
+    }
+  }
+}
