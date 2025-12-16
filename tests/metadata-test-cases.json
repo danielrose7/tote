@@ -1,25 +1,356 @@
 {
   "$schema": "./metadata-test-schema.json",
   "version": "1.0.0",
-  "lastUpdated": "2025-12-07",
+  "lastUpdated": "2025-12-16T01:13:50.497Z",
   "testCases": [
     {
-      "id": "example-amazon-1",
-      "url": "https://www.amazon.com/example-product",
-      "siteName": "Amazon",
-      "category": "e-commerce",
-      "status": "pending",
-      "microlinkResult": {},
-      "expectedResult": {
-        "title": "",
-        "description": "",
-        "imageUrl": "",
-        "price": "",
-        "currency": "USD"
+      "id": "test-1765845987279-9s499",
+      "url": "https://roselosangeles.com/products/high-energy-delights",
+      "siteName": "Roselosangeles",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Roselosangeles.com"
       },
-      "issues": [],
-      "severity": "unknown",
-      "notes": "Template test case - replace with real URLs"
+      "expectedResult": {
+        "title": "High Energy",
+        "description": "Fresh-pressed green juice made from apple, spinach, watercress, cucumber, and ginger sourced from local organic farms. High Energy is infused with CBG-rich flower rosin we press in-house, turned to for its cognitive-enhancing properties. Goji berry, coffee cherry tea, and Lion’s Mane contribute additional brain benefits.",
+        "imageUrl": "https://cdn.shopify.com/s/files/1/0482/7814/3138/files/High-Energy-Rose-Delights-no-mg.jpg?v=1755638174&width=3840",
+        "price": "40"
+      },
+      "testedAt": "2025-12-16T00:46:27.279Z"
+    },
+    {
+      "id": "test-1765844821584-s5wgb",
+      "url": "https://www.markethallfoods.com/products/signature-harissa-new-york-shuk?currency=USD&variant=33039886909522&utm_source=google&utm_medium=cpc&utm_campaign=Google%20Shopping&stkn=eca81018c135&gad_source=1&gad_campaignid=22394052854&gbraid=0AAAAAD-0ftuO-QdReC9vyp1bK1_KBaTMR",
+      "siteName": "Markethallfoods",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "New York Shuk Signature Harissa",
+        "description": "New York Shuk’s Signature Harissa is based on co-founder, Ron Aranzi, grandmother’s recipe. Their harissa is a medium-spicy combination of dried chiles, lemon juice, garlic and non-GMO sunflower oil, coriander, cumin and salt.",
+        "imageUrl": "https://www.markethallfoods.com/cdn/shop/files/NYShuk-Signature-Harissa.gif?v=1762383394"
+      },
+      "expectedResult": {
+        "title": "New York Shuk Signature Harissa",
+        "description": "New York Shuk’s Signature Harissa is based on co-founder, Ron Aranzi, grandmother’s recipe. Their harissa is a medium-spicy combination of dried chiles, lemon juice, garlic and non-GMO sunflower oil, coriander, cumin and salt.",
+        "imageUrl": "https://www.markethallfoods.com/cdn/shop/files/NYShuk-Signature-Harissa.gif?v=1762383394",
+        "price": "18.95"
+      },
+      "testedAt": "2025-12-16T00:27:01.584Z"
+    },
+    {
+      "id": "test-1765844821590-i7weg",
+      "url": "https://joinform.com/products/pullover-sweater-oatmeal",
+      "siteName": "Joinform",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Pullover Sweater - Oatmeal",
+        "description": "The V-Neck Sweater features a ribbed waist and cuffs, with a relaxed fit that billows at the chest and hugs the waist. Wear it on both shoulders or drape it off one for an effortlessly chic look. Cozy, stylish, and versatile — your go-to sweater for all season. SPLITHERE More Info The perfect slouchy sweater has arrive",
+        "imageUrl": "https://joinform.com/cdn/shop/files/pulloveroatmealfront.png?v=1729630570"
+      },
+      "expectedResult": {
+        "title": "Pullover Sweater - Oatmeal",
+        "description": "The perfect slouchy sweater has arrived. The V-Neck Sweater features a ribbed panel at the waist and cuffs, with a relaxed fit that billows at the chest and hugs just right at the waist. With a ribbed neckline and a vibe that’s effortlessly chic, you can wear it on both shoulders or let it drape off one for that perfectly undone look. Cozy, stylish, and versatile — this is the sweater you’ll be reaching for all season long.",
+        "imageUrl": "https://joinform.com/cdn/shop/files/pulloveroatmealfront.png?v=1729630570",
+        "price": "76.00"
+      },
+      "testedAt": "2025-12-16T00:27:01.590Z"
+    },
+    {
+      "id": "test-1765844825595-aysoh",
+      "url": "https://www.bedbathandbeyond.com/Home-Garden/Kate-and-Laurel-Kato-Floating-Side-Table/37666070/product.html?option=83239263&recalg=1006%2C994&recset=aacfbe2a-a727-4212-aeea-71bdee3de06e&refccid=UBAV5QDYD74JS2CN55HQDF4KTY&recguid=6a59111f-63bf-41a1-84ab-315f4ac9ad7a&recidx=1&st=pdp_cmpr_ctrl",
+      "siteName": "Bedbathandbeyond",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "product.html?option=83239263&recalg=1006%2C994&recset=aacfbe2a-a727-4212-aeea-71bdee3de06e&refccid=UBAV5QDYD74JS2CN55HQDF4KTY&recguid=6a59111f-63bf-41a1-84ab-315f4ac9ad7a&recidx=1&st=pdp_cmpr_ctrl",
+        "description": null,
+        "imageUrl": "https://www.bedbathandbeyond.com/favicon.ico"
+      },
+      "expectedResult": {
+        "title": "Kate and Laurel Kato Floating Side Table - 18x10x9 - Black",
+        "description": "Introducing the Kato floating side table - the perfect addition to your bedroom or living space! This modern floating nightstand is designed to add functionality and style to any room with its sleek and transitional design. The natural brown finish adds warmth and elegance to your decor, making it a versatile piece that complements various interior styles. Featuring a convenient drawer, this floating side table provides ample storage space for your essentials, such as books, remotes, and other small items. The smooth-gliding drawer ensures easy access and smooth operation, while the sturdy construction ensures durability and longevity. The floating design of this side table creates a unique and modern look, adding an aesthetic touch to your room. It is easy to install with the included hardware, making it a hassle-free addition to your home. The floating design also helps to create an illusion of more space, making it a great choice for small rooms or apartments. Made from shaped mango wood, this floating side table is built to last. The natural brown finish adds a touch of warmth and elegance to your space, while the clean lines and minimalist design make it a perfect fit for any modern or transitional decor. Measuring at 18 inches wide by 10 inches deep by 9 inches tall, this compact side table is ideal for small spaces, making it perfect for use as a bedside table or as a space-saving solution in any room. Upgrade your bedroom or living space with the Kato floating side table. Whether you use it as a floating nightstand or a sleek side table, it is sure to enhance the functionality and style of your room. Add a touch of modern sophistication to your home with this versatile and stylish floating side table!",
+        "imageUrl": "https://ak1.ostkcdn.com/images/products/is/images/direct/3a103704ce5f60ce8633586d52398f85ed7f9f4c/Kate-and-Laurel-Kato-Floating-Side-Table.jpg?impolicy=medium",
+        "price": "145.99"
+      },
+      "testedAt": "2025-12-16T00:27:05.595Z",
+      "severity": "critical"
+    },
+    {
+      "id": "test-1765844831565-a4bln",
+      "url": "https://www.2modern.com/products/wallie-wall-drawer-set-of-2?variant=40933625102381&utm_source=google&campaign_id=20911467993&ad_id=&utm_medium=cpc&utm_campaign=HB%20%7C%20PMAX%20-%20Furniture%20-%20Group%20PMAX&utm_content=&utm_term=&gad_source=1&gad_campaignid=20918110013&gbraid=0AAAAAD_WqglRdBK-O72vaGv5q7QlnjVrY",
+      "siteName": "2modern",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Wallie Wall Drawer (Set of 2)",
+        "description": "Shop the Wallie Wall Drawer (Set of 2) by WOUD at 2Modern. Free Shipping and 100% Price Match Guarantee.",
+        "imageUrl": "https://www.2modern.com/cdn/shop/products/woud-wallie-wall-drawer-view-add02.jpg?v=1760364055"
+      },
+      "expectedResult": {
+        "title": "Wallie Wall Drawer (Set of 2)",
+        "description": "Beautifully combining solid oak with black metal, the Wallie Wall Drawer (Set of 2) from WOUD delivers circular, soft shapes through its magnetic drawer and compact silhouette. Minimalist and functional, Wallie is perfect for keeping things organized in an entryway or for storing everyday essentials bedside.",
+        "imageUrl": "https://www.2modern.com/cdn/shop/products/woud-wallie-wall-drawer-view-add02.jpg?v=1760364055",
+        "price": "618.00"
+      },
+      "testedAt": "2025-12-16T00:27:11.565Z",
+      "severity": "major"
+    },
+    {
+      "id": "test-1765844831573-z0zqq",
+      "url": "https://www.target.com/p/o-cedar-easywring-spin-mop-and-bucket-system/-/A-50335649#lnk=sametab",
+      "siteName": "Target",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "O-Cedar EasyWring Spin Mop and Bucket System",
+        "description": "Read reviews and buy O-Cedar EasyWring Spin Mop and Bucket System at Target. Choose from contactless Same Day Delivery, Drive Up and more.",
+        "imageUrl": "https://target.scene7.com/is/image/Target/GUEST_8faa618d-5967-4f5e-b02c-a8770a3258dc"
+      },
+      "expectedResult": {
+        "title": "O-Cedar EasyWring Spin Mop and Bucket System",
+        "description": "O-Cedar's EasyWring microfiber mop delivers a better clean by effectively removing dirt and grime just water. The EasyWring is a better way to truly clean your floors! The foot pedal on the bucket allows for hands-free wringing to prevent bending over and wet hands. Control the level of moisture on your mop with the built-in, high-quality foot pedal while Splash Guards keep the water inside the mop bucket. This is an ideal deep-cleaning solution for all hard floors, such as hardwood, tile, laminate, marble, and ceramic. It can be used wet or dry depending if floors need mopping or dusting. Everyone can use this mop as the telescopic handle adjusts to 51 inches.\n\n*Removes over 99% of E. coli and Staph. aureus from pre-finished hardwood flooring and ceramic tile using tap water, as tested at an independent accredited lab\n\n***The EasyWring #1 Spin Mop claim is based on IRI, Total US MULO, L52 wks 01/01/23, Consumer Focused Durable Mops dollar sales.",
+        "imageUrl": "https://target.scene7.com/is/image/Target/GUEST_8faa618d-5967-4f5e-b02c-a8770a3258dc",
+        "price": "39.99"
+      },
+      "testedAt": "2025-12-16T00:27:11.573Z",
+      "severity": "major"
+    },
+    {
+      "id": "test-1765844831576-abywe",
+      "url": "https://us.mustardmade.com/collections/the-hangers/products/adult-top-hangers-in-blush",
+      "siteName": "Us",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "The Hangers in Blush • Adult Metal Clothes Hangers • Mustard Made",
+        "description": "The Hangers come in packs of 10 and fit perfectly inside The Skinny and The Twinny. They come in all 12 colors, or you can pick a bundle in two fun color themes: Summer (Mustard, Berry, Blush, Lilac and Chalk) and Winter (Olive, Sage, Ocean, Navy and Slate). Because we love a matching moment, and your clothes shouldn’t",
+        "imageUrl": "https://us.mustardmade.com/cdn/shop/files/mustard-made-adult-top-hangers-blush-ATH-P10-BL-product.png?v=1755664902"
+      },
+      "expectedResult": {
+        "title": "The Hangers in Blush • Adult Metal Clothes Hangers • Mustard Made",
+        "description": "Why we love them\nBecause we love a matching moment, and your clothes shouldn't have to miss out! They're also stronger than most hangers, and add the perfect pop of color to your wardrobe.\n\nIt's all in the details\nThe Hangers come in packs of 10 and fit perfectly inside The Skinny and The Twinny. They come in all 12 colors, or you can pick a bundle in two fun color themes: Summer (Mustard, Berry, Blush, Lilac and Chalk) and Winter (Olive, Sage, Ocean, Navy and Slate).",
+        "imageUrl": "https://us.mustardmade.com/cdn/shop/files/mustard-made-adult-top-hangers-blush-ATH-P10-BL-product.png?v=1755664902",
+        "price": "35"
+      },
+      "testedAt": "2025-12-16T00:27:11.576Z"
+    },
+    {
+      "id": "test-1765844831580-oawoa",
+      "url": "https://m.wconcept.com/product/fake-3-pairs-socks-gray-hmmk-3-3p-/720374746.html",
+      "siteName": "Wconcept",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "ERROR: The request could not be satisfied",
+        "description": null,
+        "imageUrl": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://m.wconcept.com/product/fake-3-pairs-socks-gray-hmmk-3-3p-/720374746.html&size=128"
+      },
+      "expectedResult": {
+        "title": "Fake 3 Pairs Socks [Gray] (HMMK-3-3P)",
+        "description": "SKU 720374746\n\n* Product information has been automatically translated from W Concept Korea site.\nPlease note that due to international shipping conditions, all free gifts will be excluded.\n\nCountry of Origin : KOREA ",
+        "imageUrl": "\thttps://cdn.wconcept.com/products/resize/632x843/7203747/46/720374746_1.png",
+        "price": "46"
+      },
+      "testedAt": "2025-12-16T00:27:11.580Z",
+      "severity": "major"
+    },
+    {
+      "id": "test-1765844831582-egvmv",
+      "url": "https://folkrm.com/products/pahto-ski-poles",
+      "siteName": "Folkrm",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Pahto Ski Poles",
+        "description": "Folkrm’s long grip adjustable ski poles. Equipped with our classic long grip everyone has come to love and now the ability to adjust. Now extending to 140cm, you can pretend you’re skate skiing your way to gold on the end of that flat, never ending forest service road exit. The Folkrm Pahto Ski Poles are named after o",
+        "imageUrl": "https://folkrm.com/cdn/shop/files/Folkrm-Long-Grip-Adjustable-SkiPole-Pahto-Black-Main_1200x1200.jpg?v=1759812650"
+      },
+      "expectedResult": {
+        "title": "Pahto Ski Poles",
+        "description": "Folkrm’s long grip adjustable ski poles. Equipped with our classic long grip everyone has come to love and now the ability to adjust. Now extending to 140cm, you can pretend you’re skate skiing your way to gold on the end of that flat, never ending forest service road exit. The Folkrm Pahto Ski Poles are named after o",
+        "imageUrl": "https://folkrm.com/cdn/shop/files/Folkrm-Long-Grip-Adjustable-SkiPole-Pahto-Black-Main_1200x1200.jpg?v=1759812650",
+        "price": "150"
+      },
+      "testedAt": "2025-12-16T00:27:11.582Z",
+      "severity": "minor"
+    },
+    {
+      "id": "test-1765844831583-drp84",
+      "url": "https://www.amazon.com/dp/B0DB58KHR5",
+      "siteName": "Amazon",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Amazon.com: FRESH SPEED 4 Inch Dryer Vent Cover Outside Stainless Steel Wall Vent with Removable Cover and Insect Screen Mesh : Appliances",
+        "description": "Amazon.com: FRESH SPEED 4 Inch Dryer Vent Cover Outside Stainless Steel Wall Vent with Removable Cover and Insect Screen Mesh : Appliances",
+        "imageUrl": "https://m.media-amazon.com/images/G/01/marketing/prime/2022PrimeBrand/Logos/Prime_Logo_RGB_Prime_Blue_MASTER._CB542735979_.png"
+      },
+      "expectedResult": {
+        "title": "4 Inch Dryer Vent Cover Outside Stainless Steel Wall Vent with Removable Cover and Insect Screen Mesh",
+        "description": "Ensure optimal airflow and safety for your home with our premium Dryer Vent cover, designed specifically to improve your ventilation systems. We have made significant upgrades to the product design. The dryer vent cover is removable that is easy to clean away cotton wool, dust and oil and other debris. The screen mesh can keeps out birds, rats, insects, rodents and leaves. Say goodbye to complicated installations with our easy-to-use dryer vent. Our exterior dryer vent cover is not just functional but also built to last against harsh weather conditions. It is an essential component in home improvement.",
+        "imageUrl": "https://m.media-amazon.com/images/I/61Yi9lkr0KL._AC_SX679_.jpg",
+        "price": "29.45"
+      },
+      "testedAt": "2025-12-16T00:27:11.583Z",
+      "severity": "critical"
+    },
+    {
+      "id": "test-1765844831585-s8eyh",
+      "url": "https://www.supplyhouse.com/Bosch-SINGULAR-5200-Singular-5200-199000-BTU-Combi-Gas-Fired-Wall-Hung-Condensing-Boiler",
+      "siteName": "Supplyhouse",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Just a moment...",
+        "description": "Verifying you are human. This may take a few seconds.",
+        "imageUrl": "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://www.supplyhouse.com/Bosch-SINGULAR-5200-Singular-5200-199000-BTU-Combi-Gas-Fired-Wall-Hung-Condensing-Boiler&size=128"
+      },
+      "expectedResult": {
+        "title": "Singular 5200 199,000 BTU Combi Gas-Fired Wall-Hung Condensing Boiler",
+        "description": "Rebates:\nThis product qualifies for a federal tax rebate of 30% of project cost up to $600. Federal Rebate click for more info\n\nIn addition to the federal rebate, you may also be eligible for rebates from your local utility company and state. Search your zip code in the link below for information about local rebate programs that may apply to you. Bosch Rebate Center\n\nBosch Singular combi boilers are the \"singular solution\" for efficient, dependable home heating with up to 7.7 gallons per minute of domestic hot water production. Depending on incoming water temperature, Singular can run up to three showers and a dishwasher simultaneously. Singular is a wall-mounted combi boiler that can be used in many hydronic heating applications. Their small, lightweight form makes for easy installation, and the stainless steel heat exchanger system offers excellent performance at a cost-effective price. Singular is highly efficient, with a 95% AFUE rating; this makes your new system eligible for up to 75% savings in local and/or federal energy rebate programs.\n\nProduct Features\nHigh-efficiency condensing combi wall boiler - 95% AFUE rating\nBuilt-in boiler circulator pump\nStainless steel primary & secondary heat exchangers for cost-effective, reliable performance\nAll models are field convertible from NG to LP with included conversion kit\nCapable of outdoor reset with accessory temperature sensor (not included)\nEco-friendly low NOx metal fiber burner\nTurndown ratio up to 10:1\n2\" PVC vent up to 60' (3\" venting up to 150')\nExhaust gas temperature sensor ensures safe operation\n10-year heat exchanger, 5-year parts, and 1-year labor limited warranty",
+        "imageUrl": "https://d3501hjdis3g5w.cloudfront.net/images/products/zoom/singular-5200-1.jpg",
+        "price": "3,434.92"
+      },
+      "testedAt": "2025-12-16T00:27:11.585Z",
+      "severity": "critical"
+    },
+    {
+      "id": "test-1765844831586-agys7",
+      "url": "https://binkmade.com/products/21oz-day-bottle",
+      "siteName": "Binkmade",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Day Bottle Classic | 21oz",
+        "description": "A 21oz hydration tracking bottle designed to help you meet your daily water needs. Car Cup Holder compatible.",
+        "imageUrl": "https://binkmade.com/cdn/shop/files/Cobalt_001_87995af0-87c0-4965-b2d7-85262e985e37.jpg?v=1763084535"
+      },
+      "expectedResult": {
+        "title": "Day Bottle Classic | 21oz",
+        "description": "A 21oz hydration tracking bottle designed to help you meet your daily water needs. Car Cup Holder compatible.",
+        "imageUrl": "https://binkmade.com/cdn/shop/files/Cobalt_001_87995af0-87c0-4965-b2d7-85262e985e37.jpg?v=1763084535",
+        "price": "30.00"
+      },
+      "testedAt": "2025-12-16T00:27:11.586Z",
+      "severity": "minor"
+    },
+    {
+      "id": "test-1765844837117-i1d7e",
+      "url": "https://www.tradeinn.com/trekkinn/en/black-blum-glass-water-bottle-600ml/139389021/p?utm_source=google_products&utm_medium=merchant&id_producte=17832801&country=us&gclsrc=aw.ds&gad_source=1&gad_campaignid=23058399730&gbraid=0AAAAADvzHL868Pju0MRtnE9mzPfYQNYdT",
+      "siteName": "Tradeinn",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Black+blum Glass Water Bottle 600ml Golden | Trekkinn",
+        "description": "Get Black+blum Glass Water Bottle 600ml in Golden for 23.99 $. Ideal for outdoor with fast delivery. Buy Cookware at Trekkinn!",
+        "imageUrl": "https://cache.tradeinn.com/web/web/inn.jpg"
+      },
+      "expectedResult": {
+        "title": "Black+blum Glass Water Bottle 600ml",
+        "description": "A 600ml / 20 fl oz Borosilicate glass bottle with a protective non-slip sleeve, convenient carry loop and full glass and Stainless steel contact with water.\n\nThread Is On The Inside Of Neck:\n- The thread is on the inside of the bottle so the outer lip is smooth and gives a better drinking experience\n\nStainless Steel Lid:\n- It is strong, hard wearing, taste neutral, and it means that no plastic comes into contact with the water\n\nNylon Paracord Carry Loop:\n- Strong, hard wearing, water and mildew resistant paracord make it easy to carry your bottle\n\nA Word From The Designer:\n- There is something lovely about drinking water from glass. It makes the water feel fresh, crisp and clean. We wanted to create a minimal bottle design that celebrated this. It was a challenge to hand blow a glass bottle with a thread on the inside, but working closely with the skilled artisan makers, we were able to achieve a spout design that was a pleasure to drink from. The stainless steel top and paracord loop give the design a utilitarian feel and the silicone sleeve provides reassuring grip and protection to offset the fragility of the glass. The end result is a pure, no nonsense design that will age well and can become your everyday",
+        "imageUrl": "https://www.tradeinn.com/f/13938/139389021/black-blum-glass-water-bottle-600ml.jpg",
+        "price": "23.99"
+      },
+      "testedAt": "2025-12-16T00:27:17.117Z",
+      "severity": "critical"
+    },
+    {
+      "id": "test-1765844837122-becxy",
+      "url": "https://drdankeown.com/course/the-octavia-course/",
+      "siteName": "Drdankeown",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "The Octavia Course – Dr Dan Keown",
+        "description": "Please log in to access your purchased courses.",
+        "imageUrl": "https://drdankeown.com/wp-content/uploads/2025/08/cropped-octavia-512.png"
+      },
+      "expectedResult": {
+        "title": "The Octavia Course",
+        "description": "The Octavia Course was designed by Dr Daniel Keown who holds dual degrees in Western and Chinese medicine.\n\nThe Octavia Course does something unique, it combines the Western understanding of how the body works within the Chinese model of The Six Divisions. We organise your understanding into the Six Divisions, and in the process you intuitively understand all the Western concepts as well. The net result is you can learn incredibly complex Western medicine, effortlessly, simply by understanding how it fits into the Six Divisions.\n\nIn this way you only have to learn one thing and then you understand the whole lot. As well as this there are two very important bonuses.\n\nFirstly, it is super easy to understand and remember. You just have to remember six main parts of the body, the divisions, and how they behave and what they do.\n\nSecondly, this understanding makes the practice, and most importantly, succesful practice, of acupuncture much much easier!\n\nIf you want to understand more just watch some of our free preview lessons.",
+        "imageUrl": "https://drdankeown.com/wp-content/uploads/2025/08/cropped-octavia-512.png",
+        "currency": "GBP",
+        "price": "15.00"
+      },
+      "testedAt": "2025-12-16T00:27:17.122Z",
+      "severity": "major"
+    },
+    {
+      "id": "test-1765844837126-g70yc",
+      "url": "https://www.homedepot.com/p/Teks-8-x-1-2-in-External-Hex-Flange-Hex-Head-Self-Drilling-Screws-280-Pack-21308/100188836",
+      "siteName": "Homedepot",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Error Page",
+        "description": "How doers get more done™ Need Help? Visit our Customer Service Center",
+        "imageUrl": "https://www.homedepot.com/favicon.ico"
+      },
+      "expectedResult": {
+        "title": "Teks #8 x 1/2 in. External Hex Flange Hex-Head Self-Drilling Screws (280-Pack)",
+        "description": "Teks #8 x 1/2 in. Zinc-Plated Steel Hex-Head Self-Tapping Drill-Point Screws (280-Pack) are ideal for attaching HVAC, electrical, metal framing, and general metal-to-metal applications for secure fastening and strong holding power. Teks screws provide secure metal-to-metal fastening and strong holding power without the need to pre-drill. Screws tap their own threads. Engineered drill point and flute allow for efficient material removal",
+        "imageUrl": "https://images.thdstatic.com/productImages/9811abfd-b327-4dd9-b848-dd6df9d5e07d/svn/teks-self-drilling-screws-21308-64_600.jpg",
+        "price": "14.57"
+      },
+      "testedAt": "2025-12-16T00:27:17.126Z",
+      "severity": "critical"
+    },
+    {
+      "id": "test-1765844837129-bvsrt",
+      "url": "https://cooking.nytimes.com/recipes/1025510-sticky-miso-salmon-bowl?smid=ck-recipe-iOS-share",
+      "siteName": "Cooking",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Sticky Miso Salmon Bowl Recipe",
+        "description": "Miso salmon is an easy meal for any night of the week but it gets taken to a whole other level here with the additions of grapefruit and honey Combining the zest and juice from the grapefruit with honey, miso and a bit of ginger gives the fish a sticky-tangy finish when broiled The sushi rice is mixed with a humble pat of butter and some sliced scallions, making it a comforting counterpart to this simple fish for an elegant weeknight dinner.",
+        "imageUrl": "https://static01.nyt.com/images/2024/06/21/multimedia/ab-sticky-miso-citrus-broiled-salmon-bowlrex/SSe:-Panko-crusted-pork-with-tahini-lime-slawrex-qwlh-threeByTwoMediumAt2X.jpg"
+      },
+      "expectedResult": {
+        "title": "Sticky Miso Salmon Bowl Recipe",
+        "description": "Miso salmon is an easy meal for any night of the week but it gets taken to a whole other level here with the additions of grapefruit and honey. Combining the zest and juice from the grapefruit with honey, miso and a bit of ginger gives the fish a sticky-tangy finish when broiled. The sushi rice is mixed with a humble pat of butter and some sliced scallions, making it a comforting counterpart to this simple fish for an elegant weeknight dinner.",
+        "imageUrl": "https://static01.nyt.com/images/2024/06/21/multimedia/ab-sticky-miso-citrus-broiled-salmon-bowlrex/SSe:-Panko-crusted-pork-with-tahini-lime-slawrex-qwlh-threeByTwoMediumAt2X.jpg"
+      },
+      "testedAt": "2025-12-16T00:27:17.129Z"
+    },
+    {
+      "id": "test-1765844837131-1ge4f",
+      "url": "https://maps.app.goo.gl/o1V9werFpe8D1vjQ7",
+      "siteName": "Maps",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "SNÖBAHN Action Sports Center · Centennial, Colorado",
+        "description": "Find local businesses, view maps and get driving directions in Google Maps.",
+        "imageUrl": "https://lh3.googleusercontent.com/p/AF1QipMO0vdrGLGgQ-xMxAWnmz0BE5XE_cclJr57IWRD=w900-h900-p-k-no"
+      },
+      "expectedResult": {
+        "title": "SNÖBAHN Action Sports Center · Centennial, Colorado",
+        "description": "Find local businesses, view maps and get driving directions in Google Maps.",
+        "imageUrl": "https://lh3.googleusercontent.com/p/AF1QipMO0vdrGLGgQ-xMxAWnmz0BE5XE_cclJr57IWRD=w900-h900-p-k-no"
+      },
+      "testedAt": "2025-12-16T00:27:17.131Z"
+    },
+    {
+      "id": "test-1765844837133-le2dd",
+      "url": "https://open.spotify.com/album/5WulAOx9ilWy1h8UGZ1gkI?si=W8SAa5YISc-poU7rRT6RMA",
+      "siteName": "Open",
+      "category": "general",
+      "status": "tested",
+      "microlinkResult": {
+        "title": "Deadbeat",
+        "description": "Tame Impala",
+        "imageUrl": "https://image-cdn-ak.spotifycdn.com/image/ab67616d0000b273208500450dcd0fd294d7bd3b"
+      },
+      "expectedResult": {
+        "title": "Deadbeat",
+        "description": "Tame Impala",
+        "imageUrl": "https://image-cdn-ak.spotifycdn.com/image/ab67616d0000b273208500450dcd0fd294d7bd3b"
+      },
+      "testedAt": "2025-12-16T00:27:17.133Z"
     }
   ],
   "categories": {

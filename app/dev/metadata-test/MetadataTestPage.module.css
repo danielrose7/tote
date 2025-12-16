@@ -1,3 +1,15 @@
+/* Define color variables for this page */
+:global(:root) {
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-background: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+}
+
 .container {
   min-height: 100vh;
   background: var(--color-background);
@@ -80,7 +92,7 @@
 }
 
 .buttonPrimary:hover:not(:disabled) {
-  background: var(--color-primary-dark);
+  background: var(--color-primary-hover);
 }
 
 .buttonDanger {
@@ -289,6 +301,11 @@
   text-decoration: underline;
 }
 
+.headerActions {
+  display: flex;
+  gap: 8px;
+}
+
 .comparisonGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -357,7 +374,8 @@
 .imagePreview img {
   display: block;
   max-width: 100%;
-  height: auto;
+  max-height: 5rem;
+  object-fit: contain;
 }
 
 .error {
@@ -408,6 +426,63 @@
   background: #fca5a5;
   color: #7f1d1d;
   border-color: #fca5a5;
+}
+
+/* Rubric Checklist */
+.rubricGrid {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rubricItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rubricCheck {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 2px solid var(--color-border);
+  background: var(--color-background);
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+}
+
+.rubricPass {
+  background: #dcfce7;
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+.rubricFail {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #dc2626;
+}
+
+.rubricLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.rubricHint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.cardHint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: -8px 0 12px 0;
 }
 
 .metadataGrid {

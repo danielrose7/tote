@@ -1,9 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { fetchMetadata } from "../../../src/utils/metadata";
+import { fetchMetadata } from "../../utils/metadata";
 import styles from "./MetadataTestPage.module.css";
+
+interface ExtractionRubric {
+  title: boolean | null;
+  description: boolean | null;
+  image: boolean | null;
+  price: boolean | null;
+}
 
 interface TestCase {
   id: string;
@@ -27,7 +35,8 @@ interface TestCase {
     currency?: string;
     brand?: string;
   };
-  issues?: string[];
+  rubric?: ExtractionRubric;
+  issues?: string[]; // deprecated, kept for backwards compat
   severity?: "critical" | "major" | "minor" | "unknown";
   notes?: string;
   testedAt?: string;
@@ -36,12 +45,20 @@ interface TestCase {
 const STORAGE_KEY = "tote-metadata-test-cases";
 
 export default function MetadataTestPage() {
+  return (
+    <Suspense fallback={<div className={styles.container}>Loading...</div>}>
+      <MetadataTestPageContent />
+    </Suspense>
+  );
+}
+
+function MetadataTestPageContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [currentUrl, setCurrentUrl] = useState("");
-  const [siteName, setSiteName] = useState("");
-  const [category, setCategory] = useState("shopify-indie");
-  const [platformDetail, setPlatformDetail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState("");
   const [selectedTest, setSelectedTest] = useState<TestCase | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -50,6 +67,27 @@ export default function MetadataTestPage() {
   useEffect(() => {
     loadFromFile();
   }, []);
+
+  // Sync selected test case with URL
+  useEffect(() => {
+    const testId = searchParams.get("id");
+    if (testId && testCases.length > 0) {
+      const testCase = testCases.find((tc) => tc.id === testId);
+      if (testCase && selectedTest?.id !== testId) {
+        setSelectedTest(testCase);
+      }
+    }
+  }, [searchParams, testCases]);
+
+  // Update URL when selected test changes
+  const selectTestCase = (testCase: TestCase | null) => {
+    setSelectedTest(testCase);
+    if (testCase) {
+      router.push(`/dev/metadata-test?id=${testCase.id}`, { scroll: false });
+    } else {
+      router.push("/dev/metadata-test", { scroll: false });
+    }
+  };
 
   // Auto-save to localStorage for backup
   useEffect(() => {
@@ -102,64 +140,92 @@ export default function MetadataTestPage() {
     }
   };
 
+  const getSiteNameFromUrl = (url: string): string => {
+    try {
+      const hostname = new URL(url).hostname.replace(/^www\./, "").replace(/^m\./, "");
+      // Capitalize and clean up
+      const name = hostname.split(".")[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    } catch {
+      return "Unknown";
+    }
+  };
+
   const handleTestUrl = async () => {
-    if (!currentUrl || !siteName) {
-      alert("Please enter both URL and site name");
+    if (!currentUrl) {
+      alert("Please enter a URL");
+      return;
+    }
+
+    // Remove all whitespace/newlines, then split by http(s):// to find URLs
+    // This handles URLs that wrap across multiple lines
+    const cleaned = currentUrl.replace(/\s+/g, "");
+    const urls = cleaned
+      .split(/(?=https?:\/\/)/)
+      .map((u) => u.trim())
+      .filter((u) => u.startsWith("http://") || u.startsWith("https://"));
+
+    if (urls.length === 0) {
+      alert("Please enter at least one URL");
       return;
     }
 
     setIsLoading(true);
+    setCurrentUrl("");
 
-    try {
-      const metadata = await fetchMetadata(currentUrl);
+    const newTestCases: TestCase[] = [];
 
-      const newTestCase: TestCase = {
-        id: `test-${Date.now()}`,
-        url: currentUrl,
-        siteName,
-        category,
-        platformDetail: platformDetail || undefined,
-        status: "tested",
-        microlinkResult: {
-          title: metadata.title,
-          description: metadata.description,
-          imageUrl: metadata.imageUrl,
-          price: metadata.price,
-        },
-        expectedResult: {
-          title: metadata.title || "",
-          description: metadata.description || "",
-          imageUrl: metadata.imageUrl || "",
-        },
-        testedAt: new Date().toISOString(),
-      };
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      setLoadingProgress(`${i + 1}/${urls.length}`);
+      try {
+        const metadata = await fetchMetadata(url);
+        const siteName = getSiteNameFromUrl(url);
 
-      setTestCases((prev) => [newTestCase, ...prev]);
-      setSelectedTest(newTestCase);
+        const newTestCase: TestCase = {
+          id: `test-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          url,
+          siteName,
+          category: "general",
+          status: "tested",
+          microlinkResult: {
+            title: metadata.title,
+            description: metadata.description,
+            imageUrl: metadata.imageUrl,
+            price: metadata.price,
+          },
+          expectedResult: {
+            title: metadata.title || "",
+            description: metadata.description || "",
+            imageUrl: metadata.imageUrl || "",
+          },
+          testedAt: new Date().toISOString(),
+        };
 
-      // Clear form
-      setCurrentUrl("");
-      setSiteName("");
-      setPlatformDetail("");
-    } catch (error) {
-      const errorTestCase: TestCase = {
-        id: `test-${Date.now()}`,
-        url: currentUrl,
-        siteName,
-        category,
-        platformDetail: platformDetail || undefined,
-        status: "failed",
-        microlinkResult: {
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-        testedAt: new Date().toISOString(),
-      };
+        newTestCases.push(newTestCase);
+      } catch (error) {
+        const errorTestCase: TestCase = {
+          id: `test-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          url,
+          siteName: getSiteNameFromUrl(url),
+          category: "general",
+          status: "failed",
+          microlinkResult: {
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+          testedAt: new Date().toISOString(),
+        };
 
-      setTestCases((prev) => [errorTestCase, ...prev]);
-      setSelectedTest(errorTestCase);
-    } finally {
-      setIsLoading(false);
+        newTestCases.push(errorTestCase);
+      }
     }
+
+    setTestCases((prev) => [...newTestCases, ...prev]);
+    if (newTestCases.length > 0) {
+      selectTestCase(newTestCases[0]);
+    }
+    setIsLoading(false);
+    setLoadingProgress("");
   };
 
   const handleRetest = async (testCase: TestCase) => {
@@ -270,9 +336,16 @@ export default function MetadataTestPage() {
   const handleClear = () => {
     if (confirm("Clear all test cases? This cannot be undone.")) {
       setTestCases([]);
-      setSelectedTest(null);
+      selectTestCase(null);
       localStorage.removeItem(STORAGE_KEY);
       setLastSaved(null);
+    }
+  };
+
+  const handleDelete = (testCase: TestCase) => {
+    setTestCases((prev) => prev.filter((tc) => tc.id !== testCase.id));
+    if (selectedTest?.id === testCase.id) {
+      selectTestCase(null);
     }
   };
 
@@ -336,68 +409,33 @@ export default function MetadataTestPage() {
         <aside className={styles.sidebar}>
           <div className={styles.sidebarSection}>
             <h2>Add Test Case</h2>
-            <div className={styles.form}>
+            <form
+              className={styles.form}
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleTestUrl();
+              }}
+            >
               <div className={styles.formGroup}>
-                <label>Product URL</label>
-                <input
-                  type="url"
+                <label>URLs (one per line)</label>
+                <textarea
                   value={currentUrl}
                   onChange={(e) => setCurrentUrl(e.target.value)}
-                  placeholder="https://example.com/products/..."
+                  placeholder="Paste URLs here, one per line..."
                   disabled={isLoading}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Site Name</label>
-                <input
-                  type="text"
-                  value={siteName}
-                  onChange={(e) => setSiteName(e.target.value)}
-                  placeholder="e.g., Cool Shop"
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  disabled={isLoading}
-                >
-                  <optgroup label="🎯 Indie Sites">
-                    <option value="shopify-indie">Shopify Indie</option>
-                    <option value="squarespace-indie">Squarespace Indie</option>
-                    <option value="indie-platforms">Other Indie</option>
-                  </optgroup>
-                  <optgroup label="Major Platforms">
-                    <option value="e-commerce-major">Major E-Commerce</option>
-                    <option value="fashion">Fashion/Apparel</option>
-                    <option value="marketplace">Marketplace</option>
-                  </optgroup>
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Theme/Template (optional)</label>
-                <input
-                  type="text"
-                  value={platformDetail}
-                  onChange={(e) => setPlatformDetail(e.target.value)}
-                  placeholder="e.g., Dawn, Bedford"
-                  disabled={isLoading}
+                  autoFocus
+                  rows={4}
                 />
               </div>
 
               <button
-                onClick={handleTestUrl}
-                disabled={isLoading || !currentUrl || !siteName}
+                type="submit"
+                disabled={isLoading || !currentUrl}
                 className={styles.buttonPrimary}
               >
-                {isLoading ? "Testing..." : "Test URL"}
+                {isLoading ? `Testing ${loadingProgress}...` : "Test URLs"}
               </button>
-            </div>
+            </form>
           </div>
 
           <div className={styles.sidebarSection}>
@@ -409,7 +447,7 @@ export default function MetadataTestPage() {
                   className={`${styles.testItem} ${
                     selectedTest?.id === tc.id ? styles.testItemActive : ""
                   }`}
-                  onClick={() => setSelectedTest(tc)}
+                  onClick={() => selectTestCase(tc)}
                 >
                   <div className={styles.testItemHeader}>
                     <span className={styles.testItemSite}>{tc.siteName}</span>
@@ -437,8 +475,10 @@ export default function MetadataTestPage() {
         <main className={styles.main}>
           {selectedTest ? (
             <TestDetail
+              key={selectedTest.id}
               testCase={selectedTest}
               onRetest={handleRetest}
+              onDelete={handleDelete}
               onUpdateExpected={handleUpdateExpected}
               onUpdateMetadata={handleUpdateMetadata}
               isLoading={isLoading}
@@ -457,6 +497,7 @@ export default function MetadataTestPage() {
 interface TestDetailProps {
   testCase: TestCase;
   onRetest: (testCase: TestCase) => void;
+  onDelete: (testCase: TestCase) => void;
   onUpdateExpected: (testCase: TestCase, field: string, value: string) => void;
   onUpdateMetadata: (testCase: TestCase, updates: Partial<TestCase>) => void;
   isLoading: boolean;
@@ -465,35 +506,37 @@ interface TestDetailProps {
 function TestDetail({
   testCase,
   onRetest,
+  onDelete,
   onUpdateExpected,
   onUpdateMetadata,
   isLoading,
 }: TestDetailProps) {
-  const [selectedIssues, setSelectedIssues] = useState<string[]>(
-    testCase.issues || []
-  );
+  // Auto-calculate rubric by comparing actual vs expected
+  const calculateRubric = () => {
+    const actual = testCase.microlinkResult;
+    const expected = testCase.expectedResult;
 
-  const commonIssues = [
-    "No price",
-    "No image",
-    "Wrong image (logo instead of product)",
-    "No description",
-    "Wrong title (site name instead of product)",
-    "Low-res image",
-    "Truncated description",
-    "CORS error",
-    "Missing availability",
-    "JS required",
-  ];
+    const compareField = (
+      actualVal: string | undefined | null,
+      expectedVal: string | undefined
+    ): boolean | null => {
+      // If no expected value set, can't evaluate
+      if (!expectedVal || expectedVal.trim() === "") return null;
+      // If actual matches expected (normalized), pass
+      const normalizedActual = (actualVal || "").trim().toLowerCase();
+      const normalizedExpected = expectedVal.trim().toLowerCase();
+      return normalizedActual === normalizedExpected;
+    };
 
-  const toggleIssue = (issue: string) => {
-    const updated = selectedIssues.includes(issue)
-      ? selectedIssues.filter((i) => i !== issue)
-      : [...selectedIssues, issue];
-
-    setSelectedIssues(updated);
-    onUpdateMetadata(testCase, { issues: updated });
+    return {
+      title: compareField(actual?.title, expected?.title),
+      description: compareField(actual?.description, expected?.description),
+      image: compareField(actual?.imageUrl, expected?.imageUrl),
+      price: compareField(actual?.price, expected?.price),
+    };
   };
+
+  const rubric = calculateRubric();
 
   return (
     <div className={styles.testDetail}>
@@ -509,19 +552,27 @@ function TestDetail({
             {testCase.url}
           </a>
         </div>
-        <button
-          onClick={() => onRetest(testCase)}
-          disabled={isLoading}
-          className={styles.button}
-        >
-          🔄 Re-test
-        </button>
+        <div className={styles.headerActions}>
+          <button
+            onClick={() => onRetest(testCase)}
+            disabled={isLoading}
+            className={styles.button}
+          >
+            🔄 Re-test
+          </button>
+          <button
+            onClick={() => onDelete(testCase)}
+            className={styles.buttonDanger}
+          >
+            🗑️ Delete
+          </button>
+        </div>
       </div>
 
       <div className={styles.comparisonGrid}>
-        {/* Microlink Results */}
+        {/* Actual Results */}
         <div className={styles.comparisonCard}>
-          <h3>Microlink Results</h3>
+          <h3>Actual (Extracted)</h3>
           {testCase.microlinkResult?.error ? (
             <div className={styles.error}>
               Error: {testCase.microlinkResult.error}
@@ -552,7 +603,8 @@ function TestDetail({
 
         {/* Expected Results */}
         <div className={styles.comparisonCard}>
-          <h3>Expected Results</h3>
+          <h3>Expected (Correct Values)</h3>
+          <p className={styles.cardHint}>Edit these to what the values should be</p>
           <div className={styles.metadataFields}>
             <EditableField
               label="Title"
@@ -601,22 +653,30 @@ function TestDetail({
         </div>
       </div>
 
-      {/* Issues */}
+      {/* Extraction Rubric - Auto-calculated */}
       <div className={styles.section}>
-        <h3>Issues Found</h3>
-        <div className={styles.issuesTags}>
-          {commonIssues.map((issue) => (
-            <button
-              key={issue}
-              onClick={() => toggleIssue(issue)}
-              className={`${styles.issueTag} ${
-                selectedIssues.includes(issue) ? styles.issueTagSelected : ""
-              }`}
-            >
-              {issue}
-            </button>
+        <h3>Extraction Quality</h3>
+        <div className={styles.rubricGrid}>
+          {(["title", "description", "image", "price"] as const).map((field) => (
+            <div key={field} className={styles.rubricItem}>
+              <div
+                className={`${styles.rubricCheck} ${
+                  rubric[field] === true
+                    ? styles.rubricPass
+                    : rubric[field] === false
+                    ? styles.rubricFail
+                    : ""
+                }`}
+              >
+                {rubric[field] === true ? "✓" : rubric[field] === false ? "✗" : "—"}
+              </div>
+              <span className={styles.rubricLabel}>
+                {field.charAt(0).toUpperCase() + field.slice(1)}
+              </span>
+            </div>
           ))}
         </div>
+        <p className={styles.rubricHint}>Auto-calculated: ✓ actual matches expected, ✗ mismatch, — not set</p>
       </div>
 
       {/* Severity & Notes */}
