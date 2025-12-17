@@ -2,12 +2,11 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
 
-// Mock collections for prototype
-const MOCK_COLLECTIONS = [
-  { id: "1", name: "My Links", color: "#6366f1" },
-  { id: "2", name: "Wishlist", color: "#8b5cf6" },
-  { id: "3", name: "Home Office", color: "#059669" },
-];
+interface Collection {
+  id: string;
+  name: string;
+  color: string;
+}
 
 type Status = "loading" | "ready" | "saving" | "success" | "error";
 
@@ -35,57 +34,100 @@ function Popup() {
   const [status, setStatus] = useState<Status>("loading");
   const [metadata, setMetadata] = useState<ExtractedMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCollection, setSelectedCollection] = useState(
-    MOCK_COLLECTIONS[0].id
-  );
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<string>("");
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  // Fetch collections from the API
+  const fetchCollections = async (token: string) => {
+    try {
+      console.log("[Tote] Fetching collections...");
+      const response = await fetch("http://localhost:3000/api/collections/list", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("[Tote] Collections fetched:", data);
+        if (data.collections && data.collections.length > 0) {
+          setCollections(data.collections);
+          // Set default to first collection
+          setSelectedCollection(data.collections[0].id);
+        } else {
+          setError("No collections found. Please create a collection first.");
+        }
+      } else if (response.status === 401) {
+        setError("Not authenticated. Please generate a token on /auth/extension");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to fetch collections");
+      }
+    } catch (err) {
+      console.error("[Tote] Error fetching collections:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch collections"
+      );
+    }
+  };
 
   useEffect(() => {
-    // Initialize auth token if not present
-    chrome.storage.local.get("authToken", (result) => {
-      if (!result.authToken) {
-        // Set a test token for development
-        const testToken = `ext_test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-        chrome.storage.local.set({ authToken: testToken }, () => {
-          console.log("[Tote] Initialized test token:", testToken);
-        });
-      }
-    });
+    // Get auth token from chrome storage
+    chrome.storage.local.get("authToken", async (result) => {
+      let token = result.authToken;
 
-    // Get active tab and request metadata extraction
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs[0];
-      if (!tab?.id) {
-        setError("No active tab found");
+      if (!token) {
+        // User needs to generate a token
+        setError(
+          "No auth token found. Please visit /auth/extension to generate one."
+        );
         setStatus("error");
         return;
       }
 
-      // Send message to content script
-      chrome.tabs.sendMessage(
-        tab.id,
-        { type: "EXTRACT_METADATA" } as MessagePayload,
-        (response: MessagePayload) => {
-          if (chrome.runtime.lastError) {
-            // Content script might not be loaded yet
-            setError(
-              "Could not extract metadata. Try refreshing the page."
-            );
-            setStatus("error");
-            return;
-          }
+      setAuthToken(token);
 
-          if (response?.error) {
-            setError(response.error);
-            setStatus("error");
-            return;
-          }
+      // Fetch collections
+      await fetchCollections(token);
 
-          if (response?.data) {
-            setMetadata(response.data);
-            setStatus("ready");
-          }
+      // Get active tab and request metadata extraction
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        if (!tab?.id) {
+          setError("No active tab found");
+          setStatus("error");
+          return;
         }
-      );
+
+        // Send message to content script
+        chrome.tabs.sendMessage(
+          tab.id,
+          { type: "EXTRACT_METADATA" } as MessagePayload,
+          (response: MessagePayload) => {
+            if (chrome.runtime.lastError) {
+              // Content script might not be loaded yet
+              setError(
+                "Could not extract metadata. Try refreshing the page."
+              );
+              setStatus("error");
+              return;
+            }
+
+            if (response?.error) {
+              setError(response.error);
+              setStatus("error");
+              return;
+            }
+
+            if (response?.data) {
+              setMetadata(response.data);
+              setStatus("ready");
+            }
+          }
+        );
+      });
     });
   }, []);
 
@@ -171,7 +213,8 @@ function Popup() {
           <h2>Saved to Tote!</h2>
           <p>
             Added to{" "}
-            {MOCK_COLLECTIONS.find((c) => c.id === selectedCollection)?.name}
+            {collections.find((c) => c.id === selectedCollection)?.name ||
+              "collection"}
           </p>
         </div>
       )}
@@ -218,12 +261,19 @@ function Popup() {
               id="collection"
               value={selectedCollection}
               onChange={(e) => setSelectedCollection(e.target.value)}
+              disabled={collections.length === 0}
             >
-              {MOCK_COLLECTIONS.map((col) => (
-                <option key={col.id} value={col.id}>
-                  {col.name}
+              {collections.length === 0 ? (
+                <option disabled value="">
+                  No collections available
                 </option>
-              ))}
+              ) : (
+                collections.map((col) => (
+                  <option key={col.id} value={col.id}>
+                    {col.name}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
