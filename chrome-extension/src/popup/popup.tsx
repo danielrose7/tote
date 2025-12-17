@@ -74,19 +74,28 @@ function Popup() {
   };
 
   useEffect(() => {
-    // Get auth token from chrome storage
-    chrome.storage.local.get("authToken", async (result) => {
+    const initializePopup = async () => {
+      // Get auth token from chrome storage
+      const result = await new Promise<{ authToken?: string }>((resolve) => {
+        chrome.storage.local.get("authToken", resolve);
+      });
+
       let token = result.authToken;
 
       if (!token) {
         // User needs to generate a token
         setError(
-          "No auth token found. Please visit /auth/extension to generate one."
+          "No auth token found. Please visit http://localhost:3000/auth/extension to generate one."
         );
         setStatus("error");
         return;
       }
 
+      await proceedWithToken(token);
+    };
+
+    // Helper function to proceed with token
+    const proceedWithToken = async (token: string) => {
       setAuthToken(token);
 
       // Fetch collections
@@ -128,7 +137,9 @@ function Popup() {
           }
         );
       });
-    });
+    };
+
+    initializePopup();
   }, []);
 
   const handleSave = async () => {

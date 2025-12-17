@@ -87,10 +87,32 @@ export default function ExtensionAuthPage() {
       }
       me.root!.apiTokens!.$jazz.push(apiToken);
 
-      // Store token in localStorage for extension to retrieve
+      // Store token in localStorage for web app
       if (typeof window !== "undefined") {
         localStorage.setItem("tote_extension_token", newToken);
         localStorage.setItem("tote_extension_generated_at", new Date().toISOString());
+
+        // Try to send token to extension via Chrome Extension messaging
+        // This will work if the extension is installed and has proper permissions
+        if ((window as any).chrome?.runtime?.sendMessage) {
+          try {
+            (window as any).chrome.runtime.sendMessage(
+              {
+                type: "STORE_TOKEN",
+                token: newToken,
+              },
+              (response: any) => {
+                if ((window as any).chrome.runtime.lastError) {
+                  console.log("Extension not available or not responding");
+                } else {
+                  console.log("Token stored in extension:", response);
+                }
+              }
+            );
+          } catch (err) {
+            console.log("Could not send message to extension:", err);
+          }
+        }
       }
 
       setToken(newToken);
