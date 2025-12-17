@@ -70,7 +70,13 @@ export async function getUserAccountByClerkId(clerkUserId: string) {
 
     // Load the Jazz account using the worker
     const worker = await getJazzWorker();
-    const account = await worker.load(JazzAccount, jazzAccountId);
+    const account = await worker.load(JazzAccount, jazzAccountId, {
+      resolve: {
+        root: {
+          collections: { $each: {} },
+        },
+      },
+    });
 
     if (!account) {
       console.error("[Jazz Worker] Failed to load Jazz account:", jazzAccountId);

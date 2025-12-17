@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getUserAccountByClerkId } from "../../../../src/lib/jazz-worker";
+import { getUserByToken } from "../../../../src/lib/token-auth";
 
 /**
  * Get user's collections for the extension
@@ -21,13 +22,34 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: getCorsHeaders() });
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // Verify user is authenticated
-    const { userId } = await auth();
+    // Try to get userId from Clerk session or bearer token
+    let userId: string | null = null;
+
+    // First try Clerk session (web app)
+    const clerkAuth = await auth();
+    if (clerkAuth.userId) {
+      userId = clerkAuth.userId;
+    } else {
+      // Try bearer token (extension)
+      const authHeader = request.headers.get("authorization");
+      const bearerToken = authHeader?.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : null;
+
+      if (bearerToken) {
+        const tokenInfo = await getUserByToken(bearerToken);
+        if (tokenInfo) {
+          userId = tokenInfo.userId;
+          console.log("[Collections] Authenticated via token");
+        }
+      }
+    }
+
     if (!userId) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { error: "Unauthorized - Clerk session or Bearer token required" },
         { status: 401, headers: getCorsHeaders() }
       );
     }
