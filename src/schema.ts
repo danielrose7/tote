@@ -48,6 +48,7 @@ export const AccountRoot = co.map({
   collections: co.list(Collection),
   defaultCollectionId: z.string().optional(),
   apiTokens: co.list(ApiToken),
+  clerkUserId: z.string().optional(), // Clerk user ID for server-side lookups
 });
 
 export const JazzAccount = co

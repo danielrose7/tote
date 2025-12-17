@@ -11,8 +11,12 @@ import { CollectionList } from "./components/CollectionList/CollectionList";
 import { CollectionView } from "./components/CollectionView/CollectionView";
 import { CreateCollectionDialog } from "./components/CreateCollectionDialog/CreateCollectionDialog";
 import { useToast } from "./components/ToastNotification";
+import { useSyncClerkUser } from "./hooks/useSyncClerkUser";
 
 function App() {
+  // Sync Clerk user ID with Jazz for server-side lookups
+  useSyncClerkUser();
+
   const me = useAccount(JazzAccount, {
     resolve: {
       profile: true,
