@@ -25,6 +25,7 @@ export default function SettingsPage() {
   const me = useAccount(JazzAccount, {
     resolve: {
       root: {
+        collections: { $each: {} },
         apiTokens: { $each: {} },
       },
     },
@@ -137,7 +138,7 @@ export default function SettingsPage() {
   };
 
   const handleGenerateExtensionToken = async () => {
-    if (!me?.root?.$isLoaded) {
+    if (!me?.$jazz?.id || !me?.root) {
       setExtensionTokenError("Account not loaded yet. Please wait...");
       return;
     }
@@ -161,11 +162,16 @@ export default function SettingsPage() {
         me.$jazz
       );
 
-      // Add to user's apiTokens list
-      if (!me.root!.apiTokens) {
-        me.root!.apiTokens = [];
+      // Ensure apiTokens array exists
+      if (!me.root.apiTokens) {
+        me.root.apiTokens = [];
       }
-      me.root!.apiTokens!.$jazz.push(apiToken);
+
+      // Add to user's apiTokens list
+      const tokensArray = me.root.apiTokens;
+      if (tokensArray && tokensArray.$jazz) {
+        tokensArray.$jazz.push(apiToken);
+      }
 
       // Also store the token in Clerk's private metadata for server-side lookups
       try {
@@ -370,7 +376,7 @@ export default function SettingsPage() {
                 <button
                   className={styles.buttonPrimary}
                   onClick={handleGenerateExtensionToken}
-                  disabled={extensionTokenLoading || !me?.root?.$isLoaded}
+                  disabled={extensionTokenLoading || !me?.$jazz?.id}
                 >
                   {extensionTokenLoading ? "Generating..." : "Generate New Token"}
                 </button>
