@@ -24,10 +24,7 @@ export default function SettingsPage() {
 
   const me = useAccount(JazzAccount, {
     resolve: {
-      root: {
-        collections: { $each: {} },
-        apiTokens: { $each: {} },
-      },
+      root: true,
     },
   });
 
@@ -44,8 +41,23 @@ export default function SettingsPage() {
 
   // Load existing tokens when they're available
   useEffect(() => {
-    if (me?.root?.apiTokens?.$isLoaded) {
-      setExtensionTokens(Array.from(me.root.apiTokens));
+    if (me?.root?.apiTokens) {
+      try {
+        let tokens: any[] = [];
+        if (Array.isArray(me.root.apiTokens)) {
+          tokens = me.root.apiTokens;
+        } else if (me.root.apiTokens && typeof me.root.apiTokens[Symbol.iterator] === 'function') {
+          // It's iterable (co.list)
+          tokens = Array.from(me.root.apiTokens);
+        } else if (me.root.apiTokens && me.root.apiTokens.$listContents) {
+          // Try accessing internal list contents
+          tokens = Array.from(me.root.apiTokens.$listContents.values());
+        }
+        setExtensionTokens(tokens);
+      } catch (err) {
+        console.log("Could not load tokens:", err);
+        setExtensionTokens([]);
+      }
     }
   }, [me?.root?.apiTokens]);
 
@@ -138,7 +150,7 @@ export default function SettingsPage() {
   };
 
   const handleGenerateExtensionToken = async () => {
-    if (!me?.$jazz?.id || !me?.root) {
+    if (!me?.$jazz?.id || !me?.root?.$isLoaded) {
       setExtensionTokenError("Account not loaded yet. Please wait...");
       return;
     }
@@ -162,15 +174,14 @@ export default function SettingsPage() {
         me.$jazz
       );
 
-      // Ensure apiTokens array exists
-      if (!me.root.apiTokens) {
-        me.root.apiTokens = [];
-      }
-
-      // Add to user's apiTokens list
-      const tokensArray = me.root.apiTokens;
-      if (tokensArray && tokensArray.$jazz) {
-        tokensArray.$jazz.push(apiToken);
+      // Ensure apiTokens array exists and add the token
+      if (!me.root!.apiTokens || !me.root!.apiTokens.$jazz) {
+        // If apiTokens doesn't exist, create it and add the token
+        const newList = [apiToken];
+        me.root!.$jazz.set("apiTokens", newList);
+      } else {
+        // If apiTokens exists, push to it
+        me.root!.apiTokens.$jazz.push(apiToken);
       }
 
       // Also store the token in Clerk's private metadata for server-side lookups
@@ -241,12 +252,20 @@ export default function SettingsPage() {
     try {
       if (!me.root?.apiTokens) return;
 
-      const tokenIndex = Array.from(me.root.apiTokens).findIndex(
+      // Convert to array if needed
+      let tokensArray: any[] = [];
+      if (Array.isArray(me.root.apiTokens)) {
+        tokensArray = me.root.apiTokens;
+      } else if (me.root.apiTokens && typeof me.root.apiTokens[Symbol.iterator] === 'function') {
+        tokensArray = Array.from(me.root.apiTokens);
+      }
+
+      const tokenIndex = tokensArray.findIndex(
         (t: any) => t.$jazz.id === tokenId
       );
 
-      if (tokenIndex >= 0) {
-        me.root.apiTokens!.$jazz.splice(tokenIndex, 1);
+      if (tokenIndex >= 0 && me.root.apiTokens?.$jazz?.splice) {
+        me.root.apiTokens.$jazz.splice(tokenIndex, 1);
         setExtensionTokens(
           extensionTokens.filter((t) => t.$jazz.id !== tokenId)
         );
@@ -376,7 +395,7 @@ export default function SettingsPage() {
                 <button
                   className={styles.buttonPrimary}
                   onClick={handleGenerateExtensionToken}
-                  disabled={extensionTokenLoading || !me?.$jazz?.id}
+                  disabled={extensionTokenLoading || !me?.$jazz?.id || !me?.root?.$isLoaded}
                 >
                   {extensionTokenLoading ? "Generating..." : "Generate New Token"}
                 </button>
