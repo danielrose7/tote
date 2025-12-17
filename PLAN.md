@@ -195,6 +195,71 @@ AccountRoot = {
 
 ---
 
+### Phase 3.6: Chrome Extension
+**Status:** 🚧 IN PROGRESS (Phase 1 & 2 Integration COMPLETE)
+**Priority:** High
+
+**Goal:** Browser extension to save products directly from any webpage, bypassing bot detection and JS-rendering issues.
+
+**Key Benefits:**
+- Runs in real browser context (bypasses Cloudflare, bot detection)
+- Access to fully rendered DOM (solves JS-rendered content)
+- Can handle age gates and modals
+- One-click saving from any product page
+
+**Detailed Plan:** `./plans/CHROME_EXTENSION.md`
+
+### ✅ Phase 1 - MVP (COMPLETE)
+All extraction, UI, and end-to-end integration working:
+- ✓ Extension scaffolding with Vite + CRXJS + TypeScript + React
+- ✓ Metadata extraction (JSON-LD, Open Graph, price, currency, platform detection)
+- ✓ Popup UI with preview, collection selector, save button
+- ✓ Content script messaging with full DOM access
+- ✓ Comprehensive test suite (26 tests, all passing)
+- ✓ Tested on: Under Armour, Target, Bed Bath & Beyond, Rose LA
+- ✓ Price extraction handles: European format (1.234,56), US format (1,234.56), data attributes
+
+### 🚧 Phase 2 - API Integration (IN PROGRESS)
+- ✓ `POST /api/links/add` endpoint with CORS
+- ✓ Save button wired to API with full payload
+- ✓ Auth token auto-generation in extension
+- ✓ Verified end-to-end on Under Armour (all metadata flowing correctly)
+- ⏳ **NEXT**: Connect endpoint to Jazz database (Phase 2b)
+- ⏳ **NEXT**: Build token generation UI (`/auth/extension` page)
+- ⏳ **NEXT**: Fetch real collections from Jazz
+
+### 📋 Phase 3 - Enhanced Features (PLANNED)
+- Keyboard shortcut (Cmd+Shift+T) for quick save
+- Right-click context menu
+- Badge counter showing saved status
+- Offline queue support
+
+**Files Created:**
+- `chrome-extension/` - Full extension package
+- `app/api/links/add/route.ts` - Save link endpoint (working, needs Jazz integration)
+- `chrome-extension/src/lib/extractors/` - Ported extraction logic
+- `chrome-extension/src/popup/popup.tsx` - React UI with API integration
+- `chrome-extension/CLAUDE.md` - Development guide with testing instructions
+
+**Next Steps for Continuation:**
+1. **Phase 2b - Jazz Integration**: Connect `/api/links/add` to Jazz database
+   - Update `src/schema.ts` to add Link type
+   - Implement token validation against Jazz apiTokens
+   - Create Link documents and associate with collections
+
+2. **Phase 2 - Token UI**: Build token generation interface
+   - Create `/auth/extension` page for logged-in users
+   - Add `POST /api/auth/generate-token` endpoint
+   - Update extension to use real tokens instead of auto-generated ones
+
+3. **Phase 2 - Collections**: Fetch real collections from Jazz
+   - Create `GET /api/collections/list` endpoint
+   - Update popup to fetch and display user's collections
+
+See `./plans/CHROME_EXTENSION.md` for detailed implementation steps and quick resume guide.
+
+---
+
 ### Phase 4: Custom Image Selection
 **Status:** Pending
 **Priority:** Medium (blocked on Phase 3.5 completion)
@@ -336,6 +401,7 @@ For a **production-ready MVP**:
 - ✅ Phase 2: Collections System
 - ✅ Phase 3: Edit & Delete Functionality
 - 🚧 Phase 3.5: Metadata Extraction Improvement (critical for quality)
+- 📋 Phase 3.6: Chrome Extension (solves bot detection, JS-rendering)
 - Phase 5: Budget Calculator (unique differentiator!)
 
 ### Nice to Have (v1.1):
@@ -346,7 +412,7 @@ For a **production-ready MVP**:
 ### Continuous:
 - Phase 8: Polish & Refinement (ongoing throughout)
 
-**Current Focus:** Phase 3.5 - Improving metadata extraction quality for indie e-commerce sites. This is critical before launch as it directly impacts user experience when adding products.
+**Current Focus:** Phase 3.6 - Chrome Extension prototype. Bypasses bot detection and handles JS-rendered content that server-side extraction cannot.
 
 ---
 
@@ -356,7 +422,7 @@ For a **production-ready MVP**:
 - Price tracking - Monitor price changes over time
 - Availability checking - Check if items are still in stock
 - Shared collections - Share wishlists with friends/family
-- Browser extension - Quick "Add to Tote" button
+- ~~Browser extension~~ → Now Phase 3.6!
 - Import from other services - Amazon wishlist, Pinterest, etc.
 - Export options - PDF, CSV, print-friendly view
 - Collaborative collections - Multiple users editing same collection
@@ -606,6 +672,6 @@ src/
 
 ---
 
-**Last Updated:** December 8, 2024
-**Version:** 0.0.206
-**Status:** Active Development - Phase 3.5 (Metadata Extraction Improvement)
+**Last Updated:** December 16, 2024
+**Version:** 0.0.207
+**Status:** Active Development - Phase 3.6 (Chrome Extension)
