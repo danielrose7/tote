@@ -1,6 +1,7 @@
 "use workflow";
 
 import { FatalError } from "workflow";
+import { ProductLink } from "../../../src/schema";
 
 /**
  * Workflow: Save Link from Extension
@@ -78,9 +79,15 @@ async function persistLinkToJazz(input: SaveLinkInput) {
       collectionId: input.collectionId,
     });
 
-    // TODO: Implement actual Jazz persistence
-    // This will use the getUserAccountByClerkId and ProductLink.create
-    // For now, generate a mock linkId
+    // TODO: Get Jazz worker to load the account and save the link
+    // For now, use a mock implementation
+    // In production, this will:
+    // 1. Get the Jazz worker instance
+    // 2. Load the user's account using jazzAccountId
+    // 3. Find the collection by collectionId
+    // 4. Create a ProductLink and add it to the collection
+    // 5. Return the link ID
+
     const linkId = `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     console.log("[Step] Link persisted with ID:", linkId);
