@@ -298,7 +298,12 @@ function Popup() {
 
           <details className="debug">
             <summary>Debug Info</summary>
-            <pre>{JSON.stringify(metadata, null, 2)}</pre>
+            <pre>{JSON.stringify({
+              authToken: authToken ? `${authToken.substring(0, 8)}...${authToken.substring(authToken.length - 8)}` : "Not found",
+              collectionsCount: collections.length,
+              selectedCollection,
+              metadata
+            }, null, 2)}</pre>
           </details>
         </>
       )}
