@@ -167,6 +167,7 @@ function Popup() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           url: metadata.url,
@@ -176,7 +177,6 @@ function Popup() {
           price: metadata.price,
           currency: metadata.currency,
           collectionId: selectedCollection,
-          authToken,
         }),
       });
 

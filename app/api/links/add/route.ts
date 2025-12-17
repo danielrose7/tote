@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { start } from "workflow/api";
 import { saveLinkWorkflow, type SaveLinkInput } from "../../../workflows/save-link";
+import { getUserByToken } from "../../../../src/lib/token-auth";
 
 interface AddLinkRequest {
   url: string;
@@ -11,7 +12,6 @@ interface AddLinkRequest {
   price?: string;
   currency?: string;
   collectionId: string;
-  authToken?: string;
 }
 
 function getCorsHeaders() {
@@ -79,37 +79,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = body.authToken;
-    if (!token) {
+    // Get authorization token from header (format: "Bearer <token>")
+    const authHeader = request.headers.get("authorization");
+    const bearerToken = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+
+    if (!bearerToken) {
       return NextResponse.json(
-        { error: "Auth token is required" },
+        { error: "Authorization header with Bearer token required" },
         { status: 401, headers: getCorsHeaders() }
       );
     }
 
-    // Verify user is authenticated with Clerk
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Unauthorized - user must be authenticated" },
-        { status: 401, headers: getCorsHeaders() }
-      );
+    // Try to get userId from Clerk session (web app)
+    // or validate the bearer token (extension)
+    let userId: string | null = null;
+    let jazzAccountId: string | null = null;
+
+    const clerkAuth = await auth();
+    if (clerkAuth.userId) {
+      // Authenticated via Clerk session (web app)
+      userId = clerkAuth.userId;
+      jazzAccountId = await getJazzAccountId(userId);
+    } else {
+      // Extension request - validate bearer token
+      console.log("[API] Token-based authentication (extension request)");
+      const tokenInfo = await getUserByToken(bearerToken);
+
+      if (!tokenInfo) {
+        console.error("[API] Token not found or invalid");
+        return NextResponse.json(
+          { error: "Invalid authorization token" },
+          { status: 401, headers: getCorsHeaders() }
+        );
+      }
+
+      userId = tokenInfo.userId;
+      jazzAccountId = tokenInfo.jazzAccountId;
+      console.log("[API] Authenticated extension user:", userId);
     }
 
-    console.log("[API] Processing link save for user:", userId);
-
-    // Get user's Jazz account ID from Clerk metadata
-    const jazzAccountId = await getJazzAccountId(userId);
-    if (!jazzAccountId) {
-      console.error("[API] Failed to look up Jazz account");
+    if (!userId || !jazzAccountId) {
+      console.error("[API] Failed to identify user or look up Jazz account");
       return NextResponse.json(
         { error: "Failed to look up user account" },
         { status: 500, headers: getCorsHeaders() }
       );
     }
 
-    console.log("[API] Triggering saveLinkWorkflow", {
-      userId,
+    console.log("[API] Processing link save for user:", userId, {
       url: body.url,
       collectionId: body.collectionId,
     });

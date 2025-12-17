@@ -87,6 +87,22 @@ export default function ExtensionAuthPage() {
       }
       me.root!.apiTokens!.$jazz.push(apiToken);
 
+      // Also store the token in Clerk's private metadata for server-side lookups
+      try {
+        await fetch("/api/user/store-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: newToken,
+            tokenId: apiToken.$jazz.id,
+            jazzAccountId: me.$jazz.id,
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to store token in Clerk:", err);
+        // Don't fail the token generation if this fails
+      }
+
       // Store token in localStorage for web app
       if (typeof window !== "undefined") {
         localStorage.setItem("tote_extension_token", newToken);
