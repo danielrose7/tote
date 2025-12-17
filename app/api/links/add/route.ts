@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { JazzAccount, ProductLink } from "@/src/schema";
+import { start } from "workflow/api";
+import { saveLinkWorkflow, type SaveLinkInput } from "../../../workflows/save-link";
 
 interface AddLinkRequest {
   url: string;
@@ -23,6 +24,40 @@ function getCorsHeaders() {
 
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: getCorsHeaders() });
+}
+
+async function getJazzAccountId(clerkUserId: string) {
+  try {
+    if (!process.env.CLERK_SECRET_KEY) {
+      throw new Error("Missing CLERK_SECRET_KEY environment variable");
+    }
+
+    // Look up user in Clerk to get their Jazz account ID from metadata
+    const response = await fetch(`https://api.clerk.com/v1/users/${clerkUserId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      },
+    });
+
+    if (!response.ok) {
+      console.error("[API] Clerk API error:", response.status);
+      return null;
+    }
+
+    const clerkUser = await response.json();
+    const jazzAccountId = clerkUser.public_metadata?.jazzAccountId;
+
+    if (!jazzAccountId) {
+      console.log("[API] No Jazz account ID found for Clerk user:", clerkUserId);
+      return null;
+    }
+
+    console.log("[API] Found Jazz account ID:", jazzAccountId);
+    return jazzAccountId;
+  } catch (error) {
+    console.error("[API] Error looking up Jazz account:", error);
+    return null;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -61,56 +96,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log for debugging
-    console.log("[Extension Save] Received link:", {
+    console.log("[API] Processing link save for user:", userId);
+
+    // Get user's Jazz account ID from Clerk metadata
+    const jazzAccountId = await getJazzAccountId(userId);
+    if (!jazzAccountId) {
+      console.error("[API] Failed to look up Jazz account");
+      return NextResponse.json(
+        { error: "Failed to look up user account" },
+        { status: 500, headers: getCorsHeaders() }
+      );
+    }
+
+    console.log("[API] Triggering saveLinkWorkflow", {
+      userId,
+      url: body.url,
+      collectionId: body.collectionId,
+    });
+
+    // Prepare workflow input
+    const workflowInput: SaveLinkInput = {
+      userId,
+      jazzAccountId,
       url: body.url,
       title: body.title,
       description: body.description,
       imageUrl: body.imageUrl,
       price: body.price,
-      currency: body.currency,
       collectionId: body.collectionId,
-      tokenLength: token.length,
-      userId,
-    });
+    };
 
-    // TODO: Phase 2c - Implement actual Jazz integration
-    // This requires:
-    // 1. Validate token against user's Jazz account
-    // 2. Access user's Jazz account data
-    // 3. Find collection by ID
-    // 4. Create ProductLink and add to collection
-    //
-    // For now, return success response with mock linkId
-    // but log that real Jazz integration is needed
-
-    const linkId = `link_${Date.now()}`;
-
-    console.log("[Extension Save] TODO: Implement Jazz integration for actual persistence");
-    console.log("[Extension Save] TODO: Validate token:", {
-      token: token.substring(0, 10) + "...",
-      userId,
-    });
+    // Start the workflow - it will handle link persistence durably with retries
+    await start(saveLinkWorkflow, [workflowInput]);
 
     return NextResponse.json(
       {
         success: true,
-        linkId,
-        message: "Link saved successfully",
-        // Echo back what we received for debugging
-        received: {
-          url: body.url,
-          title: body.title,
-          collectionId: body.collectionId,
-          userId,
-        },
+        message: "Link save workflow started",
       },
-      { status: 201, headers: getCorsHeaders() }
+      { status: 202, headers: getCorsHeaders() }
     );
   } catch (error) {
-    console.error("[Extension Save] Error:", error);
+    console.error("[API] Error starting workflow:", error);
     return NextResponse.json(
-      { error: "Failed to save link", details: String(error) },
+      { error: "Failed to start link save workflow", details: String(error) },
       { status: 500, headers: getCorsHeaders() }
     );
   }

@@ -22,6 +22,7 @@
     "next": "^16.0.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "workflow": "4.0.1-beta.29",
     "yup": "^1.7.1"
   },
   "devDependencies": {

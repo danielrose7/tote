@@ -10,6 +10,7 @@ import styles from "./landing.module.css";
 
 export default function HomePage() {
   const router = useRouter();
+
   const me = useAccount(JazzAccount, {
     resolve: {
       profile: true,
@@ -52,6 +53,7 @@ export default function HomePage() {
       }
     }
   };
+
 
   return (
     <div className={styles.container}>

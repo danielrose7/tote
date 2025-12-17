@@ -32,19 +32,54 @@ export async function getJazzWorker() {
 }
 
 /**
- * Query a user's account by their ID
- * Used in API routes to access user data
+ * Get a user's account by their Clerk ID
+ * Retrieves the Jazz account ID from Clerk's user metadata
+ * Then loads the account using the Jazz worker
+ *
+ * This requires:
+ * 1. Clerk API key for looking up user metadata
+ * 2. Jazz account ID stored in user's publicMetadata.jazzAccountId
  */
-export async function getUserAccount(userId: string) {
-  const worker = await getJazzWorker();
+export async function getUserAccountByClerkId(clerkUserId: string) {
+  try {
+    if (!process.env.CLERK_SECRET_KEY) {
+      throw new Error("Missing CLERK_SECRET_KEY environment variable");
+    }
 
-  // TODO: Need to implement account lookup by userId
-  // This requires understanding how Jazz stores user ID references
-  // For now, we'll document the pattern
+    // Look up user in Clerk to get their Jazz account ID from metadata
+    const response = await fetch(`https://api.clerk.com/v1/users/${clerkUserId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      },
+    });
 
-  console.log("[Jazz Worker] Looking up account for userId:", userId);
+    if (!response.ok) {
+      console.error("[Jazz Worker] Clerk API error:", response.status);
+      return null;
+    }
 
-  // Placeholder - actual implementation depends on how
-  // we link Clerk userIds to Jazz account IDs
-  return null;
+    const clerkUser = await response.json();
+    const jazzAccountId = clerkUser.public_metadata?.jazzAccountId;
+
+    if (!jazzAccountId) {
+      console.log("[Jazz Worker] No Jazz account ID found for Clerk user:", clerkUserId);
+      return null;
+    }
+
+    console.log("[Jazz Worker] Found Jazz account ID:", jazzAccountId);
+
+    // Load the Jazz account using the worker
+    const worker = await getJazzWorker();
+    const account = await worker.load(JazzAccount, jazzAccountId);
+
+    if (!account) {
+      console.error("[Jazz Worker] Failed to load Jazz account:", jazzAccountId);
+      return null;
+    }
+
+    return account;
+  } catch (error) {
+    console.error("[Jazz Worker] Error looking up account:", error);
+    return null;
+  }
 }

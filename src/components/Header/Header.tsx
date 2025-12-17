@@ -60,6 +60,9 @@ export function Header({
               + Create Collection
             </button>
           )}
+          <Link href="/settings" className={styles.settingsLink}>
+            ⚙️ Settings
+          </Link>
           <AuthButton />
         </div>
       </div>
