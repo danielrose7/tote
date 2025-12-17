@@ -26,6 +26,15 @@ export const Collection = co.map({
   createdAt: z.date(),
 });
 
+/** API token for extension authentication */
+export const ApiToken = co.map({
+  token: z.string(),
+  name: z.string(),
+  createdAt: z.date(),
+  lastUsedAt: z.date().optional(),
+  isActive: z.boolean(),
+});
+
 /** The account profile is an app-specific per-user public `CoMap`
  *  where you can store top-level objects for that user */
 export const JazzProfile = co.profile({
@@ -38,6 +47,7 @@ export const AccountRoot = co.map({
   links: co.list(ProductLink),
   collections: co.list(Collection),
   defaultCollectionId: z.string().optional(),
+  apiTokens: co.list(ApiToken),
 });
 
 export const JazzAccount = co
@@ -66,6 +76,7 @@ export const JazzAccount = co
         links: [],
         collections: [defaultCollection],
         defaultCollectionId: defaultCollection.$jazz.id,
+        apiTokens: [],
       });
     } else {
       // Migrate existing accounts
@@ -74,6 +85,11 @@ export const JazzAccount = co
         // Add collections array if missing
         if (!root.collections) {
           root.collections = [];
+        }
+
+        // Add apiTokens array if missing
+        if (!root.apiTokens) {
+          root.apiTokens = [];
         }
 
         // Create default collection if none exists

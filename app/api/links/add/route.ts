@@ -1,4 +1,6 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { JazzAccount, ProductLink } from "@/src/schema";
 
 interface AddLinkRequest {
   url: string;
@@ -42,12 +44,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Validate authToken with Jazz in Phase 2b
-    // For now, just accept any token as a placeholder
     const token = body.authToken;
     if (!token) {
       return NextResponse.json(
         { error: "Auth token is required" },
+        { status: 401, headers: getCorsHeaders() }
+      );
+    }
+
+    // Verify user is authenticated with Clerk
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized - user must be authenticated" },
         { status: 401, headers: getCorsHeaders() }
       );
     }
@@ -62,11 +71,26 @@ export async function POST(request: NextRequest) {
       currency: body.currency,
       collectionId: body.collectionId,
       tokenLength: token.length,
+      userId,
     });
 
-    // TODO: Phase 2b - Connect to Jazz and actually save the link
-    // For now, return success response
+    // TODO: Phase 2c - Implement actual Jazz integration
+    // This requires:
+    // 1. Validate token against user's Jazz account
+    // 2. Access user's Jazz account data
+    // 3. Find collection by ID
+    // 4. Create ProductLink and add to collection
+    //
+    // For now, return success response with mock linkId
+    // but log that real Jazz integration is needed
+
     const linkId = `link_${Date.now()}`;
+
+    console.log("[Extension Save] TODO: Implement Jazz integration for actual persistence");
+    console.log("[Extension Save] TODO: Validate token:", {
+      token: token.substring(0, 10) + "...",
+      userId,
+    });
 
     return NextResponse.json(
       {
@@ -78,6 +102,7 @@ export async function POST(request: NextRequest) {
           url: body.url,
           title: body.title,
           collectionId: body.collectionId,
+          userId,
         },
       },
       { status: 201, headers: getCorsHeaders() }
