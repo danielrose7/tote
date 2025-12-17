@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { AuthButton } from "../src/AuthButton";
 import { JazzAccount } from "../src/schema";
 import styles from "./landing.module.css";
 
@@ -53,6 +55,10 @@ export default function HomePage() {
 
   return (
     <div className={styles.container}>
+      <div className={styles.header}>
+        <h1 className={styles.logo}>tote</h1>
+        <AuthButton />
+      </div>
       <div className={styles.hero}>
         <h1 className={styles.title}>tote</h1>
         <p className={styles.tagline}>Your personal product wishlist</p>
@@ -60,13 +66,18 @@ export default function HomePage() {
           Save, organize, and track products you want to remember with beautiful collections and smart budgeting.
         </p>
         <div className={styles.cta}>
-          <button
-            className={styles.primaryButton}
-            onClick={handleGetStarted}
-            disabled={!me.$isLoaded}
-          >
-            {me.$isLoaded ? 'Get Started' : 'Loading...'}
-          </button>
+          <SignedIn>
+            <button
+              className={styles.primaryButton}
+              onClick={handleGetStarted}
+              disabled={!me.$isLoaded}
+            >
+              {me.$isLoaded ? 'Get Started' : 'Loading...'}
+            </button>
+          </SignedIn>
+          <SignedOut>
+            <p className={styles.signInPrompt}>Sign in to get started</p>
+          </SignedOut>
         </div>
       </div>
       <div className={styles.features}>

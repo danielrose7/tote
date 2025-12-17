@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { AuthButton } from "../../AuthButton";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
@@ -59,6 +60,7 @@ export function Header({
               + Create Collection
             </button>
           )}
+          <AuthButton />
         </div>
       </div>
     </header>
