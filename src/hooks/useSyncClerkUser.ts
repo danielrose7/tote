@@ -36,7 +36,7 @@ export function useSyncClerkUser() {
 
 async function syncJazzAccountIdToClerk(jazzAccountId: string) {
   try {
-    console.log("[Sync] Starting Jazz account ID sync to Clerk metadata");
+    console.log("[Sync] Syncing Jazz account ID to Clerk metadata");
 
     const response = await fetch("/api/user/sync-jazz-account", {
       method: "POST",
@@ -46,13 +46,12 @@ async function syncJazzAccountIdToClerk(jazzAccountId: string) {
 
     const result = await response.json();
 
-    if (response.ok || response.status === 202) {
-      console.log("[Sync] Jazz account sync workflow started", result);
-      // Workflow is now running in background to update Clerk metadata
+    if (response.ok) {
+      console.log("[Sync] Jazz account synced to Clerk", result);
     } else {
-      console.error("[Sync] Failed to start sync workflow:", result);
+      console.error("[Sync] Failed to sync Jazz account:", result);
     }
   } catch (error) {
-    console.error("[Sync] Error starting sync workflow:", error);
+    console.error("[Sync] Error syncing Jazz account:", error);
   }
 }

@@ -1,25 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { start } from "workflow/api";
-import { syncJazzAccountWorkflow } from "../../../workflows/sync-jazz-account";
-
-interface CollectionInfo {
-  id: string;
-  name: string;
-  color?: string;
-}
 
 /**
- * Sync Jazz account ID and collections to Clerk user metadata
+ * Sync Jazz account ID to Clerk user metadata
  *
- * Triggers a workflow to durably sync the Jazz account ID to Clerk's
- * publicMetadata for server-side lookups. Also stores collections in
- * privateMetadata so the extension can fetch them without Jazz access.
+ * Directly syncs the Jazz account ID to Clerk's publicMetadata
+ * for server-side lookups.
  */
 
 export async function POST(request: Request) {
   try {
-    const { jazzAccountId, collections } = await request.json();
+    const { jazzAccountId } = await request.json();
 
     if (!jazzAccountId) {
       return NextResponse.json(
@@ -37,53 +28,62 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log("[API] Triggering syncJazzAccountWorkflow", {
+    if (!process.env.CLERK_SECRET_KEY) {
+      return NextResponse.json(
+        { error: "Missing CLERK_SECRET_KEY" },
+        { status: 500 }
+      );
+    }
+
+    console.log("[Sync] Updating Clerk metadata for user:", {
       userId,
       jazzAccountId,
-      collectionsCount: collections?.length || 0,
     });
 
-    // Start the workflow - it will handle the sync durably with retries
-    await start(syncJazzAccountWorkflow, [userId, jazzAccountId]);
-
-    // Also store collections in private metadata for extension access
-    if (collections && Array.isArray(collections)) {
-      try {
-        const response = await fetch(`https://api.clerk.com/v1/users/${userId}`, {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
-            "Content-Type": "application/json",
+    // Directly update Clerk API
+    const response = await fetch(
+      `https://api.clerk.com/v1/users/${userId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          public_metadata: {
+            jazzAccountId,
           },
-          body: JSON.stringify({
-            private_metadata: {
-              collections: collections as CollectionInfo[],
-              collectionsUpdatedAt: new Date().toISOString(),
-            },
-          }),
-        });
-
-        if (!response.ok) {
-          console.error("[API] Failed to store collections in Clerk:", response.status);
-        } else {
-          console.log("[API] ✓ Collections stored in Clerk metadata:", collections.length);
-        }
-      } catch (err) {
-        console.error("[API] Error storing collections:", err);
+        }),
       }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error("[Sync] Clerk API error:", response.status, error);
+      return NextResponse.json(
+        { error: "Clerk API error", status: response.status, details: error },
+        { status: response.status }
+      );
     }
+
+    const user = await response.json();
+
+    console.log("[Sync] Successfully updated Clerk metadata");
 
     return NextResponse.json(
       {
         success: true,
-        message: "Jazz account sync workflow started",
+        message: "Jazz account synced to Clerk",
+        userId,
+        jazzAccountId,
+        publicMetadata: user.public_metadata,
       },
-      { status: 202 }
+      { status: 200 }
     );
   } catch (error) {
-    console.error("[API] Error starting workflow:", error);
+    console.error("[Sync] Error updating Clerk metadata:", error);
     return NextResponse.json(
-      { error: "Failed to start sync workflow", details: String(error) },
+      { error: "Failed to sync Jazz account", details: String(error) },
       { status: 500 }
     );
   }
