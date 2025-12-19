@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useAccount, useAgent, useIsAuthenticated } from "jazz-tools/react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { JazzAccount } from "../../src/schema";
+import { JazzAccount } from "../../schema";
 import styles from "./settings.module.css";
 
 export default function SettingsPage() {

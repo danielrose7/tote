@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter, useParams } from "next/navigation";
-import { JazzAccount, type ProductLink } from "../../../src/schema";
+import { JazzAccount, type ProductLink } from "../../../schema";
 import type { co } from "jazz-tools";
-import { Header } from "../../../src/components/Header";
-import { CollectionView } from "../../../src/components/CollectionView/CollectionView";
-import { AddLinkDialog } from "../../../src/components/AddLinkDialog";
-import { EditLinkDialog } from "../../../src/components/EditLinkDialog";
-import { EditCollectionDialog } from "../../../src/components/EditCollectionDialog";
-import { DeleteConfirmDialog } from "../../../src/components/DeleteConfirmDialog";
-import { useToast } from "../../../src/components/ToastNotification";
+import { Header } from "../../../components/Header";
+import { CollectionView } from "../../../components/CollectionView/CollectionView";
+import { AddLinkDialog } from "../../../components/AddLinkDialog";
+import { EditLinkDialog } from "../../../components/EditLinkDialog";
+import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
+import { DeleteConfirmDialog } from "../../../components/DeleteConfirmDialog";
+import { useToast } from "../../../components/ToastNotification";
 
 export default function CollectionDetailPage() {
   const router = useRouter();

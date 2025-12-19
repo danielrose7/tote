@@ -4,7 +4,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import type { JazzAccount } from "../../schema.ts";
 import type { co } from "jazz-tools";
-import { fetchMetadata, isValidUrl } from "../../../app/utils/metadata";
+import { fetchMetadata, isValidUrl } from "../../app/utils/metadata";
 import { ProductLink } from "../../schema.ts";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";

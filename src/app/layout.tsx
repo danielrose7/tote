@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
-import "../src/index.css";
+import "../index.css";
 
 export const metadata: Metadata = {
   title: "tote - Your product wishlist",

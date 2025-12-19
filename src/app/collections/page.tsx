@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
-import { JazzAccount, type Collection } from "../../src/schema";
+import { JazzAccount, type Collection } from "../../schema";
 import type { co } from "jazz-tools";
-import { Header } from "../../src/components/Header";
-import { CollectionList } from "../../src/components/CollectionList/CollectionList";
-import { CreateCollectionDialog } from "../../src/components/CreateCollectionDialog/CreateCollectionDialog";
-import { EditCollectionDialog } from "../../src/components/EditCollectionDialog";
+import { Header } from "../../components/Header";
+import { CollectionList } from "../../components/CollectionList/CollectionList";
+import { CreateCollectionDialog } from "../../components/CreateCollectionDialog/CreateCollectionDialog";
+import { EditCollectionDialog } from "../../components/EditCollectionDialog";
 
 export default function CollectionsPage() {
   const router = useRouter();

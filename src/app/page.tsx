@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { AuthButton } from "../src/AuthButton";
-import { JazzAccount } from "../src/schema";
+import { AuthButton } from "../AuthButton";
+import { JazzAccount } from "../schema";
 import styles from "./landing.module.css";
 
 export default function HomePage() {
@@ -25,7 +25,7 @@ export default function HomePage() {
     if (me.$isLoaded && me.root?.$isLoaded && me.root.collections?.$isLoaded) {
       // Create default collection if none exists
       if (me.root.collections.length === 0) {
-        const { Collection } = require("../src/schema");
+        const { Collection } = require("../schema");
         const defaultCollection = Collection.create(
           {
             name: "My Links",

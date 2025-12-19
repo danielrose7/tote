@@ -2,11 +2,11 @@
 
 import { ClerkProvider, useClerk } from "@clerk/nextjs";
 import { JazzReactProviderWithClerk } from "jazz-tools/react";
-import { JazzAccount } from "../src/schema";
-import { ToastProvider } from "../src/components/ToastNotification";
-import { OfflineBanner } from "../src/components/OfflineBanner";
+import { JazzAccount } from "../schema";
+import { ToastProvider } from "../components/ToastNotification";
+import { OfflineBanner } from "../components/OfflineBanner";
 import { JazzInspector } from "jazz-tools/inspector";
-import { apiKey } from "../src/apiKey";
+import { apiKey } from "../apiKey";
 
 function JazzProvider({ children }: { children: React.ReactNode }) {
   const clerk = useClerk();
