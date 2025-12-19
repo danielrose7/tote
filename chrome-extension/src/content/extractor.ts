@@ -1,3 +1,10 @@
+/**
+ * Content script for extracting product metadata from web pages
+ *
+ * This script runs on all pages and listens for messages from the popup
+ * to extract product information (title, price, image, etc.)
+ */
+
 import { extractMetadata } from "../lib/extractors";
 import type { MessagePayload } from "../lib/extractors/types";
 

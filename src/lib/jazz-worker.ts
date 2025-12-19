@@ -11,6 +11,7 @@ let workerInstance: any = null;
 
 export async function getJazzWorker() {
   if (workerInstance) {
+    console.log("[Jazz Worker] Returning cached worker instance");
     return workerInstance;
   }
 
@@ -20,15 +21,18 @@ export async function getJazzWorker() {
     );
   }
 
-  const { worker } = await startWorker({
-    AccountSchema: JazzAccount,
-    syncServer: `wss://cloud.jazz.tools/?key=${apiKey}`,
+  console.log("[Jazz Worker] Initializing new worker instance...");
+  const result = await startWorker({
     accountID: process.env.JAZZ_WORKER_ACCOUNT,
+    AccountSchema: JazzAccount,
     accountSecret: process.env.JAZZ_WORKER_SECRET,
+    syncServer: `wss://cloud.jazz.tools/?key=${apiKey}`,
   });
 
-  workerInstance = worker;
-  return worker;
+  // The result itself is the worker account, not just a wrapper
+  workerInstance = result;
+  console.log("[Jazz Worker] Worker initialized successfully");
+  return result;
 }
 
 /**
@@ -68,9 +72,12 @@ export async function getUserAccountByClerkId(clerkUserId: string) {
 
     console.log("[Jazz Worker] Found Jazz account ID:", jazzAccountId);
 
-    // Load the Jazz account using the worker
-    const worker = await getJazzWorker();
-    const account = await worker.load(JazzAccount, jazzAccountId, {
+    // Get the worker - this initializes the Jazz connection
+    const workerResult = await getJazzWorker();
+
+    // Load the account using JazzAccount.load with the worker as the loader
+    const account = await JazzAccount.load(jazzAccountId, {
+      loadAs: workerResult.worker,
       resolve: {
         root: {
           collections: { $each: {} },
@@ -83,6 +90,12 @@ export async function getUserAccountByClerkId(clerkUserId: string) {
       return null;
     }
 
+    console.log("[Jazz Worker] Successfully loaded account:", jazzAccountId);
+    console.log("[Jazz Worker] Account details:", {
+      loadingState: account.$jazz.loadingState,
+      hasRoot: !!account.root,
+      hasCollections: !!account.root?.collections,
+    });
     return account;
   } catch (error) {
     console.error("[Jazz Worker] Error looking up account:", error);

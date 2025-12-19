@@ -30,10 +30,12 @@
   ],
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "cookies"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "https://*.clerk.accounts.dev/*"
   ],
   "externally_connectable": {
     "matches": [

@@ -176,16 +176,67 @@ function extractOpenGraph(): Partial<ExtractedMetadata> {
 
 // DOM-based price extraction (for JS-rendered content)
 function extractPriceFromDOM(): { price?: string; currency?: string } {
+  // Priority selectors - check sale prices FIRST (order matters!)
+  // These indicate the actual/current price to pay, not original/list prices
+  const salePriceSelectors = [
+    // data-testid patterns (very reliable when present)
+    '[data-testid*="sale-price"]',
+    '[data-testid*="sales-price"]',
+    '[data-testid*="final-price"]',
+    '[data-testid*="current-price"]',
+    '[data-testid*="offer-price"]',
+    '[data-testid*="your-price"]',
+    // BFX (Borderfree) ecommerce platform
+    '.bfx-sale-price',
+    // Common class patterns
+    '.sale-price',
+    '.current-price',
+    '.final-price',
+    '.offer-price',
+    '.your-price',
+    '.special-price',
+    '.promo-price',
+    // Attribute wildcards
+    '[class*="sale-price"]',
+    '[class*="salePrice"]',
+    '[class*="final-price"]',
+    '[class*="finalPrice"]',
+    '[class*="current-price"]',
+    '[class*="currentPrice"]',
+    '[class*="special-price"]',
+    '[class*="specialPrice"]',
+  ];
+
+  // Check sale price selectors first
+  for (const selector of salePriceSelectors) {
+    try {
+      const el = document.querySelector(selector);
+      if (el) {
+        const text = el.textContent?.trim();
+        if (text) {
+          const result = extractPriceFromText(text);
+          if (result) return result;
+        }
+      }
+    } catch {
+      // Invalid selector
+    }
+  }
+
+  // General price selectors (excluding list/original prices)
+  // These are checked AFTER sale price selectors, so sale prices take priority
   const selectors = [
     '[itemprop="price"]',
     "[data-price]",
     "[data-product-price]",
-    ".price:not(.price-compare):not(.was-price)",
-    ".product-price",
-    ".current-price",
-    ".sale-price",
-    '[class*="price"]:not([class*="compare"]):not([class*="was"]):not([class*="old"])',
-    '[class*="Price"]:not([class*="Compare"]):not([class*="Was"]):not([class*="Old"])',
+    // Exclude list/original/compare prices via class
+    ".price:not(.price-compare):not(.was-price):not(.list-price):not(.bfx-list-price)",
+    ".product-price:not(.list-price):not(.original-price)",
+    // Exclude via class wildcards
+    '[class*="price"]:not([class*="compare"]):not([class*="was"]):not([class*="old"]):not([class*="list"]):not([class*="original"]):not([class*="strikethrough"]):not([class*="crossed"])',
+    '[class*="Price"]:not([class*="Compare"]):not([class*="Was"]):not([class*="Old"]):not([class*="List"]):not([class*="Original"]):not([class*="Strikethrough"]):not([class*="Crossed"])',
+    // Exclude via data-testid patterns
+    '[data-testid*="price"]:not([data-testid*="list"]):not([data-testid*="original"]):not([data-testid*="was"]):not([data-testid*="compare"])',
   ];
 
   // First try itemprop with content attribute

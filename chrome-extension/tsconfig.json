@@ -15,7 +15,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["chrome"]
+    "types": ["chrome"],
+    "baseUrl": ".",
+    "paths": {
+      "@tote/schema": ["../src/schema.ts"],
+      "@tote/apiKey": ["../src/apiKey.ts"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../src/schema.ts", "../src/apiKey.ts"]
 }

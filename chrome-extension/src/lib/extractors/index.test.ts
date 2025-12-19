@@ -299,3 +299,61 @@ describe("Real-world Test Cases", () => {
     expect(result.price).toBe("145.99");
   });
 });
+
+describe("Sale Price Priority", () => {
+  it("extracts sale price over list price using data-testid", () => {
+    // Based on real-world BFX (Borderfree) ecommerce markup
+    setupDOM(`
+      <div class="bfx-price-container">
+        <span class="bfx-price bfx-list-price" data-testid="price-display-list-price">$50.00</span>
+        <span class="bfx-price bfx-sale-price" data-testid="price-display-sales-price">$20.98</span>
+      </div>
+    `);
+    const result = extractMetadata();
+    expect(result.price).toBe("20.98");
+  });
+
+  it("extracts sale price when list price comes first in DOM", () => {
+    setupDOM(`
+      <div class="price-wrapper">
+        <span class="list-price strikethrough">$100.00</span>
+        <span class="sale-price">$79.99</span>
+      </div>
+    `);
+    const result = extractMetadata();
+    expect(result.price).toBe("79.99");
+  });
+
+  it("extracts current price using data-testid pattern", () => {
+    setupDOM(`
+      <div class="pricing">
+        <span data-testid="original-price">$150.00</span>
+        <span data-testid="current-price">$99.00</span>
+      </div>
+    `);
+    const result = extractMetadata();
+    expect(result.price).toBe("99.00");
+  });
+
+  it("extracts final-price using data-testid pattern", () => {
+    setupDOM(`
+      <div class="pricing">
+        <del data-testid="was-price">$200.00</del>
+        <span data-testid="final-price">$149.99</span>
+      </div>
+    `);
+    const result = extractMetadata();
+    expect(result.price).toBe("149.99");
+  });
+
+  it("extracts special price over regular price", () => {
+    setupDOM(`
+      <div class="product-price">
+        <span class="regular-price">$45.00</span>
+        <span class="special-price">$29.99</span>
+      </div>
+    `);
+    const result = extractMetadata();
+    expect(result.price).toBe("29.99");
+  });
+});
