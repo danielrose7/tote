@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { AuthButton } from "../../AuthButton";
 import styles from "./Header.module.css";
 
@@ -18,16 +17,6 @@ export function Header({
   showAddLink = false,
   showCreateCollection = false,
 }: HeaderProps) {
-  const [isLocalhost, setIsLocalhost] = useState(false);
-
-  useEffect(() => {
-    // Check if running on localhost
-    setIsLocalhost(
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1"
-    );
-  }, []);
-
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -37,11 +26,6 @@ export function Header({
         </Link>
 
         <div className={styles.actions}>
-          {isLocalhost && (
-            <Link href="/dev/metadata-test" className={styles.devLink}>
-              🧪 Test Lab
-            </Link>
-          )}
           {showAddLink && onAddLinkClick && (
             <button
               type="button"

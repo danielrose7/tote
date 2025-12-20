@@ -103,44 +103,29 @@ Problem sites that were originally failing:
 - **Popup UI**: `src/popup/popup.tsx`
   - React component displaying extracted metadata
   - Shows preview with title, image, price
-  - Collection selector (mock data for now)
+  - Collection selector synced via Jazz
+  - Uses Clerk authentication with `@clerk/chrome-extension`
 
-## End-to-End Testing (Phase 2 Integration)
+## Architecture
 
-Extension now saves links to `POST /api/links/add` endpoint.
+The extension uses native Clerk + Jazz integration:
 
-### Prerequisites
+1. **Authentication**: `@clerk/chrome-extension` with `syncHost` pointing to tote.tools
+2. **Data Sync**: `jazz-tools/react` with `JazzReactProviderWithClerk`
+3. **Saving**: Direct Jazz CoValue mutations (no API routes needed)
+
+### Testing
+
 1. Main Tote app running: `cd /Users/dan/personal/tote && pnpm dev` (port 3000)
 2. Extension built: `pnpm build`
 3. Extension loaded in `chrome://extensions/` (unpacked from `dist/`)
+4. Visit a product page, click extension icon, select collection, save
 
-### Manual Test Flow
-1. Visit a product page (e.g., https://www.target.com/p/o-cedar-easywring-spin-mop-and-bucket-system/-/A-50335649)
-2. Click extension icon → popup opens with extracted metadata
-3. Select collection from dropdown
-4. Click "Save to Tote"
-5. Watch for:
-   - Loading spinner while saving
-   - Success message + green checkmark
-   - Check browser console for API logs
+## Future Enhancements
 
-### API Endpoint Details
-- **URL**: `POST http://localhost:3000/api/links/add`
-- **Required fields**: `url`, `collectionId`, `authToken`
-- **Optional fields**: `title`, `description`, `imageUrl`, `price`, `currency`
-- **CORS**: Enabled for extension requests
-- **Response**: `{ success: true, linkId, received: {...} }`
-
-### Debug Tips
-- **Check token**: Open DevTools → Application → Storage → Local Storage → look for `authToken` key
-- **Check API logs**: Watch terminal output from `pnpm dev` for `[Extension Save]` logs
-- **Network tab**: Check XHR request to `/api/links/add` with full payload
-
-## Next Steps
-
-- **Phase 2b**: Connect endpoint to Jazz database (actual saving)
-- **Phase 2**: Add token generation UI (`/auth/extension` page on web app)
-- **Phase 3**: Enhanced features (keyboard shortcuts, right-click menu, badge counter)
+- Keyboard shortcuts for quick save
+- Right-click context menu integration
+- Badge counter showing saved items
 
 ## Common Issues
 
