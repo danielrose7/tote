@@ -1,5 +1,7 @@
 # Tote Chrome Extension - Development Guide
 
+**See [../PRODUCT.md](../PRODUCT.md) for product principles and values.**
+
 Quick reference for common development tasks.
 
 ## Getting Started
