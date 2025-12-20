@@ -5,6 +5,96 @@
  * Auth state is synced automatically via Clerk's Sync Host feature.
  */
 
+import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
+
+// Handle messages from the web app (externally_connectable)
+chrome.runtime.onMessageExternal.addListener(
+  (message, sender, sendResponse) => {
+    console.log("[Tote] External message received:", message, "from:", sender.origin);
+
+    if (message.type === "PING") {
+      // Simple ping to check if extension is installed
+      sendResponse({ success: true, version: chrome.runtime.getManifest().version });
+      return true;
+    }
+
+    if (message.type === "REFRESH_LINK") {
+      // Extract metadata from a URL by opening it in a background tab
+      handleRefreshLink(message.url)
+        .then((metadata) => sendResponse({ success: true, metadata }))
+        .catch((error) => sendResponse({ success: false, error: error.message }));
+      return true; // Keep channel open for async response
+    }
+
+    return false;
+  }
+);
+
+// Open a URL in a background tab, extract metadata, then close the tab
+async function handleRefreshLink(url: string): Promise<ExtractedMetadata> {
+  console.log("[Tote] Refreshing link:", url);
+
+  // Open tab in background
+  const tab = await chrome.tabs.create({
+    url,
+    active: false, // Background tab
+  });
+
+  if (!tab.id) {
+    throw new Error("Failed to create tab");
+  }
+
+  const tabId = tab.id;
+
+  try {
+    // Wait for page to load
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        chrome.tabs.onUpdated.removeListener(listener);
+        reject(new Error("Page load timeout"));
+      }, 15000);
+
+      const listener = (
+        updatedTabId: number,
+        changeInfo: chrome.tabs.TabChangeInfo
+      ) => {
+        if (updatedTabId === tabId && changeInfo.status === "complete") {
+          chrome.tabs.onUpdated.removeListener(listener);
+          clearTimeout(timeout);
+          resolve();
+        }
+      };
+
+      chrome.tabs.onUpdated.addListener(listener);
+    });
+
+    // Small delay for content script to be ready
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Request metadata from content script
+    const response = await chrome.tabs.sendMessage(tabId, {
+      type: "EXTRACT_METADATA",
+    } as MessagePayload);
+
+    if (response?.error) {
+      throw new Error(response.error);
+    }
+
+    if (!response?.data) {
+      throw new Error("No metadata extracted");
+    }
+
+    return response.data;
+  } finally {
+    // Always close the tab
+    try {
+      await chrome.tabs.remove(tabId);
+    } catch {
+      // Tab may already be closed
+    }
+  }
+}
+
 // Create context menu on install
 chrome.runtime.onInstalled.addListener(() => {
   console.log("[Tote] Extension installed");

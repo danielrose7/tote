@@ -6,6 +6,20 @@ import { isShopifySite, extractShopifyProduct } from "./shopify";
 
 export type { ExtractedMetadata, ExtractionResult } from "./types";
 
+// Decode HTML entities like &#x27; &quot; &amp; etc.
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
+      String.fromCharCode(parseInt(hex, 16))
+    )
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&"); // Must be last to avoid double-decoding
+}
+
 interface MergedResult extends ExtractedMetadata {
   sources: string[];
   confidence: number;
@@ -70,6 +84,14 @@ function mergeResults(results: (ExtractionResult | null)[]): MergedResult {
     merged.extractedFields.includes(f)
   ).length;
   merged.confidence = criticalExtracted / criticalFields.length;
+
+  // Decode HTML entities in text fields
+  if (merged.title) {
+    merged.title = decodeHtmlEntities(merged.title);
+  }
+  if (merged.description) {
+    merged.description = decodeHtmlEntities(merged.description);
+  }
 
   return merged;
 }

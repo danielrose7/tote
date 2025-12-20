@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Collection, JazzAccount, ProductLink } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { ProductCard } from "../ProductCard/ProductCard";
@@ -11,19 +11,94 @@ interface ExtractedMetadata {
   price?: string;
 }
 
-async function refreshLinkMetadata(
-  link: co.loaded<typeof ProductLink>
-): Promise<boolean> {
+// Extension ID - set via env var or hardcode after publishing
+const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID || "";
+
+// Check if the Tote extension is available
+async function checkExtensionAvailable(): Promise<boolean> {
+  if (!EXTENSION_ID || typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
+    return false;
+  }
+
+  try {
+    const response = await new Promise<{ success: boolean } | undefined>((resolve) => {
+      chrome.runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (resp) => {
+        if (chrome.runtime.lastError) {
+          resolve(undefined);
+        } else {
+          resolve(resp);
+        }
+      });
+    });
+    return response?.success === true;
+  } catch {
+    return false;
+  }
+}
+
+// Refresh using the extension (opens page in background tab, extracts with full DOM)
+async function refreshViaExtension(url: string): Promise<ExtractedMetadata | null> {
+  if (!EXTENSION_ID) return null;
+
+  try {
+    const response = await new Promise<{ success: boolean; metadata?: ExtractedMetadata; error?: string }>((resolve) => {
+      chrome.runtime.sendMessage(
+        EXTENSION_ID,
+        { type: "REFRESH_LINK", url },
+        (resp) => {
+          if (chrome.runtime.lastError) {
+            resolve({ success: false, error: chrome.runtime.lastError.message });
+          } else {
+            resolve(resp);
+          }
+        }
+      );
+    });
+
+    if (response.success && response.metadata) {
+      return response.metadata;
+    }
+    console.warn("[Tote] Extension refresh failed:", response.error);
+    return null;
+  } catch (error) {
+    console.error("[Tote] Extension communication error:", error);
+    return null;
+  }
+}
+
+// Fallback: server-side extraction
+async function refreshViaServer(url: string): Promise<ExtractedMetadata | null> {
   try {
     const response = await fetch("/api/extract", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: link.url }),
+      body: JSON.stringify({ url }),
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
 
-    const metadata: ExtractedMetadata = await response.json();
+async function refreshLinkMetadata(
+  link: co.loaded<typeof ProductLink>,
+  useExtension: boolean
+): Promise<boolean> {
+  try {
+    // Try extension first if available, then fall back to server
+    let metadata: ExtractedMetadata | null = null;
+
+    if (useExtension) {
+      metadata = await refreshViaExtension(link.url);
+    }
+
+    if (!metadata) {
+      metadata = await refreshViaServer(link.url);
+    }
+
+    if (!metadata) return false;
 
     // Update the link with new metadata
     if (metadata.title) link.$jazz.set("title", metadata.title);
@@ -60,10 +135,16 @@ export function CollectionView({
     current: number;
     total: number;
   } | null>(null);
+  const [extensionAvailable, setExtensionAvailable] = useState(false);
+
+  // Check if extension is available on mount
+  useEffect(() => {
+    checkExtensionAvailable().then(setExtensionAvailable);
+  }, []);
 
   const handleRefreshLink = async (link: co.loaded<typeof ProductLink>) => {
     setRefreshingLinkId(link.$jazz.id);
-    await refreshLinkMetadata(link);
+    await refreshLinkMetadata(link, extensionAvailable);
     setRefreshingLinkId(null);
   };
 
@@ -74,7 +155,7 @@ export function CollectionView({
     for (let i = 0; i < validLinks.length; i++) {
       const link = validLinks[i];
       setRefreshingLinkId(link.$jazz.id);
-      await refreshLinkMetadata(link);
+      await refreshLinkMetadata(link, extensionAvailable);
       setRefreshAllProgress({ current: i + 1, total: validLinks.length });
     }
 
