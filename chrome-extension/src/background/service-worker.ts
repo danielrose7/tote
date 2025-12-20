@@ -17,56 +17,101 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// Show a toast notification on the page
+function showToast(tabId: number, message: string) {
+  chrome.scripting.executeScript({
+    target: { tabId },
+    func: (msg: string) => {
+      const toast = document.createElement("div");
+      toast.textContent = msg;
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #6366f1;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-family: system-ui, sans-serif;
+        font-size: 14px;
+        z-index: 999999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: toteSlideIn 0.3s ease;
+      `;
+
+      const style = document.createElement("style");
+      style.textContent = `
+        @keyframes toteSlideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = "toteSlideIn 0.3s ease reverse";
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    },
+    args: [message],
+  });
+}
+
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId === "save-to-tote" && tab?.id) {
-    // Open the popup - this works because it's triggered by user gesture
-    try {
-      await chrome.action.openPopup();
-    } catch (err) {
-      // Fallback: If openPopup fails, show the user how to save
-      console.log("[Tote] Could not open popup, showing notification");
+  if (info.menuItemId !== "save-to-tote" || !tab?.id) return;
 
-      // Inject a small notification into the page
-      chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          // Create and show a toast notification
-          const toast = document.createElement("div");
-          toast.textContent = "Click the Tote icon in your toolbar to save this page";
-          toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #6366f1;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-family: system-ui, sans-serif;
-            font-size: 14px;
-            z-index: 999999;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideIn 0.3s ease;
-          `;
+  // If right-clicked on a link, open that page first
+  if (info.linkUrl) {
+    console.log("[Tote] Opening linked page:", info.linkUrl);
 
-          // Add animation keyframes
-          const style = document.createElement("style");
-          style.textContent = `
-            @keyframes slideIn {
-              from { transform: translateX(100%); opacity: 0; }
-              to { transform: translateX(0); opacity: 1; }
-            }
-          `;
-          document.head.appendChild(style);
-          document.body.appendChild(toast);
+    // Open the link in a new tab
+    const newTab = await chrome.tabs.create({
+      url: info.linkUrl,
+      active: true,
+    });
 
-          // Remove after 3 seconds
-          setTimeout(() => {
-            toast.style.animation = "slideIn 0.3s ease reverse";
-            setTimeout(() => toast.remove(), 300);
-          }, 3000);
-        },
-      });
-    }
+    if (!newTab.id) return;
+
+    // Wait for the page to finish loading, then open popup
+    const listener = async (
+      tabId: number,
+      changeInfo: chrome.tabs.TabChangeInfo
+    ) => {
+      if (tabId === newTab.id && changeInfo.status === "complete") {
+        chrome.tabs.onUpdated.removeListener(listener);
+
+        // Small delay to ensure content script is injected
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        try {
+          await chrome.action.openPopup();
+        } catch (err) {
+          console.log("[Tote] Could not open popup:", err);
+          showToast(
+            tabId,
+            "Click the Tote icon in your toolbar to save this page"
+          );
+        }
+      }
+    };
+
+    chrome.tabs.onUpdated.addListener(listener);
+
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      chrome.tabs.onUpdated.removeListener(listener);
+    }, 10000);
+
+    return;
+  }
+
+  // Right-clicked on the page itself - just open popup
+  try {
+    await chrome.action.openPopup();
+  } catch (err) {
+    console.log("[Tote] Could not open popup, showing notification");
+    showToast(tab.id, "Click the Tote icon in your toolbar to save this page");
   }
 });
