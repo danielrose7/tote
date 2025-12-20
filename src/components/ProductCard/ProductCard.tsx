@@ -7,12 +7,14 @@ interface ProductCardProps {
   link: co.loaded<typeof ProductLink>;
   onEdit?: (link: co.loaded<typeof ProductLink>) => void;
   onDelete?: (link: co.loaded<typeof ProductLink>) => void;
+  onRefresh?: (link: co.loaded<typeof ProductLink>) => void;
 }
 
-export function ProductCard({ link, onEdit, onDelete }: ProductCardProps) {
+export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const formattedDate = link.addedAt.toLocaleDateString("en-US", {
     year: "numeric",
@@ -69,8 +71,25 @@ export function ProductCard({ link, onEdit, onDelete }: ProductCardProps) {
       )}
 
       {/* Quick Actions Menu */}
-      {showActions && (onEdit || onDelete) && (
+      {showActions && (onEdit || onDelete || onRefresh) && (
         <div className={styles.actionsMenu}>
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={async () => {
+                setIsRefreshing(true);
+                await onRefresh(link);
+                setIsRefreshing(false);
+              }}
+              className={`${styles.actionButton} ${isRefreshing ? styles.actionButtonSpinning : ""}`}
+              aria-label="Refresh metadata"
+              disabled={isRefreshing}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          )}
           {onEdit && (
             <button
               type="button"

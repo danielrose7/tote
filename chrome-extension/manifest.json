@@ -31,7 +31,9 @@
   "permissions": [
     "activeTab",
     "storage",
-    "cookies"
+    "cookies",
+    "contextMenus",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>",

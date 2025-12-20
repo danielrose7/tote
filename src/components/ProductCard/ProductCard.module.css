@@ -152,6 +152,23 @@
   border-color: var(--color-danger);
 }
 
+.actionButtonSpinning {
+  pointer-events: none;
+}
+
+.actionButtonSpinning svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Content */
 .content {
   padding: var(--spacing-lg);

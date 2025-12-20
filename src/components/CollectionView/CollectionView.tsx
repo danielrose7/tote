@@ -1,7 +1,42 @@
+import { useState } from "react";
 import type { Collection, JazzAccount, ProductLink } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { ProductCard } from "../ProductCard/ProductCard";
 import styles from "./CollectionView.module.css";
+
+interface ExtractedMetadata {
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  price?: string;
+}
+
+async function refreshLinkMetadata(
+  link: co.loaded<typeof ProductLink>
+): Promise<boolean> {
+  try {
+    const response = await fetch("/api/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: link.url }),
+    });
+
+    if (!response.ok) return false;
+
+    const metadata: ExtractedMetadata = await response.json();
+
+    // Update the link with new metadata
+    if (metadata.title) link.$jazz.set("title", metadata.title);
+    if (metadata.description) link.$jazz.set("description", metadata.description);
+    if (metadata.imageUrl) link.$jazz.set("imageUrl", metadata.imageUrl);
+    if (metadata.price) link.$jazz.set("price", metadata.price);
+
+    return true;
+  } catch (error) {
+    console.error("[Tote] Failed to refresh link:", error);
+    return false;
+  }
+}
 
 interface CollectionViewProps {
   account: co.loaded<typeof JazzAccount>;
@@ -20,6 +55,33 @@ export function CollectionView({
   onEditCollection,
   onBackToCollections,
 }: CollectionViewProps) {
+  const [refreshingLinkId, setRefreshingLinkId] = useState<string | null>(null);
+  const [refreshAllProgress, setRefreshAllProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+
+  const handleRefreshLink = async (link: co.loaded<typeof ProductLink>) => {
+    setRefreshingLinkId(link.$jazz.id);
+    await refreshLinkMetadata(link);
+    setRefreshingLinkId(null);
+  };
+
+  const handleRefreshAll = async (links: co.loaded<typeof ProductLink>[]) => {
+    const validLinks = links.filter((l) => l && l.$isLoaded);
+    setRefreshAllProgress({ current: 0, total: validLinks.length });
+
+    for (let i = 0; i < validLinks.length; i++) {
+      const link = validLinks[i];
+      setRefreshingLinkId(link.$jazz.id);
+      await refreshLinkMetadata(link);
+      setRefreshAllProgress({ current: i + 1, total: validLinks.length });
+    }
+
+    setRefreshingLinkId(null);
+    setRefreshAllProgress(null);
+  };
+
   if (!account.root || !account.root.$isLoaded) {
     return (
       <div className={styles.container}>
@@ -133,6 +195,32 @@ export function CollectionView({
               })}
             </span>
           </div>
+          {links.length > 0 && (
+            <div className={styles.actions}>
+              <button
+                type="button"
+                onClick={() => handleRefreshAll(links as co.loaded<typeof ProductLink>[])}
+                className={styles.refreshAllButton}
+                disabled={refreshAllProgress !== null}
+              >
+                {refreshAllProgress ? (
+                  <>
+                    <svg className={styles.spinningIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refreshing {refreshAllProgress.current}/{refreshAllProgress.total}
+                  </>
+                ) : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh All
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -161,12 +249,14 @@ export function CollectionView({
         <div className={styles.grid}>
           {links.map((link) => {
             if (!link || !link.$isLoaded) return null;
+            const isRefreshing = refreshingLinkId === link.$jazz.id;
             return (
               <ProductCard
                 key={link.$jazz.id}
                 link={link}
                 onEdit={onEditLink}
                 onDelete={onDeleteLink}
+                onRefresh={handleRefreshLink}
               />
             );
           })}

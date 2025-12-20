@@ -29,8 +29,8 @@ When making tradeoffs:
 ## Roadmap
 
 ### Now
-- [ ] **Recrawl command** - Update metadata for existing saved links
-- [ ] **Right-click save** - Context menu "Save to Tote" in extension
+- [x] **Recrawl command** - Update metadata for existing saved links
+- [x] **Right-click save** - Context menu "Save to Tote" in extension
 
 ### Next
 - [ ] **Shareable collections** - Public links to collections (opt-in)
