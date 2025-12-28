@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import type { Collection, JazzAccount, ProductLink } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { ProductCard } from "../ProductCard/ProductCard";
+import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
+import { TableView } from "./TableView";
 import styles from "./CollectionView.module.css";
+
+const VIEW_MODE_STORAGE_KEY = "tote:viewMode";
 
 interface ExtractedMetadata {
   title?: string;
@@ -136,6 +140,20 @@ export function CollectionView({
     total: number;
   } | null>(null);
   const [extensionAvailable, setExtensionAvailable] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  // Load view mode preference from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (stored === "grid" || stored === "table") {
+      setViewMode(stored);
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  };
 
   // Check if extension is available on mount
   useEffect(() => {
@@ -300,12 +318,13 @@ export function CollectionView({
                   </>
                 )}
               </button>
+              <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
             </div>
           )}
         </div>
       </div>
 
-      {/* Links Grid */}
+      {/* Links */}
       {links.length === 0 ? (
         <div className={styles.empty}>
           <svg
@@ -326,11 +345,17 @@ export function CollectionView({
             Add links to this collection to get started
           </p>
         </div>
+      ) : viewMode === "table" ? (
+        <TableView
+          links={links.filter((l): l is co.loaded<typeof ProductLink> => l !== null && l.$isLoaded)}
+          onEdit={onEditLink}
+          onDelete={onDeleteLink}
+          onRefresh={handleRefreshLink}
+        />
       ) : (
         <div className={styles.grid}>
           {links.map((link) => {
             if (!link || !link.$isLoaded) return null;
-            const isRefreshing = refreshingLinkId === link.$jazz.id;
             return (
               <ProductCard
                 key={link.$jazz.id}
