@@ -8,10 +8,16 @@
  * since it requires an active Clerk session.
  */
 
-import { ClerkProvider, SignedIn, useClerk } from "@clerk/chrome-extension";
+import { ClerkProvider, useClerk } from "@clerk/chrome-extension";
 import { JazzReactProviderWithClerk } from "jazz-tools/react";
 import { JazzAccount } from "@tote/schema";
 import { CLERK_PUBLISHABLE_KEY, JAZZ_API_KEY, SYNC_HOST } from "../config";
+
+console.log("[Tote] Providers loading with config:", {
+  publishableKey: CLERK_PUBLISHABLE_KEY ? "set" : "missing",
+  syncHost: SYNC_HOST,
+  jazzApiKey: JAZZ_API_KEY ? "set" : "missing",
+});
 
 /**
  * Jazz provider - only rendered when user is signed in
