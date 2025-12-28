@@ -39,7 +39,7 @@ When making tradeoffs:
 ### Later
 - [ ] Collaborative wishlists
 - [ ] Keyboard shortcuts
-- [ ] Safari extension
+- [ ] Safari extension (iOS/macOS) - Convert Chrome extension via [safari-web-extension-converter](https://developer.apple.com/documentation/safariservices/creating-a-safari-web-extension)
 
 ## Anti-Goals
 
