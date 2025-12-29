@@ -356,4 +356,23 @@ describe("Sale Price Priority", () => {
     const result = extractMetadata();
     expect(result.price).toBe("29.99");
   });
+
+  it("extracts sale price from complex nested PriceDisplay component", () => {
+    // Real-world case from retail site with list price and sale price
+    setupDOM(`
+      <div id="product-price">
+        <div class="PriceDisplay_price-display__PU2nD PriceDisplay_enhanced-price-display__wC9j3" aria-hidden="true" data-alternate-price-display="true">
+          <span data-testid="price-display-list-price" class="bfx-price bfx-list-price">$50</span>
+          <span data-testid="price-display-sales-price" class="bfx-price bfx-sale-price">$44.97</span>
+          <div class="PriceDisplay_alternative-sale-text__9WawT PriceDisplay_percentage__5_OXv">10% off</div>
+        </div>
+        <div class="PriceDisplay_sr-price__NA35y">Original price: $50, Sale price: $44.97</div>
+        <div class="PriceDisplay_price-display-low-message__9jHzq">
+          <div class="VariantMessages_messages__VXuXK"></div>
+        </div>
+      </div>
+    `);
+    const result = extractMetadata();
+    expect(result.price).toBe("44.97");
+  });
 });

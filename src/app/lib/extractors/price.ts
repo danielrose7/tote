@@ -1,13 +1,34 @@
 // Price extraction from HTML using multiple strategies
 
+// Sale price selectors - check these FIRST (order matters!)
+// These indicate the actual/current price to pay, not original/list prices
+const SALE_PRICE_SELECTORS = [
+  // data-testid patterns (very reliable when present)
+  '[data-testid*="sale-price"]',
+  '[data-testid*="sales-price"]',
+  '[data-testid*="final-price"]',
+  '[data-testid*="current-price"]',
+  '[data-testid*="offer-price"]',
+  '[data-testid*="your-price"]',
+  // BFX (Borderfree) ecommerce platform
+  '.bfx-sale-price',
+  // Common class patterns
+  '.sale-price',
+  '.current-price',
+  '.final-price',
+  '.offer-price',
+  '.your-price',
+  '.special-price',
+  '.promo-price',
+];
+
+// General price selectors (checked after sale prices)
 const PRICE_SELECTORS = [
   '[itemprop="price"]',
   '[data-price]',
   '[data-product-price]',
   ".price",
   ".product-price",
-  ".current-price",
-  ".sale-price",
   '[class*="price"]:not([class*="compare"])',
   '[class*="Price"]:not([class*="Compare"])',
 ];
@@ -141,20 +162,33 @@ function getElementContent(html: string, selector: string): string | null {
 }
 
 export function extractPrice(html: string): { price?: string; currency?: string } {
-  // Strategy 1: itemprop="price" with content attribute
+  // Strategy 1: Check SALE PRICE selectors FIRST (highest priority)
+  // These indicate the actual price to pay, not original/list prices
+  for (const selector of SALE_PRICE_SELECTORS) {
+    // Skip complex selectors with :not() for regex-based extraction
+    if (selector.includes(":not(")) continue;
+
+    const content = getElementContent(html, selector);
+    if (content) {
+      const result = extractPriceFromText(content);
+      if (result) return result;
+    }
+  }
+
+  // Strategy 2: itemprop="price" with content attribute
   const itempropPrice = getAttributeValue(html, '[itemprop="price"]', "content");
   if (itempropPrice) {
     const currency = getAttributeValue(html, '[itemprop="priceCurrency"]', "content");
     return { price: itempropPrice, currency: currency || "USD" };
   }
 
-  // Strategy 2: data-price attribute
+  // Strategy 3: data-price attribute (but skip if it's a list price)
   const dataPrice = getAttributeValue(html, "[data-price]", "data-price");
   if (dataPrice) {
     return extractPriceFromText(dataPrice) || { price: dataPrice };
   }
 
-  // Strategy 3: CSS selectors with text content
+  // Strategy 4: General CSS selectors with text content
   for (const selector of PRICE_SELECTORS) {
     // Skip complex selectors with :not() for regex-based extraction
     if (selector.includes(":not(")) continue;
@@ -166,10 +200,19 @@ export function extractPrice(html: string): { price?: string; currency?: string 
     }
   }
 
-  // Strategy 4: Scan for any price-like pattern in common containers
-  const priceContainerPattern = /<(?:span|div|p)[^>]*class=["'][^"']*price[^"']*["'][^>]*>([\s\S]*?)<\/(?:span|div|p)>/gi;
+  // Strategy 5: Scan for any price-like pattern in common containers
+  // But avoid list/original price containers
+  const priceContainerPattern = /<(?:span|div|p)[^>]*class=["'][^"']*(?:sale|current|final|offer|special|promo)?-?price[^"']*["'][^>]*>([\s\S]*?)<\/(?:span|div|p)>/gi;
   let match;
   while ((match = priceContainerPattern.exec(html)) !== null) {
+    // Skip if this looks like a list/original price
+    const fullMatch = match[0].toLowerCase();
+    if (fullMatch.includes('list-price') ||
+        fullMatch.includes('original') ||
+        fullMatch.includes('was-price') ||
+        fullMatch.includes('compare')) {
+      continue;
+    }
     const content = match[1].replace(/<[^>]+>/g, " ").trim();
     const result = extractPriceFromText(content);
     if (result) return result;
