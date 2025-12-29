@@ -7,21 +7,21 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import type { co } from "jazz-tools";
-import type { ProductLink } from "../../schema";
+import type { Block } from "../../schema";
 import { getColumns } from "./columns";
 import styles from "./TableView.module.css";
 
-type LoadedProductLink = co.loaded<typeof ProductLink>;
+type LoadedBlock = co.loaded<typeof Block>;
 
 interface TableViewProps {
-  links: LoadedProductLink[];
-  onEdit?: (link: LoadedProductLink) => void;
-  onDelete?: (link: LoadedProductLink) => void;
-  onRefresh?: (link: LoadedProductLink) => void;
+  blocks: LoadedBlock[];
+  onEdit?: (block: LoadedBlock) => void;
+  onDelete?: (block: LoadedBlock) => void;
+  onRefresh?: (block: LoadedBlock) => void;
 }
 
 export function TableView({
-  links,
+  blocks,
   onEdit,
   onDelete,
   onRefresh,
@@ -34,7 +34,7 @@ export function TableView({
   );
 
   const table = useReactTable({
-    data: links,
+    data: blocks,
     columns,
     state: { sorting },
     onSortingChange: setSorting,

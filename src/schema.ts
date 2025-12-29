@@ -5,26 +5,57 @@
 
 import { Group, co, z } from "jazz-tools";
 
-/** Product link data */
-export const ProductLink = co.map({
+// =============================================================================
+// Block-Based Schema (New)
+// =============================================================================
+
+/** Type-specific data schemas */
+const ProductData = z.object({
   url: z.string(),
-  title: z.string().optional(),
-  description: z.string().optional(),
   imageUrl: z.string().optional(),
   price: z.string().optional(),
-  addedAt: z.date(),
+  priceValue: z.number().optional(),
+  description: z.string().optional(),
   notes: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  status: z.enum(["considering", "selected", "ruled-out"]).optional(),
 });
 
-/** Collection for organizing product links */
-export const Collection = co.map({
-  name: z.string(),
-  description: z.string().optional(),
+const CollectionData = z.object({
   color: z.string().optional(),
-  links: co.list(ProductLink),
+  description: z.string().optional(),
+  viewMode: z.enum(["grid", "table"]).optional(),
+  budget: z.number().optional(),
+});
+
+const SlotData = z.object({
+  budget: z.number().optional(),
+  budgetDisplay: z.string().optional(),
+  selectedProductId: z.string().optional(),
+});
+
+const ProjectData = z.object({
+  budget: z.number().optional(),
+  targetDate: z.string().optional(),
+  description: z.string().optional(),
+});
+
+/** Universal block primitive - everything is a Block */
+export const Block = co.map({
+  type: z.enum(["project", "collection", "slot", "product"]),
+  name: z.string(),
+  // Type-specific data - use the appropriate schema based on block type
+  productData: ProductData.optional(),
+  collectionData: CollectionData.optional(),
+  slotData: SlotData.optional(),
+  projectData: ProjectData.optional(),
+  // Flat storage: use parentId instead of nested children
+  parentId: z.string().optional(),
+  sortOrder: z.number().optional(),
   createdAt: z.date(),
 });
+
+/** List of blocks - defined after Block */
+export const BlockList = co.list(Block);
 
 /** The account profile is an app-specific per-user public `CoMap`
  *  where you can store top-level objects for that user */
@@ -35,10 +66,9 @@ export const JazzProfile = co.profile({
 /** The account root is an app-specific per-user private `CoMap`
  *  where you can store top-level objects for that user */
 export const AccountRoot = co.map({
-  links: co.list(ProductLink),
-  collections: co.list(Collection),
-  defaultCollectionId: z.string().optional(),
-  clerkUserId: z.string().optional(), // Clerk user ID for server-side lookups
+  blocks: BlockList.optional(),
+  defaultBlockId: z.string().optional(),
+  clerkUserId: z.string().optional(),
 });
 
 export const JazzAccount = co
@@ -51,52 +81,52 @@ export const JazzAccount = co
      *  You can use it to set up the account root and any other initial CoValues you need.
      */
     if (!account.$jazz.has("root")) {
-      // Create default "My Links" collection
-      const defaultCollection = Collection.create(
+      // Create default "My Links" collection block
+      const defaultCollection = Block.create(
         {
+          type: "collection",
           name: "My Links",
-          description: "Your personal collection of product links",
-          color: "#6366f1",
-          links: [],
+          collectionData: {
+            color: "#6366f1",
+            description: "Your personal collection of product links",
+            viewMode: "grid",
+          },
           createdAt: new Date(),
         },
         account.$jazz,
       );
 
+      // Create the blocks list with the default collection
+      const blocksList = BlockList.create([defaultCollection], account);
+
       account.$jazz.set("root", {
-        links: [],
-        collections: [defaultCollection],
-        defaultCollectionId: defaultCollection.$jazz.id,
+        blocks: blocksList,
+        defaultBlockId: defaultCollection.$jazz.id,
       });
     } else {
-      // Migrate existing accounts
+      // Ensure blocks exists for existing accounts
       const root = account.root;
       if (root && root.$isLoaded) {
-        // Add collections array if missing
-        if (!root.collections) {
-          root.collections = [];
-        }
-
-        // Create default collection if none exists
-        if (root.collections.$isLoaded && root.collections.length === 0) {
-          const defaultCollection = Collection.create(
+        const hasBlocks = root.blocks && root.blocks.$isLoaded && root.blocks.length > 0;
+        if (!hasBlocks) {
+          // Create default collection block if none exists
+          const defaultCollection = Block.create(
             {
+              type: "collection",
               name: "My Links",
-              description: "Your personal collection of product links",
-              color: "#6366f1",
-              links: [],
+              collectionData: {
+                color: "#6366f1",
+                description: "Your personal collection of product links",
+                viewMode: "grid",
+              },
               createdAt: new Date(),
             },
             account.$jazz,
           );
-          root.collections.$jazz.push(defaultCollection);
-          root.defaultCollectionId = defaultCollection.$jazz.id;
-        } else if (!root.defaultCollectionId && root.collections.$isLoaded && root.collections.length > 0) {
-          // Set first collection as default if no default is set
-          const firstCollection = root.collections[0];
-          if (firstCollection && firstCollection.$isLoaded) {
-            root.defaultCollectionId = firstCollection.$jazz.id;
-          }
+
+          const blocksList = BlockList.create([defaultCollection], account);
+          root.$jazz.set("blocks", blocksList);
+          root.$jazz.set("defaultBlockId", defaultCollection.$jazz.id);
         }
       }
     }

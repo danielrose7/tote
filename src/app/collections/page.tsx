@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
-import { JazzAccount, type Collection } from "../../schema";
+import { JazzAccount, type Block } from "../../schema";
 import type { co } from "jazz-tools";
 import { Header } from "../../components/Header";
 import { CollectionList } from "../../components/CollectionList/CollectionList";
 import { CreateCollectionDialog } from "../../components/CreateCollectionDialog/CreateCollectionDialog";
 import { EditCollectionDialog } from "../../components/EditCollectionDialog";
+
+type LoadedBlock = co.loaded<typeof Block>;
 
 export default function CollectionsPage() {
   const router = useRouter();
@@ -16,18 +18,17 @@ export default function CollectionsPage() {
     resolve: {
       profile: true,
       root: {
-        links: { $each: {} },
-        collections: { $each: { links: { $each: {} } } }
+        blocks: { $each: {} }
       }
     },
   });
 
   const [isCreateCollectionDialogOpen, setIsCreateCollectionDialogOpen] = useState(false);
   const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
-  const [selectedCollection, setSelectedCollection] = useState<co.loaded<typeof Collection> | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<LoadedBlock | null>(null);
 
-  const handleEditCollection = (collection: co.loaded<typeof Collection>) => {
-    setSelectedCollection(collection);
+  const handleEditCollection = (block: LoadedBlock) => {
+    setSelectedBlock(block);
     setIsEditCollectionDialogOpen(true);
   };
 
@@ -56,8 +57,8 @@ export default function CollectionsPage() {
       <main>
         <CollectionList
           account={me}
-          onSelectCollection={(collection) => {
-            router.push(`/collections/${collection.$jazz.id}`);
+          onSelectCollection={(block) => {
+            router.push(`/collections/${block.$jazz.id}`);
           }}
           onEditCollection={handleEditCollection}
         />
@@ -70,7 +71,7 @@ export default function CollectionsPage() {
       <EditCollectionDialog
         open={isEditCollectionDialogOpen}
         onOpenChange={setIsEditCollectionDialogOpen}
-        collection={selectedCollection}
+        block={selectedBlock}
         account={me}
       />
     </>

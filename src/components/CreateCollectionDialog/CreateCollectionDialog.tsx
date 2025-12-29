@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import type { JazzAccount } from "../../schema.ts";
 import type { co } from "jazz-tools";
-import { Collection } from "../../schema.ts";
+import { Block, BlockList } from "../../schema.ts";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import styles from "./CreateCollectionDialog.module.css";
@@ -56,24 +56,29 @@ export function CreateCollectionDialog({
         return;
       }
 
-      if (!account.root.collections.$isLoaded) {
-        formik.setFieldError("name", "Collections not loaded");
-        return;
-      }
-
       try {
-        const newCollection = Collection.create(
+        // Create the collection block (no parentId = top-level)
+        const newCollectionBlock = Block.create(
           {
+            type: "collection",
             name: values.name.trim(),
-            description: values.description.trim() || undefined,
-            color: values.color,
-            links: [],
+            collectionData: {
+              description: values.description.trim() || undefined,
+              color: values.color,
+              viewMode: "grid",
+            },
             createdAt: new Date(),
           },
           account.$jazz,
         );
 
-        account.root.collections.$jazz.push(newCollection);
+        // Ensure blocks exists and add the new collection
+        if (!account.root.blocks) {
+          const blocksList = BlockList.create([newCollectionBlock], account);
+          account.root.$jazz.set("blocks", blocksList);
+        } else if (account.root.blocks.$isLoaded) {
+          account.root.blocks.$jazz.push(newCollectionBlock);
+        }
 
         showToast({
           title: "Collection created",

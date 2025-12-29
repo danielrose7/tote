@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Collection, JazzAccount, ProductLink } from "../../schema.ts";
+import type { Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { ProductCard } from "../ProductCard/ProductCard";
 import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
@@ -7,6 +7,8 @@ import { TableView } from "./TableView";
 import styles from "./CollectionView.module.css";
 
 const VIEW_MODE_STORAGE_KEY = "tote:viewMode";
+
+type LoadedBlock = co.loaded<typeof Block>;
 
 interface ExtractedMetadata {
   title?: string;
@@ -86,55 +88,68 @@ async function refreshViaServer(url: string): Promise<ExtractedMetadata | null> 
   }
 }
 
-async function refreshLinkMetadata(
-  link: co.loaded<typeof ProductLink>,
+async function refreshBlockMetadata(
+  block: LoadedBlock,
   useExtension: boolean
 ): Promise<boolean> {
+  const productData = block.productData;
+  if (!productData) return false;
+
   try {
     // Try extension first if available, then fall back to server
     let metadata: ExtractedMetadata | null = null;
 
     if (useExtension) {
-      metadata = await refreshViaExtension(link.url);
+      metadata = await refreshViaExtension(productData.url);
     }
 
     if (!metadata) {
-      metadata = await refreshViaServer(link.url);
+      metadata = await refreshViaServer(productData.url);
     }
 
     if (!metadata) return false;
 
-    // Update the link with new metadata
-    if (metadata.title) link.$jazz.set("title", metadata.title);
-    if (metadata.description) link.$jazz.set("description", metadata.description);
-    if (metadata.imageUrl) link.$jazz.set("imageUrl", metadata.imageUrl);
-    if (metadata.price) link.$jazz.set("price", metadata.price);
+    // Update the block with new metadata
+    const updatedProductData = { ...productData };
+    if (metadata.title) {
+      block.$jazz.set("name", metadata.title);
+    }
+    if (metadata.description) {
+      updatedProductData.description = metadata.description;
+    }
+    if (metadata.imageUrl) {
+      updatedProductData.imageUrl = metadata.imageUrl;
+    }
+    if (metadata.price) {
+      updatedProductData.price = metadata.price;
+    }
+    block.$jazz.set("productData", updatedProductData);
 
     return true;
   } catch (error) {
-    console.error("[Tote] Failed to refresh link:", error);
+    console.error("[Tote] Failed to refresh block:", error);
     return false;
   }
 }
 
 interface CollectionViewProps {
-  account: co.loaded<typeof JazzAccount>;
-  collectionId: string;
-  onEditLink?: (link: co.loaded<typeof ProductLink>) => void;
-  onDeleteLink?: (link: co.loaded<typeof ProductLink>) => void;
-  onEditCollection?: (collection: co.loaded<typeof Collection>) => void;
+  collectionBlock: LoadedBlock;
+  allBlocks: LoadedBlock[];  // All blocks to find children by parentId
+  onEditBlock?: (block: LoadedBlock) => void;
+  onDeleteBlock?: (block: LoadedBlock) => void;
+  onEditCollection?: (block: LoadedBlock) => void;
   onBackToCollections?: () => void;
 }
 
 export function CollectionView({
-  account,
-  collectionId,
-  onEditLink,
-  onDeleteLink,
+  collectionBlock,
+  allBlocks,
+  onEditBlock,
+  onDeleteBlock,
   onEditCollection,
   onBackToCollections,
 }: CollectionViewProps) {
-  const [refreshingLinkId, setRefreshingLinkId] = useState<string | null>(null);
+  const [refreshingBlockId, setRefreshingBlockId] = useState<string | null>(null);
   const [refreshAllProgress, setRefreshAllProgress] = useState<{
     current: number;
     total: number;
@@ -160,78 +175,36 @@ export function CollectionView({
     checkExtensionAvailable().then(setExtensionAvailable);
   }, []);
 
-  const handleRefreshLink = async (link: co.loaded<typeof ProductLink>) => {
-    setRefreshingLinkId(link.$jazz.id);
-    await refreshLinkMetadata(link, extensionAvailable);
-    setRefreshingLinkId(null);
+  const handleRefreshBlock = async (block: LoadedBlock) => {
+    setRefreshingBlockId(block.$jazz.id);
+    await refreshBlockMetadata(block, extensionAvailable);
+    setRefreshingBlockId(null);
   };
 
-  const handleRefreshAll = async (links: co.loaded<typeof ProductLink>[]) => {
-    const validLinks = links.filter((l) => l && l.$isLoaded);
-    setRefreshAllProgress({ current: 0, total: validLinks.length });
+  const handleRefreshAll = async (blocks: LoadedBlock[]) => {
+    const validBlocks = blocks.filter((b) => b && b.$isLoaded && b.type === "product");
+    setRefreshAllProgress({ current: 0, total: validBlocks.length });
 
-    for (let i = 0; i < validLinks.length; i++) {
-      const link = validLinks[i];
-      setRefreshingLinkId(link.$jazz.id);
-      await refreshLinkMetadata(link, extensionAvailable);
-      setRefreshAllProgress({ current: i + 1, total: validLinks.length });
+    for (let i = 0; i < validBlocks.length; i++) {
+      const block = validBlocks[i];
+      setRefreshingBlockId(block.$jazz.id);
+      await refreshBlockMetadata(block, extensionAvailable);
+      setRefreshAllProgress({ current: i + 1, total: validBlocks.length });
     }
 
-    setRefreshingLinkId(null);
+    setRefreshingBlockId(null);
     setRefreshAllProgress(null);
   };
 
-  if (!account.root || !account.root.$isLoaded) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading...</div>
-      </div>
-    );
-  }
+  const collectionData = collectionBlock.collectionData;
+  const collectionId = collectionBlock.$jazz.id;
 
-  const collections = account.root.collections;
-
-  if (!collections.$isLoaded) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading...</div>
-      </div>
-    );
-  }
-
-  // Find the collection by ID
-  const collection = collections.find(
-    (c) => c && c.$isLoaded && c.$jazz.id === collectionId
-  ) as co.loaded<typeof Collection> | undefined;
-
-  if (!collection) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.error}>
-          <h2>Collection not found</h2>
-          <p>This collection may have been deleted or does not exist.</p>
-          {onBackToCollections && (
-            <button
-              type="button"
-              onClick={onBackToCollections}
-              className={styles.backButton}
-            >
-              ← Back to Collections
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  const links = collection.links;
-
-  if (!links.$isLoaded) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.loading}>Loading links...</div>
-      </div>
-    );
+  // Get product blocks by filtering allBlocks by parentId
+  const productBlocks: LoadedBlock[] = [];
+  for (const block of allBlocks) {
+    if (block && block.$isLoaded && block.type === "product" && block.parentId === collectionId) {
+      productBlocks.push(block);
+    }
   }
 
   return (
@@ -249,17 +222,17 @@ export function CollectionView({
         )}
         <div className={styles.headerContent}>
           <div className={styles.titleSection}>
-            {collection.color && (
+            {collectionData?.color && (
               <div
                 className={styles.colorIndicator}
-                style={{ backgroundColor: collection.color }}
+                style={{ backgroundColor: collectionData.color }}
               />
             )}
-            <h1 className={styles.title}>{collection.name}</h1>
+            <h1 className={styles.title}>{collectionBlock.name}</h1>
             {onEditCollection && (
               <button
                 type="button"
-                onClick={() => onEditCollection(collection)}
+                onClick={() => onEditCollection(collectionBlock)}
                 className={styles.settingsButton}
                 aria-label="Edit collection"
               >
@@ -279,26 +252,26 @@ export function CollectionView({
               </button>
             )}
           </div>
-          {collection.description && (
-            <p className={styles.description}>{collection.description}</p>
+          {collectionData?.description && (
+            <p className={styles.description}>{collectionData.description}</p>
           )}
           <div className={styles.meta}>
             <span className={styles.count}>
-              {links.length} {links.length === 1 ? 'item' : 'items'}
+              {productBlocks.length} {productBlocks.length === 1 ? 'item' : 'items'}
             </span>
             <span className={styles.date}>
-              Created {collection.createdAt.toLocaleDateString("en-US", {
+              Created {collectionBlock.createdAt.toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "short",
                 day: "numeric",
               })}
             </span>
           </div>
-          {links.length > 0 && (
+          {productBlocks.length > 0 && (
             <div className={styles.actions}>
               <button
                 type="button"
-                onClick={() => handleRefreshAll(links as co.loaded<typeof ProductLink>[])}
+                onClick={() => handleRefreshAll(productBlocks)}
                 className={styles.refreshAllButton}
                 disabled={refreshAllProgress !== null}
               >
@@ -324,8 +297,8 @@ export function CollectionView({
         </div>
       </div>
 
-      {/* Links */}
-      {links.length === 0 ? (
+      {/* Products */}
+      {productBlocks.length === 0 ? (
         <div className={styles.empty}>
           <svg
             className={styles.emptyIcon}
@@ -340,32 +313,29 @@ export function CollectionView({
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          <h2 className={styles.emptyTitle}>No links in this collection</h2>
+          <h2 className={styles.emptyTitle}>No items in this collection</h2>
           <p className={styles.emptyDescription}>
-            Add links to this collection to get started
+            Add items to this collection to get started
           </p>
         </div>
       ) : viewMode === "table" ? (
         <TableView
-          links={links.filter((l): l is co.loaded<typeof ProductLink> => l !== null && l.$isLoaded)}
-          onEdit={onEditLink}
-          onDelete={onDeleteLink}
-          onRefresh={handleRefreshLink}
+          blocks={productBlocks}
+          onEdit={onEditBlock}
+          onDelete={onDeleteBlock}
+          onRefresh={handleRefreshBlock}
         />
       ) : (
         <div className={styles.grid}>
-          {links.map((link) => {
-            if (!link || !link.$isLoaded) return null;
-            return (
-              <ProductCard
-                key={link.$jazz.id}
-                link={link}
-                onEdit={onEditLink}
-                onDelete={onDeleteLink}
-                onRefresh={handleRefreshLink}
-              />
-            );
-          })}
+          {productBlocks.map((block) => (
+            <ProductCard
+              key={block.$jazz.id}
+              block={block}
+              onEdit={onEditBlock}
+              onDelete={onDeleteBlock}
+              onRefresh={handleRefreshBlock}
+            />
+          ))}
         </div>
       )}
     </div>

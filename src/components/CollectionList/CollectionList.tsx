@@ -1,13 +1,15 @@
-import type { Collection, JazzAccount } from "../../schema.ts";
+import type { Block, JazzAccount } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { CollectionCard } from "../CollectionCard/CollectionCard";
 import styles from "./CollectionList.module.css";
 
+type LoadedBlock = co.loaded<typeof Block>;
+
 interface CollectionListProps {
   account: co.loaded<typeof JazzAccount>;
-  onEditCollection?: (collection: co.loaded<typeof Collection>) => void;
-  onDeleteCollection?: (collection: co.loaded<typeof Collection>) => void;
-  onSelectCollection?: (collection: co.loaded<typeof Collection>) => void;
+  onEditCollection?: (block: LoadedBlock) => void;
+  onDeleteCollection?: (block: LoadedBlock) => void;
+  onSelectCollection?: (block: LoadedBlock) => void;
 }
 
 export function CollectionList({
@@ -24,9 +26,9 @@ export function CollectionList({
     );
   }
 
-  const collections = account.root.collections;
+  const blocks = account.root.blocks;
 
-  if (!collections.$isLoaded) {
+  if (!blocks || !blocks.$isLoaded) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>Loading...</div>
@@ -34,7 +36,15 @@ export function CollectionList({
     );
   }
 
-  if (collections.length === 0) {
+  // Filter to only top-level collection blocks (no parentId)
+  const collectionBlocks: LoadedBlock[] = [];
+  for (const block of blocks) {
+    if (block && block.$isLoaded && block.type === "collection" && !block.parentId) {
+      collectionBlocks.push(block);
+    }
+  }
+
+  if (collectionBlocks.length === 0) {
     return (
       <div className={styles.container}>
         <div className={styles.empty}>
@@ -60,21 +70,27 @@ export function CollectionList({
     );
   }
 
+  // Get all loaded blocks for child lookup
+  const allBlocks: LoadedBlock[] = [];
+  for (const block of blocks) {
+    if (block && block.$isLoaded) {
+      allBlocks.push(block);
+    }
+  }
+
   return (
     <div className={styles.container}>
       <div className={styles.grid}>
-        {collections.map((collection) => {
-          if (!collection || !collection.$isLoaded) return null;
-          return (
-            <CollectionCard
-              key={collection.$jazz.id}
-              collection={collection}
-              onEdit={onEditCollection}
-              onDelete={onDeleteCollection}
-              onClick={onSelectCollection}
-            />
-          );
-        })}
+        {collectionBlocks.map((block) => (
+          <CollectionCard
+            key={block.$jazz.id}
+            block={block}
+            allBlocks={allBlocks}
+            onEdit={onEditCollection}
+            onDelete={onDeleteCollection}
+            onClick={onSelectCollection}
+          />
+        ))}
       </div>
     </div>
   );

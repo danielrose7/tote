@@ -1,8 +1,9 @@
-import React, { useEffect, useState, Component, ErrorInfo, ReactNode } from "react";
+import { useEffect, useState, Component, ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { SignedIn, SignedOut, useAuth } from "@clerk/chrome-extension";
 import { useAccount } from "jazz-tools/react";
-import { JazzAccount, ProductLink } from "@tote/schema";
+import { JazzAccount, Block } from "@tote/schema";
+import type { co } from "jazz-tools";
 import { ExtensionProviders, JazzProvider } from "../providers/ExtensionProviders";
 import { SYNC_HOST } from "../config";
 import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
@@ -136,11 +137,11 @@ function SaveUI({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get user's Jazz account with collections loaded
+  // Get user's Jazz account with blocks loaded
   const me = useAccount(JazzAccount, {
     resolve: {
       root: {
-        collections: { $each: { links: true } },
+        blocks: { $each: {} },
       },
     },
   });
@@ -148,21 +149,29 @@ function SaveUI({
   // Check if account and root are loaded
   const isLoaded = me && "$isLoaded" in me && me.$isLoaded;
   const root = isLoaded ? me.root : null;
-  const collectionsLoaded = root && "$isLoaded" in root && root.$isLoaded;
-  const collections =
-    collectionsLoaded && root.collections?.$isLoaded ? root.collections : [];
+  const rootLoaded = root && "$isLoaded" in root && root.$isLoaded;
+
+  // Get collection blocks (top-level collections without parentId)
+  type LoadedBlock = co.loaded<typeof Block>;
+  const collections: LoadedBlock[] = [];
+  if (rootLoaded && root.blocks?.$isLoaded) {
+    for (const b of Array.from(root.blocks)) {
+      if (b && b.$isLoaded && b.type === "collection" && !b.parentId) {
+        collections.push(b as LoadedBlock);
+      }
+    }
+  }
 
   // Set default collection when collections load
   // Use the user's default collection, or fall back to the first one
   useEffect(() => {
     if (collections.length > 0 && !selectedCollection) {
-      const defaultId = root?.defaultCollectionId;
+      const defaultId = root?.defaultBlockId;
 
       // Try to use the user's default collection
       if (defaultId) {
         const defaultCollection = collections.find(
-          (c): c is NonNullable<typeof c> =>
-            c !== null && c.$isLoaded && c.$jazz.id === defaultId
+          (c) => c.$jazz.id === defaultId
         );
         if (defaultCollection) {
           setSelectedCollection(defaultCollection.$jazz.id);
@@ -172,14 +181,14 @@ function SaveUI({
 
       // Fall back to first collection
       const firstCollection = collections[0];
-      if (firstCollection && firstCollection.$isLoaded) {
+      if (firstCollection) {
         setSelectedCollection(firstCollection.$jazz.id);
       }
     }
-  }, [collections, selectedCollection, root?.defaultCollectionId]);
+  }, [collections, selectedCollection, root?.defaultBlockId]);
 
   const handleSave = async () => {
-    if (!me || !isLoaded || !root || !selectedCollection) {
+    if (!me || !isLoaded || !root || !root.blocks?.$isLoaded || !selectedCollection) {
       setError("No collection selected");
       return;
     }
@@ -190,32 +199,37 @@ function SaveUI({
     try {
       // Find the selected collection
       const collection = collections.find(
-        (c): c is NonNullable<typeof c> =>
-          c !== null && c.$isLoaded && c.$jazz.id === selectedCollection
+        (c) => c.$jazz.id === selectedCollection
       );
 
-      if (!collection || !collection.links?.$isLoaded) {
+      if (!collection) {
         throw new Error("Collection not found");
       }
 
-      // Create a new ProductLink directly in Jazz
-      const newLink = ProductLink.create(
+      // Create a new product Block directly in Jazz
+      // Use the root blocks' owner for proper permissions
+      const newProductBlock = Block.create(
         {
-          url: metadata.url,
-          title: metadata.title,
-          description: metadata.description,
-          imageUrl: metadata.imageUrl,
-          price: metadata.price,
-          addedAt: new Date(),
+          type: "product",
+          name: metadata.title || "Untitled",
+          productData: {
+            url: metadata.url,
+            imageUrl: metadata.imageUrl,
+            price: metadata.price,
+            description: metadata.description,
+            status: "considering",
+          },
+          parentId: selectedCollection, // Link to the collection
+          createdAt: new Date(),
         },
-        collection.$jazz.owner
+        { owner: root.blocks.$jazz.owner }
       );
 
-      // Add to the collection's links
-      collection.links.$jazz.push(newLink);
+      // Add to root blocks
+      root.blocks.$jazz.push(newProductBlock);
 
       // Wait for sync to complete before showing success
-      await collection.links.$jazz.waitForSync({ timeout: 5000 });
+      await root.blocks.$jazz.waitForSync({ timeout: 5000 });
 
       onSuccess();
     } catch (err) {
@@ -226,7 +240,7 @@ function SaveUI({
   };
 
   // Loading state while Jazz loads
-  if (!isLoaded || !collectionsLoaded) {
+  if (!isLoaded || !rootLoaded) {
     return (
       <div className="loading">
         <div className="spinner" />
@@ -255,14 +269,11 @@ function SaveUI({
           onChange={(e) => setSelectedCollection(e.target.value)}
           disabled={saving}
         >
-          {collections.map((col) => {
-            if (!col || !col.$isLoaded) return null;
-            return (
-              <option key={col.$jazz.id} value={col.$jazz.id}>
-                {col.name || "Unnamed collection"}
-              </option>
-            );
-          })}
+          {collections.map((col) => (
+            <option key={col.$jazz.id} value={col.$jazz.id}>
+              {col.name || "Unnamed collection"}
+            </option>
+          ))}
         </select>
       </div>
 

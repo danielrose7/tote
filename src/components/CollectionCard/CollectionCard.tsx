@@ -1,48 +1,57 @@
 import { useState } from "react";
-import type { Collection } from "../../schema.ts";
+import type { Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import styles from "./CollectionCard.module.css";
 
+type LoadedBlock = co.loaded<typeof Block>;
+
 interface CollectionCardProps {
-  collection: co.loaded<typeof Collection>;
-  onEdit?: (collection: co.loaded<typeof Collection>) => void;
-  onDelete?: (collection: co.loaded<typeof Collection>) => void;
-  onClick?: (collection: co.loaded<typeof Collection>) => void;
+  block: LoadedBlock;
+  allBlocks: LoadedBlock[];  // All blocks to find children by parentId
+  onEdit?: (block: LoadedBlock) => void;
+  onDelete?: (block: LoadedBlock) => void;
+  onClick?: (block: LoadedBlock) => void;
 }
 
 export function CollectionCard({
-  collection,
+  block,
+  allBlocks,
   onEdit,
   onDelete,
   onClick,
 }: CollectionCardProps) {
   const [showActions, setShowActions] = useState(false);
 
-  const formattedDate = collection.createdAt.toLocaleDateString("en-US", {
+  const collectionData = block.collectionData;
+  const blockId = block.$jazz.id;
+
+  const formattedDate = block.createdAt.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
-  const linkCount = collection.links?.$isLoaded ? collection.links.length : 0;
-
-  // Get preview images from first few links
-  const previewImages = collection.links?.$isLoaded
-    ? collection.links
-        .slice(0, 4)
-        .map((link) => link?.$isLoaded ? link.imageUrl : undefined)
-        .filter((url): url is string => !!url)
-    : [];
+  // Count product children by filtering allBlocks by parentId
+  let linkCount = 0;
+  const previewImages: string[] = [];
+  for (const child of allBlocks) {
+    if (child && child.$isLoaded && child.type === "product" && child.parentId === blockId) {
+      linkCount++;
+      if (previewImages.length < 4 && child.productData?.imageUrl) {
+        previewImages.push(child.productData.imageUrl);
+      }
+    }
+  }
 
   return (
     <article
       className={styles.card}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
-      onClick={() => onClick?.(collection)}
+      onClick={() => onClick?.(block)}
       style={
         {
-          "--collection-color": collection.color || "var(--color-accent)",
+          "--collection-color": collectionData?.color || "var(--color-accent)",
         } as React.CSSProperties
       }
     >
@@ -88,7 +97,7 @@ export function CollectionCard({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onEdit(collection);
+                onEdit(block);
               }}
               className={styles.actionButton}
               aria-label="Edit collection"
@@ -108,7 +117,7 @@ export function CollectionCard({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(collection);
+                onDelete(block);
               }}
               className={`${styles.actionButton} ${styles.actionButtonDanger}`}
               aria-label="Delete collection"
@@ -129,15 +138,15 @@ export function CollectionCard({
       {/* Content Section */}
       <div className={styles.content}>
         <div className={styles.header}>
-          <h3 className={styles.title}>{collection.name || "Untitled Collection"}</h3>
+          <h3 className={styles.title}>{block.name || "Untitled Collection"}</h3>
         </div>
 
-        {collection.description && (
-          <p className={styles.description}>{collection.description}</p>
+        {collectionData?.description && (
+          <p className={styles.description}>{collectionData.description}</p>
         )}
 
         <div className={styles.footer}>
-          <span className={styles.date} title={collection.createdAt.toLocaleString()}>
+          <span className={styles.date} title={block.createdAt.toLocaleString()}>
             Created {formattedDate}
           </span>
         </div>

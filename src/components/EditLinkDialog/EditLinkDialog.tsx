@@ -2,14 +2,16 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import type { ProductLink } from "../../schema.ts";
+import type { Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import styles from "./EditLinkDialog.module.css";
+
+type LoadedBlock = co.loaded<typeof Block>;
 
 interface EditLinkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  link: co.loaded<typeof ProductLink> | null;
+  block: LoadedBlock | null;
 }
 
 const validationSchema = Yup.object({
@@ -17,53 +19,57 @@ const validationSchema = Yup.object({
   description: Yup.string(),
   notes: Yup.string(),
   price: Yup.string(),
-  tags: Yup.string(),
+  status: Yup.string(),
 });
 
 export function EditLinkDialog({
   open,
   onOpenChange,
-  link,
+  block,
 }: EditLinkDialogProps) {
+  const productData = block?.productData;
+
   const formik = useFormik({
     initialValues: {
       title: "",
       description: "",
       notes: "",
       price: "",
-      tags: "",
+      status: "considering" as "considering" | "selected" | "ruled-out",
     },
     validationSchema,
     onSubmit: async (values) => {
-      if (!link) return;
+      if (!block || !block.productData) return;
 
-      link.$jazz.set("title", values.title || undefined);
-      link.$jazz.set("description", values.description || undefined);
-      link.$jazz.set("notes", values.notes || undefined);
-      link.$jazz.set("price", values.price || undefined);
+      // Update block name
+      block.$jazz.set("name", values.title || block.name);
 
-      const tagArray = values.tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0);
-      link.$jazz.set("tags", tagArray.length > 0 ? tagArray : undefined);
+      // Update productData
+      const updatedProductData = {
+        ...block.productData,
+        description: values.description || undefined,
+        notes: values.notes || undefined,
+        price: values.price || undefined,
+        status: values.status,
+      };
+      block.$jazz.set("productData", updatedProductData);
 
       onOpenChange(false);
     },
   });
 
-  // Update form values when link changes
+  // Update form values when block changes
   useEffect(() => {
-    if (link) {
+    if (block && productData) {
       formik.setValues({
-        title: link.title || "",
-        description: link.description || "",
-        notes: link.notes || "",
-        price: link.price || "",
-        tags: link.tags?.join(", ") || "",
+        title: block.name || "",
+        description: productData.description || "",
+        notes: productData.notes || "",
+        price: productData.price || "",
+        status: productData.status || "considering",
       });
     }
-  }, [link]);
+  }, [block, productData]);
 
   const handleClose = () => {
     onOpenChange(false);
@@ -138,21 +144,23 @@ export function EditLinkDialog({
             </div>
 
             <div className={styles.inputGroup}>
-              <label htmlFor="tags" className={styles.label}>
-                Tags <span className={styles.hint}>(comma-separated)</span>
+              <label htmlFor="status" className={styles.label}>
+                Status
               </label>
-              <input
-                id="tags"
-                name="tags"
-                type="text"
-                value={formik.values.tags}
+              <select
+                id="status"
+                name="status"
+                value={formik.values.status}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                placeholder="electronics, gift ideas, wishlist"
-                className={styles.input}
-              />
-              {formik.touched.tags && formik.errors.tags && (
-                <div className={styles.error}>{formik.errors.tags}</div>
+                className={styles.select}
+              >
+                <option value="considering">Considering</option>
+                <option value="selected">Selected</option>
+                <option value="ruled-out">Ruled out</option>
+              </select>
+              {formik.touched.status && formik.errors.status && (
+                <div className={styles.error}>{formik.errors.status}</div>
               )}
             </div>
 
@@ -178,12 +186,12 @@ export function EditLinkDialog({
             <div className={styles.urlDisplay}>
               <label className={styles.label}>URL</label>
               <a
-                href={link?.url}
+                href={productData?.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.urlLink}
               >
-                {link?.url}
+                {productData?.url}
               </a>
             </div>
 

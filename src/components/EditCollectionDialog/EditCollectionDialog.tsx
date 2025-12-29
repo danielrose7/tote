@@ -2,16 +2,18 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import type { Collection, JazzAccount } from "../../schema.ts";
+import type { Block, JazzAccount } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import styles from "./EditCollectionDialog.module.css";
 
+type LoadedBlock = co.loaded<typeof Block>;
+
 interface EditCollectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  collection: co.loaded<typeof Collection> | null;
+  block: LoadedBlock | null;
   account: co.loaded<typeof JazzAccount>;
 }
 
@@ -39,14 +41,16 @@ const validationSchema = Yup.object({
 export function EditCollectionDialog({
   open,
   onOpenChange,
-  collection,
+  block,
   account,
 }: EditCollectionDialogProps) {
   const { showToast } = useToast();
   const isOnline = useOnlineStatus();
 
+  const collectionData = block?.collectionData;
+
   const isDefault = account.root?.$isLoaded
-    ? account.root.defaultCollectionId === collection?.$jazz.id
+    ? account.root.defaultBlockId === block?.$jazz.id
     : false;
 
   const formik = useFormik({
@@ -57,11 +61,17 @@ export function EditCollectionDialog({
     },
     validationSchema,
     onSubmit: async (values) => {
-      if (!collection) return;
+      if (!block) return;
 
-      collection.$jazz.set("name", values.name.trim());
-      collection.$jazz.set("description", values.description.trim() || undefined);
-      collection.$jazz.set("color", values.color);
+      // Update block name
+      block.$jazz.set("name", values.name.trim());
+
+      // Update collectionData
+      block.$jazz.set("collectionData", {
+        ...block.collectionData,
+        description: values.description.trim() || undefined,
+        color: values.color,
+      });
 
       showToast({
         title: "Collection updated",
@@ -73,25 +83,25 @@ export function EditCollectionDialog({
     },
   });
 
-  // Update form values when collection changes
+  // Update form values when block changes
   useEffect(() => {
-    if (collection) {
+    if (block) {
       formik.setValues({
-        name: collection.name || "",
-        description: collection.description || "",
-        color: collection.color || PRESET_COLORS[0],
+        name: block.name || "",
+        description: collectionData?.description || "",
+        color: collectionData?.color || PRESET_COLORS[0],
       });
     }
-  }, [collection]);
+  }, [block, collectionData]);
 
   const handleSetAsDefault = () => {
-    if (!collection || !account.root || !account.root.$isLoaded) return;
+    if (!block || !account.root || !account.root.$isLoaded) return;
 
-    account.root.$jazz.set("defaultCollectionId", collection.$jazz.id);
+    account.root.$jazz.set("defaultBlockId", block.$jazz.id);
 
     showToast({
       title: "Default collection set",
-      description: `"${collection.name}" is now your default collection${!isOnline ? " (will sync when online)" : ""}`,
+      description: `"${block.name}" is now your default collection${!isOnline ? " (will sync when online)" : ""}`,
       variant: "success",
     });
   };

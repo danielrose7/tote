@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { AuthButton } from "../AuthButton";
-import { JazzAccount } from "../schema";
+import { JazzAccount, Block, BlockList } from "../schema";
 import styles from "./landing.module.css";
 
 export default function HomePage() {
@@ -15,41 +14,56 @@ export default function HomePage() {
     resolve: {
       profile: true,
       root: {
-        links: { $each: {} },
-        collections: { $each: { links: { $each: {} } } }
+        blocks: { $each: {} }
       }
     },
   });
 
   const handleGetStarted = () => {
-    if (me.$isLoaded && me.root?.$isLoaded && me.root.collections?.$isLoaded) {
+    if (!me.$isLoaded || !me.root?.$isLoaded) return;
+
+    // Get collection blocks
+    const blocks = me.root.blocks;
+    const collectionBlocks = blocks?.$isLoaded
+      ? Array.from(blocks).filter(b => b?.$isLoaded && b.type === "collection" && !b.parentId)
+      : [];
+
+    if (collectionBlocks.length === 0) {
       // Create default collection if none exists
-      if (me.root.collections.length === 0) {
-        const { Collection } = require("../schema");
-        const defaultCollection = Collection.create(
-          {
-            name: "My Links",
+      const defaultCollection = Block.create(
+        {
+          type: "collection",
+          name: "My Links",
+          collectionData: {
             description: "Your personal collection of product links",
             color: "#6366f1",
-            links: [],
-            createdAt: new Date(),
+            viewMode: "grid",
           },
-          me.$jazz,
-        );
-        me.root.collections.$jazz.push(defaultCollection);
-        me.root.$jazz.set("defaultCollectionId", defaultCollection.$jazz.id);
+          createdAt: new Date(),
+        },
+        me.$jazz,
+      );
 
-        // Navigate to the new collection
-        router.push(`/collections/${defaultCollection.$jazz.id}`);
+      if (!me.root.blocks) {
+        const blocksList = BlockList.create([defaultCollection], me);
+        me.root.$jazz.set("blocks", blocksList);
+      } else if (me.root.blocks.$isLoaded) {
+        me.root.blocks.$jazz.push(defaultCollection);
+      }
+      me.root.$jazz.set("defaultBlockId", defaultCollection.$jazz.id);
+
+      // Navigate to the new collection
+      router.push(`/collections/${defaultCollection.$jazz.id}`);
+    } else {
+      // Navigate to first collection or default
+      const targetCollection = me.root.defaultBlockId
+        ? collectionBlocks.find(c => c.$jazz.id === me.root!.defaultBlockId)
+        : collectionBlocks[0];
+
+      if (targetCollection) {
+        router.push(`/collections/${targetCollection.$jazz.id}`);
       } else {
-        // Navigate to first collection or default
-        const targetCollection = me.root.defaultCollectionId
-          ? me.root.collections.find(c => c?.$isLoaded && c.$jazz.id === me.root!.defaultCollectionId)
-          : me.root.collections[0];
-
-        if (targetCollection?.$isLoaded) {
-          router.push(`/collections/${targetCollection.$jazz.id}`);
-        }
+        router.push("/collections");
       }
     }
   };

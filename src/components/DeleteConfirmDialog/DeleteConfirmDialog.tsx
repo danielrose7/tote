@@ -1,19 +1,21 @@
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
-import type { ProductLink } from "../../schema.ts";
+import type { Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import styles from "./DeleteConfirmDialog.module.css";
+
+type LoadedBlock = co.loaded<typeof Block>;
 
 interface DeleteConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  link: co.loaded<typeof ProductLink> | null;
+  block: LoadedBlock | null;
   onConfirm: () => void;
 }
 
 export function DeleteConfirmDialog({
   open,
   onOpenChange,
-  link,
+  block,
   onConfirm,
 }: DeleteConfirmDialogProps) {
   const handleConfirm = () => {
@@ -31,7 +33,7 @@ export function DeleteConfirmDialog({
           </AlertDialog.Title>
           <AlertDialog.Description className={styles.description}>
             Are you sure you want to delete{" "}
-            <strong>{link?.title || "this link"}</strong>? This action cannot be
+            <strong>{block?.name || "this link"}</strong>? This action cannot be
             undone.
           </AlertDialog.Description>
 

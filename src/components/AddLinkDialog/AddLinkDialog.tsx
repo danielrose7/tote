@@ -2,19 +2,21 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import type { JazzAccount } from "../../schema.ts";
+import type { JazzAccount, Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { fetchMetadata, isValidUrl } from "../../app/utils/metadata";
-import { ProductLink } from "../../schema.ts";
+import { Block as BlockSchema, BlockList } from "../../schema.ts";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import styles from "./AddLinkDialog.module.css";
+
+type LoadedBlock = co.loaded<typeof Block>;
 
 interface AddLinkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   account: co.loaded<typeof JazzAccount>;
-  collectionId?: string; // Optional collection ID to default to
+  collectionId?: string; // Optional collection block ID to default to
 }
 
 const validationSchema = Yup.object({
@@ -33,8 +35,20 @@ export function AddLinkDialog({
   const isOnline = useOnlineStatus();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Default to the provided collection ID, or the account's default collection
-  const defaultCollectionId = collectionId || (account.root?.$isLoaded ? account.root.defaultCollectionId || null : null);
+  // Default to the provided collection ID, or the account's default block
+  const defaultCollectionId = collectionId || (account.root?.$isLoaded ? account.root.defaultBlockId || null : null);
+
+  // Get collection blocks from blocks list
+  const getCollectionBlocks = (): LoadedBlock[] => {
+    if (!account.root?.blocks?.$isLoaded) return [];
+    const blocks: LoadedBlock[] = [];
+    for (const block of account.root.blocks) {
+      if (block && block.$isLoaded && block.type === "collection" && !block.parentId) {
+        blocks.push(block);
+      }
+    }
+    return blocks;
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -44,7 +58,7 @@ export function AddLinkDialog({
     validationSchema,
     onSubmit: async (values) => {
       if (!account.root || !account.root.$isLoaded) return;
-      if (!values.collectionId || !account.root.collections.$isLoaded) return;
+      if (!values.collectionId || !account.root.blocks?.$isLoaded) return;
 
       if (!isOnline) {
         formik.setFieldError(
@@ -59,27 +73,36 @@ export function AddLinkDialog({
       try {
         const metadata = await fetchMetadata(values.url);
 
-        const newLink = ProductLink.create(
+        // Find the collection block to get its name for the toast
+        const collectionBlock = account.root.blocks.find(
+          (b) => b && b.$isLoaded && b.$jazz.id === values.collectionId
+        );
+
+        // Create a product block with parentId set to the collection
+        const newProductBlock = BlockSchema.create(
           {
-            url: metadata.url,
-            title: metadata.title,
-            description: metadata.description,
-            imageUrl: metadata.imageUrl,
-            price: metadata.price,
-            addedAt: new Date(),
+            type: "product",
+            name: metadata.title || "Untitled",
+            productData: {
+              url: metadata.url,
+              imageUrl: metadata.imageUrl,
+              price: metadata.price,
+              description: metadata.description,
+              status: "considering",
+            },
+            parentId: values.collectionId,  // Set parent to collection
+            createdAt: new Date(),
           },
           account.$jazz,
         );
 
-        // Add to selected collection
-        const collection = account.root.collections.find(
-          (c) => c && c.$isLoaded && c.$jazz.id === values.collectionId
-        );
-        if (collection && collection.$isLoaded && collection.links.$isLoaded) {
-          collection.links.$jazz.push(newLink);
+        // Add the product block to the flat blocks list
+        account.root.blocks.$jazz.push(newProductBlock);
+
+        if (collectionBlock && collectionBlock.$isLoaded) {
           showToast({
             title: "Link added",
-            description: `"${metadata.title || "Link"}" has been added to ${collection.name}`,
+            description: `"${metadata.title || "Link"}" has been added to ${collectionBlock.name}`,
             variant: "success",
           });
         }
@@ -140,31 +163,32 @@ export function AddLinkDialog({
             </div>
 
             {/* Collection Selector */}
-            {account.root?.collections?.$isLoaded && account.root.collections.length > 0 && (
-              <div className={styles.inputGroup}>
-                <label htmlFor="collectionId" className={styles.label}>
-                  Collection
-                </label>
-                <select
-                  id="collectionId"
-                  name="collectionId"
-                  value={formik.values.collectionId}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  className={styles.select}
-                  disabled={isLoading}
-                >
-                  {account.root.collections.map((collection) => {
-                    if (!collection || !collection.$isLoaded) return null;
-                    return (
-                      <option key={collection.$jazz.id} value={collection.$jazz.id}>
-                        {collection.name}
+            {(() => {
+              const collectionBlocks = getCollectionBlocks();
+              if (collectionBlocks.length === 0) return null;
+              return (
+                <div className={styles.inputGroup}>
+                  <label htmlFor="collectionId" className={styles.label}>
+                    Collection
+                  </label>
+                  <select
+                    id="collectionId"
+                    name="collectionId"
+                    value={formik.values.collectionId}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className={styles.select}
+                    disabled={isLoading}
+                  >
+                    {collectionBlocks.map((block) => (
+                      <option key={block.$jazz.id} value={block.$jazz.id}>
+                        {block.name}
                       </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
+                    ))}
+                  </select>
+                </div>
+              );
+            })()}
 
             <div className={styles.actions}>
               <Dialog.Close asChild>

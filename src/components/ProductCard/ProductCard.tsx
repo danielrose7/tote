@@ -1,28 +1,33 @@
 import { useState } from "react";
-import type { ProductLink } from "../../schema.ts";
+import type { Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import styles from "./ProductCard.module.css";
 
+type LoadedBlock = co.loaded<typeof Block>;
+
 interface ProductCardProps {
-  link: co.loaded<typeof ProductLink>;
-  onEdit?: (link: co.loaded<typeof ProductLink>) => void;
-  onDelete?: (link: co.loaded<typeof ProductLink>) => void;
-  onRefresh?: (link: co.loaded<typeof ProductLink>) => void;
+  block: LoadedBlock;
+  onEdit?: (block: LoadedBlock) => void;
+  onDelete?: (block: LoadedBlock) => void;
+  onRefresh?: (block: LoadedBlock) => void;
 }
 
-export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardProps) {
+export function ProductCard({ block, onEdit, onDelete, onRefresh }: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const formattedDate = link.addedAt.toLocaleDateString("en-US", {
+  const productData = block.productData;
+  if (!productData) return null;
+
+  const formattedDate = block.createdAt.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
-  const hasImage = link.imageUrl && !imageError;
+  const hasImage = productData.imageUrl && !imageError;
 
   return (
     <article
@@ -35,15 +40,15 @@ export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardPr
         <div className={styles.imageContainer}>
           {!imageLoaded && <div className={styles.imageSkeleton} />}
           <img
-            src={link.imageUrl}
-            alt={link.title || "Product"}
+            src={productData.imageUrl}
+            alt={block.name || "Product"}
             className={`${styles.image} ${imageLoaded ? styles.imageLoaded : ""}`}
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
           />
-          {link.price && (
+          {productData.price && (
             <div className={styles.priceOverlay}>
-              <span className={styles.priceTag}>{link.price}</span>
+              <span className={styles.priceTag}>{productData.price}</span>
             </div>
           )}
         </div>
@@ -62,9 +67,9 @@ export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardPr
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          {link.price && (
+          {productData.price && (
             <div className={styles.priceOverlay}>
-              <span className={styles.priceTag}>{link.price}</span>
+              <span className={styles.priceTag}>{productData.price}</span>
             </div>
           )}
         </div>
@@ -78,7 +83,7 @@ export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardPr
               type="button"
               onClick={async () => {
                 setIsRefreshing(true);
-                await onRefresh(link);
+                await onRefresh(block);
                 setIsRefreshing(false);
               }}
               className={`${styles.actionButton} ${isRefreshing ? styles.actionButtonSpinning : ""}`}
@@ -93,7 +98,7 @@ export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardPr
           {onEdit && (
             <button
               type="button"
-              onClick={() => onEdit(link)}
+              onClick={() => onEdit(block)}
               className={styles.actionButton}
               aria-label="Edit product"
             >
@@ -105,7 +110,7 @@ export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardPr
           {onDelete && (
             <button
               type="button"
-              onClick={() => onDelete(link)}
+              onClick={() => onDelete(block)}
               className={`${styles.actionButton} ${styles.actionButtonDanger}`}
               aria-label="Delete product"
             >
@@ -120,28 +125,22 @@ export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardPr
       {/* Content Section */}
       <div className={styles.content}>
         <div className={styles.header}>
-          <h3 className={styles.title}>{link.title || "Untitled"}</h3>
-          {link.tags && link.tags.length > 0 && (
-            <div className={styles.tags}>
-              {link.tags.slice(0, 2).map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {tag}
-                </span>
-              ))}
-              {link.tags.length > 2 && (
-                <span className={styles.tag}>+{link.tags.length - 2}</span>
-              )}
-            </div>
+          <h3 className={styles.title}>{block.name || "Untitled"}</h3>
+          {/* Status badge for product blocks */}
+          {productData.status && productData.status !== "considering" && (
+            <span className={`${styles.statusBadge} ${styles[`status_${productData.status}`]}`}>
+              {productData.status === "selected" ? "Selected" : "Ruled out"}
+            </span>
           )}
         </div>
 
-        {link.description && (
-          <p className={styles.description}>{link.description}</p>
+        {productData.description && (
+          <p className={styles.description}>{productData.description}</p>
         )}
 
         <div className={styles.footer}>
           <a
-            href={link.url}
+            href={productData.url}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.link}
@@ -149,7 +148,7 @@ export function ProductCard({ link, onEdit, onDelete, onRefresh }: ProductCardPr
           >
             Visit →
           </a>
-          <span className={styles.date} title={link.addedAt.toLocaleString()}>
+          <span className={styles.date} title={block.createdAt.toLocaleString()}>
             {formattedDate}
           </span>
         </div>

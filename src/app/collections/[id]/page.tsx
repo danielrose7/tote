@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter, useParams } from "next/navigation";
-import { JazzAccount, type ProductLink } from "../../../schema";
+import { JazzAccount, type Block, BlockList } from "../../../schema";
 import type { co } from "jazz-tools";
 import { Header } from "../../../components/Header";
 import { CollectionView } from "../../../components/CollectionView/CollectionView";
@@ -12,6 +12,8 @@ import { EditLinkDialog } from "../../../components/EditLinkDialog";
 import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
 import { DeleteConfirmDialog } from "../../../components/DeleteConfirmDialog";
 import { useToast } from "../../../components/ToastNotification";
+
+type LoadedBlock = co.loaded<typeof Block>;
 
 export default function CollectionDetailPage() {
   const router = useRouter();
@@ -22,8 +24,7 @@ export default function CollectionDetailPage() {
     resolve: {
       profile: true,
       root: {
-        links: { $each: {} },
-        collections: { $each: { links: { $each: {} } } }
+        blocks: { $each: {} }
       }
     },
   });
@@ -34,15 +35,34 @@ export default function CollectionDetailPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedLink, setSelectedLink] = useState<co.loaded<typeof ProductLink> | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<LoadedBlock | null>(null);
 
-  const handleEditLink = (link: co.loaded<typeof ProductLink>) => {
-    setSelectedLink(link);
+  // Get all loaded blocks
+  const allBlocks = useMemo(() => {
+    if (!me.$isLoaded || !me.root?.$isLoaded || !me.root.blocks?.$isLoaded) {
+      return [];
+    }
+    const blocks: LoadedBlock[] = [];
+    for (const block of me.root.blocks) {
+      if (block && block.$isLoaded) {
+        blocks.push(block);
+      }
+    }
+    return blocks;
+  }, [me]);
+
+  // Find the collection block by ID
+  const collectionBlock = useMemo(() => {
+    return allBlocks.find((b) => b.$jazz.id === collectionId) || null;
+  }, [allBlocks, collectionId]);
+
+  const handleEditBlock = (block: LoadedBlock) => {
+    setSelectedBlock(block);
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteLink = (link: co.loaded<typeof ProductLink>) => {
-    setSelectedLink(link);
+  const handleDeleteBlock = (block: LoadedBlock) => {
+    setSelectedBlock(block);
     setIsDeleteDialogOpen(true);
   };
 
@@ -58,29 +78,22 @@ export default function CollectionDetailPage() {
   };
 
   const handleConfirmDelete = () => {
-    if (!selectedLink || !me.$isLoaded || !me.root || !me.root.$isLoaded) return;
-    if (!me.root.collections.$isLoaded) return;
+    if (!selectedBlock || !me.root?.blocks?.$isLoaded) return;
 
-    const collection = me.root.collections.find(
-      (c) => c && c.$isLoaded && c.$jazz.id === collectionId
+    const blockIndex = me.root.blocks.findIndex(
+      (block) => block && block.$isLoaded && block.$jazz.id === selectedBlock.$jazz.id
     );
 
-    if (collection && collection.$isLoaded && collection.links.$isLoaded) {
-      const linkIndex = collection.links.findIndex(
-        (link) => link && link.$isLoaded && link.$jazz.id === selectedLink.$jazz.id
-      );
-
-      if (linkIndex !== -1) {
-        collection.links.$jazz.splice(linkIndex, 1);
-        showToast({
-          title: "Link deleted",
-          description: `"${selectedLink.title || "Untitled"}" has been removed`,
-          variant: "success",
-        });
-      }
+    if (blockIndex !== -1) {
+      me.root.blocks.$jazz.splice(blockIndex, 1);
+      showToast({
+        title: "Link deleted",
+        description: `"${selectedBlock.name || "Untitled"}" has been removed`,
+        variant: "success",
+      });
     }
 
-    setSelectedLink(null);
+    setSelectedBlock(null);
   };
 
   if (!me.$isLoaded) {
@@ -99,6 +112,37 @@ export default function CollectionDetailPage() {
     );
   }
 
+  if (!collectionBlock) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          color: "var(--color-text-secondary)",
+          gap: "1rem",
+        }}
+      >
+        <p>Collection not found</p>
+        <button
+          type="button"
+          onClick={() => router.push("/collections")}
+          style={{
+            padding: "0.5rem 1rem",
+            borderRadius: "0.5rem",
+            border: "1px solid var(--color-border)",
+            background: "var(--color-background)",
+            cursor: "pointer",
+          }}
+        >
+          Back to Collections
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <Header
@@ -107,10 +151,10 @@ export default function CollectionDetailPage() {
       />
       <main>
         <CollectionView
-          account={me}
-          collectionId={collectionId}
-          onEditLink={handleEditLink}
-          onDeleteLink={handleDeleteLink}
+          collectionBlock={collectionBlock}
+          allBlocks={allBlocks}
+          onEditBlock={handleEditBlock}
+          onDeleteBlock={handleDeleteBlock}
           onEditCollection={() => setIsEditCollectionDialogOpen(true)}
           onBackToCollections={() => router.push("/collections")}
         />
@@ -124,24 +168,18 @@ export default function CollectionDetailPage() {
       <EditLinkDialog
         open={isEditDialogOpen}
         onOpenChange={handleEditDialogClose}
-        link={selectedLink}
+        block={selectedBlock}
       />
       <EditCollectionDialog
         open={isEditCollectionDialogOpen}
         onOpenChange={setIsEditCollectionDialogOpen}
-        collection={
-          me.root?.collections.$isLoaded
-            ? me.root.collections.find(
-                (c) => c && c.$isLoaded && c.$jazz.id === collectionId
-              ) || null
-            : null
-        }
+        block={collectionBlock}
         account={me}
       />
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        link={selectedLink}
+        block={selectedBlock}
         onConfirm={handleConfirmDelete}
       />
     </>

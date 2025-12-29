@@ -1,11 +1,11 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import type { co } from "jazz-tools";
-import type { ProductLink } from "../../schema";
+import type { Block } from "../../schema";
 import styles from "./TableView.module.css";
 
-type LoadedProductLink = co.loaded<typeof ProductLink>;
+type LoadedBlock = co.loaded<typeof Block>;
 
-const columnHelper = createColumnHelper<LoadedProductLink>();
+const columnHelper = createColumnHelper<LoadedBlock>();
 
 function formatRelativeDate(date: Date): string {
   const now = new Date();
@@ -21,21 +21,22 @@ function formatRelativeDate(date: Date): string {
 }
 
 interface ColumnOptions {
-  onEdit?: (link: LoadedProductLink) => void;
-  onDelete?: (link: LoadedProductLink) => void;
-  onRefresh?: (link: LoadedProductLink) => void;
+  onEdit?: (block: LoadedBlock) => void;
+  onDelete?: (block: LoadedBlock) => void;
+  onRefresh?: (block: LoadedBlock) => void;
 }
 
 export function getColumns(options: ColumnOptions) {
   const { onEdit, onDelete, onRefresh } = options;
 
   return [
-    columnHelper.accessor("imageUrl", {
+    columnHelper.display({
+      id: "image",
       header: "",
       size: 60,
-      enableSorting: false,
       cell: (info) => {
-        const imageUrl = info.getValue();
+        const block = info.row.original;
+        const imageUrl = block.productData?.imageUrl;
         return (
           <div className={styles.imageCell}>
             {imageUrl ? (
@@ -66,31 +67,36 @@ export function getColumns(options: ColumnOptions) {
       },
     }),
 
-    columnHelper.accessor("title", {
+    columnHelper.accessor("name", {
       header: "Title",
       size: 300,
       cell: (info) => {
-        const link = info.row.original;
+        const block = info.row.original;
         const title = info.getValue() || "Untitled";
-        return (
+        const url = block.productData?.url;
+        return url ? (
           <a
-            href={link.url}
+            href={url}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.titleLink}
-            title={link.url}
+            title={url}
           >
             {title}
           </a>
+        ) : (
+          <span className={styles.titleLink}>{title}</span>
         );
       },
     }),
 
-    columnHelper.accessor("price", {
+    columnHelper.display({
+      id: "price",
       header: "Price",
       size: 100,
       cell: (info) => {
-        const price = info.getValue();
+        const block = info.row.original;
+        const price = block.productData?.price;
         return price ? (
           <span className={styles.price}>{price}</span>
         ) : (
@@ -99,33 +105,25 @@ export function getColumns(options: ColumnOptions) {
       },
     }),
 
-    columnHelper.accessor("tags", {
-      header: "Tags",
-      size: 200,
-      enableSorting: false,
+    columnHelper.display({
+      id: "status",
+      header: "Status",
+      size: 120,
       cell: (info) => {
-        const tags = info.getValue();
-        if (!tags || tags.length === 0) {
+        const block = info.row.original;
+        const status = block.productData?.status;
+        if (!status || status === "considering") {
           return <span className={styles.noValue}>-</span>;
         }
-        const visibleTags = tags.slice(0, 2);
-        const remaining = tags.length - 2;
         return (
-          <div className={styles.tags}>
-            {visibleTags.map((tag) => (
-              <span key={tag} className={styles.tag}>
-                {tag}
-              </span>
-            ))}
-            {remaining > 0 && (
-              <span className={styles.tagMore}>+{remaining}</span>
-            )}
-          </div>
+          <span className={`${styles.statusBadge} ${styles[`status_${status}`]}`}>
+            {status === "selected" ? "Selected" : "Ruled out"}
+          </span>
         );
       },
     }),
 
-    columnHelper.accessor("addedAt", {
+    columnHelper.accessor("createdAt", {
       header: "Added",
       size: 120,
       cell: (info) => {
@@ -143,14 +141,14 @@ export function getColumns(options: ColumnOptions) {
       header: "",
       size: 100,
       cell: (info) => {
-        const link = info.row.original;
+        const block = info.row.original;
         return (
           <div className={styles.actions}>
             {onRefresh && (
               <button
                 type="button"
                 className={styles.actionButton}
-                onClick={() => onRefresh(link)}
+                onClick={() => onRefresh(block)}
                 title="Refresh metadata"
               >
                 <svg
@@ -169,7 +167,7 @@ export function getColumns(options: ColumnOptions) {
               <button
                 type="button"
                 className={styles.actionButton}
-                onClick={() => onEdit(link)}
+                onClick={() => onEdit(block)}
                 title="Edit"
               >
                 <svg
@@ -189,7 +187,7 @@ export function getColumns(options: ColumnOptions) {
               <button
                 type="button"
                 className={`${styles.actionButton} ${styles.deleteButton}`}
-                onClick={() => onDelete(link)}
+                onClick={() => onDelete(block)}
                 title="Delete"
               >
                 <svg
