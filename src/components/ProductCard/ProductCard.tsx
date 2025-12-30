@@ -10,13 +10,21 @@ interface ProductCardProps {
   onEdit?: (block: LoadedBlock) => void;
   onDelete?: (block: LoadedBlock) => void;
   onRefresh?: (block: LoadedBlock) => void;
+  isRefreshing?: boolean;
+  isEnqueued?: boolean;
 }
 
-export function ProductCard({ block, onEdit, onDelete, onRefresh }: ProductCardProps) {
+export function ProductCard({
+  block,
+  onEdit,
+  onDelete,
+  onRefresh,
+  isRefreshing = false,
+  isEnqueued = false,
+}: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showActions, setShowActions] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const productData = block.productData;
   if (!productData) return null;
@@ -29,12 +37,51 @@ export function ProductCard({ block, onEdit, onDelete, onRefresh }: ProductCardP
 
   const hasImage = productData.imageUrl && !imageError;
 
+  const cardClassName = [
+    styles.card,
+    isRefreshing && styles.cardRefreshing,
+    isEnqueued && styles.cardEnqueued,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <article
-      className={styles.card}
+      className={cardClassName}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
+      {/* Refresh Status Badge */}
+      {(isRefreshing || isEnqueued) && (
+        <div className={styles.refreshBadge}>
+          {isRefreshing ? (
+            <>
+              <svg
+                className={styles.spinningIcon}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              <span>Refreshing</span>
+            </>
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10" strokeWidth={2} />
+                <polyline points="12 6 12 12 16 14" strokeWidth={2} strokeLinecap="round" />
+              </svg>
+              <span>Queued</span>
+            </>
+          )}
+        </div>
+      )}
       {/* Image Section */}
       {hasImage ? (
         <div className={styles.imageContainer}>
@@ -81,14 +128,10 @@ export function ProductCard({ block, onEdit, onDelete, onRefresh }: ProductCardP
           {onRefresh && (
             <button
               type="button"
-              onClick={async () => {
-                setIsRefreshing(true);
-                await onRefresh(block);
-                setIsRefreshing(false);
-              }}
+              onClick={() => onRefresh(block)}
               className={`${styles.actionButton} ${isRefreshing ? styles.actionButtonSpinning : ""}`}
               aria-label="Refresh metadata"
-              disabled={isRefreshing}
+              disabled={isRefreshing || isEnqueued}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />

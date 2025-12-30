@@ -24,10 +24,12 @@ interface ColumnOptions {
   onEdit?: (block: LoadedBlock) => void;
   onDelete?: (block: LoadedBlock) => void;
   onRefresh?: (block: LoadedBlock) => void;
+  refreshingBlockId?: string | null;
+  enqueuedBlockIds?: string[];
 }
 
 export function getColumns(options: ColumnOptions) {
-  const { onEdit, onDelete, onRefresh } = options;
+  const { onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds } = options;
 
   return [
     columnHelper.display({
@@ -142,14 +144,20 @@ export function getColumns(options: ColumnOptions) {
       size: 100,
       cell: (info) => {
         const block = info.row.original;
+        const blockId = block.$jazz.id;
+        const isRefreshing = refreshingBlockId === blockId;
+        const isEnqueued = enqueuedBlockIds?.includes(blockId);
+        const isDisabled = isRefreshing || isEnqueued;
+
         return (
           <div className={styles.actions}>
             {onRefresh && (
               <button
                 type="button"
-                className={styles.actionButton}
+                className={`${styles.actionButton} ${isRefreshing ? styles.actionButtonSpinning : ""}`}
                 onClick={() => onRefresh(block)}
-                title="Refresh metadata"
+                title={isRefreshing ? "Refreshing..." : isEnqueued ? "Queued" : "Refresh metadata"}
+                disabled={isDisabled}
               >
                 <svg
                   width="14"
@@ -169,6 +177,7 @@ export function getColumns(options: ColumnOptions) {
                 className={styles.actionButton}
                 onClick={() => onEdit(block)}
                 title="Edit"
+                disabled={isDisabled}
               >
                 <svg
                   width="14"
@@ -189,6 +198,7 @@ export function getColumns(options: ColumnOptions) {
                 className={`${styles.actionButton} ${styles.deleteButton}`}
                 onClick={() => onDelete(block)}
                 title="Delete"
+                disabled={isDisabled}
               >
                 <svg
                   width="14"

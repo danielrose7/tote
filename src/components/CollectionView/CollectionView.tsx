@@ -150,6 +150,7 @@ export function CollectionView({
   onBackToCollections,
 }: CollectionViewProps) {
   const [refreshingBlockId, setRefreshingBlockId] = useState<string | null>(null);
+  const [enqueuedBlockIds, setEnqueuedBlockIds] = useState<string[]>([]);
   const [refreshAllProgress, setRefreshAllProgress] = useState<{
     current: number;
     total: number;
@@ -183,16 +184,26 @@ export function CollectionView({
 
   const handleRefreshAll = async (blocks: LoadedBlock[]) => {
     const validBlocks = blocks.filter((b) => b && b.$isLoaded && b.type === "product");
+
+    // Set all blocks as enqueued first
+    const allIds = validBlocks.map((b) => b.$jazz.id);
+    setEnqueuedBlockIds(allIds);
     setRefreshAllProgress({ current: 0, total: validBlocks.length });
 
     for (let i = 0; i < validBlocks.length; i++) {
       const block = validBlocks[i];
-      setRefreshingBlockId(block.$jazz.id);
+      const blockId = block.$jazz.id;
+
+      // Move from enqueued to refreshing
+      setEnqueuedBlockIds((prev) => prev.filter((id) => id !== blockId));
+      setRefreshingBlockId(blockId);
+
       await refreshBlockMetadata(block, extensionAvailable);
       setRefreshAllProgress({ current: i + 1, total: validBlocks.length });
     }
 
     setRefreshingBlockId(null);
+    setEnqueuedBlockIds([]);
     setRefreshAllProgress(null);
   };
 
@@ -324,18 +335,25 @@ export function CollectionView({
           onEdit={onEditBlock}
           onDelete={onDeleteBlock}
           onRefresh={handleRefreshBlock}
+          refreshingBlockId={refreshingBlockId}
+          enqueuedBlockIds={enqueuedBlockIds}
         />
       ) : (
         <div className={styles.grid}>
-          {productBlocks.map((block) => (
-            <ProductCard
-              key={block.$jazz.id}
-              block={block}
-              onEdit={onEditBlock}
-              onDelete={onDeleteBlock}
-              onRefresh={handleRefreshBlock}
-            />
-          ))}
+          {productBlocks.map((block) => {
+            const blockId = block.$jazz.id;
+            return (
+              <ProductCard
+                key={blockId}
+                block={block}
+                onEdit={onEditBlock}
+                onDelete={onDeleteBlock}
+                onRefresh={handleRefreshBlock}
+                isRefreshing={refreshingBlockId === blockId}
+                isEnqueued={enqueuedBlockIds.includes(blockId)}
+              />
+            );
+          })}
         </div>
       )}
     </div>

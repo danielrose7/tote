@@ -18,6 +18,8 @@ interface TableViewProps {
   onEdit?: (block: LoadedBlock) => void;
   onDelete?: (block: LoadedBlock) => void;
   onRefresh?: (block: LoadedBlock) => void;
+  refreshingBlockId?: string | null;
+  enqueuedBlockIds?: string[];
 }
 
 export function TableView({
@@ -25,12 +27,14 @@ export function TableView({
   onEdit,
   onDelete,
   onRefresh,
+  refreshingBlockId,
+  enqueuedBlockIds,
 }: TableViewProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(
-    () => getColumns({ onEdit, onDelete, onRefresh }),
-    [onEdit, onDelete, onRefresh]
+    () => getColumns({ onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds }),
+    [onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds]
   );
 
   const table = useReactTable({
@@ -82,15 +86,28 @@ export function TableView({
           ))}
         </thead>
         <tbody className={styles.tbody}>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className={styles.tr}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className={styles.td}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {table.getRowModel().rows.map((row) => {
+            const blockId = row.original.$jazz.id;
+            const isRefreshing = refreshingBlockId === blockId;
+            const isEnqueued = enqueuedBlockIds?.includes(blockId);
+            const rowClassName = [
+              styles.tr,
+              isRefreshing && styles.trRefreshing,
+              isEnqueued && styles.trEnqueued,
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            return (
+              <tr key={row.id} className={rowClassName}>
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className={styles.td}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
