@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import type { Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { ProductCard } from "../ProductCard/ProductCard";
+import { SlotSection } from "../SlotSection/SlotSection";
 import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
 import { TableView } from "./TableView";
+import {
+  getSlotsForCollection,
+  getProductsForSlot,
+  getUngroupedProducts,
+  removeFromSelection,
+} from "../../lib/slotHelpers";
 import styles from "./CollectionView.module.css";
 
 const VIEW_MODE_STORAGE_KEY = "tote:viewMode";
@@ -138,7 +145,6 @@ interface CollectionViewProps {
   onEditBlock?: (block: LoadedBlock) => void;
   onDeleteBlock?: (block: LoadedBlock) => void;
   onEditCollection?: (block: LoadedBlock) => void;
-  onBackToCollections?: () => void;
 }
 
 export function CollectionView({
@@ -147,7 +153,6 @@ export function CollectionView({
   onEditBlock,
   onDeleteBlock,
   onEditCollection,
-  onBackToCollections,
 }: CollectionViewProps) {
   const [refreshingBlockId, setRefreshingBlockId] = useState<string | null>(null);
   const [enqueuedBlockIds, setEnqueuedBlockIds] = useState<string[]>([]);
@@ -210,27 +215,40 @@ export function CollectionView({
   const collectionData = collectionBlock.collectionData;
   const collectionId = collectionBlock.$jazz.id;
 
-  // Get product blocks by filtering allBlocks by parentId
-  const productBlocks: LoadedBlock[] = [];
-  for (const block of allBlocks) {
-    if (block && block.$isLoaded && block.type === "product" && block.parentId === collectionId) {
-      productBlocks.push(block);
-    }
+  // Get slots for this collection
+  const slots = getSlotsForCollection(allBlocks, collectionId);
+
+  // Get ungrouped products (directly in collection, not in a slot)
+  const ungroupedProducts = getUngroupedProducts(allBlocks, collectionId);
+
+  // Get all products (for total count and refresh all)
+  const allProducts: LoadedBlock[] = [...ungroupedProducts];
+  for (const slot of slots) {
+    allProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
   }
+
+  // Handle slot deletion - moves products back to collection
+  const handleDeleteSlot = (slot: LoadedBlock) => {
+    const slotProducts = getProductsForSlot(allBlocks, slot.$jazz.id);
+
+    // Move all products to the collection
+    for (const product of slotProducts) {
+      // Remove from slot's selection if selected
+      removeFromSelection(product.$jazz.id, slot);
+      // Move to collection
+      product.$jazz.set("parentId", collectionId);
+    }
+
+    // Find and remove the slot from the blocks list
+    // Note: In Jazz, we'd typically soft-delete or just orphan it
+    // For now, we'll just set parentId to undefined to "remove" it
+    slot.$jazz.set("parentId", undefined);
+  };
 
   return (
     <div className={styles.container}>
       {/* Collection Header */}
       <div className={styles.header}>
-        {onBackToCollections && (
-          <button
-            type="button"
-            onClick={onBackToCollections}
-            className={styles.backButton}
-          >
-            ← Back to Collections
-          </button>
-        )}
         <div className={styles.headerContent}>
           <div className={styles.titleSection}>
             {collectionData?.color && (
@@ -268,7 +286,8 @@ export function CollectionView({
           )}
           <div className={styles.meta}>
             <span className={styles.count}>
-              {productBlocks.length} {productBlocks.length === 1 ? 'item' : 'items'}
+              {allProducts.length} {allProducts.length === 1 ? 'item' : 'items'}
+              {slots.length > 0 && ` in ${slots.length} ${slots.length === 1 ? 'slot' : 'slots'}`}
             </span>
             <span className={styles.date}>
               Created {collectionBlock.createdAt.toLocaleDateString("en-US", {
@@ -278,11 +297,11 @@ export function CollectionView({
               })}
             </span>
           </div>
-          {productBlocks.length > 0 && (
+          {allProducts.length > 0 && (
             <div className={styles.actions}>
               <button
                 type="button"
-                onClick={() => handleRefreshAll(productBlocks)}
+                onClick={() => handleRefreshAll(allProducts)}
                 className={styles.refreshAllButton}
                 disabled={refreshAllProgress !== null}
               >
@@ -309,7 +328,7 @@ export function CollectionView({
       </div>
 
       {/* Products */}
-      {productBlocks.length === 0 ? (
+      {allProducts.length === 0 && slots.length === 0 ? (
         <div className={styles.empty}>
           <svg
             className={styles.emptyIcon}
@@ -331,7 +350,8 @@ export function CollectionView({
         </div>
       ) : viewMode === "table" ? (
         <TableView
-          blocks={productBlocks}
+          blocks={allProducts}
+          allBlocks={allBlocks}
           onEdit={onEditBlock}
           onDelete={onDeleteBlock}
           onRefresh={handleRefreshBlock}
@@ -339,22 +359,47 @@ export function CollectionView({
           enqueuedBlockIds={enqueuedBlockIds}
         />
       ) : (
-        <div className={styles.grid}>
-          {productBlocks.map((block) => {
-            const blockId = block.$jazz.id;
-            return (
-              <ProductCard
-                key={blockId}
-                block={block}
-                onEdit={onEditBlock}
-                onDelete={onDeleteBlock}
-                onRefresh={handleRefreshBlock}
-                isRefreshing={refreshingBlockId === blockId}
-                isEnqueued={enqueuedBlockIds.includes(blockId)}
-              />
-            );
-          })}
-        </div>
+        <>
+          {/* Slots */}
+          {slots.map((slot) => (
+            <SlotSection
+              key={slot.$jazz.id}
+              slotBlock={slot}
+              products={getProductsForSlot(allBlocks, slot.$jazz.id)}
+              onEditProduct={onEditBlock}
+              onDeleteProduct={onDeleteBlock}
+              onRefreshProduct={handleRefreshBlock}
+              onDeleteSlot={handleDeleteSlot}
+              refreshingBlockId={refreshingBlockId}
+              enqueuedBlockIds={enqueuedBlockIds}
+            />
+          ))}
+
+          {/* Ungrouped Products */}
+          {ungroupedProducts.length > 0 && (
+            <div className={styles.ungroupedSection}>
+              {slots.length > 0 && (
+                <h3 className={styles.ungroupedTitle}>Ungrouped</h3>
+              )}
+              <div className={styles.grid}>
+                {ungroupedProducts.map((block) => {
+                  const blockId = block.$jazz.id;
+                  return (
+                    <ProductCard
+                      key={blockId}
+                      block={block}
+                      onEdit={onEditBlock}
+                      onDelete={onDeleteBlock}
+                      onRefresh={handleRefreshBlock}
+                      isRefreshing={refreshingBlockId === blockId}
+                      isEnqueued={enqueuedBlockIds.includes(blockId)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

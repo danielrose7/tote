@@ -1,9 +1,12 @@
 "use client";
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
+import Link from "next/link";
 import styles from "./AuthButton.module.css";
 
 export function AuthButton() {
+  const { user, isLoaded } = useUser();
+
   return (
     <>
       <SignedOut>
@@ -17,7 +20,19 @@ export function AuthButton() {
         </div>
       </SignedOut>
       <SignedIn>
-        <UserButton />
+        <Link href="/settings" className={styles.avatarLink}>
+          {isLoaded && user?.imageUrl ? (
+            <img
+              src={user.imageUrl}
+              alt={user.firstName || "Account"}
+              className={styles.avatar}
+            />
+          ) : (
+            <div className={styles.avatarPlaceholder}>
+              {user?.firstName?.[0] || "?"}
+            </div>
+          )}
+        </Link>
       </SignedIn>
     </>
   );

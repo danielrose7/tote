@@ -1,34 +1,6 @@
 .container {
   min-height: 100vh;
   background: var(--color-background, #ffffff);
-  padding: 2rem;
-}
-
-.header {
-  margin-bottom: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.backLink {
-  color: var(--color-primary, #6366f1);
-  text-decoration: none;
-  font-size: 14px;
-  display: inline-block;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.backLink:hover {
-  background-color: var(--color-background-secondary, #f5f5f5);
-}
-
-.header h1 {
-  margin: 0;
-  font-size: 28px;
-  color: var(--color-text-primary, #000000);
 }
 
 .center {
@@ -41,92 +13,26 @@
   text-align: center;
 }
 
-.content {
-  max-width: 800px;
+.main {
+  max-width: 900px;
   margin: 0 auto;
+  padding: 1rem 2rem 2rem;
 }
 
-.section {
+.syncStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
   background: var(--color-background-secondary, #f9f9f9);
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 8px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-}
-
-.section h2 {
-  margin: 0 0 1rem 0;
-  font-size: 18px;
-  color: var(--color-text-primary, #000000);
-  font-weight: 600;
-}
-
-.description {
-  color: var(--color-text-secondary, #666666);
-  font-size: 14px;
-  margin: 0 0 1.5rem 0;
-  line-height: 1.5;
-}
-
-.accountInfo {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.userProfile {
-  flex-shrink: 0;
-}
-
-.userId {
-  margin: 0;
-  font-size: 14px;
-  color: var(--color-text-secondary, #666666);
-}
-
-.userId code {
-  background: var(--color-background, #ffffff);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 12px;
-  color: var(--color-text-primary, #000000);
-}
-
-.syncInfo {
-  background: var(--color-background, #ffffff);
   border-radius: 6px;
-  padding: 1rem;
   margin-bottom: 1.5rem;
-  border: 1px solid var(--color-border, #e5e7eb);
-}
-
-.infoRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
   font-size: 14px;
 }
 
-.infoRow:not(:last-child) {
-  border-bottom: 1px solid var(--color-border, #e5e7eb);
-}
-
-.label {
-  font-weight: 500;
-  color: var(--color-text-primary, #000000);
-}
-
-.value {
-  font-family: monospace;
-  font-size: 12px;
-  background: var(--color-background-secondary, #f5f5f5);
-  padding: 0.25rem 0.5rem;
-  border-radius: 3px;
+.syncLabel {
   color: var(--color-text-secondary, #666666);
-  word-break: break-all;
 }
 
 .statusSynced {
@@ -134,9 +40,8 @@
   font-weight: 500;
 }
 
-.statusIdle {
+.statusLoading {
   color: #6b7280;
-  font-weight: 500;
 }
 
 .statusError {
@@ -144,320 +49,41 @@
   font-weight: 500;
 }
 
-.buttonGroup {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-.buttonPrimary,
-.buttonSecondary {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.buttonPrimary {
-  background-color: #10b981;
-  color: white;
-}
-
-.buttonPrimary:hover:not(:disabled) {
-  background-color: #059669;
-}
-
-.buttonPrimary:disabled {
-  background-color: #d1fae5;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.buttonSecondary {
-  background-color: #6366f1;
-  color: white;
-}
-
-.buttonSecondary:hover:not(:disabled) {
-  background-color: #4f46e5;
-}
-
-.buttonSecondary:disabled {
-  background-color: #e0e7ff;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.debugOutput {
-  background: var(--color-background, #ffffff);
+.retryButton {
+  margin-left: auto;
+  padding: 0.25rem 0.75rem;
+  background: transparent;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
-  padding: 1rem;
-  overflow-x: auto;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.debugOutput pre {
-  margin: 0;
-  font-family: monospace;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--color-text-secondary, #666666);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.tokenDisplay {
-  background: var(--color-background, #ffffff);
-  border: 1px solid #10b981;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.tokenBox {
-  background: var(--color-background-secondary, #f9f9f9);
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.tokenLabel {
-  font-size: 14px;
-  color: var(--color-text-secondary, #666666);
-  margin: 0 0 0.5rem 0;
-  font-weight: 500;
-}
-
-.token {
-  display: block;
-  background: var(--color-background, #ffffff);
-  padding: 0.75rem;
   border-radius: 4px;
-  font-family: monospace;
-  font-size: 13px;
-  word-break: break-all;
-  color: var(--color-text-primary, #000000);
-  border: 1px solid var(--color-border, #e5e7eb);
-  margin-bottom: 0.75rem;
-  user-select: all;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--color-text-secondary, #666666);
 }
 
-.copyButton {
+.retryButton:hover {
+  background: var(--color-background-secondary, #f5f5f5);
+}
+
+.profileWrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.clerkRootBox {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
 }
 
-.copyButton:hover:not(:disabled) {
-  background-color: #2563eb;
-}
-
-.copyButton:disabled {
-  background-color: #86efac;
-  cursor: default;
-}
-
-.warning {
-  background: #fef3c7;
-  border: 1px solid #fcd34d;
-  border-radius: 6px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.warning p {
-  margin: 0;
-  color: #92400e;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.secondaryButton {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #6366f1;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.secondaryButton:hover {
-  background-color: #4f46e5;
-}
-
-.generateSection {
-  background: var(--color-background, #ffffff);
+.clerkCard {
+  box-shadow: none;
   border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.generateSection p {
-  color: var(--color-text-secondary, #666666);
-  margin-bottom: 1rem;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.error {
-  color: #ef4444;
-  font-size: 14px;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  border-radius: 4px;
-}
-
-.tokensSection {
-  margin-top: 2rem;
-}
-
-.tokensSection h3 {
-  font-size: 16px;
-  color: var(--color-text-primary, #000000);
-  margin-bottom: 1rem;
-  font-weight: 600;
-}
-
-.tokensList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.tokenItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: var(--color-background-secondary, #f9f9f9);
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
-}
-
-.tokenInfo {
-  flex: 1;
-}
-
-.tokenName {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text-primary, #000000);
-}
-
-.tokenMeta {
-  margin: 0.25rem 0 0 0;
-  font-size: 12px;
-  color: var(--color-text-secondary, #666666);
-}
-
-.revokeButton {
-  padding: 0.5rem 1rem;
-  background-color: #ef4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-left: 1rem;
-}
-
-.revokeButton:hover {
-  background-color: #dc2626;
-}
-
-.instructions {
-  background: var(--color-background-secondary, #f9f9f9);
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-}
-
-.instructions h3 {
-  margin: 0 0 1rem 0;
-  font-size: 16px;
-  color: var(--color-text-primary, #000000);
-  font-weight: 600;
-}
-
-.instructions ol {
-  margin: 0;
-  padding-left: 1.5rem;
-  color: var(--color-text-secondary, #666666);
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-.instructions li {
-  margin-bottom: 0.5rem;
 }
 
 @media (max-width: 768px) {
-  .container {
+  .main {
     padding: 1rem;
   }
 
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .section {
-    padding: 1.5rem;
-  }
-
-  .accountInfo {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .buttonGroup {
-    flex-direction: column;
-  }
-
-  .buttonPrimary,
-  .buttonSecondary {
-    width: 100%;
-  }
-
-  .infoRow {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .tokenItem {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .revokeButton {
-    margin-left: 0;
-    margin-top: 0.75rem;
-    width: 100%;
+  .syncStatus {
+    flex-wrap: wrap;
   }
 }

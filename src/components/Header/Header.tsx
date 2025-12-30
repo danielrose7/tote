@@ -4,26 +4,50 @@ import Link from "next/link";
 import { AuthButton } from "../../AuthButton";
 import styles from "./Header.module.css";
 
+interface Breadcrumb {
+  label: string;
+  href?: string;
+}
+
 interface HeaderProps {
   onAddLinkClick?: () => void;
-  onCreateCollectionClick?: () => void;
+  onAddCollectionClick?: () => void;
   showAddLink?: boolean;
-  showCreateCollection?: boolean;
+  showAddCollection?: boolean;
+  breadcrumbs?: Breadcrumb[];
 }
 
 export function Header({
   onAddLinkClick,
-  onCreateCollectionClick,
+  onAddCollectionClick,
   showAddLink = false,
-  showCreateCollection = false,
+  showAddCollection = false,
+  breadcrumbs,
 }: HeaderProps) {
   return (
     <header className={styles.header}>
       <div className={styles.container}>
-        <Link href="/collections" className={styles.brand}>
-          <h1 className={styles.title}>tote</h1>
-          <p className={styles.tagline}>Your product wishlist</p>
-        </Link>
+        <div className={styles.brandSection}>
+          <Link href="/collections" className={styles.brand}>
+            <h1 className={styles.title}>tote</h1>
+          </Link>
+          {breadcrumbs && breadcrumbs.length > 0 && (
+            <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
+              {breadcrumbs.map((crumb, index) => (
+                <span key={crumb.label} className={styles.breadcrumbItem}>
+                  <span className={styles.breadcrumbSeparator}>/</span>
+                  {crumb.href ? (
+                    <Link href={crumb.href} className={styles.breadcrumbLink}>
+                      {crumb.label}
+                    </Link>
+                  ) : (
+                    <span className={styles.breadcrumbCurrent}>{crumb.label}</span>
+                  )}
+                </span>
+              ))}
+            </nav>
+          )}
+        </div>
 
         <div className={styles.actions}>
           {showAddLink && onAddLinkClick && (
@@ -35,18 +59,15 @@ export function Header({
               + Add Link
             </button>
           )}
-          {showCreateCollection && onCreateCollectionClick && (
+          {showAddCollection && onAddCollectionClick && (
             <button
               type="button"
-              onClick={onCreateCollectionClick}
+              onClick={onAddCollectionClick}
               className={styles.addButton}
             >
-              + Create Collection
+              + Add Collection
             </button>
           )}
-          <Link href="/settings" className={styles.settingsLink}>
-            ⚙️ Settings
-          </Link>
           <AuthButton />
         </div>
       </div>

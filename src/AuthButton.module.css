@@ -16,3 +16,33 @@
   display: flex;
   gap: var(--spacing-sm);
 }
+
+.avatarLink {
+  display: block;
+  border-radius: 50%;
+  transition: opacity var(--transition-fast);
+}
+
+.avatarLink:hover {
+  opacity: 0.8;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--color-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}

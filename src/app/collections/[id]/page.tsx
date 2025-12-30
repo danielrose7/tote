@@ -148,6 +148,10 @@ export default function CollectionDetailPage() {
       <Header
         showAddLink
         onAddLinkClick={() => setIsAddDialogOpen(true)}
+        breadcrumbs={[
+          { label: "Collections", href: "/collections" },
+          { label: collectionBlock.name || "Untitled" },
+        ]}
       />
       <main>
         <CollectionView
@@ -156,7 +160,6 @@ export default function CollectionDetailPage() {
           onEditBlock={handleEditBlock}
           onDeleteBlock={handleDeleteBlock}
           onEditCollection={() => setIsEditCollectionDialogOpen(true)}
-          onBackToCollections={() => router.push("/collections")}
         />
       </main>
       <AddLinkDialog
@@ -169,6 +172,7 @@ export default function CollectionDetailPage() {
         open={isEditDialogOpen}
         onOpenChange={handleEditDialogClose}
         block={selectedBlock}
+        account={me}
       />
       <EditCollectionDialog
         open={isEditCollectionDialogOpen}

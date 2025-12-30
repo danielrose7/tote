@@ -51,3 +51,7 @@ pnpm build        # Production build
 2. **Bundle size matters** - Avoid adding dependencies; justify new ones
 3. **Offline works** - Jazz handles sync; don't assume network
 4. **Keep it simple** - Prefer boring solutions over clever ones
+
+## UI Conventions
+
+- **Use "Add" not "Create"** - Button labels should say "Add Collection", "Add Link", etc. (not "Create" or "New")

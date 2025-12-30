@@ -51,8 +51,8 @@ export default function CollectionsPage() {
   return (
     <>
       <Header
-        showCreateCollection
-        onCreateCollectionClick={() => setIsCreateCollectionDialogOpen(true)}
+        showAddCollection
+        onAddCollectionClick={() => setIsCreateCollectionDialogOpen(true)}
       />
       <main>
         <CollectionList
