@@ -4,7 +4,11 @@ import { SignInButton, SignUpButton, SignedIn, SignedOut, useUser } from "@clerk
 import Link from "next/link";
 import styles from "./AuthButton.module.css";
 
-export function AuthButton() {
+interface AuthButtonProps {
+  variant?: "landing" | "app";
+}
+
+export function AuthButton({ variant = "app" }: AuthButtonProps) {
   const { user, isLoaded } = useUser();
 
   return (
@@ -15,24 +19,30 @@ export function AuthButton() {
             <button className={styles.button}>Log in</button>
           </SignInButton>
           <SignUpButton mode="modal">
-            <button className={styles.button}>Sign up</button>
+            <button className={`${styles.button} ${styles.buttonPrimary}`}>Sign up</button>
           </SignUpButton>
         </div>
       </SignedOut>
       <SignedIn>
-        <Link href="/settings" className={styles.avatarLink}>
-          {isLoaded && user?.imageUrl ? (
-            <img
-              src={user.imageUrl}
-              alt={user.firstName || "Account"}
-              className={styles.avatar}
-            />
-          ) : (
-            <div className={styles.avatarPlaceholder}>
-              {user?.firstName?.[0] || "?"}
-            </div>
-          )}
-        </Link>
+        {variant === "landing" ? (
+          <Link href="/collections" className={`${styles.button} ${styles.buttonPrimary}`}>
+            Open Tote
+          </Link>
+        ) : (
+          <Link href="/settings" className={styles.avatarLink}>
+            {isLoaded && user?.imageUrl ? (
+              <img
+                src={user.imageUrl}
+                alt={user.firstName || "Account"}
+                className={styles.avatar}
+              />
+            ) : (
+              <div className={styles.avatarPlaceholder}>
+                {user?.firstName?.[0] || "?"}
+              </div>
+            )}
+          </Link>
+        )}
       </SignedIn>
     </>
   );
