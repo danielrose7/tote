@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SignedIn, SignedOut, UserProfile } from "@clerk/nextjs";
+import { SignedIn, SignedOut, SignOutButton, UserProfile } from "@clerk/nextjs";
 import { useAccount } from "jazz-tools/react";
 import Link from "next/link";
 import { Header } from "../../components/Header/Header";
@@ -68,22 +68,27 @@ export default function SettingsPage() {
         <Header />
 
         <main className={styles.main}>
-          <div className={styles.syncStatus}>
-            <span className={styles.syncLabel}>Extension sync:</span>
-            <span className={
-              syncStatus === "synced" ? styles.statusSynced :
-              syncStatus === "error" ? styles.statusError :
-              styles.statusLoading
-            }>
-              {syncStatus === "synced" && "Ready"}
-              {syncStatus === "error" && "Error - please refresh"}
-              {syncStatus === "loading" && "Syncing..."}
-            </span>
-            {syncStatus === "error" && (
-              <button onClick={syncMetadata} className={styles.retryButton}>
-                Retry
-              </button>
-            )}
+          <div className={styles.settingsRow}>
+            <div className={styles.syncStatus}>
+              <span className={styles.syncLabel}>Extension sync:</span>
+              <span className={
+                syncStatus === "synced" ? styles.statusSynced :
+                syncStatus === "error" ? styles.statusError :
+                styles.statusLoading
+              }>
+                {syncStatus === "synced" && "Ready"}
+                {syncStatus === "error" && "Error - please refresh"}
+                {syncStatus === "loading" && "Syncing..."}
+              </span>
+              {syncStatus === "error" && (
+                <button onClick={syncMetadata} className={styles.retryButton}>
+                  Retry
+                </button>
+              )}
+            </div>
+            <SignOutButton>
+              <button className={styles.logoutButton}>Log out</button>
+            </SignOutButton>
           </div>
 
           <div className={styles.profileWrapper}>
