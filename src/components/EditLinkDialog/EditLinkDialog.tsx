@@ -1,9 +1,12 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import type { Block } from "../../schema.ts";
+import type { Block, JazzAccount } from "../../schema.ts";
+import { Block as BlockSchema } from "../../schema.ts";
 import type { co } from "jazz-tools";
+import { SlotSelector } from "../SlotSelector/SlotSelector";
+import { getSlotsForCollection } from "../../lib/slotHelpers";
 import styles from "./EditLinkDialog.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;
@@ -12,6 +15,7 @@ interface EditLinkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   block: LoadedBlock | null;
+  account?: co.loaded<typeof JazzAccount>;
 }
 
 const validationSchema = Yup.object({
@@ -19,15 +23,57 @@ const validationSchema = Yup.object({
   description: Yup.string(),
   notes: Yup.string(),
   price: Yup.string(),
-  status: Yup.string(),
 });
 
 export function EditLinkDialog({
   open,
   onOpenChange,
   block,
+  account,
 }: EditLinkDialogProps) {
   const productData = block?.productData;
+  // Track newly created slots to ensure they're available immediately
+  const [createdSlots, setCreatedSlots] = useState<LoadedBlock[]>([]);
+
+  // Get all loaded blocks
+  const getAllBlocks = (): LoadedBlock[] => {
+    if (!account?.root?.blocks?.$isLoaded) return [];
+    const blocks: LoadedBlock[] = [];
+    for (const b of account.root.blocks) {
+      if (b && b.$isLoaded) {
+        blocks.push(b);
+      }
+    }
+    return blocks;
+  };
+
+  // Find the collection ID for this product (could be direct parent or via slot)
+  const getCollectionId = (): string | null => {
+    if (!block?.parentId) return null;
+    const allBlocks = getAllBlocks();
+    const parent = allBlocks.find((b) => b.$jazz.id === block.parentId);
+    if (!parent) return null;
+    // If parent is a collection, use it; if parent is a slot, use slot's parent
+    if (parent.type === "collection") {
+      return parent.$jazz.id;
+    } else if (parent.type === "slot" && parent.parentId) {
+      return parent.parentId;
+    }
+    return null;
+  };
+
+  // Get the current slot ID (if product is in a slot)
+  const getCurrentSlotId = (): string | null => {
+    if (!block?.parentId) return null;
+    const allBlocks = getAllBlocks();
+    const parent = allBlocks.find((b) => b.$jazz.id === block.parentId);
+    if (parent?.type === "slot") {
+      return parent.$jazz.id;
+    }
+    return null;
+  };
+
+  const collectionId = getCollectionId();
 
   const formik = useFormik({
     initialValues: {
@@ -35,7 +81,7 @@ export function EditLinkDialog({
       description: "",
       notes: "",
       price: "",
-      status: "considering" as "considering" | "selected" | "ruled-out",
+      slotId: null as string | null,
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -50,9 +96,18 @@ export function EditLinkDialog({
         description: values.description || undefined,
         notes: values.notes || undefined,
         price: values.price || undefined,
-        status: values.status,
       };
       block.$jazz.set("productData", updatedProductData);
+
+      // Update parentId if slot changed
+      const currentSlotId = getCurrentSlotId();
+      if (values.slotId !== currentSlotId) {
+        // If moving to a slot, set parentId to slot; otherwise set to collection
+        const newParentId = values.slotId || collectionId;
+        if (newParentId) {
+          block.$jazz.set("parentId", newParentId);
+        }
+      }
 
       onOpenChange(false);
     },
@@ -66,12 +121,50 @@ export function EditLinkDialog({
         description: productData.description || "",
         notes: productData.notes || "",
         price: productData.price || "",
-        status: productData.status || "considering",
+        slotId: getCurrentSlotId(),
       });
     }
   }, [block, productData]);
 
+  // Get slots for this product's collection (including newly created ones)
+  const getSlots = (): LoadedBlock[] => {
+    if (!collectionId) return [];
+    const existingSlots = getSlotsForCollection(getAllBlocks(), collectionId);
+    // Merge in any newly created slots that might not be in the blocks list yet
+    const existingIds = new Set(existingSlots.map(s => s.$jazz.id));
+    const newSlots = createdSlots.filter(s =>
+      s.parentId === collectionId && !existingIds.has(s.$jazz.id)
+    );
+    return [...existingSlots, ...newSlots];
+  };
+
+  // Create a new slot in the collection
+  const handleCreateSlot = async (name: string): Promise<string> => {
+    if (!account?.root?.blocks?.$isLoaded || !collectionId) {
+      throw new Error("Cannot create slot");
+    }
+
+    const newSlot = BlockSchema.create(
+      {
+        type: "slot",
+        name,
+        slotData: {
+          maxSelections: 1,
+        },
+        parentId: collectionId,
+        createdAt: new Date(),
+      },
+      account.$jazz,
+    );
+
+    account.root.blocks.$jazz.push(newSlot);
+    // Track the new slot locally to ensure it's immediately available
+    setCreatedSlots(prev => [...prev, newSlot as LoadedBlock]);
+    return newSlot.$jazz.id;
+  };
+
   const handleClose = () => {
+    setCreatedSlots([]); // Clear created slots on close
     onOpenChange(false);
   };
 
@@ -143,26 +236,22 @@ export function EditLinkDialog({
               )}
             </div>
 
-            <div className={styles.inputGroup}>
-              <label htmlFor="status" className={styles.label}>
-                Status
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={formik.values.status}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className={styles.select}
-              >
-                <option value="considering">Considering</option>
-                <option value="selected">Selected</option>
-                <option value="ruled-out">Ruled out</option>
-              </select>
-              {formik.touched.status && formik.errors.status && (
-                <div className={styles.error}>{formik.errors.status}</div>
-              )}
-            </div>
+            {/* Slot Selector - only show if we have account access */}
+            {account && collectionId && (
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>
+                  Slot <span className={styles.optional}>(optional)</span>
+                </label>
+                <SlotSelector
+                  value={formik.values.slotId}
+                  onChange={(slotId) => formik.setFieldValue("slotId", slotId)}
+                  slots={getSlots()}
+                  onCreateSlot={handleCreateSlot}
+                  placeholder="Move to slot (optional)"
+                  disabled={formik.isSubmitting}
+                />
+              </div>
+            )}
 
             <div className={styles.inputGroup}>
               <label htmlFor="notes" className={styles.label}>

@@ -25,20 +25,26 @@ export function CollectionCard({
   const collectionData = block.collectionData;
   const blockId = block.$jazz.id;
 
-  const formattedDate = block.createdAt.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+  // Get slot IDs belonging to this collection
+  const slotIds = new Set<string>();
+  for (const b of allBlocks) {
+    if (b && b.$isLoaded && b.type === "slot" && b.parentId === blockId) {
+      slotIds.add(b.$jazz.id);
+    }
+  }
 
-  // Count product children by filtering allBlocks by parentId
+  // Count products: direct children OR children of slots in this collection
   let linkCount = 0;
   const previewImages: string[] = [];
   for (const child of allBlocks) {
-    if (child && child.$isLoaded && child.type === "product" && child.parentId === blockId) {
-      linkCount++;
-      if (previewImages.length < 4 && child.productData?.imageUrl) {
-        previewImages.push(child.productData.imageUrl);
+    if (child && child.$isLoaded && child.type === "product") {
+      const isDirectChild = child.parentId === blockId;
+      const isInSlot = child.parentId && slotIds.has(child.parentId);
+      if (isDirectChild || isInSlot) {
+        linkCount++;
+        if (previewImages.length < 4 && child.productData?.imageUrl) {
+          previewImages.push(child.productData.imageUrl);
+        }
       }
     }
   }
@@ -144,12 +150,6 @@ export function CollectionCard({
         {collectionData?.description && (
           <p className={styles.description}>{collectionData.description}</p>
         )}
-
-        <div className={styles.footer}>
-          <span className={styles.date} title={block.createdAt.toLocaleString()}>
-            Created {formattedDate}
-          </span>
-        </div>
       </div>
     </article>
   );

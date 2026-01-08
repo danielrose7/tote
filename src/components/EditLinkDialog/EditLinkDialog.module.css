@@ -82,6 +82,11 @@
   font-size: var(--font-size-xs);
 }
 
+.optional {
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-tertiary);
+}
+
 .input,
 .textarea,
 .select {

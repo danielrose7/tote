@@ -12,6 +12,8 @@ interface ProductCardProps {
   onRefresh?: (block: LoadedBlock) => void;
   isRefreshing?: boolean;
   isEnqueued?: boolean;
+  isSelected?: boolean;
+  onToggleSelection?: () => void;
 }
 
 export function ProductCard({
@@ -21,6 +23,8 @@ export function ProductCard({
   onRefresh,
   isRefreshing = false,
   isEnqueued = false,
+  isSelected = false,
+  onToggleSelection,
 }: ProductCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -41,6 +45,7 @@ export function ProductCard({
     styles.card,
     isRefreshing && styles.cardRefreshing,
     isEnqueued && styles.cardEnqueued,
+    isSelected && styles.cardSelected,
   ]
     .filter(Boolean)
     .join(" ");
@@ -122,9 +127,30 @@ export function ProductCard({
         </div>
       )}
 
+      {/* Selection Badge */}
+      {isSelected && (
+        <div className={styles.selectionBadge}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+      )}
+
       {/* Quick Actions Menu */}
-      {showActions && (onEdit || onDelete || onRefresh) && (
+      {showActions && (onEdit || onDelete || onRefresh || onToggleSelection) && (
         <div className={styles.actionsMenu}>
+          {onToggleSelection && (
+            <button
+              type="button"
+              onClick={onToggleSelection}
+              className={`${styles.actionButton} ${isSelected ? styles.actionButtonSelected : ""}`}
+              aria-label={isSelected ? "Deselect product" : "Select product"}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="20 6 9 17 4 12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
           {onRefresh && (
             <button
               type="button"
@@ -169,12 +195,6 @@ export function ProductCard({
       <div className={styles.content}>
         <div className={styles.header}>
           <h3 className={styles.title}>{block.name || "Untitled"}</h3>
-          {/* Status badge for product blocks */}
-          {productData.status && productData.status !== "considering" && (
-            <span className={`${styles.statusBadge} ${styles[`status_${productData.status}`]}`}>
-              {productData.status === "selected" ? "Selected" : "Ruled out"}
-            </span>
-          )}
         </div>
 
         {productData.description && (

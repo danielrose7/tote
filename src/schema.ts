@@ -17,7 +17,6 @@ const ProductData = z.object({
   priceValue: z.number().optional(),
   description: z.string().optional(),
   notes: z.string().optional(),
-  status: z.enum(["considering", "selected", "ruled-out"]).optional(),
 });
 
 const CollectionData = z.object({
@@ -29,8 +28,8 @@ const CollectionData = z.object({
 
 const SlotData = z.object({
   budget: z.number().optional(),
-  budgetDisplay: z.string().optional(),
-  selectedProductId: z.string().optional(),
+  maxSelections: z.number().optional(),
+  selectedProductIds: z.array(z.string()).optional(),
 });
 
 const ProjectData = z.object({

@@ -124,6 +124,113 @@ function SignInPrompt() {
 }
 
 /**
+ * Simple slot selector component for the extension
+ */
+function SlotSelector({
+  value,
+  onChange,
+  slots,
+  onCreateSlot,
+  disabled = false,
+}: {
+  value: string | null;
+  onChange: (slotId: string | null) => void;
+  slots: { id: string; name: string }[];
+  onCreateSlot: (name: string) => Promise<string>;
+  disabled?: boolean;
+}) {
+  const [inputValue, setInputValue] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  const selectedSlot = value ? slots.find((s) => s.id === value) : null;
+  const filteredSlots = inputValue
+    ? slots.filter((s) => s.name.toLowerCase().includes(inputValue.toLowerCase()))
+    : slots;
+  const exactMatch = slots.some(
+    (s) => s.name.toLowerCase() === inputValue.toLowerCase()
+  );
+  const showCreateOption = inputValue.trim() && !exactMatch;
+
+  const handleSelect = (slotId: string) => {
+    onChange(slotId);
+    setInputValue("");
+    setIsOpen(false);
+  };
+
+  const handleCreate = async () => {
+    if (!inputValue.trim() || isCreating) return;
+    setIsCreating(true);
+    try {
+      const newSlotId = await onCreateSlot(inputValue.trim());
+      onChange(newSlotId);
+      setInputValue("");
+      setIsOpen(false);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleClear = () => {
+    onChange(null);
+    setInputValue("");
+  };
+
+  if (selectedSlot && !isOpen) {
+    return (
+      <div className="slot-selected">
+        <span>{selectedSlot.name}</span>
+        {!disabled && (
+          <button type="button" onClick={handleClear} className="slot-clear">
+            ×
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="slot-selector">
+      <input
+        type="text"
+        value={inputValue}
+        onChange={(e) => {
+          setInputValue(e.target.value);
+          if (!isOpen) setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        onBlur={() => setTimeout(() => setIsOpen(false), 150)}
+        placeholder="Add to slot (optional)"
+        disabled={disabled}
+      />
+      {isOpen && !disabled && (
+        <ul className="slot-dropdown">
+          {filteredSlots.map((slot) => (
+            <li
+              key={slot.id}
+              onClick={() => handleSelect(slot.id)}
+              className={value === slot.id ? "selected" : ""}
+            >
+              {slot.name}
+            </li>
+          ))}
+          {showCreateOption && (
+            <li onClick={handleCreate} className="create-option">
+              {isCreating ? "Creating..." : `+ Create "${inputValue.trim()}"`}
+            </li>
+          )}
+          {filteredSlots.length === 0 && !showCreateOption && (
+            <li className="empty">
+              {slots.length === 0 ? "Type to create a slot" : "No matches"}
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
  * Save UI for authenticated users - uses Jazz directly
  */
 function SaveUI({
@@ -134,6 +241,7 @@ function SaveUI({
   onSuccess: () => void;
 }) {
   const [selectedCollection, setSelectedCollection] = useState<string>("");
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -161,6 +269,39 @@ function SaveUI({
       }
     }
   }
+
+  // Get slot blocks for the selected collection
+  const slots: { id: string; name: string }[] = [];
+  if (rootLoaded && root.blocks?.$isLoaded && selectedCollection) {
+    for (const b of Array.from(root.blocks)) {
+      if (b && b.$isLoaded && b.type === "slot" && b.parentId === selectedCollection) {
+        slots.push({ id: b.$jazz.id, name: b.name || "Unnamed slot" });
+      }
+    }
+  }
+
+  // Create a new slot
+  const handleCreateSlot = async (name: string): Promise<string> => {
+    if (!root?.blocks?.$isLoaded || !selectedCollection) {
+      throw new Error("Cannot create slot");
+    }
+
+    const newSlot = Block.create(
+      {
+        type: "slot",
+        name,
+        slotData: {
+          maxSelections: 1,
+        },
+        parentId: selectedCollection,
+        createdAt: new Date(),
+      },
+      { owner: root.blocks.$jazz.owner }
+    );
+
+    root.blocks.$jazz.push(newSlot);
+    return newSlot.$jazz.id;
+  };
 
   // Set default collection when collections load
   // Use the user's default collection, or fall back to the first one
@@ -208,6 +349,8 @@ function SaveUI({
 
       // Create a new product Block directly in Jazz
       // Use the root blocks' owner for proper permissions
+      // If a slot is selected, link to slot; otherwise link to collection
+      const parentId = selectedSlot || selectedCollection;
       const newProductBlock = Block.create(
         {
           type: "product",
@@ -217,9 +360,8 @@ function SaveUI({
             imageUrl: metadata.imageUrl,
             price: metadata.price,
             description: metadata.description,
-            status: "considering",
           },
-          parentId: selectedCollection, // Link to the collection
+          parentId,
           createdAt: new Date(),
         },
         { owner: root.blocks.$jazz.owner }
@@ -266,7 +408,10 @@ function SaveUI({
         <select
           id="collection"
           value={selectedCollection}
-          onChange={(e) => setSelectedCollection(e.target.value)}
+          onChange={(e) => {
+            setSelectedCollection(e.target.value);
+            setSelectedSlot(null); // Clear slot when collection changes
+          }}
           disabled={saving}
         >
           {collections.map((col) => (
@@ -275,6 +420,17 @@ function SaveUI({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="form-group">
+        <label>Slot <span className="optional">(optional)</span></label>
+        <SlotSelector
+          value={selectedSlot}
+          onChange={setSelectedSlot}
+          slots={slots}
+          onCreateSlot={handleCreateSlot}
+          disabled={saving}
+        />
       </div>
 
       <button className="save-button" onClick={handleSave} disabled={saving}>

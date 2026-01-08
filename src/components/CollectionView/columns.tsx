@@ -26,10 +26,21 @@ interface ColumnOptions {
   onRefresh?: (block: LoadedBlock) => void;
   refreshingBlockId?: string | null;
   enqueuedBlockIds?: string[];
+  allBlocks?: LoadedBlock[];
 }
 
 export function getColumns(options: ColumnOptions) {
-  const { onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds } = options;
+  const { onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds, allBlocks } = options;
+
+  // Helper to get slot name for a product
+  const getSlotName = (block: LoadedBlock): string | null => {
+    if (!block.parentId || !allBlocks) return null;
+    const parent = allBlocks.find((b) => b.$jazz.id === block.parentId);
+    if (parent?.type === "slot") {
+      return parent.name || "Unnamed slot";
+    }
+    return null;
+  };
 
   return [
     columnHelper.display({
@@ -108,19 +119,16 @@ export function getColumns(options: ColumnOptions) {
     }),
 
     columnHelper.display({
-      id: "status",
-      header: "Status",
-      size: 120,
+      id: "slot",
+      header: "Slot",
+      size: 140,
       cell: (info) => {
         const block = info.row.original;
-        const status = block.productData?.status;
-        if (!status || status === "considering") {
-          return <span className={styles.noValue}>-</span>;
-        }
-        return (
-          <span className={`${styles.statusBadge} ${styles[`status_${status}`]}`}>
-            {status === "selected" ? "Selected" : "Ruled out"}
-          </span>
+        const slotName = getSlotName(block);
+        return slotName ? (
+          <span className={styles.slotBadge}>{slotName}</span>
+        ) : (
+          <span className={styles.noValue}>-</span>
         );
       },
     }),

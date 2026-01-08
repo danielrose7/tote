@@ -8,6 +8,8 @@ import { fetchMetadata, isValidUrl } from "../../app/utils/metadata";
 import { Block as BlockSchema, BlockList } from "../../schema.ts";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import { SlotSelector } from "../SlotSelector/SlotSelector";
+import { getSlotsForCollection } from "../../lib/slotHelpers";
 import styles from "./AddLinkDialog.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;
@@ -34,26 +36,34 @@ export function AddLinkDialog({
   const { showToast } = useToast();
   const isOnline = useOnlineStatus();
   const [isLoading, setIsLoading] = useState(false);
+  // Track newly created slots to ensure they're available immediately
+  const [createdSlots, setCreatedSlots] = useState<LoadedBlock[]>([]);
 
   // Default to the provided collection ID, or the account's default block
   const defaultCollectionId = collectionId || (account.root?.$isLoaded ? account.root.defaultBlockId || null : null);
 
-  // Get collection blocks from blocks list
-  const getCollectionBlocks = (): LoadedBlock[] => {
+  // Get all loaded blocks
+  const getAllBlocks = (): LoadedBlock[] => {
     if (!account.root?.blocks?.$isLoaded) return [];
     const blocks: LoadedBlock[] = [];
     for (const block of account.root.blocks) {
-      if (block && block.$isLoaded && block.type === "collection" && !block.parentId) {
+      if (block && block.$isLoaded) {
         blocks.push(block);
       }
     }
     return blocks;
   };
 
+  // Get collection blocks from blocks list
+  const getCollectionBlocks = (): LoadedBlock[] => {
+    return getAllBlocks().filter((b) => b.type === "collection" && !b.parentId);
+  };
+
   const formik = useFormik({
     initialValues: {
       url: "",
       collectionId: defaultCollectionId || "",
+      slotId: null as string | null,
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -78,7 +88,8 @@ export function AddLinkDialog({
           (b) => b && b.$isLoaded && b.$jazz.id === values.collectionId
         );
 
-        // Create a product block with parentId set to the collection
+        // Create a product block with parentId set to slot (if selected) or collection
+        const parentId = values.slotId || values.collectionId;
         const newProductBlock = BlockSchema.create(
           {
             type: "product",
@@ -88,9 +99,8 @@ export function AddLinkDialog({
               imageUrl: metadata.imageUrl,
               price: metadata.price,
               description: metadata.description,
-              status: "considering",
             },
-            parentId: values.collectionId,  // Set parent to collection
+            parentId,
             createdAt: new Date(),
           },
           account.$jazz,
@@ -125,9 +135,48 @@ export function AddLinkDialog({
       values: {
         url: "",
         collectionId: defaultCollectionId || "",
+        slotId: null,
       },
     });
+    setCreatedSlots([]); // Clear created slots on close
     onOpenChange(false);
+  };
+
+  // Get slots for the currently selected collection (including newly created ones)
+  const getSlotsForSelectedCollection = (): LoadedBlock[] => {
+    if (!formik.values.collectionId) return [];
+    const existingSlots = getSlotsForCollection(getAllBlocks(), formik.values.collectionId);
+    // Merge in any newly created slots that might not be in the blocks list yet
+    const existingIds = new Set(existingSlots.map(s => s.$jazz.id));
+    const newSlots = createdSlots.filter(s =>
+      s.parentId === formik.values.collectionId && !existingIds.has(s.$jazz.id)
+    );
+    return [...existingSlots, ...newSlots];
+  };
+
+  // Create a new slot in the selected collection
+  const handleCreateSlot = async (name: string): Promise<string> => {
+    if (!account.root?.blocks?.$isLoaded) {
+      throw new Error("Blocks not loaded");
+    }
+
+    const newSlot = BlockSchema.create(
+      {
+        type: "slot",
+        name,
+        slotData: {
+          maxSelections: 1,
+        },
+        parentId: formik.values.collectionId,
+        createdAt: new Date(),
+      },
+      account.$jazz,
+    );
+
+    account.root.blocks.$jazz.push(newSlot);
+    // Track the new slot locally to ensure it's immediately available
+    setCreatedSlots(prev => [...prev, newSlot as LoadedBlock]);
+    return newSlot.$jazz.id;
   };
 
   return (
@@ -175,7 +224,11 @@ export function AddLinkDialog({
                     id="collectionId"
                     name="collectionId"
                     value={formik.values.collectionId}
-                    onChange={formik.handleChange}
+                    onChange={(e) => {
+                      formik.handleChange(e);
+                      // Clear slot when collection changes
+                      formik.setFieldValue("slotId", null);
+                    }}
                     onBlur={formik.handleBlur}
                     className={styles.select}
                     disabled={isLoading}
@@ -189,6 +242,23 @@ export function AddLinkDialog({
                 </div>
               );
             })()}
+
+            {/* Slot Selector */}
+            {formik.values.collectionId && (
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>
+                  Slot <span className={styles.optional}>(optional)</span>
+                </label>
+                <SlotSelector
+                  value={formik.values.slotId}
+                  onChange={(slotId) => formik.setFieldValue("slotId", slotId)}
+                  slots={getSlotsForSelectedCollection()}
+                  onCreateSlot={handleCreateSlot}
+                  placeholder="Add to slot (optional)"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             <div className={styles.actions}>
               <Dialog.Close asChild>

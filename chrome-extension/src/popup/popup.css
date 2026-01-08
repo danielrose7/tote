@@ -282,3 +282,93 @@ body {
 .sign-in-button:active {
   transform: scale(0.98);
 }
+
+/* Optional label */
+.optional {
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+/* Slot Selector */
+.slot-selector {
+  position: relative;
+}
+
+.slot-selector input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+}
+
+.slot-selector input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.slot-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 160px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.slot-dropdown li {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.slot-dropdown li:hover,
+.slot-dropdown li.selected {
+  background: #f3f4f6;
+}
+
+.slot-dropdown li.create-option {
+  color: #6366f1;
+  font-weight: 500;
+  border-top: 1px solid #e5e7eb;
+}
+
+.slot-dropdown li.empty {
+  color: #9ca3af;
+  cursor: default;
+}
+
+.slot-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.slot-clear {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.slot-clear:hover {
+  color: #6b7280;
+}

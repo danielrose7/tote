@@ -15,6 +15,7 @@ type LoadedBlock = co.loaded<typeof Block>;
 
 interface TableViewProps {
   blocks: LoadedBlock[];
+  allBlocks?: LoadedBlock[]; // All blocks for looking up slot names
   onEdit?: (block: LoadedBlock) => void;
   onDelete?: (block: LoadedBlock) => void;
   onRefresh?: (block: LoadedBlock) => void;
@@ -24,6 +25,7 @@ interface TableViewProps {
 
 export function TableView({
   blocks,
+  allBlocks,
   onEdit,
   onDelete,
   onRefresh,
@@ -33,8 +35,8 @@ export function TableView({
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(
-    () => getColumns({ onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds }),
-    [onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds]
+    () => getColumns({ onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds, allBlocks }),
+    [onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds, allBlocks]
   );
 
   const table = useReactTable({
