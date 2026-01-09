@@ -3,7 +3,7 @@ import { Providers } from "./providers";
 import "../index.css";
 
 export const metadata: Metadata = {
-  title: "tote - Your product wishlist",
+  title: "tote - One place, every store",
   description: "Save and organize product links you want to remember",
 };
 

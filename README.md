@@ -1,4 +1,4 @@
-# Tote - Product Wishlist App
+# Tote - One place, every store
 
 A snazzy product link collection app built with **[Jazz](https://jazz.tools)** (distributed database), React, Next.js, and TypeScript. Save, organize, and track products you want to remember with rich metadata, visual displays, and collections.
 

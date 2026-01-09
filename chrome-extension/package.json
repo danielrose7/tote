@@ -4,8 +4,10 @@
   "description": "Save products to your Tote collections from any webpage",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --mode development",
+    "build": "vite build --mode production",
+    "build:dev": "vite build --mode development",
+    "build:zip": "vite build --mode production && cd dist && zip -r ../tote-extension.zip .",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run"

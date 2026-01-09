@@ -148,7 +148,7 @@ export default function HomePage() {
           <div className={styles.featureContent}>
             <h2 className={styles.featureTitle}>Organize your way</h2>
             <p className={styles.featureDescription}>
-              Create collections for different projects, seasons, or wishlists.
+              Create collections for different projects, seasons, or goals.
               Whether it's a home renovation, gift ideas, or your personal style board—keep
               everything sorted exactly how you think about it.
             </p>
@@ -185,7 +185,7 @@ export default function HomePage() {
             <h2 className={styles.featureTitle}>Your data stays yours</h2>
             <p className={styles.featureDescription}>
               No tracking, no ads, no selling your shopping habits.
-              Tote is built for you, not advertisers. Your wishlist is
+              Tote is built for you, not advertisers. Your data is
               private and syncs securely across your devices.
             </p>
           </div>

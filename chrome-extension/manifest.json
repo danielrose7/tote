@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Tote - Save Products",
+  "name": "Tote",
   "version": "0.1.0",
-  "description": "Save products to your Tote collections from any webpage",
+  "description": "One place, every store. Save anything from the web.",
   "icons": {
     "16": "assets/icons/icon16.png",
     "48": "assets/icons/icon48.png",
@@ -38,7 +38,8 @@
   ],
   "host_permissions": [
     "<all_urls>",
-    "https://*.clerk.accounts.dev/*"
+    "https://*.clerk.accounts.dev/*",
+    "https://clerk.tote.tools/*"
   ],
   "externally_connectable": {
     "matches": [

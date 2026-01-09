@@ -132,7 +132,7 @@ export function EditCollectionDialog({
                 value={formik.values.name}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                placeholder="e.g., Wishlist, Tech Gadgets, Home Decor"
+                placeholder="e.g., Gift Ideas, Tech Gadgets, Home Decor"
                 className={styles.input}
                 maxLength={50}
                 autoFocus

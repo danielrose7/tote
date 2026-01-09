@@ -5,7 +5,6 @@ import { useAccount } from "jazz-tools/react";
 import { JazzAccount, Block } from "@tote/schema";
 import type { co } from "jazz-tools";
 import { ExtensionProviders, JazzProvider } from "../providers/ExtensionProviders";
-import { SYNC_HOST } from "../config";
 import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
 
 // Error boundary to catch rendering errors
@@ -110,7 +109,8 @@ function MetadataPreview({ metadata }: { metadata: ExtractedMetadata | null }) {
  */
 function SignInPrompt() {
   const handleSignIn = () => {
-    chrome.tabs.create({ url: `${SYNC_HOST}/extension-auth` });
+    // Auth page is on main app, not Clerk domain
+    chrome.tabs.create({ url: "https://tote.tools/extension-auth" });
   };
 
   return (
@@ -436,30 +436,6 @@ function SaveUI({
       <button className="save-button" onClick={handleSave} disabled={saving}>
         {saving ? "Saving..." : "Save to Tote"}
       </button>
-
-      <details className="debug">
-        <summary>Debug Info</summary>
-        <pre>
-          {JSON.stringify(
-            {
-              authType: "Clerk + Jazz Native",
-              jazzAccountId: me?.$jazz?.id || "Loading...",
-              collectionsCount: collections.length,
-              selectedCollection: selectedCollection || "None",
-              metadata: metadata
-                ? {
-                    title: metadata.title?.substring(0, 50),
-                    url: metadata.url?.substring(0, 50),
-                    price: metadata.price,
-                    platform: metadata.platform,
-                  }
-                : null,
-            },
-            null,
-            2
-          )}
-        </pre>
-      </details>
     </>
   );
 }
@@ -580,18 +556,8 @@ function App() {
   );
 }
 
-console.log("[Tote] Popup script loading...");
-
-try {
-  const rootElement = document.getElementById("root");
-  if (!rootElement) {
-    console.error("[Tote] Root element not found!");
-  } else {
-    console.log("[Tote] Mounting React app...");
-    const root = createRoot(rootElement);
-    root.render(<App />);
-    console.log("[Tote] React app mounted");
-  }
-} catch (err) {
-  console.error("[Tote] Failed to mount app:", err);
+const rootElement = document.getElementById("root");
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(<App />);
 }

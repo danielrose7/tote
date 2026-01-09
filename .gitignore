@@ -27,3 +27,10 @@ dist-ssr
 *.sw?
 
 playwright-report
+.vercel
+
+# Environment files (keep out of version control)
+.env.production
+chrome-extension/.env.development
+chrome-extension/.env.production
+chrome-extension/tote-extension.zip
