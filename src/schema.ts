@@ -24,6 +24,13 @@ const CollectionData = z.object({
   description: z.string().optional(),
   viewMode: z.enum(["grid", "table"]).optional(),
   budget: z.number().optional(),
+  // Sharing fields for collaborator access
+  sharingGroupId: z.string().optional(), // Group ID for invite-based sharing
+  // Publishing fields for draft/publish workflow
+  publishedId: z.string().optional(), // ID of the published clone (on draft)
+  sourceId: z.string().optional(), // ID of the source draft (on published clone)
+  publishedAt: z.date().optional(), // When last published
+  childBlockIds: z.array(z.string()).optional(), // IDs of child blocks (for public view)
 });
 
 const SlotData = z.object({
@@ -56,6 +63,22 @@ export const Block = co.map({
 /** List of blocks - defined after Block */
 export const BlockList = co.list(Block);
 
+// =============================================================================
+// Sharing Schema
+// =============================================================================
+
+/** Reference to a collection shared with the current user */
+export const SharedCollectionRef = co.map({
+  collectionId: z.string(),
+  role: z.enum(["reader", "writer", "admin"]),
+  sharedBy: z.string(), // Account ID of the person who shared
+  sharedAt: z.date(),
+  name: z.string().optional(), // Cached name for display
+});
+
+/** List of collections shared with the current user */
+export const SharedWithMeList = co.list(SharedCollectionRef);
+
 /** The account profile is an app-specific per-user public `CoMap`
  *  where you can store top-level objects for that user */
 export const JazzProfile = co.profile({
@@ -68,6 +91,7 @@ export const AccountRoot = co.map({
   blocks: BlockList.optional(),
   defaultBlockId: z.string().optional(),
   clerkUserId: z.string().optional(),
+  sharedWithMe: SharedWithMeList.optional(), // Collections others have shared with this user
 });
 
 export const JazzAccount = co

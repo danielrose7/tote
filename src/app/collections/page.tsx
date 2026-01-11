@@ -18,7 +18,8 @@ export default function CollectionsPage() {
     resolve: {
       profile: true,
       root: {
-        blocks: { $each: {} }
+        blocks: { $each: {} },
+        sharedWithMe: { $each: {} },
       }
     },
   });

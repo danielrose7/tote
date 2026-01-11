@@ -11,6 +11,7 @@ import { AddLinkDialog } from "../../../components/AddLinkDialog";
 import { EditLinkDialog } from "../../../components/EditLinkDialog";
 import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
 import { DeleteConfirmDialog } from "../../../components/DeleteConfirmDialog";
+import { ShareCollectionDialog } from "../../../components/ShareCollectionDialog";
 import { useToast } from "../../../components/ToastNotification";
 
 type LoadedBlock = co.loaded<typeof Block>;
@@ -34,6 +35,7 @@ export default function CollectionDetailPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<LoadedBlock | null>(null);
 
@@ -160,6 +162,7 @@ export default function CollectionDetailPage() {
           onEditBlock={handleEditBlock}
           onDeleteBlock={handleDeleteBlock}
           onEditCollection={() => setIsEditCollectionDialogOpen(true)}
+          onShareCollection={() => setIsShareDialogOpen(true)}
         />
       </main>
       <AddLinkDialog
@@ -185,6 +188,13 @@ export default function CollectionDetailPage() {
         onOpenChange={setIsDeleteDialogOpen}
         block={selectedBlock}
         onConfirm={handleConfirmDelete}
+      />
+      <ShareCollectionDialog
+        open={isShareDialogOpen}
+        onOpenChange={setIsShareDialogOpen}
+        collection={collectionBlock}
+        allBlocks={allBlocks}
+        account={me}
       />
     </>
   );

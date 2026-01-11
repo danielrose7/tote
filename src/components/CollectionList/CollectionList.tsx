@@ -1,9 +1,12 @@
-import type { Block, JazzAccount } from "../../schema.ts";
+import { useCoState } from "jazz-tools/react";
+import type { Block, JazzAccount, SharedCollectionRef } from "../../schema.ts";
+import { Block as BlockSchema } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { CollectionCard } from "../CollectionCard/CollectionCard";
 import styles from "./CollectionList.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;
+type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
 
 interface CollectionListProps {
   account: co.loaded<typeof JazzAccount>;
@@ -78,8 +81,19 @@ export function CollectionList({
     }
   }
 
+  // Get shared collection references
+  const sharedRefs: LoadedSharedRef[] = [];
+  if (account.root.sharedWithMe?.$isLoaded) {
+    for (const ref of account.root.sharedWithMe) {
+      if (ref && ref.$isLoaded) {
+        sharedRefs.push(ref);
+      }
+    }
+  }
+
   return (
     <div className={styles.container}>
+      {/* My Collections */}
       <div className={styles.grid}>
         {collectionBlocks.map((block) => (
           <CollectionCard
@@ -92,6 +106,68 @@ export function CollectionList({
           />
         ))}
       </div>
+
+      {/* Shared With Me */}
+      {sharedRefs.length > 0 && (
+        <div className={styles.sharedSection}>
+          <h2 className={styles.sectionTitle}>Shared with me</h2>
+          <div className={styles.grid}>
+            {sharedRefs.map((ref) => (
+              <SharedCollectionCard
+                key={ref.collectionId}
+                collectionId={ref.collectionId}
+                sharedRef={ref}
+                onClick={onSelectCollection}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+/** Card component that loads a shared collection by ID */
+function SharedCollectionCard({
+  collectionId,
+  sharedRef,
+  onClick,
+}: {
+  collectionId: string;
+  sharedRef: LoadedSharedRef;
+  onClick?: (block: LoadedBlock) => void;
+}) {
+  const collection = useCoState(BlockSchema, collectionId as `co_z${string}`, {});
+
+  if (!collection || collection.type !== "collection") {
+    return (
+      <div className={styles.sharedCard}>
+        <div className={styles.sharedCardLoading}>
+          {sharedRef.name || "Loading..."}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={styles.sharedCard}
+      onClick={() => onClick?.(collection)}
+    >
+      <div
+        className={styles.sharedCardColor}
+        style={{ backgroundColor: collection.collectionData?.color || "#6366f1" }}
+      />
+      <div className={styles.sharedCardContent}>
+        <h3 className={styles.sharedCardTitle}>{collection.name}</h3>
+        {collection.collectionData?.description && (
+          <p className={styles.sharedCardDescription}>
+            {collection.collectionData.description}
+          </p>
+        )}
+        <span className={styles.sharedBadge}>Shared</span>
+      </div>
+    </button>
   );
 }
