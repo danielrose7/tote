@@ -542,14 +542,34 @@ export async function getOrCreateSharingGroup(
 
 /**
  * Generate an invite link for a collection.
- * Uses Jazz's createInviteLink for proper formatting.
+ * Creates a path-based URL instead of Jazz's default hash-based URL.
+ * Format: /invite/[collectionId]?secret=[inviteSecret]&role=[role]
  */
 export function generateCollectionInviteLink(
   collection: LoadedBlock,
   role: SharingRole,
   baseUrl: string
 ): string {
-  // Use Jazz's createInviteLink function
-  // This creates a properly formatted invite URL
-  return createInviteLink(collection, role, baseUrl);
+  // Use Jazz's createInviteLink to generate the invite secret
+  const hashBasedUrl = createInviteLink(collection, role, baseUrl);
+
+  // Parse the hash-based URL to extract the invite secret
+  // Format is: baseUrl#/invite/{valueId}/{inviteSecret}
+  const hashPart = hashBasedUrl.split('#')[1];
+  if (!hashPart) {
+    throw new Error('Failed to generate invite link');
+  }
+
+  // Parse: /invite/{valueId}/{inviteSecret}
+  const parts = hashPart.split('/').filter(Boolean);
+  // parts = ['invite', valueId, inviteSecret]
+  if (parts.length < 3 || parts[0] !== 'invite') {
+    throw new Error('Invalid invite link format');
+  }
+
+  const valueId = parts[1];
+  const inviteSecret = parts[2];
+
+  // Create path-based URL
+  return `${baseUrl}/invite/${valueId}?secret=${encodeURIComponent(inviteSecret)}&role=${role}`;
 }
