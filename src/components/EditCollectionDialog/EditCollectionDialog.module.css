@@ -230,3 +230,83 @@
   background-color: var(--color-surface);
   color: var(--color-text-secondary);
 }
+
+/* Danger Zone */
+.dangerZone {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.dangerHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.dangerTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-danger);
+}
+
+.dangerDescription {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.dangerConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.dangerLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.dangerLabel strong {
+  color: var(--color-text-primary);
+  font-family: monospace;
+  background-color: var(--color-surface);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.dangerInput {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.dangerInput:focus {
+  outline: none;
+  border-color: var(--color-danger);
+}
+
+.dangerButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.dangerButton:hover:not(:disabled) {
+  background-color: #bb2d3b;
+}
+
+.dangerButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

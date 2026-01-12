@@ -33,7 +33,12 @@ function PublicViewContent() {
   // Load the published collection in guest mode
   const collection = useCoState(Block, collectionId as `co_z${string}`, {});
 
-  if (!collection) {
+  // Show loading state while collection is loading or not yet fully available
+  // We need to wait for both the collection AND its collectionData to be present
+  // before we can determine if it's a valid published collection
+  const isLoading = !collection || !collection.$isLoaded || collection.type === undefined;
+
+  if (isLoading) {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
@@ -44,7 +49,7 @@ function PublicViewContent() {
     );
   }
 
-  // Check if this is actually a collection
+  // Now we know the collection is loaded, check if it's actually a collection
   if (collection.type !== "collection") {
     return (
       <div className={styles.container}>

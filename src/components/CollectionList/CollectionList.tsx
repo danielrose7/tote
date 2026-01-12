@@ -40,9 +40,16 @@ export function CollectionList({
   }
 
   // Filter to only top-level collection blocks (no parentId)
+  // Also exclude published clones (they have sourceId set) - we only show the original drafts
   const collectionBlocks: LoadedBlock[] = [];
   for (const block of blocks) {
-    if (block && block.$isLoaded && block.type === "collection" && !block.parentId) {
+    if (
+      block &&
+      block.$isLoaded &&
+      block.type === "collection" &&
+      !block.parentId &&
+      !block.collectionData?.sourceId // Exclude published clones
+    ) {
       collectionBlocks.push(block);
     }
   }

@@ -236,6 +236,245 @@ export function unpublishCollection(sourceCollection: LoadedBlock): void {
   });
 }
 
+/**
+ * Republish a collection by updating the existing published clone in place.
+ * This preserves the public URL by keeping the same published collection ID.
+ * Child blocks are recreated fresh.
+ *
+ * Returns the newly created child blocks so caller can add them to their blocks list.
+ */
+export function republishCollection(
+  sourceCollection: LoadedBlock,
+  allBlocks: LoadedBlock[],
+  owner: Account,
+  blockList: { $jazz: { splice: (index: number, deleteCount: number) => void }; length: number; [index: number]: LoadedBlock | null }
+): LoadedBlock[] {
+  if (sourceCollection.type !== "collection") {
+    throw new Error("Can only republish collection blocks");
+  }
+
+  if (!isPublished(sourceCollection)) {
+    throw new Error("Collection is not published");
+  }
+
+  const publishedId = sourceCollection.collectionData?.publishedId;
+  if (!publishedId) {
+    throw new Error("No published ID found");
+  }
+
+  // Find the published collection
+  const publishedCollection = allBlocks.find(
+    (b) => b.$jazz.id === publishedId
+  );
+
+  if (!publishedCollection) {
+    throw new Error("Published collection not found");
+  }
+
+  // Collect IDs of old child blocks to delete (but NOT the collection itself)
+  const childIdsToDelete = new Set<string>();
+
+  if (publishedCollection.collectionData?.childBlockIds) {
+    for (const childId of publishedCollection.collectionData.childBlockIds) {
+      childIdsToDelete.add(childId);
+    }
+  }
+
+  // Also find children by parentId traversal
+  const findDescendants = (parentId: string) => {
+    for (const block of allBlocks) {
+      if (block.parentId === parentId) {
+        childIdsToDelete.add(block.$jazz.id);
+        findDescendants(block.$jazz.id);
+      }
+    }
+  };
+  findDescendants(publishedId);
+
+  // Remove old child blocks from the list
+  for (let i = blockList.length - 1; i >= 0; i--) {
+    const block = blockList[i];
+    if (block && childIdsToDelete.has(block.$jazz.id)) {
+      blockList.$jazz.splice(i, 1);
+    }
+  }
+
+  // Update the published collection's properties (preserve sourceId!)
+  publishedCollection.$jazz.set("name", sourceCollection.name);
+
+  // Create a new Group for child blocks with "everyone" as reader
+  const group = Group.create({ owner });
+  group.addMember("everyone", "reader");
+
+  // Create new child blocks
+  const createdBlocks: LoadedBlock[] = [];
+
+  const childBlocks = allBlocks.filter(
+    (b) => b.parentId === sourceCollection.$jazz.id
+  );
+
+  for (const child of childBlocks) {
+    if (child.type === "slot") {
+      const clonedSlot = Block.create(
+        {
+          type: "slot",
+          name: child.name,
+          slotData: child.slotData,
+          parentId: publishedId,
+          sortOrder: child.sortOrder,
+          createdAt: child.createdAt,
+        },
+        { owner: group }
+      ) as LoadedBlock;
+
+      createdBlocks.push(clonedSlot);
+
+      // Clone products in this slot
+      const slotProducts = allBlocks.filter(
+        (b) => b.parentId === child.$jazz.id && b.type === "product"
+      );
+
+      for (const product of slotProducts) {
+        const clonedProduct = Block.create(
+          {
+            type: "product",
+            name: product.name,
+            productData: product.productData,
+            parentId: clonedSlot.$jazz.id,
+            sortOrder: product.sortOrder,
+            createdAt: product.createdAt,
+          },
+          { owner: group }
+        ) as LoadedBlock;
+
+        createdBlocks.push(clonedProduct);
+      }
+    } else if (child.type === "product") {
+      const clonedProduct = Block.create(
+        {
+          type: "product",
+          name: child.name,
+          productData: child.productData,
+          parentId: publishedId,
+          sortOrder: child.sortOrder,
+          createdAt: child.createdAt,
+        },
+        { owner: group }
+      ) as LoadedBlock;
+
+      createdBlocks.push(clonedProduct);
+    }
+  }
+
+  // Update published collection's collectionData with new child IDs and synced properties
+  const childBlockIds = createdBlocks.map((b) => b.$jazz.id);
+  publishedCollection.$jazz.set("collectionData", {
+    // Preserve critical fields
+    sourceId: publishedCollection.collectionData?.sourceId,
+    // Sync display properties from source
+    color: sourceCollection.collectionData?.color,
+    description: sourceCollection.collectionData?.description,
+    viewMode: sourceCollection.collectionData?.viewMode,
+    budget: sourceCollection.collectionData?.budget,
+    // Update child block IDs
+    childBlockIds,
+    // Update timestamp
+    publishedAt: new Date(),
+  });
+
+  // Update publishedAt on source
+  sourceCollection.$jazz.set("collectionData", {
+    ...sourceCollection.collectionData,
+    publishedAt: new Date(),
+  });
+
+  return createdBlocks;
+}
+
+// =============================================================================
+// Deletion
+// =============================================================================
+
+/**
+ * Get all block IDs that should be deleted when deleting a collection.
+ * This includes: the collection itself, all children (slots, products),
+ * and any published clone with its children.
+ */
+export function getBlocksToDelete(
+  collection: LoadedBlock,
+  allBlocks: LoadedBlock[]
+): string[] {
+  if (collection.type !== "collection") {
+    return [collection.$jazz.id];
+  }
+
+  const idsToDelete: string[] = [];
+  const collectionId = collection.$jazz.id;
+
+  // Add the collection itself
+  idsToDelete.push(collectionId);
+
+  // Find all descendants recursively
+  const findDescendants = (parentId: string) => {
+    for (const block of allBlocks) {
+      if (block.parentId === parentId) {
+        idsToDelete.push(block.$jazz.id);
+        // Recursively find children of this block (e.g., products in slots)
+        findDescendants(block.$jazz.id);
+      }
+    }
+  };
+
+  findDescendants(collectionId);
+
+  // If this collection has a published clone, delete it and its children too
+  const publishedId = collection.collectionData?.publishedId;
+  if (publishedId) {
+    idsToDelete.push(publishedId);
+
+    // Find the published collection to get its children
+    const publishedCollection = allBlocks.find(
+      (b) => b.$jazz.id === publishedId
+    );
+    if (publishedCollection) {
+      findDescendants(publishedId);
+
+      // Also check childBlockIds stored on the published collection
+      const childBlockIds = publishedCollection.collectionData?.childBlockIds;
+      if (childBlockIds) {
+        for (const childId of childBlockIds) {
+          if (!idsToDelete.includes(childId)) {
+            idsToDelete.push(childId);
+          }
+        }
+      }
+    }
+  }
+
+  return idsToDelete;
+}
+
+/**
+ * Delete a collection and all its related blocks from the account's block list.
+ * This removes: the collection, all children (slots, products),
+ * and any published clone with its children.
+ */
+export function deleteCollectionRecursively(
+  collection: LoadedBlock,
+  allBlocks: LoadedBlock[],
+  blockList: { $jazz: { splice: (index: number, deleteCount: number) => void }; length: number; [index: number]: LoadedBlock | null }
+): void {
+  const idsToDelete = new Set(getBlocksToDelete(collection, allBlocks));
+
+  // Remove blocks from the list by splicing (iterate backwards to avoid index issues)
+  for (let i = blockList.length - 1; i >= 0; i--) {
+    const block = blockList[i];
+    if (block && idsToDelete.has(block.$jazz.id)) {
+      blockList.$jazz.splice(i, 1);
+    }
+  }
+}
+
 // =============================================================================
 // Collaborator Sharing (Invite-based)
 // =============================================================================

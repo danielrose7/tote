@@ -1,11 +1,12 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import type { Block, JazzAccount } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import { deleteCollectionRecursively } from "../../lib/blocks";
 import styles from "./EditCollectionDialog.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;
@@ -46,8 +47,10 @@ export function EditCollectionDialog({
 }: EditCollectionDialogProps) {
   const { showToast } = useToast();
   const isOnline = useOnlineStatus();
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   const collectionData = block?.collectionData;
+  const confirmPhrase = "delete this collection";
 
   const isDefault = account.root?.$isLoaded
     ? account.root.defaultBlockId === block?.$jazz.id
@@ -107,6 +110,33 @@ export function EditCollectionDialog({
   };
 
   const handleClose = () => {
+    setDeleteConfirmation("");
+    onOpenChange(false);
+  };
+
+  const handleDelete = () => {
+    if (!block || !account.root?.blocks?.$isLoaded) return;
+    if (deleteConfirmation.toLowerCase() !== confirmPhrase) return;
+
+    const blockName = block.name;
+
+    // Get all loaded blocks for the recursive delete
+    const allBlocks: LoadedBlock[] = [];
+    for (const b of account.root.blocks) {
+      if (b && b.$isLoaded) {
+        allBlocks.push(b);
+      }
+    }
+
+    deleteCollectionRecursively(block, allBlocks, account.root.blocks);
+
+    showToast({
+      title: "Collection deleted",
+      description: `"${blockName}" and all its contents have been deleted`,
+      variant: "success",
+    });
+
+    setDeleteConfirmation("");
     onOpenChange(false);
   };
 
@@ -212,6 +242,38 @@ export function EditCollectionDialog({
               >
                 {isDefault ? "✓ Default" : "Set as Default"}
               </button>
+            </div>
+
+            {/* Danger Zone */}
+            <div className={styles.dangerZone}>
+              <div className={styles.dangerHeader}>
+                <span className={styles.dangerTitle}>Delete Collection</span>
+                <span className={styles.dangerDescription}>
+                  This will permanently delete this collection, all its products, slots, and any published copies.
+                </span>
+              </div>
+              <div className={styles.dangerConfirm}>
+                <label htmlFor="delete-confirm" className={styles.dangerLabel}>
+                  Type <strong>{confirmPhrase}</strong> to confirm
+                </label>
+                <input
+                  id="delete-confirm"
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder={confirmPhrase}
+                  className={styles.dangerInput}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={deleteConfirmation.toLowerCase() !== confirmPhrase}
+                  className={styles.dangerButton}
+                >
+                  Delete Collection
+                </button>
+              </div>
             </div>
 
             <div className={styles.actions}>

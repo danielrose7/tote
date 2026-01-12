@@ -7,6 +7,7 @@ import {
   isPublishedClone,
   publishCollection,
   unpublishCollection,
+  republishCollection,
   generateCollectionInviteLink,
   type LoadedBlock,
   type SharingRole,
@@ -39,6 +40,7 @@ export function ShareCollectionDialog({
 
   // Publish state
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isRepublishing, setIsRepublishing] = useState(false);
   const [publishCopied, setPublishCopied] = useState(false);
 
   const published = isPublished(collection);
@@ -130,6 +132,56 @@ export function ShareCollectionDialog({
       variant: "success",
     });
   }, [collection, showToast]);
+
+  const handleRepublish = useCallback(async () => {
+    if (!account.root?.blocks?.$isLoaded) return;
+
+    setIsRepublishing(true);
+    try {
+      // Get fresh allBlocks from account to ensure we have latest state
+      const freshBlocks: LoadedBlock[] = [];
+      for (const block of account.root.blocks) {
+        if (block && block.$isLoaded) {
+          freshBlocks.push(block);
+        }
+      }
+
+      const createdChildBlocks = republishCollection(
+        collection,
+        freshBlocks,
+        account,
+        account.root.blocks
+      );
+
+      // Add new child blocks to the list
+      for (const block of createdChildBlocks) {
+        account.root.blocks.$jazz.push(block);
+      }
+
+      // Wait for collection to sync (it was updated in place)
+      await collection.$jazz.waitForSync({ timeout: 5000 });
+
+      // Wait for child blocks to sync
+      for (const block of createdChildBlocks) {
+        await block.$jazz.waitForSync({ timeout: 5000 });
+      }
+
+      showToast({
+        title: "Collection updated",
+        description: "The public version has been updated with your changes",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Failed to republish:", error);
+      showToast({
+        title: "Failed to update",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "error",
+      });
+    } finally {
+      setIsRepublishing(false);
+    }
+  }, [collection, account, showToast]);
 
   const handleCopyPublic = useCallback(() => {
     const link = getPublicLink();
@@ -249,13 +301,26 @@ export function ShareCollectionDialog({
                   </p>
                 )}
 
-                <button
-                  type="button"
-                  onClick={handleUnpublish}
-                  className={styles.unpublishButton}
-                >
-                  Make Private
-                </button>
+                <div className={styles.publishActions}>
+                  <button
+                    type="button"
+                    onClick={handleRepublish}
+                    disabled={isRepublishing}
+                    className={styles.updateButton}
+                  >
+                    {isRepublishing ? "Updating..." : "Update Public Version"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUnpublish}
+                    className={styles.unpublishButton}
+                  >
+                    Make Private
+                  </button>
+                </div>
+                <p className={styles.publishHint}>
+                  Update pushes your latest changes to the public version.
+                </p>
               </>
             ) : (
               <>
