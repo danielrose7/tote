@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import type { JazzAccount } from "../../schema.ts";
 import type { co } from "jazz-tools";
+import { Group } from "jazz-tools";
 import { Block, BlockList } from "../../schema.ts";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
@@ -57,7 +58,11 @@ export function CreateCollectionDialog({
       }
 
       try {
-        // Create the collection block (no parentId = top-level)
+        // Create a Group for this collection to enable sharing
+        const ownerGroup = Group.create({ owner: account });
+        ownerGroup.addMember(account, "admin");
+
+        // Create the collection block owned by the group (enables sharing)
         const newCollectionBlock = Block.create(
           {
             type: "collection",
@@ -66,10 +71,11 @@ export function CreateCollectionDialog({
               description: values.description.trim() || undefined,
               color: values.color,
               viewMode: "grid",
+              sharingGroupId: ownerGroup.$jazz.id, // Store the group ID for invites
             },
             createdAt: new Date(),
           },
-          account.$jazz,
+          { owner: ownerGroup },
         );
 
         // Ensure blocks exists and add the new collection

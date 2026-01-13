@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useAccount } from "jazz-tools/react";
+import { useAccount, useCoState } from "jazz-tools/react";
 import { useRouter, useParams } from "next/navigation";
-import { JazzAccount, type Block, BlockList } from "../../../schema";
+import { JazzAccount, Block as BlockSchema, type Block, BlockList } from "../../../schema";
 import type { co } from "jazz-tools";
 import { Header } from "../../../components/Header";
 import { CollectionView } from "../../../components/CollectionView/CollectionView";
@@ -25,10 +25,14 @@ export default function CollectionDetailPage() {
     resolve: {
       profile: true,
       root: {
-        blocks: { $each: {} }
+        blocks: { $each: {} },
+        sharedWithMe: { $each: {} },
       }
     },
   });
+
+  // Load the collection directly by ID (works for both owned and shared collections)
+  const directCollection = useCoState(BlockSchema, collectionId as `co_z${string}`, {});
 
   const { showToast } = useToast();
 
@@ -39,7 +43,7 @@ export default function CollectionDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<LoadedBlock | null>(null);
 
-  // Get all loaded blocks
+  // Get all loaded blocks from owned collections
   const allBlocks = useMemo(() => {
     if (!me.$isLoaded || !me.root?.$isLoaded || !me.root.blocks?.$isLoaded) {
       return [];
@@ -53,10 +57,27 @@ export default function CollectionDetailPage() {
     return blocks;
   }, [me]);
 
-  // Find the collection block by ID
+  // Check if this is a shared collection
+  const isSharedCollection = useMemo(() => {
+    if (!me.$isLoaded || !me.root?.sharedWithMe?.$isLoaded) return false;
+    return me.root.sharedWithMe.some(
+      (ref) => ref?.$isLoaded && ref.collectionId === collectionId
+    );
+  }, [me, collectionId]);
+
+  // Find the collection block - check owned blocks first, then use direct load for shared
   const collectionBlock = useMemo(() => {
-    return allBlocks.find((b) => b.$jazz.id === collectionId) || null;
-  }, [allBlocks, collectionId]);
+    // First check owned blocks
+    const ownedBlock = allBlocks.find((b) => b.$jazz.id === collectionId);
+    if (ownedBlock) return ownedBlock;
+
+    // For shared collections, use the directly loaded collection
+    if (directCollection && directCollection.type === "collection") {
+      return directCollection as LoadedBlock;
+    }
+
+    return null;
+  }, [allBlocks, collectionId, directCollection]);
 
   const handleEditBlock = (block: LoadedBlock) => {
     setSelectedBlock(block);
@@ -98,7 +119,8 @@ export default function CollectionDetailPage() {
     setSelectedBlock(null);
   };
 
-  if (!me.$isLoaded) {
+  // Show loading while account or direct collection is loading
+  if (!me.$isLoaded || (directCollection === undefined && !collectionBlock)) {
     return (
       <div
         style={{
@@ -114,6 +136,7 @@ export default function CollectionDetailPage() {
     );
   }
 
+  // Show not found if we've finished loading and still don't have the collection
   if (!collectionBlock) {
     return (
       <div

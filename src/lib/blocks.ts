@@ -490,7 +490,21 @@ export function hasSharingGroup(collection: LoadedBlock): boolean {
 }
 
 /**
+ * Check if a collection is properly set up for sharing (group-owned).
+ * Returns true if the collection can be shared without migration.
+ */
+export function isShareableCollection(collection: LoadedBlock): boolean {
+  if (collection.type !== "collection") return false;
+  // A collection is shareable if it has a sharingGroupId
+  // (new collections are created with group ownership from the start)
+  return !!collection.collectionData?.sharingGroupId;
+}
+
+/**
  * Enable sharing on a collection by creating a sharing Group.
+ * NOTE: For legacy account-owned collections, this only stores the group ID
+ * but doesn't actually make the collection shareable. Use migrateToGroupOwnership
+ * for those cases.
  * Returns the Group so the caller can create invite links.
  */
 export function enableSharing(
@@ -499,6 +513,11 @@ export function enableSharing(
 ): Group {
   if (collection.type !== "collection") {
     throw new Error("Can only enable sharing on collection blocks");
+  }
+
+  // If collection already has a sharing group, try to load it
+  if (collection.collectionData?.sharingGroupId) {
+    // Return a reference - caller should use getOrCreateSharingGroup instead
   }
 
   // Create a new Group for sharing

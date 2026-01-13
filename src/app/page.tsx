@@ -3,6 +3,7 @@
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
 import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { Group } from "jazz-tools";
 import { AuthButton } from "../AuthButton";
 import { JazzAccount, Block, BlockList } from "../schema";
 import styles from "./landing.module.css";
@@ -29,7 +30,11 @@ export default function HomePage() {
       : [];
 
     if (collectionBlocks.length === 0) {
-      // Create default collection if none exists
+      // Create a Group for this collection to enable sharing
+      const ownerGroup = Group.create({ owner: me });
+      ownerGroup.addMember(me, "admin");
+
+      // Create default collection if none exists, owned by the group
       const defaultCollection = Block.create(
         {
           type: "collection",
@@ -38,10 +43,11 @@ export default function HomePage() {
             description: "Your personal collection of product links",
             color: "#6366f1",
             viewMode: "grid",
+            sharingGroupId: ownerGroup.$jazz.id,
           },
           createdAt: new Date(),
         },
-        me.$jazz,
+        { owner: ownerGroup },
       );
 
       if (!me.root.blocks) {

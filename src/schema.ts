@@ -104,7 +104,11 @@ export const JazzAccount = co
      *  You can use it to set up the account root and any other initial CoValues you need.
      */
     if (!account.$jazz.has("root")) {
-      // Create default "My Links" collection block
+      // Create a Group for the default collection to enable sharing
+      const ownerGroup = Group.create({ owner: account });
+      ownerGroup.addMember(account, "admin");
+
+      // Create default "My Links" collection block owned by the group
       const defaultCollection = Block.create(
         {
           type: "collection",
@@ -113,10 +117,11 @@ export const JazzAccount = co
             color: "#6366f1",
             description: "Your personal collection of product links",
             viewMode: "grid",
+            sharingGroupId: ownerGroup.$jazz.id,
           },
           createdAt: new Date(),
         },
-        account.$jazz,
+        { owner: ownerGroup },
       );
 
       // Create the blocks list with the default collection
@@ -132,7 +137,11 @@ export const JazzAccount = co
       if (root && root.$isLoaded) {
         const hasBlocks = root.blocks && root.blocks.$isLoaded && root.blocks.length > 0;
         if (!hasBlocks) {
-          // Create default collection block if none exists
+          // Create a Group for the default collection to enable sharing
+          const ownerGroup = Group.create({ owner: account });
+          ownerGroup.addMember(account, "admin");
+
+          // Create default collection block if none exists, owned by the group
           const defaultCollection = Block.create(
             {
               type: "collection",
@@ -141,10 +150,11 @@ export const JazzAccount = co
                 color: "#6366f1",
                 description: "Your personal collection of product links",
                 viewMode: "grid",
+                sharingGroupId: ownerGroup.$jazz.id,
               },
               createdAt: new Date(),
             },
-            account.$jazz,
+            { owner: ownerGroup },
           );
 
           const blocksList = BlockList.create([defaultCollection], account);
