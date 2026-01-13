@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { co } from "jazz-tools";
+import { Group } from "jazz-tools";
 import type { Block, JazzAccount } from "../../schema";
 import {
   isPublished,
@@ -65,6 +66,19 @@ export function ShareCollectionDialog({
     try {
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
       const link = generateCollectionInviteLink(collection, selectedRole, baseUrl);
+
+      // Wait for the sharing group to sync (invite data is stored on the group)
+      const sharingGroupId = collection.collectionData?.sharingGroupId;
+      if (sharingGroupId) {
+        const group = await Group.load(sharingGroupId as `co_z${string}`, {});
+        if (group) {
+          await group.$jazz.waitForSync({ timeout: 10000 });
+        }
+      }
+
+      // Also wait for the collection to sync
+      await collection.$jazz.waitForSync({ timeout: 10000 });
+
       setInviteLink(link);
 
       showToast({
