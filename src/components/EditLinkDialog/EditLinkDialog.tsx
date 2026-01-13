@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import type { Block, JazzAccount } from "../../schema.ts";
 import { Block as BlockSchema } from "../../schema.ts";
 import type { co } from "jazz-tools";
+import { Group } from "jazz-tools";
 import { SlotSelector } from "../SlotSelector/SlotSelector";
 import { getSlotsForCollection } from "../../lib/slotHelpers";
 import styles from "./EditLinkDialog.module.css";
@@ -144,6 +145,18 @@ export function EditLinkDialog({
       throw new Error("Cannot create slot");
     }
 
+    // Find the collection to get its sharing group
+    const collectionBlock = account.root.blocks.find(
+      (b) => b && b.$isLoaded && b.$jazz.id === collectionId
+    );
+
+    // Get the collection's sharing group for proper ownership
+    let ownerGroup: Group | null = null;
+    const sharingGroupId = collectionBlock?.collectionData?.sharingGroupId;
+    if (sharingGroupId) {
+      ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+    }
+
     const newSlot = BlockSchema.create(
       {
         type: "slot",
@@ -154,7 +167,7 @@ export function EditLinkDialog({
         parentId: collectionId,
         createdAt: new Date(),
       },
-      account.$jazz,
+      ownerGroup ? { owner: ownerGroup } : account.$jazz,
     );
 
     account.root.blocks.$jazz.push(newSlot);

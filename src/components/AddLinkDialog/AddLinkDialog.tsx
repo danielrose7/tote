@@ -4,6 +4,7 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import type { JazzAccount, Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
+import { Group } from "jazz-tools";
 import { fetchMetadata, isValidUrl } from "../../app/utils/metadata";
 import { Block as BlockSchema, BlockList } from "../../schema.ts";
 import { useToast } from "../ToastNotification";
@@ -83,10 +84,17 @@ export function AddLinkDialog({
       try {
         const metadata = await fetchMetadata(values.url);
 
-        // Find the collection block to get its name for the toast
+        // Find the collection block to get its name and sharing group
         const collectionBlock = account.root.blocks.find(
           (b) => b && b.$isLoaded && b.$jazz.id === values.collectionId
         );
+
+        // Get the collection's sharing group for proper ownership
+        let ownerGroup: Group | null = null;
+        const sharingGroupId = collectionBlock?.collectionData?.sharingGroupId;
+        if (sharingGroupId) {
+          ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+        }
 
         // Create a product block with parentId set to slot (if selected) or collection
         const parentId = values.slotId || values.collectionId;
@@ -103,7 +111,7 @@ export function AddLinkDialog({
             parentId,
             createdAt: new Date(),
           },
-          account.$jazz,
+          ownerGroup ? { owner: ownerGroup } : account.$jazz,
         );
 
         // Add the product block to the flat blocks list
@@ -160,6 +168,18 @@ export function AddLinkDialog({
       throw new Error("Blocks not loaded");
     }
 
+    // Find the collection to get its sharing group
+    const collectionBlock = account.root.blocks.find(
+      (b) => b && b.$isLoaded && b.$jazz.id === formik.values.collectionId
+    );
+
+    // Get the collection's sharing group for proper ownership
+    let ownerGroup: Group | null = null;
+    const sharingGroupId = collectionBlock?.collectionData?.sharingGroupId;
+    if (sharingGroupId) {
+      ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+    }
+
     const newSlot = BlockSchema.create(
       {
         type: "slot",
@@ -170,7 +190,7 @@ export function AddLinkDialog({
         parentId: formik.values.collectionId,
         createdAt: new Date(),
       },
-      account.$jazz,
+      ownerGroup ? { owner: ownerGroup } : account.$jazz,
     );
 
     account.root.blocks.$jazz.push(newSlot);

@@ -2,6 +2,7 @@ import { useEffect, useState, Component, ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { SignedIn, SignedOut, useAuth } from "@clerk/chrome-extension";
 import { useAccount } from "jazz-tools/react";
+import { Group } from "jazz-tools";
 import { JazzAccount, Block } from "@tote/schema";
 import type { co } from "jazz-tools";
 import { ExtensionProviders, JazzProvider } from "../providers/ExtensionProviders";
@@ -286,6 +287,16 @@ function SaveUI({
       throw new Error("Cannot create slot");
     }
 
+    // Find the collection to get its sharing group
+    const collection = collections.find((c) => c.$jazz.id === selectedCollection);
+
+    // Get the collection's sharing group for proper ownership
+    let ownerGroup: Group | null = null;
+    const sharingGroupId = collection?.collectionData?.sharingGroupId;
+    if (sharingGroupId) {
+      ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+    }
+
     const newSlot = Block.create(
       {
         type: "slot",
@@ -296,7 +307,7 @@ function SaveUI({
         parentId: selectedCollection,
         createdAt: new Date(),
       },
-      { owner: root.blocks.$jazz.owner }
+      ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
     );
 
     root.blocks.$jazz.push(newSlot);
@@ -347,8 +358,15 @@ function SaveUI({
         throw new Error("Collection not found");
       }
 
+      // Get the collection's sharing group for proper ownership
+      let ownerGroup: Group | null = null;
+      const sharingGroupId = collection?.collectionData?.sharingGroupId;
+      if (sharingGroupId) {
+        ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+      }
+
       // Create a new product Block directly in Jazz
-      // Use the root blocks' owner for proper permissions
+      // Use the collection's sharing group for proper permissions
       // If a slot is selected, link to slot; otherwise link to collection
       const parentId = selectedSlot || selectedCollection;
       const newProductBlock = Block.create(
@@ -364,7 +382,7 @@ function SaveUI({
           parentId,
           createdAt: new Date(),
         },
-        { owner: root.blocks.$jazz.owner }
+        ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
       );
 
       // Add to root blocks
