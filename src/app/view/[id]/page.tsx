@@ -30,8 +30,16 @@ function PublicViewContent() {
   const params = useParams();
   const collectionId = params.id as string;
 
-  // Load the published collection in guest mode
-  const collection = useCoState(Block, collectionId as `co_z${string}`, {});
+  // Load the published collection in guest mode (with children)
+  const collection = useCoState(Block, collectionId as `co_z${string}`, {
+    resolve: {
+      children: {
+        $each: {
+          children: { $each: {} }, // For slots containing products
+        },
+      },
+    },
+  });
 
   // Show loading state while collection is loading or not yet fully available
   // We need to wait for both the collection AND its collectionData to be present
@@ -100,9 +108,12 @@ function PublicViewContent() {
         </div>
       </header>
 
-      {/* Content - Load child blocks */}
+      {/* Content - Load child blocks (using children list or fallback to childBlockIds) */}
       <main className={styles.main}>
-        <ChildBlocksLoader childBlockIds={collection.collectionData?.childBlockIds || []} />
+        <ChildBlocksLoader
+          collection={collection}
+          childBlockIds={collection.collectionData?.childBlockIds || []}
+        />
       </main>
 
       {/* Footer */}
@@ -116,10 +127,30 @@ function PublicViewContent() {
 }
 
 /**
- * Component to load and display child blocks using the stored childBlockIds.
+ * Component to load and display child blocks.
+ * Uses collection.children list (new pattern) with fallback to childBlockIds (legacy).
  */
-function ChildBlocksLoader({ childBlockIds }: { childBlockIds: string[] }) {
-  if (childBlockIds.length === 0) {
+function ChildBlocksLoader({
+  collection,
+  childBlockIds,
+}: {
+  collection: React.ComponentProps<typeof Block> & { children?: { $isLoaded?: boolean } & Iterable<any> };
+  childBlockIds: string[];
+}) {
+  // Get children from the collection's children list (new pattern)
+  const childrenFromList: any[] = [];
+  if (collection.children?.$isLoaded) {
+    for (const child of collection.children) {
+      if (child && child.$isLoaded) {
+        childrenFromList.push(child);
+      }
+    }
+  }
+
+  // Use children list if available, otherwise fall back to childBlockIds
+  const hasChildrenList = childrenFromList.length > 0;
+
+  if (!hasChildrenList && childBlockIds.length === 0) {
     return (
       <div className={styles.emptyState}>
         <p>This collection is empty.</p>
@@ -127,7 +158,32 @@ function ChildBlocksLoader({ childBlockIds }: { childBlockIds: string[] }) {
     );
   }
 
-  // Separate slots from products (we'll need to organize them)
+  // Render from children list (new pattern)
+  if (hasChildrenList) {
+    // Separate slots from products
+    const slots = childrenFromList.filter((b) => b.type === "slot");
+    const products = childrenFromList.filter((b) => b.type === "product");
+
+    return (
+      <>
+        {/* Slots with their products */}
+        {slots.map((slot) => (
+          <SlotRenderer key={slot.$jazz.id} slot={slot} />
+        ))}
+
+        {/* Ungrouped products */}
+        {products.length > 0 && (
+          <div className={styles.productGrid}>
+            {products.map((block) => (
+              <ProductRenderer key={block.$jazz.id} block={block} />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Fallback: render from childBlockIds (legacy pattern)
   return (
     <div className={styles.productGrid}>
       {childBlockIds.map((blockId) => (
@@ -138,7 +194,68 @@ function ChildBlocksLoader({ childBlockIds }: { childBlockIds: string[] }) {
 }
 
 /**
- * Renders a single child block (product or slot).
+ * Renders a slot section with its products (from children list).
+ */
+function SlotRenderer({ slot }: { slot: any }) {
+  // Get products from slot's children list
+  const products: any[] = [];
+  if (slot.children?.$isLoaded) {
+    for (const child of slot.children) {
+      if (child && child.$isLoaded && child.type === "product") {
+        products.push(child);
+      }
+    }
+  }
+
+  if (products.length === 0) {
+    return null; // Don't render empty slots in public view
+  }
+
+  return (
+    <div className={styles.slotSection}>
+      <h3 className={styles.slotTitle}>{slot.name || "Unnamed slot"}</h3>
+      <div className={styles.productGrid}>
+        {products.map((block) => (
+          <ProductRenderer key={block.$jazz.id} block={block} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Renders a product block (from children list - already loaded).
+ */
+function ProductRenderer({ block }: { block: any }) {
+  const productData = block.productData;
+
+  return (
+    <a
+      href={productData?.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={styles.productCard}
+    >
+      {productData?.imageUrl && (
+        <div className={styles.productImage}>
+          <img src={productData.imageUrl} alt={block.name} />
+        </div>
+      )}
+      <div className={styles.productInfo}>
+        <h3 className={styles.productName}>{block.name}</h3>
+        {productData?.price && (
+          <p className={styles.productPrice}>{productData.price}</p>
+        )}
+        {productData?.description && (
+          <p className={styles.productDescription}>{productData.description}</p>
+        )}
+      </div>
+    </a>
+  );
+}
+
+/**
+ * Renders a single child block by ID (legacy pattern - loads block by ID).
  */
 function ChildBlockRenderer({ blockId }: { blockId: string }) {
   const block = useCoState(Block, blockId as `co_z${string}`, {});

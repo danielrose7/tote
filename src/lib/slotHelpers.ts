@@ -112,6 +112,38 @@ export function formatBudget(cents: number): string {
   }).format(dollars);
 }
 
+/**
+ * Parse a price string to cents (e.g., "$29.99" -> 2999, "29.99" -> 2999)
+ * Returns undefined if unable to parse
+ */
+export function parsePriceToCents(priceString: string | undefined): number | undefined {
+  if (!priceString) return undefined;
+  // Remove currency symbols and whitespace, extract numeric value
+  const cleaned = priceString.replace(/[^0-9.,]/g, "");
+  // Handle comma as decimal separator (e.g., "29,99" -> "29.99")
+  const normalized = cleaned.replace(",", ".");
+  const value = parseFloat(normalized);
+  if (isNaN(value)) return undefined;
+  return Math.round(value * 100);
+}
+
+/**
+ * Calculate total price of selected products in a slot (in cents)
+ */
+export function getSelectedTotal(
+  slot: LoadedBlock,
+  products: LoadedBlock[]
+): number {
+  if (slot.type !== "slot") return 0;
+  const selectedIds = slot.slotData?.selectedProductIds || [];
+
+  return products.reduce((total, product) => {
+    if (!selectedIds.includes(product.$jazz.id)) return total;
+    const priceCents = parsePriceToCents(product.productData?.price);
+    return total + (priceCents || 0);
+  }, 0);
+}
+
 // =============================================================================
 // Query Helpers
 // =============================================================================

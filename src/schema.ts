@@ -54,7 +54,12 @@ export const Block = co.map({
   collectionData: CollectionData.optional(),
   slotData: SlotData.optional(),
   projectData: ProjectData.optional(),
-  // Flat storage: use parentId instead of nested children
+  // Nested children for collections/slots (proper Jazz pattern for sharing)
+  // Using getter to defer evaluation for recursive reference
+  get children() {
+    return BlockList.optional();
+  },
+  // Legacy flat storage (kept for backwards compatibility)
   parentId: z.string().optional(),
   sortOrder: z.number().optional(),
   createdAt: z.date(),
@@ -108,6 +113,9 @@ export const JazzAccount = co
       const ownerGroup = Group.create({ owner: account });
       ownerGroup.addMember(account, "admin");
 
+      // Create empty children list owned by the group
+      const childrenList = BlockList.create([], { owner: ownerGroup });
+
       // Create default "My Links" collection block owned by the group
       const defaultCollection = Block.create(
         {
@@ -119,6 +127,7 @@ export const JazzAccount = co
             viewMode: "grid",
             sharingGroupId: ownerGroup.$jazz.id,
           },
+          children: childrenList,
           createdAt: new Date(),
         },
         { owner: ownerGroup },
@@ -141,6 +150,9 @@ export const JazzAccount = co
           const ownerGroup = Group.create({ owner: account });
           ownerGroup.addMember(account, "admin");
 
+          // Create empty children list owned by the group
+          const childrenList = BlockList.create([], { owner: ownerGroup });
+
           // Create default collection block if none exists, owned by the group
           const defaultCollection = Block.create(
             {
@@ -152,6 +164,7 @@ export const JazzAccount = co
                 viewMode: "grid",
                 sharingGroupId: ownerGroup.$jazz.id,
               },
+              children: childrenList,
               createdAt: new Date(),
             },
             { owner: ownerGroup },

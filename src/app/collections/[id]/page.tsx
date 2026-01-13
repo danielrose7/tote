@@ -25,14 +25,31 @@ export default function CollectionDetailPage() {
     resolve: {
       profile: true,
       root: {
-        blocks: { $each: {} },
+        blocks: {
+          $each: {
+            children: {
+              $each: {
+                children: { $each: {} }, // For slots containing products
+              },
+            },
+          },
+        },
         sharedWithMe: { $each: {} },
       }
     },
   });
 
   // Load the collection directly by ID (works for both owned and shared collections)
-  const directCollection = useCoState(BlockSchema, collectionId as `co_z${string}`, {});
+  // Include children with nested resolution for slots containing products
+  const directCollection = useCoState(BlockSchema, collectionId as `co_z${string}`, {
+    resolve: {
+      children: {
+        $each: {
+          children: { $each: {} }, // For slots containing products
+        },
+      },
+    },
+  });
 
   const { showToast } = useToast();
 

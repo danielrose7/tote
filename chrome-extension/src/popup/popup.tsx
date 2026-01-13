@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { SignedIn, SignedOut, useAuth } from "@clerk/chrome-extension";
 import { useAccount } from "jazz-tools/react";
 import { Group } from "jazz-tools";
-import { JazzAccount, Block } from "@tote/schema";
+import { JazzAccount, Block, BlockList } from "@tote/schema";
 import type { co } from "jazz-tools";
 import { ExtensionProviders, JazzProvider } from "../providers/ExtensionProviders";
 import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
@@ -246,11 +246,19 @@ function SaveUI({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get user's Jazz account with blocks loaded
+  // Get user's Jazz account with blocks loaded (including children for sharing)
   const me = useAccount(JazzAccount, {
     resolve: {
       root: {
-        blocks: { $each: {} },
+        blocks: {
+          $each: {
+            children: {
+              $each: {
+                children: { $each: {} }, // For slots containing products
+              },
+            },
+          },
+        },
       },
     },
   });
@@ -271,12 +279,15 @@ function SaveUI({
     }
   }
 
-  // Get slot blocks for the selected collection
+  // Get slot blocks for the selected collection (from children list)
   const slots: { id: string; name: string }[] = [];
   if (rootLoaded && root.blocks?.$isLoaded && selectedCollection) {
-    for (const b of Array.from(root.blocks)) {
-      if (b && b.$isLoaded && b.type === "slot" && b.parentId === selectedCollection) {
-        slots.push({ id: b.$jazz.id, name: b.name || "Unnamed slot" });
+    const collection = collections.find((c) => c.$jazz.id === selectedCollection);
+    if (collection?.children?.$isLoaded) {
+      for (const b of collection.children) {
+        if (b && b.$isLoaded && b.type === "slot") {
+          slots.push({ id: b.$jazz.id, name: b.name || "Unnamed slot" });
+        }
       }
     }
   }
@@ -290,12 +301,25 @@ function SaveUI({
     // Find the collection to get its sharing group
     const collection = collections.find((c) => c.$jazz.id === selectedCollection);
 
+    if (!collection?.children?.$isLoaded) {
+      throw new Error("Collection children not loaded");
+    }
+
     // Get the collection's sharing group for proper ownership
-    let ownerGroup: Group | null = null;
+    let ownerGroup: Group | undefined;
     const sharingGroupId = collection?.collectionData?.sharingGroupId;
     if (sharingGroupId) {
-      ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+      const loaded = await Group.load(sharingGroupId as `co_z${string}`, {});
+      if (loaded && "$isLoaded" in loaded && loaded.$isLoaded) {
+        ownerGroup = loaded as Group;
+      }
     }
+
+    // Create empty children list for the slot
+    const slotChildren = BlockList.create(
+      [],
+      ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
+    );
 
     const newSlot = Block.create(
       {
@@ -304,13 +328,14 @@ function SaveUI({
         slotData: {
           maxSelections: 1,
         },
-        parentId: selectedCollection,
+        children: slotChildren,
         createdAt: new Date(),
       },
       ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
     );
 
-    root.blocks.$jazz.push(newSlot);
+    // Add slot to collection's children
+    collection.children.$jazz.push(newSlot);
     return newSlot.$jazz.id;
   };
 
@@ -359,16 +384,16 @@ function SaveUI({
       }
 
       // Get the collection's sharing group for proper ownership
-      let ownerGroup: Group | null = null;
+      let ownerGroup: Group | undefined;
       const sharingGroupId = collection?.collectionData?.sharingGroupId;
       if (sharingGroupId) {
-        ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+        const loaded = await Group.load(sharingGroupId as `co_z${string}`, {});
+        if (loaded && "$isLoaded" in loaded && loaded.$isLoaded) {
+          ownerGroup = loaded as Group;
+        }
       }
 
-      // Create a new product Block directly in Jazz
-      // Use the collection's sharing group for proper permissions
-      // If a slot is selected, link to slot; otherwise link to collection
-      const parentId = selectedSlot || selectedCollection;
+      // Create the product block owned by the group
       const newProductBlock = Block.create(
         {
           type: "product",
@@ -379,17 +404,34 @@ function SaveUI({
             price: metadata.price,
             description: metadata.description,
           },
-          parentId,
           createdAt: new Date(),
         },
         ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
       );
 
-      // Add to root blocks
-      root.blocks.$jazz.push(newProductBlock);
-
-      // Wait for sync to complete before showing success
-      await root.blocks.$jazz.waitForSync({ timeout: 5000 });
+      // Add to the appropriate parent's children list
+      if (selectedSlot) {
+        // Find the slot and add to its children
+        let slotBlock: any = null;
+        if (collection.children?.$isLoaded) {
+          for (const b of collection.children) {
+            if (b && b.$isLoaded && b.$jazz.id === selectedSlot) {
+              slotBlock = b;
+              break;
+            }
+          }
+        }
+        if (slotBlock?.children?.$isLoaded) {
+          slotBlock.children.$jazz.push(newProductBlock);
+          await slotBlock.children.$jazz.waitForSync({ timeout: 5000 });
+        }
+      } else {
+        // Add directly to collection's children
+        if (collection.children?.$isLoaded) {
+          collection.children.$jazz.push(newProductBlock);
+          await collection.children.$jazz.waitForSync({ timeout: 5000 });
+        }
+      }
 
       onSuccess();
     } catch (err) {

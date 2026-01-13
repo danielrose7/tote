@@ -62,6 +62,9 @@ export function CreateCollectionDialog({
         const ownerGroup = Group.create({ owner: account });
         ownerGroup.addMember(account, "admin");
 
+        // Create empty children list owned by the group
+        const childrenList = BlockList.create([], { owner: ownerGroup });
+
         // Create the collection block owned by the group (enables sharing)
         const newCollectionBlock = Block.create(
           {
@@ -73,6 +76,7 @@ export function CreateCollectionDialog({
               viewMode: "grid",
               sharingGroupId: ownerGroup.$jazz.id, // Store the group ID for invites
             },
+            children: childrenList,
             createdAt: new Date(),
           },
           { owner: ownerGroup },

@@ -111,13 +111,13 @@ export function ShareCollectionDialog({
     try {
       const createdBlocks = publishCollection(collection, allBlocks, account);
 
+      // Only add the published collection itself to the flat blocks list
+      // Child blocks are stored in nested children lists
+      const publishedCollection = createdBlocks[0];
       if (account.root?.blocks?.$isLoaded) {
-        for (const block of createdBlocks) {
-          account.root.blocks.$jazz.push(block);
-        }
+        account.root.blocks.$jazz.push(publishedCollection);
       }
 
-      const publishedCollection = createdBlocks[0];
       await publishedCollection.$jazz.waitForSync({ timeout: 5000 });
       await collection.$jazz.waitForSync({ timeout: 5000 });
 
@@ -167,11 +167,7 @@ export function ShareCollectionDialog({
         account.root.blocks
       );
 
-      // Add new child blocks to the list
-      for (const block of createdChildBlocks) {
-        account.root.blocks.$jazz.push(block);
-      }
-
+      // Child blocks are now stored in nested children lists, not the flat blocks list
       // Wait for collection to sync (it was updated in place)
       await collection.$jazz.waitForSync({ timeout: 5000 });
 

@@ -217,16 +217,42 @@ export function CollectionView({
   const collectionData = collectionBlock.collectionData;
   const collectionId = collectionBlock.$jazz.id;
 
-  // Get slots for this collection
-  const slots = getSlotsForCollection(allBlocks, collectionId);
+  // Get children from the collection's children list (new pattern)
+  // Fall back to parentId-based lookup for old data
+  const childrenFromList: LoadedBlock[] = [];
+  if (collectionBlock.children?.$isLoaded) {
+    for (const child of collectionBlock.children) {
+      if (child && child.$isLoaded) {
+        childrenFromList.push(child);
+      }
+    }
+  }
 
-  // Get ungrouped products (directly in collection, not in a slot)
-  const ungroupedProducts = getUngroupedProducts(allBlocks, collectionId);
+  // Get slots - from children list or fallback to parentId
+  const slots = childrenFromList.length > 0
+    ? childrenFromList.filter((b) => b.type === "slot")
+    : getSlotsForCollection(allBlocks, collectionId);
+
+  // Get ungrouped products - from children list or fallback to parentId
+  const ungroupedProducts = childrenFromList.length > 0
+    ? childrenFromList.filter((b) => b.type === "product")
+    : getUngroupedProducts(allBlocks, collectionId);
 
   // Get all products (for total count and refresh all)
   const allProducts: LoadedBlock[] = [...ungroupedProducts];
   for (const slot of slots) {
-    allProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
+    // Get products from slot's children list or fallback to parentId
+    const slotProducts: LoadedBlock[] = [];
+    if (slot.children?.$isLoaded) {
+      for (const child of slot.children) {
+        if (child && child.$isLoaded && child.type === "product") {
+          slotProducts.push(child);
+        }
+      }
+    } else {
+      slotProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
+    }
+    allProducts.push(...slotProducts);
   }
 
   // Handle slot deletion - moves products back to collection
@@ -386,19 +412,32 @@ export function CollectionView({
       ) : (
         <>
           {/* Slots */}
-          {slots.map((slot) => (
-            <SlotSection
-              key={slot.$jazz.id}
-              slotBlock={slot}
-              products={getProductsForSlot(allBlocks, slot.$jazz.id)}
-              onEditProduct={onEditBlock}
-              onDeleteProduct={onDeleteBlock}
-              onRefreshProduct={handleRefreshBlock}
-              onDeleteSlot={handleDeleteSlot}
-              refreshingBlockId={refreshingBlockId}
-              enqueuedBlockIds={enqueuedBlockIds}
-            />
-          ))}
+          {slots.map((slot) => {
+            // Get products from slot's children list or fallback to parentId
+            const slotProducts: LoadedBlock[] = [];
+            if (slot.children?.$isLoaded) {
+              for (const child of slot.children) {
+                if (child && child.$isLoaded && child.type === "product") {
+                  slotProducts.push(child);
+                }
+              }
+            } else {
+              slotProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
+            }
+            return (
+              <SlotSection
+                key={slot.$jazz.id}
+                slotBlock={slot}
+                products={slotProducts}
+                onEditProduct={onEditBlock}
+                onDeleteProduct={onDeleteBlock}
+                onRefreshProduct={handleRefreshBlock}
+                onDeleteSlot={handleDeleteSlot}
+                refreshingBlockId={refreshingBlockId}
+                enqueuedBlockIds={enqueuedBlockIds}
+              />
+            );
+          })}
 
           {/* Ungrouped Products */}
           {ungroupedProducts.length > 0 && (

@@ -6,7 +6,7 @@ import type { JazzAccount, Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
 import { fetchMetadata, isValidUrl } from "../../app/utils/metadata";
-import { Block as BlockSchema, BlockList } from "../../schema.ts";
+import { Block as BlockSchema, BlockList } from "../../schema";
 import { useToast } from "../ToastNotification";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { SlotSelector } from "../SlotSelector/SlotSelector";
@@ -89,6 +89,10 @@ export function AddLinkDialog({
           (b) => b && b.$isLoaded && b.$jazz.id === values.collectionId
         );
 
+        if (!collectionBlock) {
+          throw new Error("Collection not found");
+        }
+
         // Get the collection's sharing group for proper ownership
         let ownerGroup: Group | null = null;
         const sharingGroupId = collectionBlock?.collectionData?.sharingGroupId;
@@ -96,8 +100,7 @@ export function AddLinkDialog({
           ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
         }
 
-        // Create a product block with parentId set to slot (if selected) or collection
-        const parentId = values.slotId || values.collectionId;
+        // Create the product block owned by the group
         const newProductBlock = BlockSchema.create(
           {
             type: "product",
@@ -108,22 +111,32 @@ export function AddLinkDialog({
               price: metadata.price,
               description: metadata.description,
             },
-            parentId,
             createdAt: new Date(),
           },
           ownerGroup ? { owner: ownerGroup } : account.$jazz,
         );
 
-        // Add the product block to the flat blocks list
-        account.root.blocks.$jazz.push(newProductBlock);
-
-        if (collectionBlock && collectionBlock.$isLoaded) {
-          showToast({
-            title: "Link added",
-            description: `"${metadata.title || "Link"}" has been added to ${collectionBlock.name}`,
-            variant: "success",
-          });
+        // Add to the appropriate parent's children list
+        if (values.slotId) {
+          // Find the slot and add to its children
+          const slotBlock = collectionBlock.children?.find(
+            (b) => b && b.$isLoaded && b.$jazz.id === values.slotId
+          );
+          if (slotBlock?.children?.$isLoaded) {
+            slotBlock.children.$jazz.push(newProductBlock);
+          }
+        } else {
+          // Add directly to collection's children
+          if (collectionBlock.children?.$isLoaded) {
+            collectionBlock.children.$jazz.push(newProductBlock);
+          }
         }
+
+        showToast({
+          title: "Link added",
+          description: `"${metadata.title || "Link"}" has been added to ${collectionBlock.name}`,
+          variant: "success",
+        });
 
         handleClose();
       } catch (error) {
@@ -173,12 +186,22 @@ export function AddLinkDialog({
       (b) => b && b.$isLoaded && b.$jazz.id === formik.values.collectionId
     );
 
+    if (!collectionBlock?.children?.$isLoaded) {
+      throw new Error("Collection children not loaded");
+    }
+
     // Get the collection's sharing group for proper ownership
     let ownerGroup: Group | null = null;
     const sharingGroupId = collectionBlock?.collectionData?.sharingGroupId;
     if (sharingGroupId) {
       ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
     }
+
+    // Create empty children list for the slot
+    const slotChildren = BlockList.create(
+      [],
+      ownerGroup ? { owner: ownerGroup } : account.$jazz
+    );
 
     const newSlot = BlockSchema.create(
       {
@@ -187,13 +210,14 @@ export function AddLinkDialog({
         slotData: {
           maxSelections: 1,
         },
-        parentId: formik.values.collectionId,
+        children: slotChildren,
         createdAt: new Date(),
       },
       ownerGroup ? { owner: ownerGroup } : account.$jazz,
     );
 
-    account.root.blocks.$jazz.push(newSlot);
+    // Add slot to collection's children
+    collectionBlock.children.$jazz.push(newSlot);
     // Track the new slot locally to ensure it's immediately available
     setCreatedSlots(prev => [...prev, newSlot as LoadedBlock]);
     return newSlot.$jazz.id;

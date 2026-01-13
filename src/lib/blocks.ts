@@ -7,7 +7,7 @@
 
 import { Group, createInviteLink, type Account } from "jazz-tools";
 import type { co } from "jazz-tools";
-import { Block } from "../schema";
+import { Block, BlockList } from "../schema";
 
 // =============================================================================
 // Types
@@ -96,7 +96,7 @@ export function isPublishedClone(collection: LoadedBlock): boolean {
  */
 export function publishCollection(
   sourceCollection: LoadedBlock,
-  allBlocks: LoadedBlock[],
+  _allBlocks: LoadedBlock[], // kept for API compatibility, not used
   owner: Account
 ): LoadedBlock[] {
   if (sourceCollection.type !== "collection") {
@@ -113,10 +113,10 @@ export function publishCollection(
   const group = Group.create({ owner });
   group.addMember("everyone", "reader");
 
-  // Map from old block ID to new block ID (for parent references)
-  const idMap = new Map<string, string>();
+  // Create the children list for the published collection
+  const publishedChildrenList = BlockList.create([], { owner: group });
 
-  // Clone the collection
+  // Clone the collection with the children list
   const publishedCollection = Block.create(
     {
       type: "collection",
@@ -127,87 +127,77 @@ export function publishCollection(
         publishedId: undefined, // Published clone doesn't have its own published version
         publishedAt: new Date(),
       },
+      children: publishedChildrenList,
       createdAt: sourceCollection.createdAt,
     },
     { owner: group }
   ) as LoadedBlock;
 
   createdBlocks.push(publishedCollection);
-  idMap.set(sourceCollection.$jazz.id, publishedCollection.$jazz.id);
 
-  // Find and clone all child blocks (slots and products)
-  const childBlocks = allBlocks.filter(
-    (b) => b.parentId === sourceCollection.$jazz.id
-  );
+  // Clone children from the source collection's children list (new pattern)
+  if (sourceCollection.children?.$isLoaded) {
+    for (const child of sourceCollection.children) {
+      if (!child || !child.$isLoaded) continue;
 
-  for (const child of childBlocks) {
-    if (child.type === "slot") {
-      // Clone slot
-      const clonedSlot = Block.create(
-        {
-          type: "slot",
-          name: child.name,
-          slotData: child.slotData,
-          parentId: publishedCollection.$jazz.id,
-          sortOrder: child.sortOrder,
-          createdAt: child.createdAt,
-        },
-        { owner: group }
-      ) as LoadedBlock;
+      if (child.type === "slot") {
+        // Create children list for the slot
+        const slotChildrenList = BlockList.create([], { owner: group });
 
-      createdBlocks.push(clonedSlot);
-      idMap.set(child.$jazz.id, clonedSlot.$jazz.id);
+        // Clone slot with its own children list
+        const clonedSlot = Block.create(
+          {
+            type: "slot",
+            name: child.name,
+            slotData: child.slotData,
+            children: slotChildrenList,
+            sortOrder: child.sortOrder,
+            createdAt: child.createdAt,
+          },
+          { owner: group }
+        ) as LoadedBlock;
 
-      // Find and clone products in this slot
-      const slotProducts = allBlocks.filter(
-        (b) => b.parentId === child.$jazz.id && b.type === "product"
-      );
+        createdBlocks.push(clonedSlot);
+        publishedChildrenList.$jazz.push(clonedSlot);
 
-      for (const product of slotProducts) {
+        // Clone products from the slot's children list
+        if (child.children?.$isLoaded) {
+          for (const slotChild of child.children) {
+            if (slotChild && slotChild.$isLoaded && slotChild.type === "product") {
+              const clonedProduct = Block.create(
+                {
+                  type: "product",
+                  name: slotChild.name,
+                  productData: slotChild.productData,
+                  sortOrder: slotChild.sortOrder,
+                  createdAt: slotChild.createdAt,
+                },
+                { owner: group }
+              ) as LoadedBlock;
+
+              createdBlocks.push(clonedProduct);
+              slotChildrenList.$jazz.push(clonedProduct);
+            }
+          }
+        }
+      } else if (child.type === "product") {
+        // Clone product directly into the collection's children
         const clonedProduct = Block.create(
           {
             type: "product",
-            name: product.name,
-            productData: product.productData,
-            parentId: clonedSlot.$jazz.id,
-            sortOrder: product.sortOrder,
-            createdAt: product.createdAt,
+            name: child.name,
+            productData: child.productData,
+            sortOrder: child.sortOrder,
+            createdAt: child.createdAt,
           },
           { owner: group }
         ) as LoadedBlock;
 
         createdBlocks.push(clonedProduct);
-        idMap.set(product.$jazz.id, clonedProduct.$jazz.id);
+        publishedChildrenList.$jazz.push(clonedProduct);
       }
-    } else if (child.type === "product") {
-      // Clone product directly in collection
-      const clonedProduct = Block.create(
-        {
-          type: "product",
-          name: child.name,
-          productData: child.productData,
-          parentId: publishedCollection.$jazz.id,
-          sortOrder: child.sortOrder,
-          createdAt: child.createdAt,
-        },
-        { owner: group }
-      ) as LoadedBlock;
-
-      createdBlocks.push(clonedProduct);
-      idMap.set(child.$jazz.id, clonedProduct.$jazz.id);
     }
   }
-
-  // Collect all child block IDs (excluding the collection itself)
-  const childBlockIds = createdBlocks
-    .filter((b) => b.$jazz.id !== publishedCollection.$jazz.id)
-    .map((b) => b.$jazz.id);
-
-  // Update published collection with child IDs for public view discovery
-  publishedCollection.$jazz.set("collectionData", {
-    ...publishedCollection.collectionData,
-    childBlockIds,
-  });
 
   // Update source collection with published ID
   sourceCollection.$jazz.set("collectionData", {
@@ -247,7 +237,7 @@ export function republishCollection(
   sourceCollection: LoadedBlock,
   allBlocks: LoadedBlock[],
   owner: Account,
-  blockList: { $jazz: { splice: (index: number, deleteCount: number) => void }; length: number; [index: number]: LoadedBlock | null }
+  _blockList: { $jazz: { splice: (index: number, deleteCount: number) => void }; length: number; [index: number]: LoadedBlock | null }
 ): LoadedBlock[] {
   if (sourceCollection.type !== "collection") {
     throw new Error("Can only republish collection blocks");
@@ -271,34 +261,6 @@ export function republishCollection(
     throw new Error("Published collection not found");
   }
 
-  // Collect IDs of old child blocks to delete (but NOT the collection itself)
-  const childIdsToDelete = new Set<string>();
-
-  if (publishedCollection.collectionData?.childBlockIds) {
-    for (const childId of publishedCollection.collectionData.childBlockIds) {
-      childIdsToDelete.add(childId);
-    }
-  }
-
-  // Also find children by parentId traversal
-  const findDescendants = (parentId: string) => {
-    for (const block of allBlocks) {
-      if (block.parentId === parentId) {
-        childIdsToDelete.add(block.$jazz.id);
-        findDescendants(block.$jazz.id);
-      }
-    }
-  };
-  findDescendants(publishedId);
-
-  // Remove old child blocks from the list
-  for (let i = blockList.length - 1; i >= 0; i--) {
-    const block = blockList[i];
-    if (block && childIdsToDelete.has(block.$jazz.id)) {
-      blockList.$jazz.splice(i, 1);
-    }
-  }
-
   // Update the published collection's properties (preserve sourceId!)
   publishedCollection.$jazz.set("name", sourceCollection.name);
 
@@ -306,68 +268,75 @@ export function republishCollection(
   const group = Group.create({ owner });
   group.addMember("everyone", "reader");
 
-  // Create new child blocks
+  // Clear existing children and create a new children list
+  const newChildrenList = BlockList.create([], { owner: group });
+  publishedCollection.$jazz.set("children", newChildrenList);
+
+  // Create new child blocks from source collection's children
   const createdBlocks: LoadedBlock[] = [];
 
-  const childBlocks = allBlocks.filter(
-    (b) => b.parentId === sourceCollection.$jazz.id
-  );
+  if (sourceCollection.children?.$isLoaded) {
+    for (const child of sourceCollection.children) {
+      if (!child || !child.$isLoaded) continue;
 
-  for (const child of childBlocks) {
-    if (child.type === "slot") {
-      const clonedSlot = Block.create(
-        {
-          type: "slot",
-          name: child.name,
-          slotData: child.slotData,
-          parentId: publishedId,
-          sortOrder: child.sortOrder,
-          createdAt: child.createdAt,
-        },
-        { owner: group }
-      ) as LoadedBlock;
+      if (child.type === "slot") {
+        // Create children list for the slot
+        const slotChildrenList = BlockList.create([], { owner: group });
 
-      createdBlocks.push(clonedSlot);
+        const clonedSlot = Block.create(
+          {
+            type: "slot",
+            name: child.name,
+            slotData: child.slotData,
+            children: slotChildrenList,
+            sortOrder: child.sortOrder,
+            createdAt: child.createdAt,
+          },
+          { owner: group }
+        ) as LoadedBlock;
 
-      // Clone products in this slot
-      const slotProducts = allBlocks.filter(
-        (b) => b.parentId === child.$jazz.id && b.type === "product"
-      );
+        createdBlocks.push(clonedSlot);
+        newChildrenList.$jazz.push(clonedSlot);
 
-      for (const product of slotProducts) {
+        // Clone products from the slot's children
+        if (child.children?.$isLoaded) {
+          for (const slotChild of child.children) {
+            if (slotChild && slotChild.$isLoaded && slotChild.type === "product") {
+              const clonedProduct = Block.create(
+                {
+                  type: "product",
+                  name: slotChild.name,
+                  productData: slotChild.productData,
+                  sortOrder: slotChild.sortOrder,
+                  createdAt: slotChild.createdAt,
+                },
+                { owner: group }
+              ) as LoadedBlock;
+
+              createdBlocks.push(clonedProduct);
+              slotChildrenList.$jazz.push(clonedProduct);
+            }
+          }
+        }
+      } else if (child.type === "product") {
         const clonedProduct = Block.create(
           {
             type: "product",
-            name: product.name,
-            productData: product.productData,
-            parentId: clonedSlot.$jazz.id,
-            sortOrder: product.sortOrder,
-            createdAt: product.createdAt,
+            name: child.name,
+            productData: child.productData,
+            sortOrder: child.sortOrder,
+            createdAt: child.createdAt,
           },
           { owner: group }
         ) as LoadedBlock;
 
         createdBlocks.push(clonedProduct);
+        newChildrenList.$jazz.push(clonedProduct);
       }
-    } else if (child.type === "product") {
-      const clonedProduct = Block.create(
-        {
-          type: "product",
-          name: child.name,
-          productData: child.productData,
-          parentId: publishedId,
-          sortOrder: child.sortOrder,
-          createdAt: child.createdAt,
-        },
-        { owner: group }
-      ) as LoadedBlock;
-
-      createdBlocks.push(clonedProduct);
     }
   }
 
-  // Update published collection's collectionData with new child IDs and synced properties
-  const childBlockIds = createdBlocks.map((b) => b.$jazz.id);
+  // Update published collection's collectionData with synced properties
   publishedCollection.$jazz.set("collectionData", {
     // Preserve critical fields
     sourceId: publishedCollection.collectionData?.sourceId,
@@ -376,8 +345,6 @@ export function republishCollection(
     description: sourceCollection.collectionData?.description,
     viewMode: sourceCollection.collectionData?.viewMode,
     budget: sourceCollection.collectionData?.budget,
-    // Update child block IDs
-    childBlockIds,
     // Update timestamp
     publishedAt: new Date(),
   });

@@ -7,7 +7,6 @@ type LoadedBlock = co.loaded<typeof Block>;
 
 interface CollectionCardProps {
   block: LoadedBlock;
-  allBlocks: LoadedBlock[];  // All blocks to find children by parentId
   onEdit?: (block: LoadedBlock) => void;
   onDelete?: (block: LoadedBlock) => void;
   onClick?: (block: LoadedBlock) => void;
@@ -15,7 +14,6 @@ interface CollectionCardProps {
 
 export function CollectionCard({
   block,
-  allBlocks,
   onEdit,
   onDelete,
   onClick,
@@ -23,27 +21,30 @@ export function CollectionCard({
   const [showActions, setShowActions] = useState(false);
 
   const collectionData = block.collectionData;
-  const blockId = block.$jazz.id;
 
-  // Get slot IDs belonging to this collection
-  const slotIds = new Set<string>();
-  for (const b of allBlocks) {
-    if (b && b.$isLoaded && b.type === "slot" && b.parentId === blockId) {
-      slotIds.add(b.$jazz.id);
-    }
-  }
-
-  // Count products: direct children OR children of slots in this collection
+  // Count products from block.children (new nested pattern)
   let linkCount = 0;
   const previewImages: string[] = [];
-  for (const child of allBlocks) {
-    if (child && child.$isLoaded && child.type === "product") {
-      const isDirectChild = child.parentId === blockId;
-      const isInSlot = child.parentId && slotIds.has(child.parentId);
-      if (isDirectChild || isInSlot) {
+
+  if (block.children?.$isLoaded) {
+    for (const child of block.children) {
+      if (!child || !child.$isLoaded) continue;
+
+      if (child.type === "product") {
+        // Direct product child
         linkCount++;
         if (previewImages.length < 4 && child.productData?.imageUrl) {
           previewImages.push(child.productData.imageUrl);
+        }
+      } else if (child.type === "slot" && child.children?.$isLoaded) {
+        // Slot with nested products
+        for (const slotChild of child.children) {
+          if (slotChild && slotChild.$isLoaded && slotChild.type === "product") {
+            linkCount++;
+            if (previewImages.length < 4 && slotChild.productData?.imageUrl) {
+              previewImages.push(slotChild.productData.imageUrl);
+            }
+          }
         }
       }
     }

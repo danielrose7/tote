@@ -13,6 +13,7 @@ interface CollectionListProps {
   onEditCollection?: (block: LoadedBlock) => void;
   onDeleteCollection?: (block: LoadedBlock) => void;
   onSelectCollection?: (block: LoadedBlock) => void;
+  onLeaveSharedCollection?: (ref: LoadedSharedRef) => void;
 }
 
 export function CollectionList({
@@ -20,6 +21,7 @@ export function CollectionList({
   onEditCollection,
   onDeleteCollection,
   onSelectCollection,
+  onLeaveSharedCollection,
 }: CollectionListProps) {
   if (!account.root || !account.root.$isLoaded) {
     return (
@@ -80,14 +82,6 @@ export function CollectionList({
     );
   }
 
-  // Get all loaded blocks for child lookup
-  const allBlocks: LoadedBlock[] = [];
-  for (const block of blocks) {
-    if (block && block.$isLoaded) {
-      allBlocks.push(block);
-    }
-  }
-
   // Get shared collection references
   const sharedRefs: LoadedSharedRef[] = [];
   if (account.root.sharedWithMe?.$isLoaded) {
@@ -106,7 +100,6 @@ export function CollectionList({
           <CollectionCard
             key={block.$jazz.id}
             block={block}
-            allBlocks={allBlocks}
             onEdit={onEditCollection}
             onDelete={onDeleteCollection}
             onClick={onSelectCollection}
@@ -125,6 +118,7 @@ export function CollectionList({
                 collectionId={ref.collectionId}
                 sharedRef={ref}
                 onClick={onSelectCollection}
+                onLeave={onLeaveSharedCollection}
               />
             ))}
           </div>
@@ -139,12 +133,19 @@ function SharedCollectionCard({
   collectionId,
   sharedRef,
   onClick,
+  onLeave,
 }: {
   collectionId: string;
   sharedRef: LoadedSharedRef;
   onClick?: (block: LoadedBlock) => void;
+  onLeave?: (ref: LoadedSharedRef) => void;
 }) {
   const collection = useCoState(BlockSchema, collectionId as `co_z${string}`, {});
+
+  const handleLeave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onLeave?.(sharedRef);
+  };
 
   if (!collection || collection.type !== "collection") {
     return (
@@ -157,24 +158,50 @@ function SharedCollectionCard({
   }
 
   return (
-    <button
-      type="button"
-      className={styles.sharedCard}
-      onClick={() => onClick?.(collection)}
-    >
-      <div
-        className={styles.sharedCardColor}
-        style={{ backgroundColor: collection.collectionData?.color || "#6366f1" }}
-      />
-      <div className={styles.sharedCardContent}>
-        <h3 className={styles.sharedCardTitle}>{collection.name}</h3>
-        {collection.collectionData?.description && (
-          <p className={styles.sharedCardDescription}>
-            {collection.collectionData.description}
-          </p>
-        )}
-        <span className={styles.sharedBadge}>Shared</span>
-      </div>
-    </button>
+    <div className={styles.sharedCardWrapper}>
+      <button
+        type="button"
+        className={styles.sharedCard}
+        onClick={() => onClick?.(collection)}
+      >
+        <div
+          className={styles.sharedCardColor}
+          style={{ backgroundColor: collection.collectionData?.color || "#6366f1" }}
+        />
+        <div className={styles.sharedCardContent}>
+          <h3 className={styles.sharedCardTitle}>{collection.name}</h3>
+          {collection.collectionData?.description && (
+            <p className={styles.sharedCardDescription}>
+              {collection.collectionData.description}
+            </p>
+          )}
+          <span className={styles.sharedBadge}>Shared</span>
+        </div>
+      </button>
+      {onLeave && (
+        <button
+          type="button"
+          className={styles.leaveButton}
+          onClick={handleLeave}
+          aria-label="Leave shared collection"
+          title="Leave collection"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+      )}
+    </div>
   );
 }

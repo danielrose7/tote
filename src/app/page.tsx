@@ -34,6 +34,9 @@ export default function HomePage() {
       const ownerGroup = Group.create({ owner: me });
       ownerGroup.addMember(me, "admin");
 
+      // Create empty children list owned by the group
+      const childrenList = BlockList.create([], { owner: ownerGroup });
+
       // Create default collection if none exists, owned by the group
       const defaultCollection = Block.create(
         {
@@ -45,6 +48,7 @@ export default function HomePage() {
             viewMode: "grid",
             sharingGroupId: ownerGroup.$jazz.id,
           },
+          children: childrenList,
           createdAt: new Date(),
         },
         { owner: ownerGroup },

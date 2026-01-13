@@ -76,6 +76,10 @@
   white-space: nowrap;
 }
 
+.overBudget {
+  color: var(--color-error, #ef4444);
+}
+
 .headerActions {
   display: flex;
   align-items: center;
@@ -147,6 +151,24 @@
 
 .editInput[type="number"] {
   width: 80px;
+}
+
+.budgetInputWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.currencyPrefix {
+  position: absolute;
+  left: var(--spacing-sm);
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  pointer-events: none;
+}
+
+.budgetInputWrapper .editInput {
+  padding-left: calc(var(--spacing-sm) + 12px);
 }
 
 .editSelect {

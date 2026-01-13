@@ -5,6 +5,7 @@ import {
   isProductSelected,
   toggleProductSelection,
   formatBudget,
+  getSelectedTotal,
 } from "../../lib/slotHelpers";
 import { ProductCard } from "../ProductCard/ProductCard";
 import styles from "./SlotSection.module.css";
@@ -37,12 +38,13 @@ export function SlotSection({
     slotBlock.slotData?.maxSelections || 1
   );
   const [editBudget, setEditBudget] = useState(
-    slotBlock.slotData?.budget?.toString() || ""
+    slotBlock.slotData?.budget ? (slotBlock.slotData.budget / 100).toString() : ""
   );
 
   const { current: selectedCount, max: maxSelections } =
     getSelectionCount(slotBlock);
   const budget = slotBlock.slotData?.budget;
+  const selectedTotal = getSelectedTotal(slotBlock, products);
 
   const handleToggleSelection = (product: LoadedBlock) => {
     const result = toggleProductSelection(product, slotBlock);
@@ -53,12 +55,13 @@ export function SlotSection({
   };
 
   const handleSaveEdit = () => {
-    // Update the slot block
+    // Update the slot block - convert dollars to cents for storage
+    const budgetCents = editBudget ? Math.round(Number(editBudget) * 100) : undefined;
     slotBlock.$jazz.set("name", editName);
     slotBlock.$jazz.set("slotData", {
       ...slotBlock.slotData,
       maxSelections: editMaxSelections,
-      budget: editBudget ? Number(editBudget) : undefined,
+      budget: budgetCents,
     });
     setIsEditing(false);
   };
@@ -66,7 +69,7 @@ export function SlotSection({
   const handleCancelEdit = () => {
     setEditName(slotBlock.name);
     setEditMaxSelections(slotBlock.slotData?.maxSelections || 1);
-    setEditBudget(slotBlock.slotData?.budget?.toString() || "");
+    setEditBudget(slotBlock.slotData?.budget ? (slotBlock.slotData.budget / 100).toString() : "");
     setIsEditing(false);
   };
 
@@ -127,14 +130,19 @@ export function SlotSection({
               </select>
             </div>
             <div className={styles.editField}>
-              <label className={styles.editLabel}>Budget (cents)</label>
-              <input
-                type="number"
-                value={editBudget}
-                onChange={(e) => setEditBudget(e.target.value)}
-                className={styles.editInput}
-                placeholder="5000"
-              />
+              <label className={styles.editLabel}>Budget</label>
+              <div className={styles.budgetInputWrapper}>
+                <span className={styles.currencyPrefix}>$</span>
+                <input
+                  type="number"
+                  value={editBudget}
+                  onChange={(e) => setEditBudget(e.target.value)}
+                  className={styles.editInput}
+                  placeholder="100"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
             </div>
             <div className={styles.editActions}>
               <button
@@ -160,8 +168,10 @@ export function SlotSection({
               <span className={styles.selectionCount}>
                 {selectedCount}/{maxSelections === 0 ? "∞" : maxSelections} selected
               </span>
-              {budget && (
-                <span className={styles.budget}>{formatBudget(budget)}</span>
+              {budget !== undefined && (
+                <span className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ""}`}>
+                  {formatBudget(selectedTotal)} / {formatBudget(budget)}
+                </span>
               )}
             </div>
             <div className={styles.headerActions}>
