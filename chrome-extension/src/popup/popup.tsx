@@ -1,9 +1,9 @@
 import { useEffect, useState, Component, ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { SignedIn, SignedOut, useAuth } from "@clerk/chrome-extension";
-import { useAccount } from "jazz-tools/react";
+import { useAccount, useCoState } from "jazz-tools/react";
 import { Group } from "jazz-tools";
-import { JazzAccount, Block, BlockList } from "@tote/schema";
+import { JazzAccount, Block, BlockList, SharedCollectionRef } from "@tote/schema";
 import type { co } from "jazz-tools";
 import { ExtensionProviders, JazzProvider } from "../providers/ExtensionProviders";
 import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
@@ -231,6 +231,38 @@ function SlotSelector({
   );
 }
 
+type LoadedBlock = co.loaded<typeof Block>;
+type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
+
+/**
+ * Component to load a single shared collection
+ */
+function SharedCollectionLoader({
+  collectionId,
+  onLoad,
+}: {
+  collectionId: string;
+  onLoad: (collection: LoadedBlock) => void;
+}) {
+  const collection = useCoState(Block, collectionId as `co_z${string}`, {
+    resolve: {
+      children: {
+        $each: {
+          children: { $each: {} },
+        },
+      },
+    },
+  });
+
+  useEffect(() => {
+    if (collection && collection.$isLoaded && collection.type === "collection") {
+      onLoad(collection as LoadedBlock);
+    }
+  }, [collection, onLoad]);
+
+  return null; // This component only loads data, doesn't render anything
+}
+
 /**
  * Save UI for authenticated users - uses Jazz directly
  */
@@ -245,6 +277,7 @@ function SaveUI({
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadedSharedCollections, setLoadedSharedCollections] = useState<Map<string, LoadedBlock>>(new Map());
 
   // Get user's Jazz account with blocks loaded (including children for sharing)
   const me = useAccount(JazzAccount, {
@@ -259,6 +292,7 @@ function SaveUI({
             },
           },
         },
+        sharedWithMe: { $each: {} },
       },
     },
   });
@@ -268,46 +302,68 @@ function SaveUI({
   const root = isLoaded ? me.root : null;
   const rootLoaded = root && "$isLoaded" in root && root.$isLoaded;
 
-  // Get collection blocks (top-level collections without parentId)
-  type LoadedBlock = co.loaded<typeof Block>;
-  const collections: LoadedBlock[] = [];
-  if (rootLoaded && root.blocks?.$isLoaded) {
-    for (const b of Array.from(root.blocks)) {
-      if (b && b.$isLoaded && b.type === "collection" && !b.parentId) {
-        collections.push(b as LoadedBlock);
+  // Get writable shared collection refs (writer or admin role)
+  const writableSharedRefs: LoadedSharedRef[] = [];
+  if (rootLoaded && root.sharedWithMe?.$isLoaded) {
+    for (const ref of Array.from(root.sharedWithMe)) {
+      if (ref && ref.$isLoaded && (ref.role === "writer" || ref.role === "admin")) {
+        writableSharedRefs.push(ref);
       }
     }
   }
 
+  // Callback for when a shared collection is loaded
+  const handleSharedCollectionLoaded = (collection: LoadedBlock) => {
+    setLoadedSharedCollections((prev) => {
+      const next = new Map(prev);
+      next.set(collection.$jazz.id, collection);
+      return next;
+    });
+  };
+
+  // Get owned collection blocks (top-level collections without parentId)
+  const ownedCollections: LoadedBlock[] = [];
+  if (rootLoaded && root.blocks?.$isLoaded) {
+    for (const b of Array.from(root.blocks)) {
+      if (b && b.$isLoaded && b.type === "collection" && !b.parentId) {
+        ownedCollections.push(b as LoadedBlock);
+      }
+    }
+  }
+
+  // Combine owned + loaded shared collections
+  const ownedIds = new Set(ownedCollections.map((c) => c.$jazz.id));
+  const collections: LoadedBlock[] = [
+    ...ownedCollections,
+    ...Array.from(loadedSharedCollections.values()).filter((c) => !ownedIds.has(c.$jazz.id)),
+  ];
+
+  // Find the currently selected collection block
+  const selectedCollectionBlock = collections.find((c) => c.$jazz.id === selectedCollection);
+
   // Get slot blocks for the selected collection (from children list)
   const slots: { id: string; name: string }[] = [];
-  if (rootLoaded && root.blocks?.$isLoaded && selectedCollection) {
-    const collection = collections.find((c) => c.$jazz.id === selectedCollection);
-    if (collection?.children?.$isLoaded) {
-      for (const b of collection.children) {
-        if (b && b.$isLoaded && b.type === "slot") {
-          slots.push({ id: b.$jazz.id, name: b.name || "Unnamed slot" });
-        }
+  if (selectedCollectionBlock?.children?.$isLoaded) {
+    for (const b of selectedCollectionBlock.children) {
+      if (b && b.$isLoaded && b.type === "slot") {
+        slots.push({ id: b.$jazz.id, name: b.name || "Unnamed slot" });
       }
     }
   }
 
   // Create a new slot
   const handleCreateSlot = async (name: string): Promise<string> => {
-    if (!root?.blocks?.$isLoaded || !selectedCollection) {
-      throw new Error("Cannot create slot");
+    if (!selectedCollectionBlock) {
+      throw new Error("No collection selected");
     }
 
-    // Find the collection to get its sharing group
-    const collection = collections.find((c) => c.$jazz.id === selectedCollection);
-
-    if (!collection?.children?.$isLoaded) {
+    if (!selectedCollectionBlock?.children?.$isLoaded) {
       throw new Error("Collection children not loaded");
     }
 
     // Get the collection's sharing group for proper ownership
     let ownerGroup: Group | undefined;
-    const sharingGroupId = collection?.collectionData?.sharingGroupId;
+    const sharingGroupId = selectedCollectionBlock?.collectionData?.sharingGroupId;
     if (sharingGroupId) {
       const loaded = await Group.load(sharingGroupId as `co_z${string}`, {});
       if (loaded && "$isLoaded" in loaded && loaded.$isLoaded) {
@@ -318,7 +374,7 @@ function SaveUI({
     // Create empty children list for the slot
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
+      ownerGroup ? { owner: ownerGroup } : { owner: selectedCollectionBlock.$jazz.owner }
     );
 
     const newSlot = Block.create(
@@ -331,11 +387,11 @@ function SaveUI({
         children: slotChildren,
         createdAt: new Date(),
       },
-      ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
+      ownerGroup ? { owner: ownerGroup } : { owner: selectedCollectionBlock.$jazz.owner }
     );
 
     // Add slot to collection's children
-    collection.children.$jazz.push(newSlot);
+    selectedCollectionBlock.children.$jazz.push(newSlot);
     return newSlot.$jazz.id;
   };
 
@@ -406,7 +462,7 @@ function SaveUI({
           },
           createdAt: new Date(),
         },
-        ownerGroup ? { owner: ownerGroup } : { owner: root.blocks.$jazz.owner }
+        ownerGroup ? { owner: ownerGroup } : { owner: collection.$jazz.owner }
       );
 
       // Add to the appropriate parent's children list
@@ -461,6 +517,15 @@ function SaveUI({
 
   return (
     <>
+      {/* Load shared collections in background */}
+      {writableSharedRefs.map((ref) => (
+        <SharedCollectionLoader
+          key={ref.collectionId}
+          collectionId={ref.collectionId}
+          onLoad={handleSharedCollectionLoaded}
+        />
+      ))}
+
       {error && <div className="error">{error}</div>}
 
       <div className="form-group">

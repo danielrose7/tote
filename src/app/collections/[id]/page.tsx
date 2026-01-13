@@ -210,6 +210,7 @@ export default function CollectionDetailPage() {
         onOpenChange={setIsAddDialogOpen}
         account={me}
         collectionId={collectionId}
+        collection={collectionBlock}
       />
       <EditLinkDialog
         open={isEditDialogOpen}
