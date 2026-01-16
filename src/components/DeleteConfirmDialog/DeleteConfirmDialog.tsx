@@ -43,15 +43,13 @@ export function DeleteConfirmDialog({
                 Cancel
               </button>
             </AlertDialog.Cancel>
-            <AlertDialog.Action asChild>
-              <button
-                type="button"
-                onClick={handleConfirm}
-                className={styles.deleteButton}
-              >
-                Delete
-              </button>
-            </AlertDialog.Action>
+            <button
+              type="button"
+              onClick={handleConfirm}
+              className={styles.deleteButton}
+            >
+              Delete
+            </button>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

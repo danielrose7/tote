@@ -91,12 +91,12 @@
 }
 
 .deleteButton {
-  background-color: var(--color-danger);
+  background-color: #dc2626;
   color: white;
 }
 
 .deleteButton:hover {
-  background-color: #c82333;
+  background-color: #b91c1c;
   box-shadow: var(--shadow-md);
 }
 

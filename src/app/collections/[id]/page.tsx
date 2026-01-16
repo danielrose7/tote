@@ -118,19 +118,41 @@ export default function CollectionDetailPage() {
   };
 
   const handleConfirmDelete = () => {
-    if (!selectedBlock || !me.root?.blocks?.$isLoaded) return;
+    if (!selectedBlock || !collectionBlock?.children?.$isLoaded) return;
 
-    const blockIndex = me.root.blocks.findIndex(
+    // First check if it's directly in the collection (ungrouped product)
+    const directIndex = collectionBlock.children.findIndex(
       (block) => block && block.$isLoaded && block.$jazz.id === selectedBlock.$jazz.id
     );
 
-    if (blockIndex !== -1) {
-      me.root.blocks.$jazz.splice(blockIndex, 1);
+    if (directIndex !== -1) {
+      collectionBlock.children.$jazz.splice(directIndex, 1);
       showToast({
         title: "Link deleted",
         description: `"${selectedBlock.name || "Untitled"}" has been removed`,
-        variant: "success",
+        variant: "info",
       });
+      setSelectedBlock(null);
+      return;
+    }
+
+    // Check inside slots
+    for (const child of collectionBlock.children) {
+      if (child && child.$isLoaded && child.type === "slot" && child.children?.$isLoaded) {
+        const slotIndex = child.children.findIndex(
+          (block) => block && block.$isLoaded && block.$jazz.id === selectedBlock.$jazz.id
+        );
+        if (slotIndex !== -1) {
+          child.children.$jazz.splice(slotIndex, 1);
+          showToast({
+            title: "Link deleted",
+            description: `"${selectedBlock.name || "Untitled"}" has been removed`,
+            variant: "info",
+          });
+          setSelectedBlock(null);
+          return;
+        }
+      }
     }
 
     setSelectedBlock(null);
