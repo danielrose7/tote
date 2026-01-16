@@ -12,16 +12,17 @@ import type { LoadedBlock } from "./blocks";
 
 /**
  * Get the selection count for a slot
+ * Returns max as undefined when no target is set (subcategory mode)
  */
 export function getSelectionCount(slot: LoadedBlock): {
   current: number;
-  max: number;
+  max: number | undefined;
 } {
   if (slot.type !== "slot") {
-    return { current: 0, max: 1 };
+    return { current: 0, max: undefined };
   }
   const selectedIds = slot.slotData?.selectedProductIds || [];
-  const max = slot.slotData?.maxSelections || 1;
+  const max = slot.slotData?.maxSelections;
   return { current: selectedIds.length, max };
 }
 
@@ -41,6 +42,7 @@ export function isProductSelected(
 
 /**
  * Toggle product selection within a slot (respects maxSelections)
+ * When maxSelections is undefined (no target) or 0 (unlimited), no limit is enforced
  */
 export function toggleProductSelection(
   product: LoadedBlock,
@@ -51,7 +53,7 @@ export function toggleProductSelection(
   }
 
   const selectedIds = slot.slotData?.selectedProductIds || [];
-  const max = slot.slotData?.maxSelections || 1;
+  const max = slot.slotData?.maxSelections;
   const productId = product.$jazz.id;
 
   if (selectedIds.includes(productId)) {
@@ -63,8 +65,8 @@ export function toggleProductSelection(
     });
     return { success: true };
   } else {
-    // Select (check limit)
-    if (selectedIds.length >= max) {
+    // Select (check limit if max is defined and > 0)
+    if (max !== undefined && max > 0 && selectedIds.length >= max) {
       return {
         success: false,
         reason: `Maximum ${max} selection${max === 1 ? "" : "s"} allowed`,

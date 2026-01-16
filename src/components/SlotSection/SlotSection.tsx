@@ -57,8 +57,9 @@ export function SlotSection({
   const [isEditing, setIsEditing] = useState(false);
   const [isProductReorderMode, setIsProductReorderMode] = useState(false);
   const [editName, setEditName] = useState(slotBlock.name);
+  // Empty string = no target, number string = target
   const [editMaxSelections, setEditMaxSelections] = useState(
-    slotBlock.slotData?.maxSelections || 1
+    slotBlock.slotData?.maxSelections?.toString() ?? ""
   );
   const [editBudget, setEditBudget] = useState(
     slotBlock.slotData?.budget ? (slotBlock.slotData.budget / 100).toString() : ""
@@ -92,10 +93,12 @@ export function SlotSection({
   const handleSaveEdit = () => {
     // Update the slot block - convert dollars to cents for storage
     const budgetCents = editBudget ? Math.round(Number(editBudget) * 100) : undefined;
+    // Empty string = no target (undefined), otherwise parse as number
+    const maxSelectionsValue = editMaxSelections ? Number(editMaxSelections) : undefined;
     slotBlock.$jazz.set("name", editName);
     slotBlock.$jazz.set("slotData", {
       ...slotBlock.slotData,
-      maxSelections: editMaxSelections,
+      maxSelections: maxSelectionsValue,
       budget: budgetCents,
     });
     setIsEditing(false);
@@ -103,7 +106,7 @@ export function SlotSection({
 
   const handleCancelEdit = () => {
     setEditName(slotBlock.name);
-    setEditMaxSelections(slotBlock.slotData?.maxSelections || 1);
+    setEditMaxSelections(slotBlock.slotData?.maxSelections?.toString() ?? "");
     setEditBudget(slotBlock.slotData?.budget ? (slotBlock.slotData.budget / 100).toString() : "");
     setIsEditing(false);
   };
@@ -198,16 +201,14 @@ export function SlotSection({
             />
             <div className={styles.editField}>
               <label className={styles.editLabel}>Pick</label>
-              <select
+              <input
+                type="number"
                 value={editMaxSelections}
-                onChange={(e) => setEditMaxSelections(Number(e.target.value))}
-                className={styles.editSelect}
-              >
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-                <option value={0}>Unlimited</option>
-              </select>
+                onChange={(e) => setEditMaxSelections(e.target.value)}
+                className={styles.editInput}
+                placeholder="Any"
+                min="1"
+              />
             </div>
             <div className={styles.editField}>
               <label className={styles.editLabel}>Budget</label>
@@ -247,9 +248,11 @@ export function SlotSection({
               <h3 className={styles.title}>{slotBlock.name}</h3>
               {!forceCollapsed && (
                 <>
-                  <span className={styles.selectionCount}>
-                    {selectedCount}/{maxSelections === 0 ? "∞" : maxSelections} selected
-                  </span>
+                  {maxSelections !== undefined && (
+                    <span className={styles.selectionCount}>
+                      {selectedCount}/{maxSelections === 0 ? "∞" : maxSelections} selected
+                    </span>
+                  )}
                   {budget !== undefined && (
                     <span className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ""}`}>
                       {formatBudget(selectedTotal)} / {formatBudget(budget)}
