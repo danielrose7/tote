@@ -227,8 +227,7 @@ export default function HomePage() {
         <div className={styles.footerContent}>
           <span className={styles.footerLogo}>tote</span>
           <nav className={styles.footerLinks}>
-            <a href="#how-it-works">How it works</a>
-            <a href="#features">Features</a>
+            <a href="/docs">Help</a>
           </nav>
         </div>
         <div className={styles.footerBottom}>
