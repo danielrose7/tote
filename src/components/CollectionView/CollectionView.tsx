@@ -1,8 +1,23 @@
 import { useState, useEffect } from "react";
 import type { Block } from "../../schema.ts";
 import type { co } from "jazz-tools";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { ProductCard } from "../ProductCard/ProductCard";
 import { SlotSection } from "../SlotSection/SlotSection";
+import { SortableSlotSection } from "../SlotSection/SortableSlotSection";
 import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
 import { TableView } from "./TableView";
 import {
@@ -11,6 +26,7 @@ import {
   getUngroupedProducts,
   removeFromSelection,
 } from "../../lib/slotHelpers";
+import { reorderBlockList } from "../../lib/blocks";
 import styles from "./CollectionView.module.css";
 
 const VIEW_MODE_STORAGE_KEY = "tote:viewMode";
@@ -164,6 +180,19 @@ export function CollectionView({
   } | null>(null);
   const [extensionAvailable, setExtensionAvailable] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [isReorderMode, setIsReorderMode] = useState(false);
+
+  // DnD sensors for slot reordering
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Prevent accidental drags
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Load view mode preference from localStorage
   useEffect(() => {
@@ -273,6 +302,31 @@ export function CollectionView({
     slot.$jazz.set("parentId", undefined);
   };
 
+  // Handle slot reordering via drag and drop
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+    if (!collectionBlock.children?.$isLoaded) return;
+
+    // Find the indices of the dragged and target slots in the children list
+    const children = collectionBlock.children;
+    let fromIndex = -1;
+    let toIndex = -1;
+
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child && child.$isLoaded) {
+        if (child.$jazz.id === active.id) fromIndex = i;
+        if (child.$jazz.id === over.id) toIndex = i;
+      }
+    }
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      reorderBlockList(children, fromIndex, toIndex);
+    }
+  };
+
   return (
     <div className={styles.container}>
       {/* Collection Header */}
@@ -373,6 +427,15 @@ export function CollectionView({
                 )}
               </button>
               <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
+              {slots.length > 1 && viewMode === "grid" && (
+                <button
+                  type="button"
+                  onClick={() => setIsReorderMode(!isReorderMode)}
+                  className={isReorderMode ? styles.doneButton : styles.reorderButton}
+                >
+                  {isReorderMode ? "Done" : "Reorder Slots"}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -412,32 +475,70 @@ export function CollectionView({
       ) : (
         <>
           {/* Slots */}
-          {slots.map((slot) => {
-            // Get products from slot's children list or fallback to parentId
-            const slotProducts: LoadedBlock[] = [];
-            if (slot.children?.$isLoaded) {
-              for (const child of slot.children) {
-                if (child && child.$isLoaded && child.type === "product") {
-                  slotProducts.push(child);
+          {isReorderMode ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={slots.map((s) => s.$jazz.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {slots.map((slot) => {
+                  const slotProducts: LoadedBlock[] = [];
+                  if (slot.children?.$isLoaded) {
+                    for (const child of slot.children) {
+                      if (child && child.$isLoaded && child.type === "product") {
+                        slotProducts.push(child);
+                      }
+                    }
+                  } else {
+                    slotProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
+                  }
+                  return (
+                    <SortableSlotSection
+                      key={slot.$jazz.id}
+                      slotBlock={slot}
+                      products={slotProducts}
+                      onEditProduct={onEditBlock}
+                      onDeleteProduct={onDeleteBlock}
+                      onRefreshProduct={handleRefreshBlock}
+                      onDeleteSlot={handleDeleteSlot}
+                      refreshingBlockId={refreshingBlockId}
+                      enqueuedBlockIds={enqueuedBlockIds}
+                    />
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
+          ) : (
+            slots.map((slot) => {
+              const slotProducts: LoadedBlock[] = [];
+              if (slot.children?.$isLoaded) {
+                for (const child of slot.children) {
+                  if (child && child.$isLoaded && child.type === "product") {
+                    slotProducts.push(child);
+                  }
                 }
+              } else {
+                slotProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
               }
-            } else {
-              slotProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
-            }
-            return (
-              <SlotSection
-                key={slot.$jazz.id}
-                slotBlock={slot}
-                products={slotProducts}
-                onEditProduct={onEditBlock}
-                onDeleteProduct={onDeleteBlock}
-                onRefreshProduct={handleRefreshBlock}
-                onDeleteSlot={handleDeleteSlot}
-                refreshingBlockId={refreshingBlockId}
-                enqueuedBlockIds={enqueuedBlockIds}
-              />
-            );
-          })}
+              return (
+                <SlotSection
+                  key={slot.$jazz.id}
+                  slotBlock={slot}
+                  products={slotProducts}
+                  onEditProduct={onEditBlock}
+                  onDeleteProduct={onDeleteBlock}
+                  onRefreshProduct={handleRefreshBlock}
+                  onDeleteSlot={handleDeleteSlot}
+                  refreshingBlockId={refreshingBlockId}
+                  enqueuedBlockIds={enqueuedBlockIds}
+                />
+              );
+            })
+          )}
 
           {/* Ungrouped Products */}
           {ungroupedProducts.length > 0 && (

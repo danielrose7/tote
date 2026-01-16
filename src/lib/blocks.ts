@@ -559,3 +559,31 @@ export function generateCollectionInviteLink(
   // Create path-based URL
   return `${baseUrl}/invite/${valueId}?secret=${encodeURIComponent(inviteSecret)}&role=${role}`;
 }
+
+// =============================================================================
+// Reordering
+// =============================================================================
+
+/**
+ * Reorder an item in a BlockList from one position to another.
+ * Uses Jazz's splice method for atomic updates.
+ */
+export function reorderBlockList(
+  list: co.loaded<typeof BlockList>,
+  fromIndex: number,
+  toIndex: number
+): void {
+  if (!list.$isLoaded) return;
+  if (fromIndex === toIndex) return;
+  if (fromIndex < 0 || fromIndex >= list.length) return;
+  if (toIndex < 0 || toIndex >= list.length) return;
+
+  const item = list[fromIndex];
+  if (!item) return;
+
+  // Remove from old position
+  list.$jazz.splice(fromIndex, 1);
+
+  // Insert at new position
+  list.$jazz.splice(toIndex, 0, item);
+}

@@ -257,6 +257,44 @@
   font-size: var(--font-size-sm);
 }
 
+/* Drag Handle */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  touch-action: none;
+}
+
+.dragHandle:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* Reorder Mode */
+.reorderMode {
+  margin-bottom: var(--spacing-md);
+}
+
+.reorderMode .header {
+  border-bottom: none;
+}
+
+/* Dragging State */
+.dragging {
+  box-shadow: var(--shadow-lg);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {
