@@ -266,9 +266,9 @@
 }
 
 .saveButton:hover {
-  background-color: #157347;
+  background-color: var(--color-success-hover);
 }
 
 .saveButton:active {
-  background-color: #146c43;
+  background-color: var(--color-success-active);
 }

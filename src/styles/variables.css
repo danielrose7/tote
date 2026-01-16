@@ -35,15 +35,17 @@
   --color-text-muted: rgba(45, 49, 66, 0.5);
 
   /* Semantic - Accent & Actions */
-  --color-accent: var(--color-periwinkle);
-  --color-accent-hover: #A8A8CC;
-  --color-accent-active: #9898BC;
-  --color-accent-subtle: rgba(184, 184, 220, 0.15);
+  --color-accent: #6c47ff;
+  --color-accent-hover: #5a3de6;
+  --color-accent-active: #4832cc;
+  --color-accent-subtle: rgba(108, 71, 255, 0.15);
 
   /* Semantic - Status */
   --color-danger: #E8B4B8;
   --color-danger-hover: #D89EA2;
-  --color-success: #B8D4C6;
+  --color-success: #00cc52;
+  --color-success-hover: #00b347;
+  --color-success-active: #009a3d;
   --color-warning: #F5DDA9;
   --color-info: var(--color-powder-blue);
 

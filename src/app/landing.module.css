@@ -160,14 +160,14 @@
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all var(--transition-fast);
-  background-color: var(--color-navy);
+  background-color: var(--color-accent);
   color: var(--color-white);
   border: none;
 }
 
 .primaryButton:hover {
   transform: scale(1.02);
-  background-color: var(--color-charcoal);
+  background-color: var(--color-accent-hover);
 }
 
 .primaryButton:disabled {
