@@ -286,20 +286,37 @@ export function CollectionView({
 
   // Handle slot deletion - moves products back to collection
   const handleDeleteSlot = (slot: LoadedBlock) => {
-    const slotProducts = getProductsForSlot(allBlocks, slot.$jazz.id);
+    const children = collectionBlock.children;
 
-    // Move all products to the collection
-    for (const product of slotProducts) {
-      // Remove from slot's selection if selected
-      removeFromSelection(product.$jazz.id, slot);
-      // Move to collection
-      product.$jazz.set("parentId", collectionId);
+    // Move products from slot's children to collection's children
+    if (slot.children?.$isLoaded && children?.$isLoaded) {
+      // Collect products first, then move them
+      const products: LoadedBlock[] = [];
+      for (const child of slot.children) {
+        if (child && child.$isLoaded && child.type === "product") {
+          removeFromSelection(child.$jazz.id, slot);
+          products.push(child);
+        }
+      }
+      // Remove all products from slot (iterate backwards)
+      for (let i = slot.children.length - 1; i >= 0; i--) {
+        slot.children.$jazz.splice(i, 1);
+      }
+      // Add products to collection
+      for (const product of products) {
+        children.push(product);
+      }
     }
 
-    // Find and remove the slot from the blocks list
-    // Note: In Jazz, we'd typically soft-delete or just orphan it
-    // For now, we'll just set parentId to undefined to "remove" it
-    slot.$jazz.set("parentId", undefined);
+    // Remove the slot from the collection's children list
+    if (children?.$isLoaded) {
+      const idx = children.findIndex(
+        (c) => c && c.$isLoaded && c.$jazz.id === slot.$jazz.id
+      );
+      if (idx !== -1) {
+        children.$jazz.splice(idx, 1);
+      }
+    }
   };
 
   // Handle slot reordering via drag and drop
