@@ -1,12 +1,14 @@
 import { useEffect, useState, Component, ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { SignedIn, SignedOut, useAuth } from "@clerk/chrome-extension";
-import { useAccount, useCoState } from "jazz-tools/react";
+import { useCoState } from "jazz-tools/react";
 import { Group } from "jazz-tools";
-import { JazzAccount, Block, BlockList, SharedCollectionRef } from "@tote/schema";
+import { Block, BlockList } from "@tote/schema";
 import type { co } from "jazz-tools";
 import { ExtensionProviders, JazzProvider } from "../providers/ExtensionProviders";
 import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
+import { useCollections } from "../hooks/useCollections";
+import { loadOwnerGroup } from "../lib/loadOwnerGroup";
 
 // Error boundary to catch rendering errors
 class ErrorBoundary extends Component<
@@ -232,7 +234,6 @@ function SlotSelector({
 }
 
 type LoadedBlock = co.loaded<typeof Block>;
-type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
 
 /**
  * Component to load a single shared collection
@@ -273,83 +274,25 @@ function SaveUI({
   metadata: ExtractedMetadata;
   onSuccess: () => void;
 }) {
-  const [selectedCollection, setSelectedCollection] = useState<string>("");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadedSharedCollections, setLoadedSharedCollections] = useState<Map<string, LoadedBlock>>(new Map());
+  const [showNewCollection, setShowNewCollection] = useState(false);
+  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
 
-  // Get user's Jazz account with blocks loaded (including children for sharing)
-  const me = useAccount(JazzAccount, {
-    resolve: {
-      root: {
-        blocks: {
-          $each: {
-            children: {
-              $each: {
-                children: { $each: {} }, // For slots containing products
-              },
-            },
-          },
-        },
-        sharedWithMe: { $each: {} },
-      },
-    },
-  });
-
-  // Check if account and root are loaded
-  const isLoaded = me && "$isLoaded" in me && me.$isLoaded;
-  const root = isLoaded ? me.root : null;
-  const rootLoaded = root && "$isLoaded" in root && root.$isLoaded;
-
-  // Get writable shared collection refs (writer or admin role)
-  const writableSharedRefs: LoadedSharedRef[] = [];
-  if (rootLoaded && root.sharedWithMe?.$isLoaded) {
-    for (const ref of Array.from(root.sharedWithMe)) {
-      if (ref && ref.$isLoaded && (ref.role === "writer" || ref.role === "admin")) {
-        writableSharedRefs.push(ref);
-      }
-    }
-  }
-
-  // Callback for when a shared collection is loaded
-  const handleSharedCollectionLoaded = (collection: LoadedBlock) => {
-    setLoadedSharedCollections((prev) => {
-      const next = new Map(prev);
-      next.set(collection.$jazz.id, collection);
-      return next;
-    });
-  };
-
-  // Get owned collection blocks (top-level collections without parentId)
-  const ownedCollections: LoadedBlock[] = [];
-  if (rootLoaded && root.blocks?.$isLoaded) {
-    for (const b of Array.from(root.blocks)) {
-      if (b && b.$isLoaded && b.type === "collection" && !b.parentId) {
-        ownedCollections.push(b as LoadedBlock);
-      }
-    }
-  }
-
-  // Combine owned + loaded shared collections
-  const ownedIds = new Set(ownedCollections.map((c) => c.$jazz.id));
-  const collections: LoadedBlock[] = [
-    ...ownedCollections,
-    ...Array.from(loadedSharedCollections.values()).filter((c) => !ownedIds.has(c.$jazz.id)),
-  ];
-
-  // Find the currently selected collection block
-  const selectedCollectionBlock = collections.find((c) => c.$jazz.id === selectedCollection);
-
-  // Get slot blocks for the selected collection (from children list)
-  const slots: { id: string; name: string }[] = [];
-  if (selectedCollectionBlock?.children?.$isLoaded) {
-    for (const b of selectedCollectionBlock.children) {
-      if (b && b.$isLoaded && b.type === "slot") {
-        slots.push({ id: b.$jazz.id, name: b.name || "Unnamed slot" });
-      }
-    }
-  }
+  const {
+    collections,
+    selectedCollection,
+    setSelectedCollection,
+    slots,
+    selectedCollectionBlock,
+    sharedRefsToLoad,
+    onSharedCollectionLoaded,
+    me,
+    root,
+    isLoading,
+  } = useCollections();
 
   // Create a new slot
   const handleCreateSlot = async (name: string): Promise<string> => {
@@ -361,15 +304,7 @@ function SaveUI({
       throw new Error("Collection children not loaded");
     }
 
-    // Get the collection's sharing group for proper ownership
-    let ownerGroup: Group | undefined;
-    const sharingGroupId = selectedCollectionBlock?.collectionData?.sharingGroupId;
-    if (sharingGroupId) {
-      const loaded = await Group.load(sharingGroupId as `co_z${string}`, {});
-      if (loaded && "$isLoaded" in loaded && loaded.$isLoaded) {
-        ownerGroup = loaded as Group;
-      }
-    }
+    const ownerGroup = await loadOwnerGroup(selectedCollectionBlock);
 
     // Create empty children list for the slot
     const slotChildren = BlockList.create(
@@ -395,33 +330,54 @@ function SaveUI({
     return newSlot.$jazz.id;
   };
 
-  // Set default collection when collections load
-  // Use the user's default collection, or fall back to the first one
-  useEffect(() => {
-    if (collections.length > 0 && !selectedCollection) {
-      const defaultId = root?.defaultBlockId;
+  // Create a new collection
+  const handleCreateCollection = async () => {
+    const name = newCollectionName.trim();
+    if (!name || !me || !root) return;
 
-      // Try to use the user's default collection
-      if (defaultId) {
-        const defaultCollection = collections.find(
-          (c) => c.$jazz.id === defaultId
-        );
-        if (defaultCollection) {
-          setSelectedCollection(defaultCollection.$jazz.id);
-          return;
-        }
+    setIsCreatingCollection(true);
+    try {
+      const ownerGroup = Group.create({ owner: me });
+      ownerGroup.addMember(me, "admin");
+
+      const childrenList = BlockList.create([], { owner: ownerGroup });
+
+      const newCollection = Block.create(
+        {
+          type: "collection",
+          name,
+          collectionData: {
+            sharingGroupId: ownerGroup.$jazz.id,
+            viewMode: "grid",
+          },
+          children: childrenList,
+          createdAt: new Date(),
+        },
+        { owner: ownerGroup }
+      );
+
+      // Add to root blocks
+      if (!root.blocks?.$isLoaded) {
+        const blocksList = BlockList.create([newCollection], me);
+        root.$jazz.set("blocks", blocksList);
+      } else {
+        root.blocks.$jazz.push(newCollection);
       }
 
-      // Fall back to first collection
-      const firstCollection = collections[0];
-      if (firstCollection) {
-        setSelectedCollection(firstCollection.$jazz.id);
-      }
+      setSelectedCollection(newCollection.$jazz.id);
+      setSelectedSlot(null);
+      setNewCollectionName("");
+      setShowNewCollection(false);
+    } catch (err) {
+      console.error("[Tote] Create collection error:", err);
+      setError(err instanceof Error ? err.message : "Failed to create collection");
+    } finally {
+      setIsCreatingCollection(false);
     }
-  }, [collections, selectedCollection, root?.defaultBlockId]);
+  };
 
   const handleSave = async () => {
-    if (!me || !isLoaded || !root || !root.blocks?.$isLoaded || !selectedCollection) {
+    if (!me || !root || !root.blocks?.$isLoaded || !selectedCollection) {
       setError("No collection selected");
       return;
     }
@@ -430,7 +386,6 @@ function SaveUI({
     setError(null);
 
     try {
-      // Find the selected collection
       const collection = collections.find(
         (c) => c.$jazz.id === selectedCollection
       );
@@ -439,15 +394,7 @@ function SaveUI({
         throw new Error("Collection not found");
       }
 
-      // Get the collection's sharing group for proper ownership
-      let ownerGroup: Group | undefined;
-      const sharingGroupId = collection?.collectionData?.sharingGroupId;
-      if (sharingGroupId) {
-        const loaded = await Group.load(sharingGroupId as `co_z${string}`, {});
-        if (loaded && "$isLoaded" in loaded && loaded.$isLoaded) {
-          ownerGroup = loaded as Group;
-        }
-      }
+      const ownerGroup = await loadOwnerGroup(collection);
 
       // Create the product block owned by the group
       const newProductBlock = Block.create(
@@ -498,7 +445,7 @@ function SaveUI({
   };
 
   // Loading state while Jazz loads
-  if (!isLoaded || !rootLoaded) {
+  if (isLoading) {
     return (
       <div className="loading">
         <div className="spinner" />
@@ -507,22 +454,28 @@ function SaveUI({
     );
   }
 
-  if (collections.length === 0) {
+  if (collections.length === 0 && !showNewCollection) {
     return (
-      <div className="error">
-        No collections found. Please create a collection on the web app first.
+      <div className="empty-collections">
+        <p>No collections yet.</p>
+        <button
+          className="save-button"
+          onClick={() => setShowNewCollection(true)}
+        >
+          Add Collection
+        </button>
       </div>
     );
   }
 
   return (
     <>
-      {/* Load shared collections in background */}
-      {writableSharedRefs.map((ref) => (
+      {/* Load shared collections in background (skip ones we already own) */}
+      {sharedRefsToLoad.map((ref) => (
         <SharedCollectionLoader
           key={ref.collectionId}
           collectionId={ref.collectionId}
-          onLoad={handleSharedCollectionLoaded}
+          onLoad={onSharedCollectionLoaded}
         />
       ))}
 
@@ -530,21 +483,64 @@ function SaveUI({
 
       <div className="form-group">
         <label htmlFor="collection">Collection</label>
-        <select
-          id="collection"
-          value={selectedCollection}
-          onChange={(e) => {
-            setSelectedCollection(e.target.value);
-            setSelectedSlot(null); // Clear slot when collection changes
-          }}
-          disabled={saving}
-        >
-          {collections.map((col) => (
-            <option key={col.$jazz.id} value={col.$jazz.id}>
-              {col.name || "Unnamed collection"}
-            </option>
-          ))}
-        </select>
+        {collections.length > 0 && (
+          <div className="collection-row">
+            <select
+              id="collection"
+              value={selectedCollection}
+              onChange={(e) => {
+                setSelectedCollection(e.target.value);
+                setSelectedSlot(null);
+              }}
+              disabled={saving || isCreatingCollection}
+            >
+              {collections.map((col) => (
+                <option key={col.$jazz.id} value={col.$jazz.id}>
+                  {col.name || "Unnamed collection"}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="add-collection-button"
+              onClick={() => {
+                setShowNewCollection(!showNewCollection);
+                setNewCollectionName("");
+              }}
+              disabled={saving || isCreatingCollection}
+              title="Add collection"
+            >
+              {showNewCollection ? "\u00d7" : "+"}
+            </button>
+          </div>
+        )}
+        {showNewCollection && (
+          <div className="new-collection-row">
+            <input
+              type="text"
+              value={newCollectionName}
+              onChange={(e) => setNewCollectionName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && newCollectionName.trim()) handleCreateCollection();
+                if (e.key === "Escape") {
+                  setShowNewCollection(false);
+                  setNewCollectionName("");
+                }
+              }}
+              placeholder="Collection name"
+              disabled={isCreatingCollection}
+              autoFocus
+            />
+            <button
+              type="button"
+              className="new-collection-confirm"
+              onClick={handleCreateCollection}
+              disabled={!newCollectionName.trim() || isCreatingCollection}
+            >
+              {isCreatingCollection ? "..." : "Add"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="form-group">
@@ -558,7 +554,7 @@ function SaveUI({
         />
       </div>
 
-      <button className="save-button" onClick={handleSave} disabled={saving}>
+      <button className="save-button" onClick={handleSave} disabled={saving || !selectedCollection}>
         {saving ? "Saving..." : "Save to Tote"}
       </button>
     </>
