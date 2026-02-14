@@ -88,6 +88,12 @@
   color: white;
   border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+}
+
+.card:hover .selectionBadge {
+  transform: translate(10px, 10px) scale(0.5);
+  opacity: 0;
 }
 
 .actionButtonSelected {
