@@ -1,5 +1,12 @@
 import type { ExtractedMetadata, ExtractionResult } from "./types";
 
+// Decode HTML entities (e.g. &quot; → ") safely using a textarea
+function decodeHtmlEntities(text: string): string {
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = text;
+  return textarea.value;
+}
+
 // Currency symbols and their codes
 const CURRENCY_MAP: Record<string, string> = {
   $: "USD",
@@ -389,10 +396,12 @@ export function extractMetadata(): ExtractionResult {
   const platform = detectPlatform();
 
   // Merge with priority: JSON-LD > DOM > Open Graph
+  const title = jsonLd?.title || og.title;
+  const description = jsonLd?.description || og.description;
   const merged: ExtractedMetadata = {
     url,
-    title: jsonLd?.title || og.title,
-    description: jsonLd?.description || og.description,
+    title: title ? decodeHtmlEntities(title) : undefined,
+    description: description ? decodeHtmlEntities(description) : undefined,
     imageUrl: jsonLd?.imageUrl || og.imageUrl || domImage,
     price: jsonLd?.price || domPrice.price || og.price,
     currency: jsonLd?.currency || domPrice.currency || og.currency,

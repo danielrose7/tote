@@ -260,6 +260,36 @@ describe("Confidence Calculation", () => {
   });
 });
 
+describe("HTML Entity Decoding", () => {
+  it("decodes &quot; in JSON-LD title", () => {
+    document.head.innerHTML = `
+      <script type="application/ld+json">
+        {
+          "@type": "Product",
+          "name": "Heritage Stand Up® Shorts - 5&quot;",
+          "description": "Durable shorts with a 5&quot; inseam",
+          "offers": { "price": "79.00" }
+        }
+      </script>
+    `;
+    document.body.innerHTML = "";
+
+    const result = extractMetadata();
+    expect(result.title).toBe('Heritage Stand Up® Shorts - 5"');
+    expect(result.description).toBe('Durable shorts with a 5" inseam');
+  });
+
+  it("decodes &amp; in Open Graph title", () => {
+    document.head.innerHTML = `
+      <meta property="og:title" content="Salt &amp; Pepper Shakers">
+    `;
+    document.body.innerHTML = "";
+
+    const result = extractMetadata();
+    expect(result.title).toBe("Salt & Pepper Shakers");
+  });
+});
+
 describe("Real-world Test Cases", () => {
   it("handles Rose Los Angeles style (price in button)", () => {
     setupDOM(`
