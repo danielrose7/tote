@@ -2,6 +2,7 @@
 
 import { SignIn, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
+import styles from "./extension-auth.module.css";
 
 /**
  * Extension auth page
@@ -30,19 +31,18 @@ export default function ExtensionAuthPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+      <div className={styles.page}>
+        <div className={styles.spinner} />
       </div>
     );
   }
 
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <div className={styles.page}>
+        <div className={styles.card}>
+          <div className={styles.iconCircleSuccess}>
             <svg
-              className="w-8 h-8 text-green-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -55,13 +55,13 @@ export default function ExtensionAuthPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className={styles.heading}>
             Signed in successfully!
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className={styles.text}>
             You can now use the Tote extension to save products.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className={styles.textSmall}>
             This tab will close automatically...
           </p>
         </div>
@@ -70,12 +70,11 @@ export default function ExtensionAuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+    <div className={styles.page}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <div className={styles.iconCircleBrand}>
             <svg
-              className="w-8 h-8 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -88,10 +87,10 @@ export default function ExtensionAuthPage() {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className={styles.heading}>
             Sign in to Tote
           </h1>
-          <p className="text-gray-600">
+          <p className={styles.text}>
             Sign in to save products from the Chrome extension
           </p>
         </div>
@@ -101,8 +100,8 @@ export default function ExtensionAuthPage() {
           afterSignInUrl="/extension-auth"
           appearance={{
             elements: {
-              rootBox: "mx-auto",
-              card: "shadow-none",
+              rootBox: styles.clerkBox,
+              card: { boxShadow: "none" },
             },
           }}
         />
