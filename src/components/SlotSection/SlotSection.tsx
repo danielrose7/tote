@@ -279,6 +279,7 @@ export function SlotSection({
                       onClick={() => setIsEditing(true)}
                       className={styles.actionButton}
                       aria-label="Edit slot"
+                      data-tooltip="Edit"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -291,6 +292,7 @@ export function SlotSection({
                         onClick={handleDelete}
                         className={`${styles.actionButton} ${styles.deleteButton}`}
                         aria-label="Delete slot"
+                        data-tooltip="Delete"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <polyline points="3 6 5 6 21 6" />
