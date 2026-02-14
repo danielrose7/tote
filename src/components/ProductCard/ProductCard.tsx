@@ -5,6 +5,12 @@ import styles from "./ProductCard.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;
 
+function formatPrice(price: string): string {
+  const num = parseFloat(price);
+  if (isNaN(num)) return price;
+  return `$${num.toFixed(2)}`;
+}
+
 interface ProductCardProps {
   block: LoadedBlock;
   onEdit?: (block: LoadedBlock) => void;
@@ -100,7 +106,7 @@ export function ProductCard({
           />
           {productData.price && (
             <div className={styles.priceOverlay}>
-              <span className={styles.priceTag}>{productData.price}</span>
+              <span className={styles.priceTag}>{formatPrice(productData.price)}</span>
             </div>
           )}
         </div>
@@ -121,7 +127,7 @@ export function ProductCard({
           </svg>
           {productData.price && (
             <div className={styles.priceOverlay}>
-              <span className={styles.priceTag}>{productData.price}</span>
+              <span className={styles.priceTag}>{formatPrice(productData.price)}</span>
             </div>
           )}
         </div>

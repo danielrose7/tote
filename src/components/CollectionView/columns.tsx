@@ -7,6 +7,12 @@ type LoadedBlock = co.loaded<typeof Block>;
 
 const columnHelper = createColumnHelper<LoadedBlock>();
 
+function formatPrice(price: string): string {
+  const num = parseFloat(price);
+  if (isNaN(num)) return price;
+  return `$${num.toFixed(2)}`;
+}
+
 function formatRelativeDate(date: Date): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -111,7 +117,7 @@ export function getColumns(options: ColumnOptions) {
         const block = info.row.original;
         const price = block.productData?.price;
         return price ? (
-          <span className={styles.price}>{price}</span>
+          <span className={styles.price}>{formatPrice(price)}</span>
         ) : (
           <span className={styles.noValue}>-</span>
         );

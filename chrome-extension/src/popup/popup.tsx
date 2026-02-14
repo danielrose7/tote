@@ -272,7 +272,7 @@ function SaveUI({
   onSuccess,
 }: {
   metadata: ExtractedMetadata;
-  onSuccess: () => void;
+  onSuccess: (collectionId: string) => void;
 }) {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -436,7 +436,7 @@ function SaveUI({
         }
       }
 
-      onSuccess();
+      onSuccess(selectedCollection);
     } catch (err) {
       console.error("[Tote] Save error:", err);
       setError(err instanceof Error ? err.message : "Failed to save link");
@@ -568,6 +568,7 @@ function PopupContent() {
   const [status, setStatus] = useState<Status>("loading");
   const [metadata, setMetadata] = useState<ExtractedMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [savedCollectionId, setSavedCollectionId] = useState<string | null>(null);
   const { isLoaded } = useAuth();
 
   // Extract metadata from current tab
@@ -605,7 +606,8 @@ function PopupContent() {
     });
   }, []);
 
-  const handleSuccess = () => {
+  const handleSuccess = (collectionId: string) => {
+    setSavedCollectionId(collectionId);
     setStatus("success");
   };
 
@@ -642,6 +644,18 @@ function PopupContent() {
           <div className="success-icon">&#10003;</div>
           <h2>Saved to Tote!</h2>
           <p>Product added to your collection</p>
+          {savedCollectionId && (
+            <button
+              className="open-tote-button"
+              onClick={() => {
+                chrome.tabs.create({
+                  url: `https://tote.tools/collections/${savedCollectionId}`,
+                });
+              }}
+            >
+              Open Tote
+            </button>
+          )}
         </div>
       )}
 
