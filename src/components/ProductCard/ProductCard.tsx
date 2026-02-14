@@ -151,9 +151,13 @@ export function ProductCard({
               onClick={onToggleSelection}
               className={`${styles.actionButton} ${isSelected ? styles.actionButtonSelected : ""}`}
               aria-label={isSelected ? "Deselect product" : "Select product"}
+              data-tooltip={isSelected ? "Deselect" : "Select"}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <polyline points="20 6 9 17 4 12" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                {isSelected && (
+                  <polyline points="8 12 11 15 16 9" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                )}
               </svg>
             </button>
           )}
@@ -163,6 +167,7 @@ export function ProductCard({
               onClick={() => onRefresh(block)}
               className={`${styles.actionButton} ${isRefreshing ? styles.actionButtonSpinning : ""}`}
               aria-label="Refresh metadata"
+              data-tooltip="Refresh"
               disabled={isRefreshing || isEnqueued}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -176,6 +181,7 @@ export function ProductCard({
               onClick={() => onEdit(block)}
               className={styles.actionButton}
               aria-label="Edit product"
+              data-tooltip="Edit"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -188,6 +194,7 @@ export function ProductCard({
               onClick={() => onDelete(block)}
               className={`${styles.actionButton} ${styles.actionButtonDanger}`}
               aria-label="Delete product"
+              data-tooltip="Delete"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
