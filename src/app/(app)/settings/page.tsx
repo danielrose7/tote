@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { SignedIn, SignedOut, SignOutButton, UserProfile } from "@clerk/nextjs";
 import { useAccount } from "jazz-tools/react";
 import Link from "next/link";
-import { Header } from "../../components/Header/Header";
-import { JazzAccount } from "../../schema";
+import { Header } from "../../../components/Header/Header";
+import { JazzAccount } from "../../../schema";
 import styles from "./settings.module.css";
 
 export default function SettingsPage() {

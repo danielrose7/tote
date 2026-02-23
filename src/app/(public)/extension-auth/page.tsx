@@ -1,6 +1,6 @@
 "use client";
 
-import { SignIn, useAuth } from "@clerk/nextjs";
+import { ClerkProvider, SignIn, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import styles from "./extension-auth.module.css";
 
@@ -11,7 +11,7 @@ import styles from "./extension-auth.module.css";
  * After authentication, Clerk's Sync Host feature automatically syncs the
  * session to the extension, so we just need to show a success message.
  */
-export default function ExtensionAuthPage() {
+function ExtensionAuthContent() {
   const { isSignedIn, isLoaded } = useAuth();
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -107,5 +107,13 @@ export default function ExtensionAuthPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function ExtensionAuthPage() {
+  return (
+    <ClerkProvider>
+      <ExtensionAuthContent />
+    </ClerkProvider>
   );
 }

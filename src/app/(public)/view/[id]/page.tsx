@@ -2,8 +2,8 @@
 
 import { useParams } from "next/navigation";
 import { JazzReactProvider, useCoState } from "jazz-tools/react";
-import { Block } from "../../../schema";
-import { apiKey } from "../../../apiKey";
+import { Block } from "../../../../schema";
+import { apiKey } from "../../../../apiKey";
 import styles from "./page.module.css";
 
 /**

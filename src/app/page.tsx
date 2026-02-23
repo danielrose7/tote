@@ -1,84 +1,7 @@
-"use client";
-
-import { useAccount } from "jazz-tools/react";
-import { useRouter } from "next/navigation";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
-import { Group } from "jazz-tools";
-import { AuthButton } from "../AuthButton";
-import { JazzAccount, Block, BlockList } from "../schema";
+import { LandingAuthButtons } from "../components/LandingAuthButtons";
 import styles from "./landing.module.css";
 
 export default function HomePage() {
-  const router = useRouter();
-
-  const me = useAccount(JazzAccount, {
-    resolve: {
-      profile: true,
-      root: {
-        blocks: { $each: {} }
-      }
-    },
-  });
-
-  const handleGetStarted = () => {
-    if (!me.$isLoaded || !me.root?.$isLoaded) return;
-
-    // Get collection blocks
-    const blocks = me.root.blocks;
-    const collectionBlocks = blocks?.$isLoaded
-      ? Array.from(blocks).filter(b => b?.$isLoaded && b.type === "collection" && !b.parentId)
-      : [];
-
-    if (collectionBlocks.length === 0) {
-      // Create a Group for this collection to enable sharing
-      const ownerGroup = Group.create({ owner: me });
-      ownerGroup.addMember(me, "admin");
-
-      // Create empty children list owned by the group
-      const childrenList = BlockList.create([], { owner: ownerGroup });
-
-      // Create default collection if none exists, owned by the group
-      const defaultCollection = Block.create(
-        {
-          type: "collection",
-          name: "My Links",
-          collectionData: {
-            description: "Your personal collection of product links",
-            color: "#6366f1",
-            viewMode: "grid",
-            sharingGroupId: ownerGroup.$jazz.id,
-          },
-          children: childrenList,
-          createdAt: new Date(),
-        },
-        { owner: ownerGroup },
-      );
-
-      if (!me.root.blocks) {
-        const blocksList = BlockList.create([defaultCollection], me);
-        me.root.$jazz.set("blocks", blocksList);
-      } else if (me.root.blocks.$isLoaded) {
-        me.root.blocks.$jazz.push(defaultCollection);
-      }
-      me.root.$jazz.set("defaultBlockId", defaultCollection.$jazz.id);
-
-      // Navigate to the new collection
-      router.push(`/collections/${defaultCollection.$jazz.id}`);
-    } else {
-      // Navigate to first collection or default
-      const targetCollection = me.root.defaultBlockId
-        ? collectionBlocks.find(c => c.$jazz.id === me.root!.defaultBlockId)
-        : collectionBlocks[0];
-
-      if (targetCollection) {
-        router.push(`/collections/${targetCollection.$jazz.id}`);
-      } else {
-        router.push("/collections");
-      }
-    }
-  };
-
-
   return (
     <div className={styles.container}>
       {/* Gradient blobs */}
@@ -97,7 +20,7 @@ export default function HomePage() {
             <a href="#how-it-works" className={styles.navLink}>How it works</a>
             <a href="#features" className={styles.navLink}>Features</a>
           </div>
-          <AuthButton variant="landing" />
+          <LandingAuthButtons />
         </nav>
       </header>
 
@@ -110,18 +33,7 @@ export default function HomePage() {
           Tote keeps your saved products in one place, wherever you shop
         </p>
         <div className={styles.cta}>
-          <SignedIn>
-            <button
-              className={styles.primaryButton}
-              onClick={handleGetStarted}
-              disabled={!me.$isLoaded}
-            >
-              {me.$isLoaded ? 'Get Started' : 'Loading...'}
-            </button>
-          </SignedIn>
-          <SignedOut>
-            <AuthButton />
-          </SignedOut>
+          <LandingAuthButtons />
         </div>
       </section>
 
@@ -207,18 +119,7 @@ export default function HomePage() {
         <h2 className={styles.finalCtaTitle}>Ready to stop shopping in spreadsheets?</h2>
         <p className={styles.finalCtaSubtitle}>Try Tote today. It's free to get started.</p>
         <div className={styles.cta}>
-          <SignedIn>
-            <button
-              className={styles.primaryButton}
-              onClick={handleGetStarted}
-              disabled={!me.$isLoaded}
-            >
-              {me.$isLoaded ? 'Open Tote' : 'Loading...'}
-            </button>
-          </SignedIn>
-          <SignedOut>
-            <AuthButton variant="landing" />
-          </SignedOut>
+          <LandingAuthButtons />
         </div>
       </section>
 

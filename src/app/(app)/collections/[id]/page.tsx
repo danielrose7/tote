@@ -3,16 +3,16 @@
 import { useState, useMemo } from "react";
 import { useAccount, useCoState } from "jazz-tools/react";
 import { useRouter, useParams } from "next/navigation";
-import { JazzAccount, Block as BlockSchema, type Block, BlockList } from "../../../schema";
+import { JazzAccount, Block as BlockSchema, type Block, BlockList } from "../../../../schema";
 import type { co } from "jazz-tools";
-import { Header } from "../../../components/Header";
-import { CollectionView } from "../../../components/CollectionView/CollectionView";
-import { AddLinkDialog } from "../../../components/AddLinkDialog";
-import { EditLinkDialog } from "../../../components/EditLinkDialog";
-import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
-import { DeleteConfirmDialog } from "../../../components/DeleteConfirmDialog";
-import { ShareCollectionDialog } from "../../../components/ShareCollectionDialog";
-import { useToast } from "../../../components/ToastNotification";
+import { Header } from "../../../../components/Header";
+import { CollectionView } from "../../../../components/CollectionView/CollectionView";
+import { AddLinkDialog } from "../../../../components/AddLinkDialog";
+import { EditLinkDialog } from "../../../../components/EditLinkDialog";
+import { EditCollectionDialog } from "../../../../components/EditCollectionDialog";
+import { DeleteConfirmDialog } from "../../../../components/DeleteConfirmDialog";
+import { ShareCollectionDialog } from "../../../../components/ShareCollectionDialog";
+import { useToast } from "../../../../components/ToastNotification";
 
 type LoadedBlock = co.loaded<typeof Block>;
 

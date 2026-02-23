@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
-import { JazzAccount, type Block, type SharedCollectionRef } from "../../schema";
+import { JazzAccount, type Block, type SharedCollectionRef } from "../../../schema";
 import type { co } from "jazz-tools";
-import { Header } from "../../components/Header";
-import { CollectionList } from "../../components/CollectionList/CollectionList";
-import { CreateCollectionDialog } from "../../components/CreateCollectionDialog/CreateCollectionDialog";
-import { EditCollectionDialog } from "../../components/EditCollectionDialog";
-import { LeaveCollectionDialog } from "../../components/LeaveCollectionDialog";
+import { Header } from "../../../components/Header";
+import { CollectionList } from "../../../components/CollectionList/CollectionList";
+import { CreateCollectionDialog } from "../../../components/CreateCollectionDialog/CreateCollectionDialog";
+import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
+import { LeaveCollectionDialog } from "../../../components/LeaveCollectionDialog";
 
 type LoadedBlock = co.loaded<typeof Block>;
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;

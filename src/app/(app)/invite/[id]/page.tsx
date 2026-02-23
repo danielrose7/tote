@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useAccount } from "jazz-tools/react";
 import { SignInButton, useUser } from "@clerk/nextjs";
-import { JazzAccount, Block, SharedCollectionRef, SharedWithMeList } from "../../../schema";
-import { useToast } from "../../../components/ToastNotification";
+import { JazzAccount, Block, SharedCollectionRef, SharedWithMeList } from "../../../../schema";
+import { useToast } from "../../../../components/ToastNotification";
 import styles from "./page.module.css";
 
 export default function InvitePage() {
