@@ -1,6 +1,6 @@
 "use client";
 
-import { ClerkProvider, SignIn, useAuth } from "@clerk/nextjs";
+import { SignIn, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import styles from "./extension-auth.module.css";
 
@@ -111,9 +111,5 @@ function ExtensionAuthContent() {
 }
 
 export default function ExtensionAuthPage() {
-  return (
-    <ClerkProvider>
-      <ExtensionAuthContent />
-    </ClerkProvider>
-  );
+  return <ExtensionAuthContent />;
 }

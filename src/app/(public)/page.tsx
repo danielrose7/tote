@@ -1,4 +1,4 @@
-import { LandingAuthButtons } from "../components/LandingAuthButtons";
+import { LandingAuthButtons } from "../../components/LandingAuthButtons";
 import styles from "./landing.module.css";
 
 export default function HomePage() {

@@ -2,7 +2,6 @@
 
 import { Suspense } from "react";
 import {
-  ClerkProvider,
   SignedIn,
   SignedOut,
   SignInButton,
@@ -46,10 +45,8 @@ function LandingAuthButtonsInner() {
 
 export function LandingAuthButtons() {
   return (
-    <ClerkProvider>
-      <Suspense fallback={<AuthButtonsFallback />}>
-        <LandingAuthButtonsInner />
-      </Suspense>
-    </ClerkProvider>
+    <Suspense fallback={<AuthButtonsFallback />}>
+      <LandingAuthButtonsInner />
+    </Suspense>
   );
 }
