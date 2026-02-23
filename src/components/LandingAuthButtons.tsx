@@ -13,8 +13,8 @@ import styles from "../AuthButton.module.css";
 function AuthButtonsFallback() {
   return (
     <div className={styles.buttons}>
-      <span className={styles.button}>Log in</span>
-      <span className={`${styles.button} ${styles.buttonPrimary}`}>Sign up</span>
+      <button className={styles.button} disabled>Log in</button>
+      <button className={`${styles.button} ${styles.buttonPrimary}`} disabled>Sign up</button>
     </div>
   );
 }
