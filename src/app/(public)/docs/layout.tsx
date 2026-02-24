@@ -7,11 +7,28 @@ import styles from "./docs.module.css";
 
 const navItems = [
   { href: "/docs", label: "Overview" },
+  { href: "/docs/getting-started", label: "Getting Started" },
   { href: "/docs/collections", label: "Collections" },
   { href: "/docs/slots", label: "Slots" },
   { href: "/docs/adding-links", label: "Adding Links" },
+  { href: "/docs/extension", label: "Chrome Extension" },
+  { href: "/docs/selections-and-budgets", label: "Selections & Budgets" },
   { href: "/docs/sharing", label: "Sharing" },
 ];
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Tote Help Center",
+  url: "https://tote.tools/docs",
+  description:
+    "Learn how to use Tote to save, organize, and track products from anywhere on the web.",
+  publisher: {
+    "@type": "Organization",
+    name: "Tote",
+    url: "https://tote.tools",
+  },
+};
 
 export default function DocsLayout({
   children,
@@ -23,6 +40,10 @@ export default function DocsLayout({
 
   return (
     <div className={styles.container}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <Link href="/" className={styles.logo}>

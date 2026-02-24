@@ -1,0 +1,104 @@
+import type { Metadata } from "next";
+import styles from "../docs.module.css";
+
+export const metadata: Metadata = {
+  title: "Chrome Extension — Tote Help",
+  description:
+    "Install and use the Tote Chrome extension to save products with one click. Covers installation, one-click saving, right-click context menu, slot selection, and sign-in.",
+  openGraph: {
+    title: "Chrome Extension — Tote Help",
+    description:
+      "Install and use the Tote Chrome extension to save products with one click from any online store.",
+    url: "https://tote.tools/docs/extension",
+    siteName: "Tote",
+  },
+};
+
+export default function ExtensionPage() {
+  return (
+    <article className={styles.article}>
+      <h1>Chrome Extension</h1>
+      <p className={styles.lead}>
+        The Tote browser extension lets you save products from any online store with a single click or right-click.
+      </p>
+
+      <h2>Installing the Extension</h2>
+      <ol>
+        <li>Open the <strong>Chrome Web Store</strong> and search for "Tote"</li>
+        <li>Click <strong>"Add to Chrome"</strong> and confirm the installation</li>
+        <li>The Tote icon appears in your browser toolbar (you may need to click the puzzle-piece icon to pin it)</li>
+      </ol>
+
+      <h2>Signing In</h2>
+      <p>
+        After installing, click the Tote icon to open the popup. You'll be prompted to sign in with the same account you use on tote.tools. Once signed in, your collections sync automatically between the extension and the web app.
+      </p>
+
+      <h2>Saving a Product</h2>
+      <p>
+        There are two ways to save a product:
+      </p>
+
+      <h3>One-Click Save</h3>
+      <ol>
+        <li>Navigate to any product page</li>
+        <li>Click the Tote extension icon in your toolbar</li>
+        <li>Choose which collection to save to</li>
+        <li>Optionally select a slot within the collection</li>
+        <li>Click <strong>"Save"</strong></li>
+      </ol>
+      <p>
+        The product image, title, price, and URL are captured automatically.
+      </p>
+
+      <h3>Right-Click Context Menu</h3>
+      <p>
+        Right-click anywhere on a product page and select <strong>"Save to Tote"</strong> from the context menu. The product is saved to your most recently used collection.
+      </p>
+
+      <div className={styles.tip}>
+        <p>
+          <span className={styles.tipLabel}>Tip:</span>
+          The right-click method is the fastest way to save — it skips the popup entirely and saves to your last-used collection.
+        </p>
+      </div>
+
+      <h2>Choosing a Collection and Slot</h2>
+      <p>
+        When saving via the popup, you can pick any existing collection from the dropdown. If the collection has slots, a second dropdown appears so you can place the product directly into the right group.
+      </p>
+      <p>
+        You can also create a new collection directly from the extension popup without leaving the page you're on.
+      </p>
+
+      <h2>What Gets Captured</h2>
+      <p>
+        The extension extracts metadata from the product page:
+      </p>
+      <ul>
+        <li><strong>Product name</strong> — the title of the product</li>
+        <li><strong>Image</strong> — the main product photo</li>
+        <li><strong>Price</strong> — the current listed price</li>
+        <li><strong>URL</strong> — a link back to the original page</li>
+        <li><strong>Brand</strong> — detected from the page when available</li>
+        <li><strong>Platform</strong> — the store or marketplace (e.g., Amazon, IKEA)</li>
+      </ul>
+
+      <h2>Supported Stores</h2>
+      <p>
+        Tote works on virtually any online store. It uses standard product metadata (Open Graph, JSON-LD, meta tags) to extract product details. Stores with richer metadata yield better results, but even a basic product page will capture the title, image, and URL.
+      </p>
+
+      <h2>Troubleshooting</h2>
+      <h3>Extension not showing product details</h3>
+      <p>
+        Make sure you're on a specific product page, not a category or search results page. The extension works best when there's a single product in focus.
+      </p>
+
+      <h3>Not signed in</h3>
+      <p>
+        If your saved products aren't syncing, open the extension popup and check that you're signed in. Click "Sign in" if needed.
+      </p>
+    </article>
+  );
+}

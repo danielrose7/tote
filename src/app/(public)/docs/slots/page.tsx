@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import styles from "../docs.module.css";
+
+export const metadata: Metadata = {
+  title: "Slots — Tote Help",
+  description:
+    "Learn how to use slots in Tote to subdivide collections. Organize products into categories, set per-slot budgets, and manage selection limits.",
+  openGraph: {
+    title: "Slots — Tote Help",
+    description:
+      "Learn how to use slots in Tote to subdivide collections into categories with budgets and selection limits.",
+    url: "https://tote.tools/docs/slots",
+    siteName: "Tote",
+  },
+};
 
 export default function SlotsPage() {
   return (
@@ -50,6 +64,21 @@ export default function SlotsPage() {
       <h3>Selection Limits</h3>
       <p>
         Slots can have a maximum selection count, helping you narrow down choices. For example, if you're choosing one coffee table from five options, set the limit to 1 and mark your favorite as selected.
+      </p>
+
+      <h2>Collapse and Expand</h2>
+      <p>
+        Slots can be collapsed to hide their products, giving you a compact overview of your collection structure. Click the slot header to toggle between collapsed and expanded views. This is especially helpful when you have many slots and want to focus on one at a time.
+      </p>
+
+      <h2>Reordering Slots</h2>
+      <p>
+        Drag and drop slots to rearrange their order within a collection. You can also drag products between slots to reorganize them.
+      </p>
+
+      <h2>Deleting a Slot</h2>
+      <p>
+        When you delete a slot, the products inside it aren't deleted — they move to the "Ungrouped" section at the bottom of the collection. This means you can safely remove a slot without losing any saved products.
       </p>
 
       <h2>Ungrouped Products</h2>

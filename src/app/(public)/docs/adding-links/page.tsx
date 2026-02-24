@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import styles from "../docs.module.css";
+
+export const metadata: Metadata = {
+  title: "Adding Links — Tote Help",
+  description:
+    "Learn how to save products to Tote using the Chrome extension or by adding links manually. Covers one-click saving, right-click context menu, and product notes.",
+  openGraph: {
+    title: "Adding Links — Tote Help",
+    description:
+      "Learn how to save products to Tote using the Chrome extension or by adding links manually.",
+    url: "https://tote.tools/docs/adding-links",
+    siteName: "Tote",
+  },
+};
 
 export default function AddingLinksPage() {
   return (
@@ -59,6 +73,26 @@ export default function AddingLinksPage() {
         <li><strong>URL</strong> — so you can always get back to the original page</li>
         <li><strong>Description</strong> — a summary when available</li>
       </ul>
+
+      <h2>Right-Click "Save to Tote"</h2>
+      <p>
+        With the Chrome extension installed, you can right-click any product page and select <strong>"Save to Tote"</strong> from the context menu. This saves the product to your most recently used collection without opening the extension popup.
+      </p>
+
+      <h2>Product Notes</h2>
+      <p>
+        After saving a product, you can add personal notes — size preferences, color choices, gift recipient, or anything else you want to remember. Click on a saved product to open its details and type in the notes field.
+      </p>
+
+      <h2>Editing Saved Products</h2>
+      <p>
+        You can edit the title, price, or notes of any saved product. Click on the product to open its details, make your changes, and they're saved automatically.
+      </p>
+
+      <h2>Platform and Brand Detection</h2>
+      <p>
+        Tote automatically detects the store or marketplace (Amazon, IKEA, Etsy, etc.) and the product brand when this information is available on the page. This helps you filter and identify products at a glance.
+      </p>
 
       <h2>Refreshing Product Data</h2>
       <p>

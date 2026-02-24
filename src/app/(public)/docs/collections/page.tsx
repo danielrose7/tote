@@ -1,4 +1,18 @@
+import type { Metadata } from "next";
 import styles from "../docs.module.css";
+
+export const metadata: Metadata = {
+  title: "Collections — Tote Help",
+  description:
+    "Learn how to create and organize collections in Tote. Group saved products by project, season, or theme with colors, view modes, and budget tracking.",
+  openGraph: {
+    title: "Collections — Tote Help",
+    description:
+      "Learn how to create and organize collections in Tote. Group saved products by project, season, or theme.",
+    url: "https://tote.tools/docs/collections",
+    siteName: "Tote",
+  },
+};
 
 export default function CollectionsPage() {
   return (
@@ -46,6 +60,26 @@ export default function CollectionsPage() {
           Start simple with just one or two collections. You can always reorganize later as your needs evolve.
         </p>
       </div>
+
+      <h2>Default Collection</h2>
+      <p>
+        When you save a product without choosing a specific collection, it goes to your default collection. This is your general-purpose "inbox" for saved products. You can move items out of it into other collections at any time.
+      </p>
+
+      <h2>Item Count Badges</h2>
+      <p>
+        Each collection shows a badge with the number of products it contains. This gives you a quick sense of how full each collection is without opening it.
+      </p>
+
+      <h2>Deleting a Collection</h2>
+      <p>
+        To delete a collection, open it and use the collection menu. Deleting a collection removes it and all the products inside it, so make sure you've moved anything you want to keep.
+      </p>
+
+      <h2>Reordering Collections</h2>
+      <p>
+        Drag and drop collections to reorder them on your collections page. Put your most active projects at the top for easy access.
+      </p>
 
       <h2>Collections vs. Slots</h2>
       <p>
