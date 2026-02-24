@@ -3,6 +3,7 @@
   "name": "Tote",
   "version": "0.1.0",
   "description": "One place, every store. Save anything from the web.",
+  "homepage_url": "https://tote.tools",
   "icons": {
     "16": "assets/icons/icon16.png",
     "48": "assets/icons/icon48.png",
@@ -43,8 +44,6 @@
   ],
   "externally_connectable": {
     "matches": [
-      "http://localhost:3000/*",
-      "http://127.0.0.1:3000/*",
       "https://tote.tools/*"
     ]
   }

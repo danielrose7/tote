@@ -7,10 +7,12 @@
 
 import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
 
+const DEBUG = process.env.NODE_ENV !== "production";
+
 // Handle messages from the web app (externally_connectable)
 chrome.runtime.onMessageExternal.addListener(
   (message, sender, sendResponse) => {
-    console.log("[Tote] External message received:", message, "from:", sender.origin);
+    if (DEBUG) console.log("[Tote] External message received:", message, "from:", sender.origin);
 
     if (message.type === "PING") {
       // Simple ping to check if extension is installed
@@ -32,7 +34,7 @@ chrome.runtime.onMessageExternal.addListener(
 
 // Open a URL in a background tab, extract metadata, then close the tab
 async function handleRefreshLink(url: string): Promise<ExtractedMetadata> {
-  console.log("[Tote] Refreshing link:", url);
+  if (DEBUG) console.log("[Tote] Refreshing link:", url);
 
   // Open tab in background
   const tab = await chrome.tabs.create({
@@ -97,7 +99,7 @@ async function handleRefreshLink(url: string): Promise<ExtractedMetadata> {
 
 // Create context menu on install
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("[Tote] Extension installed");
+  if (DEBUG) console.log("[Tote] Extension installed");
 
   // Create right-click context menu
   chrome.contextMenus.create({
@@ -154,7 +156,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   // If right-clicked on a link, open that page first
   if (info.linkUrl) {
-    console.log("[Tote] Opening linked page:", info.linkUrl);
+    if (DEBUG) console.log("[Tote] Opening linked page:", info.linkUrl);
 
     // Open the link in a new tab
     const newTab = await chrome.tabs.create({
@@ -178,7 +180,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         try {
           await chrome.action.openPopup();
         } catch (err) {
-          console.log("[Tote] Could not open popup:", err);
+          if (DEBUG) console.log("[Tote] Could not open popup:", err);
           showToast(
             tabId,
             "Click the Tote icon in your toolbar to save this page"
@@ -201,7 +203,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   try {
     await chrome.action.openPopup();
   } catch (err) {
-    console.log("[Tote] Could not open popup, showing notification");
+    if (DEBUG) console.log("[Tote] Could not open popup, showing notification");
     showToast(tab.id, "Click the Tote icon in your toolbar to save this page");
   }
 });

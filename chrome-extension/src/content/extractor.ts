@@ -8,6 +8,8 @@
 import { extractMetadata } from "../lib/extractors";
 import type { MessagePayload } from "../lib/extractors/types";
 
+const DEBUG = process.env.NODE_ENV !== "production";
+
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener(
   (
@@ -18,7 +20,7 @@ chrome.runtime.onMessage.addListener(
     if (message.type === "EXTRACT_METADATA") {
       try {
         const metadata = extractMetadata();
-        console.log("[Tote] Extracted metadata:", metadata);
+        if (DEBUG) console.log("[Tote] Extracted metadata:", metadata);
         sendResponse({
           type: "METADATA_RESULT",
           data: metadata,
@@ -35,4 +37,4 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-console.log("[Tote] Content script loaded");
+if (DEBUG) console.log("[Tote] Content script loaded");

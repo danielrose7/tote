@@ -1,0 +1,112 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-white);
+  color: var(--color-text-primary);
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-md) var(--spacing-xs) var(--spacing-lg);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.logo {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--spacing-3xl) var(--spacing-lg) var(--spacing-4xl);
+  flex: 1;
+}
+
+.title {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-tight);
+}
+
+.effective {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--spacing-3xl) 0;
+}
+
+.section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text-primary);
+}
+
+.section p,
+.section ul {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.section ul {
+  padding-left: var(--spacing-xl);
+}
+
+.section li {
+  margin-bottom: var(--spacing-xs);
+}
+
+.section a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.section a:hover {
+  color: var(--color-accent-hover);
+}
+
+.footer {
+  width: 100%;
+  border-top: 1px solid var(--color-border);
+  padding: var(--spacing-lg);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: var(--spacing-2xl) var(--spacing-lg) var(--spacing-3xl);
+  }
+
+  .title {
+    font-size: var(--font-size-3xl);
+  }
+}
