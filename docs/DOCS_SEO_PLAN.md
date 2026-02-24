@@ -35,7 +35,7 @@ Target pages and example questions:
 ### ~~Add FAQPage JSON-LD per page~~ Done
 Each FAQ page now includes an inline `FAQPage` JSON-LD script matching the FAQ content.
 
-### Improve internal cross-linking
+### ~~Improve internal cross-linking~~ Done
 Pages currently link "forward" but rarely sideways or back. Every page should link to 2-3 related pages beyond the obvious next step:
 - Extension → Adding Links, Getting Started
 - Adding Links → Extension, Collections

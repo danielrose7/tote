@@ -98,6 +98,13 @@ export default function AddingLinksPage() {
       <p>
         Product details can change over time—prices drop, items sell out, listings get updated. Use the refresh button on any product to fetch the latest information from the original page.
       </p>
+
+      <h2>Related Guides</h2>
+      <ul>
+        <li><a href="/docs/extension">Chrome Extension</a> — detailed extension setup, pinning, and troubleshooting</li>
+        <li><a href="/docs/collections">Collections</a> — organize your saved products into groups</li>
+        <li><a href="/docs/selections-and-budgets">Selections &amp; Budgets</a> — mark favorites and track spending on saved products</li>
+      </ul>
     </article>
   );
 }

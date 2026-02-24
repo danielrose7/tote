@@ -100,6 +100,13 @@ export default function ExtensionPage() {
         If your saved products aren't syncing, open the extension popup and check that you're signed in. Click "Sign in" if needed.
       </p>
 
+      <h2>Related Guides</h2>
+      <ul>
+        <li><a href="/docs/adding-links">Adding Links</a> — other ways to save products, including manual URL entry</li>
+        <li><a href="/docs/getting-started">Getting Started</a> — full setup walkthrough from account creation to first save</li>
+        <li><a href="/docs/collections">Collections</a> — how to organize your saved products</li>
+      </ul>
+
       <h2>Frequently Asked Questions</h2>
 
       <h3>Does Tote work on Firefox or Safari?</h3>

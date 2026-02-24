@@ -86,6 +86,13 @@ export default function SelectionsAndBudgetsPage() {
         </p>
       </div>
 
+      <h2>Related Guides</h2>
+      <ul>
+        <li><a href="/docs/collections">Collections</a> — set budgets at the collection level</li>
+        <li><a href="/docs/slots">Slots</a> — set per-slot budgets and selection limits</li>
+        <li><a href="/docs/sharing">Sharing</a> — collaborators can select products in shared collections</li>
+      </ul>
+
       <h2>Frequently Asked Questions</h2>
 
       <h3>Do unselected products count toward the budget?</h3>

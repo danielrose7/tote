@@ -86,6 +86,13 @@ export default function CollectionsPage() {
         Collections are your main organizational unit. If you need more granular organization <em>within</em> a collection, that's where slots come in. See the <a href="/docs/slots">Slots documentation</a> to learn more.
       </p>
 
+      <h2>Related Guides</h2>
+      <ul>
+        <li><a href="/docs/slots">Slots</a> — subdivide collections into categories or budget tiers</li>
+        <li><a href="/docs/selections-and-budgets">Selections &amp; Budgets</a> — mark favorites and track spending within collections</li>
+        <li><a href="/docs/sharing">Sharing</a> — share collections with friends or make them public</li>
+      </ul>
+
       <h2>Frequently Asked Questions</h2>
 
       <h3>How many collections can I have?</h3>

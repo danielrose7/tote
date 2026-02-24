@@ -86,6 +86,13 @@ export default function SlotsPage() {
         Products that aren't in any slot appear in an "Ungrouped" section at the bottom of the collection. You can leave them there or drag them into slots as you organize.
       </p>
 
+      <h2>Related Guides</h2>
+      <ul>
+        <li><a href="/docs/collections">Collections</a> — the top-level folders that contain slots</li>
+        <li><a href="/docs/selections-and-budgets">Selections &amp; Budgets</a> — selection limits and budgets work per slot</li>
+        <li><a href="/docs/adding-links">Adding Links</a> — save products directly into a specific slot</li>
+      </ul>
+
       <h2>Collections vs. Slots: Quick Reference</h2>
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Use a Collection when...</h3>

@@ -119,6 +119,13 @@ export default function SharingPage() {
         Only people with the invite link can access a shared collection. Your other collections remain completely private. Tote never shares your data with advertisers or third parties.
       </p>
 
+      <h2>Related Guides</h2>
+      <ul>
+        <li><a href="/docs/collections">Collections</a> — create and organize the collections you share</li>
+        <li><a href="/docs/getting-started">Getting Started</a> — set up your account before accepting invite links</li>
+        <li><a href="/docs/extension">Chrome Extension</a> — save products to shared collections from any store</li>
+      </ul>
+
       <h2>Frequently Asked Questions</h2>
 
       <h3>Can people edit my shared collection?</h3>
