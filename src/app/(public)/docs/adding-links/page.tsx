@@ -19,7 +19,7 @@ export default function AddingLinksPage() {
     <article className={styles.article}>
       <h1>Adding Links</h1>
       <p className={styles.lead}>
-        Save products to Tote using the browser extension for one-click saving, or add links manually from any device.
+        Tote is a free cross-store shopping organizer. Save products using the Chrome extension for one-click saving, or add links manually from any device.
       </p>
 
       <h2>Using the Browser Extension</h2>

@@ -19,7 +19,7 @@ export default function SelectionsAndBudgetsPage() {
     <article className={styles.article}>
       <h1>Selections &amp; Budgets</h1>
       <p className={styles.lead}>
-        Use selections to mark your favorite products and budgets to track spending — two features that help you narrow down choices and stay on target.
+        Tote saves products from any online store in one place. Use selections to mark your favorite products and budgets to track spending — two features that help you narrow down choices and stay on target.
       </p>
 
       <h2>Product Selections</h2>

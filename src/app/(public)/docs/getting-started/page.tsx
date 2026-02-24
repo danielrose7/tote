@@ -19,7 +19,7 @@ export default function GettingStartedPage() {
     <article className={styles.article}>
       <h1>Getting Started</h1>
       <p className={styles.lead}>
-        Set up Tote in a few minutes and start saving products from any online store.
+        Tote is a free tool that saves products from any online store in one place. Set it up in a few minutes and start organizing your shopping.
       </p>
 
       <h2>1. Create Your Account</h2>

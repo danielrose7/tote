@@ -19,7 +19,7 @@ export default function SlotsPage() {
     <article className={styles.article}>
       <h1>Slots</h1>
       <p className={styles.lead}>
-        Slots are optional groupings within a collection. Use them when you need to organize products into categories, budget tiers, or decision-making groups.
+        Tote saves products from any online store and organizes them into collections. Slots are optional groupings within a collection — use them when you need to break things down further into categories, budget tiers, or decision-making groups.
       </p>
 
       <h2>What is a Slot?</h2>

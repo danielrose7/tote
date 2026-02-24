@@ -19,7 +19,7 @@ export default function CollectionsPage() {
     <article className={styles.article}>
       <h1>Collections</h1>
       <p className={styles.lead}>
-        Collections are the top-level way to organize your saved products. Think of them as folders or boards for different projects, seasons, or themes.
+        Tote saves products from any online store in one place. Collections are the top-level way to organize those products — think of them as folders or boards for different projects, seasons, or themes.
       </p>
 
       <h2>What is a Collection?</h2>

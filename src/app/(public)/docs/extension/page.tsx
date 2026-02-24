@@ -19,7 +19,7 @@ export default function ExtensionPage() {
     <article className={styles.article}>
       <h1>Chrome Extension</h1>
       <p className={styles.lead}>
-        The Tote browser extension lets you save products from any online store with a single click or right-click.
+        Tote is a free cross-store shopping organizer. The Chrome extension lets you save products from any online store with a single click or right-click.
       </p>
 
       <h2>Installing the Extension</h2>

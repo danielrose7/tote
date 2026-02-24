@@ -20,7 +20,7 @@ export default function DocsPage() {
     <article className={styles.article}>
       <h1>Help Center</h1>
       <p className={styles.lead}>
-        Learn how to use Tote to save, organize, and track products from anywhere on the web.
+        Tote is a free tool that saves products from any online store in one place. Learn how to organize, track, and share your finds.
       </p>
 
       <h2>Guides</h2>

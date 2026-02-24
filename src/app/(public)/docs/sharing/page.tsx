@@ -19,7 +19,7 @@ export default function SharingPage() {
     <article className={styles.article}>
       <h1>Sharing</h1>
       <p className={styles.lead}>
-        Share collections with friends, family, or collaborators for joint wishlists, gift planning, or group projects.
+        Tote is a free cross-store shopping organizer. Share your collections with friends, family, or collaborators for joint wishlists, gift planning, or group projects.
       </p>
 
       <h2>How Sharing Works</h2>
