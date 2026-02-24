@@ -99,6 +99,36 @@ export default function ExtensionPage() {
       <p>
         If your saved products aren't syncing, open the extension popup and check that you're signed in. Click "Sign in" if needed.
       </p>
+
+      <h2>Frequently Asked Questions</h2>
+
+      <h3>Does Tote work on Firefox or Safari?</h3>
+      <p>
+        Tote currently supports Chrome (and Chromium-based browsers like Edge and Brave). A Safari extension is on the roadmap. In the meantime, you can use the web app on any browser to <a href="/docs/adding-links">add links manually</a>.
+      </p>
+
+      <h3>How do I pin the Tote extension to my toolbar?</h3>
+      <p>
+        Click the puzzle-piece icon in Chrome's toolbar, find Tote in the list, and click the pin icon next to it. The Tote icon will then stay visible in your toolbar for one-click access.
+      </p>
+
+      <h3>Can I save products without opening the popup?</h3>
+      <p>
+        Yes — right-click any product page and select "Save to Tote" from the context menu. The product is saved to your most recently used collection instantly.
+      </p>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Does Tote work on Firefox or Safari?", "acceptedAnswer": { "@type": "Answer", "text": "Tote currently supports Chrome and Chromium-based browsers like Edge and Brave. A Safari extension is on the roadmap. You can use the web app on any browser to add links manually." } },
+            { "@type": "Question", "name": "How do I pin the Tote extension to my toolbar?", "acceptedAnswer": { "@type": "Answer", "text": "Click the puzzle-piece icon in Chrome's toolbar, find Tote in the list, and click the pin icon next to it. The Tote icon will then stay visible in your toolbar." } },
+            { "@type": "Question", "name": "Can I save products without opening the popup?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — right-click any product page and select \"Save to Tote\" from the context menu. The product is saved to your most recently used collection instantly." } },
+          ],
+        }) }}
+      />
     </article>
   );
 }

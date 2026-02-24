@@ -85,6 +85,36 @@ export default function SelectionsAndBudgetsPage() {
           You're furnishing a living room with a $2,000 budget. You save 8 couches, 5 coffee tables, and 10 lamps. As you select your top picks in each slot, the budget tracker updates in real time — helping you balance splurges in one category with savings in another.
         </p>
       </div>
+
+      <h2>Frequently Asked Questions</h2>
+
+      <h3>Do unselected products count toward the budget?</h3>
+      <p>
+        No. Only selected products are included in the budget total. This lets you save many options and compare freely without inflating the number.
+      </p>
+
+      <h3>Can I set a budget without using selection limits?</h3>
+      <p>
+        Yes. Budgets and selection limits are independent features. You can set a budget on a collection or <a href="/docs/slots">slot</a> without restricting how many products can be selected — or use selection limits without a budget.
+      </p>
+
+      <h3>Where do I set a budget?</h3>
+      <p>
+        You can set a budget on a collection by editing the collection, or on individual slots by clicking the edit button on the slot header. See <a href="/docs/collections">Collections</a> and <a href="/docs/slots">Slots</a> for details.
+      </p>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Do unselected products count toward the budget?", "acceptedAnswer": { "@type": "Answer", "text": "No. Only selected products are included in the budget total. This lets you save many options and compare freely without inflating the number." } },
+            { "@type": "Question", "name": "Can I set a budget without using selection limits?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Budgets and selection limits are independent features. You can set a budget on a collection or slot without restricting how many products can be selected — or use selection limits without a budget." } },
+            { "@type": "Question", "name": "Where do I set a budget?", "acceptedAnswer": { "@type": "Answer", "text": "You can set a budget on a collection by editing the collection, or on individual slots by clicking the edit button on the slot header." } },
+          ],
+        }) }}
+      />
     </article>
   );
 }

@@ -118,6 +118,36 @@ export default function SharingPage() {
       <p>
         Only people with the invite link can access a shared collection. Your other collections remain completely private. Tote never shares your data with advertisers or third parties.
       </p>
+
+      <h2>Frequently Asked Questions</h2>
+
+      <h3>Can people edit my shared collection?</h3>
+      <p>
+        It depends on the role you assign. When creating an invite link, you choose whether collaborators can view only, edit (add and modify products), or have full admin access. See <a href="/docs/collections">Collections</a> for more on managing your collections.
+      </p>
+
+      <h3>Is my shared collection visible to everyone?</h3>
+      <p>
+        No. Shared collections are only accessible to people who have the invite link. If you want anyone to see your collection without signing in, you can make it public separately — see the Public Links section above.
+      </p>
+
+      <h3>How do I stop sharing a collection?</h3>
+      <p>
+        For public links, open the Share dialog and click "Make Private" to revoke access immediately. For invite-based sharing, collaborators who have already joined retain access — this is a collaborative relationship, not a view-only broadcast.
+      </p>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "Can people edit my shared collection?", "acceptedAnswer": { "@type": "Answer", "text": "It depends on the role you assign. When creating an invite link, you choose whether collaborators can view only, edit, or have full admin access." } },
+            { "@type": "Question", "name": "Is my shared collection visible to everyone?", "acceptedAnswer": { "@type": "Answer", "text": "No. Shared collections are only accessible to people who have the invite link. You can make a collection public separately if you want anyone to see it without signing in." } },
+            { "@type": "Question", "name": "How do I stop sharing a collection?", "acceptedAnswer": { "@type": "Answer", "text": "For public links, open the Share dialog and click \"Make Private\" to revoke access immediately. For invite-based sharing, collaborators who have already joined retain access." } },
+          ],
+        }) }}
+      />
     </article>
   );
 }

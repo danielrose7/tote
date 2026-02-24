@@ -22,7 +22,7 @@ Living plan for improving Tote's documentation quality, search visibility, and d
 ### ~~Add "What is Tote?" context to every page~~ Done
 Each page's lead paragraph now includes a brief clause explaining what Tote is, so someone landing from search has immediate context.
 
-### Add FAQ sections to high-value pages
+### ~~Add FAQ sections to high-value pages~~ Done
 Add an `<h2>Frequently Asked Questions</h2>` section at the bottom of key pages with question-phrased headings. These match long-tail search queries and enable Google FAQ rich results.
 
 Target pages and example questions:
@@ -32,8 +32,8 @@ Target pages and example questions:
 - **Sharing**: "Can people edit my shared collection?", "Is my shared collection public?", "How do I stop sharing a collection?"
 - **Selections & Budgets**: "Do unselected products count toward the budget?", "Can I set a budget without selection limits?"
 
-### Add FAQPage JSON-LD per page
-Each page with an FAQ section should include a `<script type="application/ld+json">` block with `FAQPage` schema matching the FAQ content. This enables rich results in Google.
+### ~~Add FAQPage JSON-LD per page~~ Done
+Each FAQ page now includes an inline `FAQPage` JSON-LD script matching the FAQ content.
 
 ### Improve internal cross-linking
 Pages currently link "forward" but rarely sideways or back. Every page should link to 2-3 related pages beyond the obvious next step:

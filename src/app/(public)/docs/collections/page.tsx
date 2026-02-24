@@ -85,6 +85,36 @@ export default function CollectionsPage() {
       <p>
         Collections are your main organizational unit. If you need more granular organization <em>within</em> a collection, that's where slots come in. See the <a href="/docs/slots">Slots documentation</a> to learn more.
       </p>
+
+      <h2>Frequently Asked Questions</h2>
+
+      <h3>How many collections can I have?</h3>
+      <p>
+        There's no limit. Create as many collections as you need — one per project, season, room, or any theme that makes sense to you.
+      </p>
+
+      <h3>Can I move products between collections?</h3>
+      <p>
+        Yes. Open a product's details by clicking on it, then change the collection from the edit dialog. You can also change which <a href="/docs/slots">slot</a> a product belongs to.
+      </p>
+
+      <h3>What happens when I delete a collection?</h3>
+      <p>
+        Deleting a collection permanently removes it along with all the products and slots inside it. Make sure to move any products you want to keep to another collection first.
+      </p>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            { "@type": "Question", "name": "How many collections can I have?", "acceptedAnswer": { "@type": "Answer", "text": "There's no limit. Create as many collections as you need — one per project, season, room, or any theme that makes sense to you." } },
+            { "@type": "Question", "name": "Can I move products between collections?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Open a product's details by clicking on it, then change the collection from the edit dialog. You can also change which slot a product belongs to." } },
+            { "@type": "Question", "name": "What happens when I delete a collection?", "acceptedAnswer": { "@type": "Answer", "text": "Deleting a collection permanently removes it along with all the products and slots inside it. Make sure to move any products you want to keep to another collection first." } },
+          ],
+        }) }}
+      />
     </article>
   );
 }
