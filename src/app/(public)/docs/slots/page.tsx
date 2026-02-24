@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Slots — Tote Help",
+  title: "Slots",
   description:
     "Learn how to use slots in Tote to subdivide collections. Organize products into categories, set per-slot budgets, and manage selection limits.",
+  alternates: { canonical: "/docs/slots" },
   openGraph: {
-    title: "Slots — Tote Help",
+    title: "Slots — Tote",
     description:
       "Learn how to use slots in Tote to subdivide collections into categories with budgets and selection limits.",
-    url: "https://tote.tools/docs/slots",
-    siteName: "Tote",
   },
 };
 

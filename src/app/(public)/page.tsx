@@ -3,16 +3,14 @@ import { LandingAuthButtons } from "../../components/LandingAuthButtons";
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {
-  title: "Tote — A cart that doesn't belong to a store",
+  title: "A cart that doesn't belong to a store",
   description:
     "Save products from any online store in one place. Organize with collections, track prices, and share wishlists — all with complete privacy.",
+  alternates: { canonical: "/" },
   openGraph: {
     title: "Tote — A cart that doesn't belong to a store",
     description:
       "Save products from any online store in one place. Organize with collections, track prices, and share wishlists.",
-    url: "https://tote.tools",
-    siteName: "Tote",
-    type: "website",
   },
 };
 

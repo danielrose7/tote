@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Sharing — Tote Help",
+  title: "Sharing",
   description:
     "Learn how to share collections in Tote. Create invite links for collaborators, make collections public, and manage shared wishlists.",
+  alternates: { canonical: "/docs/sharing" },
   openGraph: {
-    title: "Sharing — Tote Help",
+    title: "Sharing — Tote",
     description:
       "Learn how to share collections in Tote with invite links, public pages, and collaborative wishlists.",
-    url: "https://tote.tools/docs/sharing",
-    siteName: "Tote",
   },
 };
 

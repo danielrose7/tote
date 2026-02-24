@@ -3,15 +3,14 @@ import Link from "next/link";
 import styles from "./docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Help Center — Tote",
+  title: "Help Center",
   description:
     "Learn how to use Tote to save, organize, and track products from anywhere on the web. Guides for collections, slots, sharing, and the Chrome extension.",
+  alternates: { canonical: "/docs" },
   openGraph: {
     title: "Help Center — Tote",
     description:
       "Learn how to use Tote to save, organize, and track products from anywhere on the web.",
-    url: "https://tote.tools/docs",
-    siteName: "Tote",
   },
 };
 

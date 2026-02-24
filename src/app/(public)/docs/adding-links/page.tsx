@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Adding Links — Tote Help",
+  title: "Adding Links",
   description:
     "Learn how to save products to Tote using the Chrome extension or by adding links manually. Covers one-click saving, right-click context menu, and product notes.",
+  alternates: { canonical: "/docs/adding-links" },
   openGraph: {
-    title: "Adding Links — Tote Help",
+    title: "Adding Links — Tote",
     description:
       "Learn how to save products to Tote using the Chrome extension or by adding links manually.",
-    url: "https://tote.tools/docs/adding-links",
-    siteName: "Tote",
   },
 };
 

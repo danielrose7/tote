@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Chrome Extension — Tote Help",
+  title: "Chrome Extension",
   description:
     "Install and use the Tote Chrome extension to save products with one click. Covers installation, one-click saving, right-click context menu, slot selection, and sign-in.",
+  alternates: { canonical: "/docs/extension" },
   openGraph: {
-    title: "Chrome Extension — Tote Help",
+    title: "Chrome Extension — Tote",
     description:
       "Install and use the Tote Chrome extension to save products with one click from any online store.",
-    url: "https://tote.tools/docs/extension",
-    siteName: "Tote",
   },
 };
 

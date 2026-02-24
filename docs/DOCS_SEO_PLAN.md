@@ -46,20 +46,20 @@ Pages currently link "forward" but rarely sideways or back. Every page should li
 
 ## Next: SEO Infrastructure
 
-### Root layout metadata template
-Add `title: { template: "%s — Tote", default: "Tote" }` to the root layout so every page gets consistent branding as a fallback.
+### ~~Root layout metadata template~~ Done
+Root layout now has `title.template: "%s — Tote"` with a sensible default. Per-page titles simplified to just the page name.
 
-### Canonical URLs
-Add `alternates: { canonical: "https://tote.tools/docs/..." }` to every page's metadata to prevent trailing-slash duplicate indexing.
+### ~~Canonical URLs~~ Done
+All pages have `alternates.canonical` set. `metadataBase` in root layout resolves relative paths to `https://tote.tools`.
 
 ### OG image
 Create a default Open Graph image (1200x630) for link previews on social/messaging. Either a static PNG or a Next.js `opengraph-image.tsx` that generates one.
 
-### Twitter/X card metadata
-Add `twitter: { card: "summary_large_image" }` to the root or per-page metadata for proper rendering on X.
+### ~~Twitter/X card metadata~~ Done
+Root layout sets `twitter.card: "summary_large_image"` — inherited by all pages.
 
-### llms.txt
-Create a `/public/llms.txt` file summarizing what Tote is, key features, and linking to docs pages. Emerging convention for LLM crawlers (ChatGPT, Perplexity, etc.).
+### ~~llms.txt~~ Done
+`public/llms.txt` summarizes Tote and links to all docs pages.
 
 ## Later: More Pages
 

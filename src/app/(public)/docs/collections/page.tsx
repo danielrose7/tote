@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Collections — Tote Help",
+  title: "Collections",
   description:
     "Learn how to create and organize collections in Tote. Group saved products by project, season, or theme with colors, view modes, and budget tracking.",
+  alternates: { canonical: "/docs/collections" },
   openGraph: {
-    title: "Collections — Tote Help",
+    title: "Collections — Tote",
     description:
       "Learn how to create and organize collections in Tote. Group saved products by project, season, or theme.",
-    url: "https://tote.tools/docs/collections",
-    siteName: "Tote",
   },
 };
 

@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Getting Started — Tote Help",
+  title: "Getting Started",
   description:
     "Get started with Tote in minutes. Sign up, install the Chrome extension, save your first product, and organize your shopping across every store.",
+  alternates: { canonical: "/docs/getting-started" },
   openGraph: {
-    title: "Getting Started — Tote Help",
+    title: "Getting Started — Tote",
     description:
       "Get started with Tote in minutes. Sign up, install the Chrome extension, and save your first product.",
-    url: "https://tote.tools/docs/getting-started",
-    siteName: "Tote",
   },
 };
 

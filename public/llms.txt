@@ -1,0 +1,29 @@
+# Tote
+
+> A cart that doesn't belong to a store.
+
+Tote is a free cross-store shopping organizer. It saves products from any online store in one place so you can organize, compare, and track them across every retailer.
+
+## Key Features
+
+- **One-click saving**: Chrome extension saves any product page instantly
+- **Collections**: Organize saved products into folders by project, season, or theme
+- **Slots**: Subdivide collections into categories (e.g., "Seating", "Lighting")
+- **Selections & budgets**: Mark favorites, set selection limits, track spending
+- **Price refresh**: Update saved product prices on demand
+- **Sharing**: Share collections via invite links or make them publicly viewable
+- **Privacy-first**: No tracking, no ads, no data selling. Local-first architecture.
+- **Offline support**: Works without network, syncs when reconnected
+
+## Links
+
+- Website: https://tote.tools
+- Help Center: https://tote.tools/docs
+- Getting Started: https://tote.tools/docs/getting-started
+- Chrome Extension Guide: https://tote.tools/docs/extension
+- Collections: https://tote.tools/docs/collections
+- Slots: https://tote.tools/docs/slots
+- Adding Links: https://tote.tools/docs/adding-links
+- Selections & Budgets: https://tote.tools/docs/selections-and-budgets
+- Sharing: https://tote.tools/docs/sharing
+- Privacy Policy: https://tote.tools/privacy

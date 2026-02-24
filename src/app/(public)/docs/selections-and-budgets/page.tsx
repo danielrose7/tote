@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Selections & Budgets — Tote Help",
+  title: "Selections & Budgets",
   description:
     "Learn how to use product selections and budgets in Tote. Mark favorites, set selection limits, track collection and slot budgets, and see over-budget indicators.",
+  alternates: { canonical: "/docs/selections-and-budgets" },
   openGraph: {
-    title: "Selections & Budgets — Tote Help",
+    title: "Selections & Budgets — Tote",
     description:
       "Learn how to use product selections and budgets in Tote to pick favorites and track spending.",
-    url: "https://tote.tools/docs/selections-and-budgets",
-    siteName: "Tote",
   },
 };
 
