@@ -351,7 +351,7 @@
 .footer {
   width: 100%;
   border-top: 1px solid var(--color-border);
-  padding: var(--spacing-2xl) var(--spacing-2xl) var(--spacing-lg);
+  padding: var(--spacing-lg) var(--spacing-2xl);
   position: relative;
   z-index: 1;
 }
@@ -362,14 +362,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-xl);
 }
 
-.footerLogo {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-tight);
-  color: var(--color-text-primary);
+.footerCopyright {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
 }
 
 .footerLinks {
@@ -388,13 +385,31 @@
   color: var(--color-text-primary);
 }
 
-.footerBottom {
-  max-width: var(--max-width-container);
-  margin: 0 auto;
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--color-border);
+.mountainLink {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  color: var(--color-text-tertiary);
+  transition: color var(--transition-fast);
+}
+
+.mountainLink:hover {
+  text-decoration: none;
+  color: var(--color-text-primary);
+}
+
+.mountainLabel {
+  display: inline;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  padding-bottom: 10px;
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 16'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='300' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%236c47ff'/%3E%3Cstop offset='1' stop-color='%234832cc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cline x1='0' y1='12' x2='300' y2='12' stroke='url(%23g)' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-size: 100% 16px;
+  transition: background-image 0.3s ease;
+}
+
+.mountainLink:hover .mountainLabel {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 16'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='300' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%236c47ff'/%3E%3Cstop offset='1' stop-color='%234832cc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='none' stroke='url(%23g)' stroke-width='1.5' stroke-linejoin='round' d='M0,14 L15,12 L35,10 L55,4 L65,8 L80,7 L100,6 L120,6 L140,5 L155,3 L165,5 L175,4 L185,6 L205,1 L220,5 L240,7 L255,4 L270,8 L285,11 L300,13'/%3E%3C/svg%3E");
 }
 
 /* Responsive */
@@ -471,16 +486,12 @@
   }
 
   .footer {
-    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
   }
 
   .footerContent {
     flex-direction: column;
     gap: var(--spacing-md);
-    text-align: center;
-  }
-
-  .footerBottom {
     text-align: center;
   }
 }

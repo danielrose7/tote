@@ -139,15 +139,20 @@ export default function HomePage() {
       {/* Footer */}
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
-          <span className={styles.footerLogo}>tote</span>
+          <span className={styles.footerCopyright}>&copy; {new Date().getFullYear()} Tote</span>
+          <a
+            href="https://gobloom.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.mountainLink}
+          >
+            <span className={styles.mountainLabel}>Made in Silverton, CO</span>
+          </a>
           <nav className={styles.footerLinks}>
             <a href="/privacy">Privacy</a>
             <a href="/use-cases">Use Cases</a>
             <a href="/docs">Help</a>
           </nav>
-        </div>
-        <div className={styles.footerBottom}>
-          <span>&copy; {new Date().getFullYear()} Tote</span>
         </div>
       </footer>
     </div>
