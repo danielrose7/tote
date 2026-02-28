@@ -96,12 +96,6 @@ function MetadataPreview({ metadata }: { metadata: ExtractedMetadata | null }) {
             {formatPrice(metadata.price, metadata.currency)}
           </div>
         )}
-        <div className="preview-meta">
-          {metadata.platform && metadata.platform !== "unknown" && (
-            <span className="meta-tag">{metadata.platform}</span>
-          )}
-          {metadata.brand && <span className="meta-tag">{metadata.brand}</span>}
-        </div>
       </div>
     </div>
   );

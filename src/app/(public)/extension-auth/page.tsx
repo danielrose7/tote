@@ -18,14 +18,6 @@ function ExtensionAuthContent() {
   useEffect(() => {
     if (isLoaded && isSignedIn) {
       setShowSuccess(true);
-      // Give Clerk a moment to sync the session to the extension
-      // Then we can close the tab or show success
-      const timer = setTimeout(() => {
-        // Try to close the tab (works if opened by extension)
-        window.close();
-      }, 2000);
-
-      return () => clearTimeout(timer);
     }
   }, [isLoaded, isSignedIn]);
 
@@ -62,7 +54,7 @@ function ExtensionAuthContent() {
             You can now use the Tote extension to save products.
           </p>
           <p className={styles.textSmall}>
-            This tab will close automatically...
+            You can close this tab when you're ready.
           </p>
         </div>
       </div>

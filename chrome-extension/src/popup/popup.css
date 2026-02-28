@@ -131,20 +131,6 @@ body {
   border-radius: 6px;
 }
 
-.preview-meta {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.meta-tag {
-  font-size: 11px;
-  padding: 2px 6px;
-  background: #f3f4f6;
-  color: #6b7280;
-  border-radius: 4px;
-}
 
 .form-group {
   margin-bottom: 12px;
