@@ -24,11 +24,10 @@ export default function PersonalStylePage() {
 
       <div className={styles.heroIllustration} aria-hidden="true">
         <svg viewBox="0 0 160 160">
-          <circle cx="80" cy="18" r="8" fill="none" stroke="var(--color-periwinkle)" strokeWidth="3" />
-          <path d="M80 26 L80 42 L120 70 L120 78 L40 78 L40 70 L80 42" fill="var(--color-lavender)" stroke="var(--color-periwinkle)" strokeWidth="2.5" strokeLinejoin="round" />
-          <path d="M60 78 L55 140 L105 140 L100 78" fill="var(--color-lavender)" opacity="0.6" />
-          <ellipse cx="80" cy="140" rx="30" ry="4" fill="var(--color-periwinkle)" opacity="0.3" />
-          <line x1="80" y1="78" x2="80" y2="140" stroke="var(--color-periwinkle)" strokeWidth="1.5" opacity="0.3" />
+          <circle cx="80" cy="18" r="8" fill="none" stroke="var(--color-periwinkle)" strokeWidth="3" opacity="0.6" />
+          <path d="M80 26 L80 42 L120 70 L120 78 L40 78 L40 70 L80 42" fill="var(--color-periwinkle)" opacity="0.4" stroke="var(--color-periwinkle)" strokeWidth="2" strokeOpacity="0.5" strokeLinejoin="round" />
+          <path d="M60 78 L55 140 L105 140 L100 78" fill="var(--color-periwinkle)" opacity="0.3" />
+          <ellipse cx="80" cy="140" rx="30" ry="4" fill="var(--color-periwinkle)" opacity="0.2" />
         </svg>
       </div>
 

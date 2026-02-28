@@ -24,12 +24,13 @@ export default function GiftShoppingPage() {
 
       <div className={styles.heroIllustration} aria-hidden="true">
         <svg viewBox="0 0 160 160">
-          <rect x="30" y="65" width="100" height="70" rx="8" fill="var(--color-blush)" />
-          <rect x="25" y="55" width="110" height="16" rx="4" fill="var(--color-lavender)" />
-          <rect x="72" y="55" width="16" height="80" rx="2" fill="var(--color-lavender)" opacity="0.5" />
-          <path d="M80 55 C80 55 60 30 48 36 C36 42 50 54 80 55" fill="var(--color-blush)" stroke="var(--color-navy)" strokeWidth="1.5" opacity="0.7" />
-          <path d="M80 55 C80 55 100 30 112 36 C124 42 110 54 80 55" fill="var(--color-blush)" stroke="var(--color-navy)" strokeWidth="1.5" opacity="0.7" />
-          <circle cx="80" cy="55" r="4" fill="var(--color-lavender)" />
+          <rect x="30" y="65" width="100" height="70" rx="8" fill="var(--color-lavender)" opacity="0.4" />
+          <rect x="25" y="55" width="110" height="16" rx="4" fill="var(--color-lavender)" opacity="0.6" />
+          <rect x="72" y="55" width="16" height="80" rx="2" fill="var(--color-lavender)" opacity="0.3" />
+          <rect x="25" y="60" width="110" height="6" fill="var(--color-lavender)" opacity="0.25" />
+          <ellipse cx="65" cy="48" rx="18" ry="15" fill="var(--color-lavender)" opacity="0.5" stroke="var(--color-lavender)" strokeWidth="2" />
+          <ellipse cx="95" cy="48" rx="18" ry="15" fill="var(--color-lavender)" opacity="0.5" stroke="var(--color-lavender)" strokeWidth="2" />
+          <circle cx="80" cy="50" r="8" fill="var(--color-lavender)" opacity="0.7" />
         </svg>
       </div>
 
@@ -47,7 +48,7 @@ export default function GiftShoppingPage() {
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>One collection per occasion</h3>
         <p className={styles.cardDescription}>
-          Create a collection for &ldquo;Holiday 2025&rdquo;, &ldquo;Mom&apos;s Birthday&rdquo;, or &ldquo;Wedding Registry Ideas&rdquo;. Save gift ideas from any store — Amazon, Etsy, small boutiques, anywhere — all in one place.
+          Create a collection for &ldquo;Holiday {new Date().getFullYear()}&rdquo;, &ldquo;Mom&apos;s Birthday&rdquo;, or &ldquo;Wedding Registry Ideas&rdquo;. Save gift ideas from any store — Amazon, Etsy, small boutiques, anywhere — all in one place.
         </p>
       </div>
 

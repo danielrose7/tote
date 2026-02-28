@@ -24,17 +24,11 @@ export default function HomeRenovationPage() {
 
       <div className={styles.heroIllustration} aria-hidden="true">
         <svg viewBox="0 0 160 160">
-          <path d="M80 20 L140 60 L140 140 L20 140 L20 60 Z" fill="var(--color-powder-blue)" />
-          <rect x="40" y="65" width="25" height="25" rx="2" fill="var(--color-peach)" opacity="0.8" />
-          <rect x="40" y="65" width="25" height="25" rx="2" fill="none" stroke="var(--color-navy)" strokeWidth="1" opacity="0.2" />
-          <line x1="52.5" y1="65" x2="52.5" y2="90" stroke="var(--color-navy)" strokeWidth="1" opacity="0.15" />
-          <line x1="40" y1="77.5" x2="65" y2="77.5" stroke="var(--color-navy)" strokeWidth="1" opacity="0.15" />
-          <rect x="95" y="65" width="25" height="25" rx="2" fill="var(--color-peach)" opacity="0.8" />
-          <rect x="95" y="65" width="25" height="25" rx="2" fill="none" stroke="var(--color-navy)" strokeWidth="1" opacity="0.2" />
-          <line x1="107.5" y1="65" x2="107.5" y2="90" stroke="var(--color-navy)" strokeWidth="1" opacity="0.15" />
-          <line x1="95" y1="77.5" x2="120" y2="77.5" stroke="var(--color-navy)" strokeWidth="1" opacity="0.15" />
-          <rect x="60" y="100" width="40" height="40" rx="3" fill="var(--color-peach)" />
-          <line x1="72" y1="100" x2="72" y2="140" stroke="var(--color-navy)" strokeWidth="1" opacity="0.15" />
+          <path d="M80 20 L140 60 L140 140 L20 140 L20 60 Z" fill="var(--color-powder-blue)" opacity="0.5" />
+          <rect x="40" y="65" width="25" height="25" rx="2" fill="var(--color-powder-blue)" opacity="0.35" />
+          <rect x="95" y="65" width="25" height="25" rx="2" fill="var(--color-powder-blue)" opacity="0.35" />
+          <rect x="40" y="100" width="25" height="25" rx="2" fill="var(--color-powder-blue)" opacity="0.35" />
+          <rect x="60" y="100" width="40" height="40" rx="3" fill="var(--color-powder-blue)" opacity="0.6" />
         </svg>
       </div>
 

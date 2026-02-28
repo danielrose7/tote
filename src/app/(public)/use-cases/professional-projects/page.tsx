@@ -24,18 +24,14 @@ export default function ProfessionalProjectsPage() {
 
       <div className={styles.heroIllustration} aria-hidden="true">
         <svg viewBox="0 0 160 160">
-          <rect x="10" y="10" width="60" height="60" rx="6" fill="var(--color-periwinkle)" />
-          <rect x="80" y="10" width="60" height="60" rx="6" fill="var(--color-powder-blue)" />
-          <rect x="10" y="80" width="60" height="60" rx="6" fill="var(--color-powder-blue)" />
-          <rect x="80" y="80" width="60" height="60" rx="6" fill="var(--color-periwinkle)" />
-          <circle cx="30" cy="18" r="5" fill="var(--color-navy)" opacity="0.2" />
-          <circle cx="100" cy="18" r="5" fill="var(--color-navy)" opacity="0.2" />
-          <circle cx="30" cy="88" r="5" fill="var(--color-navy)" opacity="0.2" />
-          <circle cx="100" cy="88" r="5" fill="var(--color-navy)" opacity="0.2" />
-          <line x1="30" y1="23" x2="30" y2="30" stroke="var(--color-navy)" strokeWidth="1.5" opacity="0.15" />
-          <line x1="100" y1="23" x2="100" y2="30" stroke="var(--color-navy)" strokeWidth="1.5" opacity="0.15" />
-          <line x1="30" y1="93" x2="30" y2="100" stroke="var(--color-navy)" strokeWidth="1.5" opacity="0.15" />
-          <line x1="100" y1="93" x2="100" y2="100" stroke="var(--color-navy)" strokeWidth="1.5" opacity="0.15" />
+          <rect x="10" y="10" width="60" height="60" rx="6" fill="var(--color-blush)" opacity="0.8" />
+          <rect x="80" y="10" width="60" height="60" rx="6" fill="var(--color-blush)" opacity="0.55" />
+          <rect x="10" y="80" width="60" height="60" rx="6" fill="var(--color-blush)" opacity="0.55" />
+          <rect x="80" y="80" width="60" height="60" rx="6" fill="var(--color-blush)" opacity="0.8" />
+          <circle cx="30" cy="18" r="5" fill="var(--color-blush)" />
+          <circle cx="100" cy="18" r="5" fill="var(--color-blush)" />
+          <circle cx="30" cy="88" r="5" fill="var(--color-blush)" />
+          <circle cx="100" cy="88" r="5" fill="var(--color-blush)" />
         </svg>
       </div>
 

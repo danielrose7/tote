@@ -17,11 +17,13 @@ export const metadata: Metadata = {
 function GiftIcon() {
   return (
     <svg className={styles.cardIcon} viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="6" y="22" width="36" height="20" rx="4" fill="var(--color-blush)" />
-      <rect x="10" y="14" width="28" height="10" rx="3" fill="var(--color-lavender)" />
-      <rect x="21" y="14" width="6" height="28" rx="1" fill="var(--color-lavender)" opacity="0.6" />
-      <path d="M24 14 C24 14 18 8 14 10 C10 12 14 16 24 14" fill="var(--color-blush)" stroke="var(--color-navy)" strokeWidth="1" opacity="0.7" />
-      <path d="M24 14 C24 14 30 8 34 10 C38 12 34 16 24 14" fill="var(--color-blush)" stroke="var(--color-navy)" strokeWidth="1" opacity="0.7" />
+      <rect x="8" y="22" width="32" height="20" rx="3" fill="var(--card-accent)" opacity="0.4" />
+      <rect x="6" y="16" width="36" height="8" rx="3" fill="var(--card-accent)" opacity="0.6" />
+      <rect x="22" y="16" width="4" height="26" fill="var(--card-accent)" opacity="0.3" />
+      <rect x="6" y="18" width="36" height="4" fill="var(--card-accent)" opacity="0.25" />
+      <ellipse cx="19" cy="14" rx="6" ry="5" fill="var(--card-accent)" opacity="0.5" stroke="var(--card-accent)" strokeWidth="1.5" />
+      <ellipse cx="29" cy="14" rx="6" ry="5" fill="var(--card-accent)" opacity="0.5" stroke="var(--card-accent)" strokeWidth="1.5" />
+      <circle cx="24" cy="15" r="3" fill="var(--card-accent)" opacity="0.7" />
     </svg>
   );
 }
@@ -29,11 +31,11 @@ function GiftIcon() {
 function HouseIcon() {
   return (
     <svg className={styles.cardIcon} viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M24 6 L42 22 L42 42 L6 42 L6 22 Z" fill="var(--color-powder-blue)" />
-      <rect x="14" y="16" width="8" height="8" rx="1" fill="var(--color-peach)" opacity="0.8" />
-      <rect x="26" y="16" width="8" height="8" rx="1" fill="var(--color-peach)" opacity="0.8" />
-      <rect x="14" y="28" width="8" height="8" rx="1" fill="var(--color-peach)" opacity="0.8" />
-      <rect x="26" y="28" width="8" height="14" rx="1" fill="var(--color-peach)" />
+      <path d="M24 6 L42 22 L42 42 L6 42 L6 22 Z" fill="var(--card-accent)" opacity="0.5" />
+      <rect x="14" y="16" width="8" height="8" rx="1" fill="var(--card-accent)" opacity="0.35" />
+      <rect x="26" y="16" width="8" height="8" rx="1" fill="var(--card-accent)" opacity="0.35" />
+      <rect x="14" y="28" width="8" height="8" rx="1" fill="var(--card-accent)" opacity="0.35" />
+      <rect x="26" y="28" width="8" height="14" rx="1" fill="var(--card-accent)" opacity="0.6" />
     </svg>
   );
 }
@@ -41,8 +43,8 @@ function HouseIcon() {
 function HangerIcon() {
   return (
     <svg className={styles.cardIcon} viewBox="0 0 48 48" aria-hidden="true">
-      <circle cx="24" cy="10" r="4" fill="none" stroke="var(--color-periwinkle)" strokeWidth="2.5" />
-      <path d="M24 14 L24 18 L42 32 L42 36 L6 36 L6 32 L24 18" fill="var(--color-lavender)" stroke="var(--color-periwinkle)" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="24" cy="10" r="4" fill="none" stroke="var(--card-accent)" strokeWidth="2.5" opacity="0.6" />
+      <path d="M24 14 L24 18 L42 32 L42 36 L6 36 L6 32 L24 18" fill="var(--card-accent)" opacity="0.4" stroke="var(--card-accent)" strokeWidth="1.5" strokeOpacity="0.5" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -50,10 +52,10 @@ function HangerIcon() {
 function PeopleIcon() {
   return (
     <svg className={styles.cardIcon} viewBox="0 0 48 48" aria-hidden="true">
-      <circle cx="18" cy="20" r="12" fill="var(--color-peach)" opacity="0.9" />
-      <circle cx="30" cy="20" r="12" fill="var(--color-blush)" opacity="0.9" />
-      <circle cx="18" cy="12" r="5" fill="var(--color-peach)" />
-      <circle cx="30" cy="12" r="5" fill="var(--color-blush)" />
+      <circle cx="18" cy="22" r="12" fill="var(--card-accent)" opacity="0.7" />
+      <circle cx="30" cy="22" r="12" fill="var(--card-accent)" opacity="0.7" />
+      <circle cx="18" cy="12" r="5" fill="var(--card-accent)" opacity="0.9" />
+      <circle cx="30" cy="12" r="5" fill="var(--card-accent)" opacity="0.9" />
     </svg>
   );
 }
@@ -61,12 +63,12 @@ function PeopleIcon() {
 function GridIcon() {
   return (
     <svg className={styles.cardIcon} viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="4" y="4" width="18" height="18" rx="3" fill="var(--color-periwinkle)" />
-      <rect x="26" y="4" width="18" height="18" rx="3" fill="var(--color-powder-blue)" />
-      <rect x="4" y="26" width="18" height="18" rx="3" fill="var(--color-powder-blue)" />
-      <rect x="26" y="26" width="18" height="18" rx="3" fill="var(--color-periwinkle)" />
-      <circle cx="13" cy="7" r="2" fill="var(--color-navy)" opacity="0.3" />
-      <circle cx="35" cy="7" r="2" fill="var(--color-navy)" opacity="0.3" />
+      <rect x="4" y="4" width="18" height="18" rx="3" fill="var(--card-accent)" opacity="0.8" />
+      <rect x="26" y="4" width="18" height="18" rx="3" fill="var(--card-accent)" opacity="0.55" />
+      <rect x="4" y="26" width="18" height="18" rx="3" fill="var(--card-accent)" opacity="0.55" />
+      <rect x="26" y="26" width="18" height="18" rx="3" fill="var(--card-accent)" opacity="0.8" />
+      <circle cx="13" cy="7" r="2" fill="var(--card-accent)" />
+      <circle cx="35" cy="7" r="2" fill="var(--card-accent)" />
     </svg>
   );
 }
@@ -78,6 +80,7 @@ const useCases = [
     description:
       "Build wishlists for birthdays, holidays, and special occasions. Share them with family so everyone knows what to get.",
     icon: GiftIcon,
+    accent: "var(--color-lavender)",
   },
   {
     href: "/use-cases/home-renovation",
@@ -85,6 +88,7 @@ const useCases = [
     description:
       "Organize furniture and materials room by room. Track prices across stores and share boards with your partner or contractor.",
     icon: HouseIcon,
+    accent: "var(--color-powder-blue)",
   },
   {
     href: "/use-cases/personal-style",
@@ -92,6 +96,7 @@ const useCases = [
     description:
       "Curate seasonal wardrobes and capsule collections. Save clothes from any store and watch for sales.",
     icon: HangerIcon,
+    accent: "var(--color-periwinkle)",
   },
   {
     href: "/use-cases/family-shopping",
@@ -99,6 +104,7 @@ const useCases = [
     description:
       "Shop together with your partner or family. One shared board for back-to-school, new home furnishing, or any group project.",
     icon: PeopleIcon,
+    accent: "var(--color-peach)",
   },
   {
     href: "/use-cases/professional-projects",
@@ -106,6 +112,7 @@ const useCases = [
     description:
       "Manage sourcing across multiple clients. Share curated mood boards for approval and track budgets per project.",
     icon: GridIcon,
+    accent: "var(--color-blush)",
   },
 ];
 
@@ -118,15 +125,13 @@ export default function UseCasesPage() {
       </p>
 
       {useCases.map((uc) => (
-        <div key={uc.href} className={styles.card}>
-          <div className={styles.cardWithIcon}>
+        <div key={uc.href} className={styles.card} style={{ "--card-accent": uc.accent } as React.CSSProperties}>
+          <div className={styles.cardHeader}>
+            <h3 className={styles.cardTitle}>{uc.title}</h3>
             <uc.icon />
-            <div className={styles.cardIconBody}>
-              <h3 className={styles.cardTitle}>{uc.title}</h3>
-              <p className={styles.cardDescription}>{uc.description}</p>
-              <Link href={uc.href}>Learn more &rarr;</Link>
-            </div>
           </div>
+          <p className={styles.cardDescription}>{uc.description}</p>
+          <Link href={uc.href}>Learn more &rarr;</Link>
         </div>
       ))}
     </article>

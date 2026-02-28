@@ -24,12 +24,10 @@ export default function FamilyShoppingPage() {
 
       <div className={styles.heroIllustration} aria-hidden="true">
         <svg viewBox="0 0 160 160">
-          <circle cx="60" cy="90" r="35" fill="var(--color-peach)" opacity="0.9" />
-          <circle cx="100" cy="90" r="35" fill="var(--color-blush)" opacity="0.9" />
-          <circle cx="60" cy="55" r="14" fill="var(--color-peach)" />
-          <circle cx="100" cy="55" r="14" fill="var(--color-blush)" />
-          <circle cx="60" cy="55" r="14" fill="none" stroke="var(--color-navy)" strokeWidth="1" opacity="0.1" />
-          <circle cx="100" cy="55" r="14" fill="none" stroke="var(--color-navy)" strokeWidth="1" opacity="0.1" />
+          <circle cx="60" cy="90" r="35" fill="var(--color-peach)" opacity="0.7" />
+          <circle cx="100" cy="90" r="35" fill="var(--color-peach)" opacity="0.7" />
+          <circle cx="60" cy="55" r="14" fill="var(--color-peach)" opacity="0.9" />
+          <circle cx="100" cy="55" r="14" fill="var(--color-peach)" opacity="0.9" />
         </svg>
       </div>
 
