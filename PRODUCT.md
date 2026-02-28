@@ -33,7 +33,7 @@ When making tradeoffs:
 - [x] **Right-click save** - Context menu "Save to Tote" in extension
 
 ### Next
-- [ ] **Shareable collections** - Public links to collections (opt-in)
+- [x] **Shareable collections** - Public links to collections (opt-in)
 - [ ] **Price drop notifications** - Alert when saved items go on sale
 
 ### Later

@@ -14,5 +14,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/docs/extension`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/docs/selections-and-budgets`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
     { url: `${baseUrl}/docs/sharing`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/use-cases`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/use-cases/gift-shopping`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/use-cases/home-renovation`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/use-cases/personal-style`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/use-cases/family-shopping`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
+    { url: `${baseUrl}/use-cases/professional-projects`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.7 },
   ];
 }

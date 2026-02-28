@@ -4,7 +4,7 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/docs/", "/privacy"],
+      allow: ["/", "/docs/", "/use-cases/", "/privacy"],
       disallow: ["/collections/", "/settings", "/invite/"],
     },
     sitemap: "https://tote.tools/sitemap.xml",

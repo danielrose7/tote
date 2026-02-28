@@ -82,6 +82,17 @@ export default function DocsPage() {
         </p>
         <Link href="/docs/sharing">Learn about sharing &rarr;</Link>
       </div>
+      <h2>Use Cases</h2>
+      <p>
+        See how people use Tote for specific shopping scenarios — from holiday gift lists to professional interior design sourcing.
+      </p>
+      <div className={styles.card}>
+        <h3 className={styles.cardTitle}>Explore Use Cases</h3>
+        <p className={styles.cardDescription}>
+          Gift lists, home renovations, wardrobe planning, family shopping, and professional projects.
+        </p>
+        <Link href="/use-cases">Browse use cases &rarr;</Link>
+      </div>
     </article>
   );
 }

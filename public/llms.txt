@@ -27,3 +27,12 @@ Tote is a free cross-store shopping organizer. It saves products from any online
 - Selections & Budgets: https://tote.tools/docs/selections-and-budgets
 - Sharing: https://tote.tools/docs/sharing
 - Privacy Policy: https://tote.tools/privacy
+
+## Use Cases
+
+- Use Cases Overview: https://tote.tools/use-cases
+- Gift Lists & Wishlists: https://tote.tools/use-cases/gift-shopping
+- Home Renovation & Furnishing: https://tote.tools/use-cases/home-renovation
+- Wardrobe & Style Board: https://tote.tools/use-cases/personal-style
+- Shared Family Shopping: https://tote.tools/use-cases/family-shopping
+- Professional Design & Client Projects: https://tote.tools/use-cases/professional-projects
