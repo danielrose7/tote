@@ -180,6 +180,34 @@
   margin: 0;
 }
 
+/* Wavy underline links */
+.article a,
+.card a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-underline-offset: 3px;
+  transition: color var(--transition-fast);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .article a,
+  .card a {
+    transition: text-underline-offset 0.2s ease, color var(--transition-fast);
+  }
+
+  .article a:hover,
+  .card a:hover {
+    text-decoration-style: wavy;
+    text-underline-offset: 5px;
+  }
+}
+
+.article a:hover,
+.card a:hover {
+  color: var(--color-accent-hover);
+}
+
 .tip {
   background-color: var(--color-lavender);
   border-radius: var(--radius-md);
@@ -195,6 +223,68 @@
 .tipLabel {
   font-weight: var(--font-weight-semibold);
   margin-right: var(--spacing-xs);
+}
+
+/* Hero illustration */
+.heroIllustration {
+  display: flex;
+  justify-content: center;
+  margin: var(--spacing-lg) 0 var(--spacing-xl) 0;
+}
+
+.heroIllustration svg {
+  width: 160px;
+  height: 160px;
+}
+
+/* Hub card with icon */
+.cardWithIcon {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: center;
+}
+
+.cardIcon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.cardIconBody {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Styled step list */
+.stepList {
+  list-style: none;
+  padding-left: 0;
+  margin: 0 0 var(--spacing-md) 0;
+  counter-reset: step-counter;
+  color: var(--color-text-secondary);
+}
+
+.stepList li {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  counter-increment: step-counter;
+}
+
+.stepList li::before {
+  content: counter(step-counter);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-lavender);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-top: 2px;
 }
 
 /* Mobile menu toggle */
