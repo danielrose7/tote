@@ -5,21 +5,21 @@ import styles from "../../docs/docs.module.css";
 export const metadata: Metadata = {
   title: "Shared Family Shopping",
   description:
-    "Shop together as a family with one shared board. Coordinate purchases, avoid duplicates, and stay on budget for back-to-school, new homes, and group projects.",
+    "Finally, a way to shop together without the chaos. Coordinate purchases, avoid duplicates, and stay on budget for back-to-school, new homes, and group projects.",
   alternates: { canonical: "/use-cases/family-shopping" },
   openGraph: {
     title: "Shared Family Shopping — Tote",
     description:
-      "Shop together with your partner or family. One shared board for any group shopping project.",
+      "Finally, a way to shop together without the chaos. One shared board for any group shopping project.",
   },
 };
 
 export default function FamilyShoppingPage() {
   return (
     <article className={styles.article}>
-      <h1>One shared board for every family shopping project</h1>
+      <h1>Finally, a way to shop together without the chaos</h1>
       <p className={styles.lead}>
-        Couples texting each other links. Families duplicating purchases. No single source of truth. Tote gives your household one place to shop together.
+        Couples texting each other links. Families duplicating purchases. Nobody knows what&apos;s already been bought. Tote gives your household one place to shop together.
       </p>
 
       <div className={styles.heroIllustration} aria-hidden="true">
@@ -43,9 +43,9 @@ export default function FamilyShoppingPage() {
       <h2>How Tote helps</h2>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Real-time collaboration</h3>
+        <h3 className={styles.cardTitle}>Shop together, stay in sync</h3>
         <p className={styles.cardDescription}>
-          Share a collection with your partner or family via invite link. Everyone can add products, organize them, and mark favorites. Changes sync instantly.
+          Share a collection with your partner or family via invite link. Everyone can add products, organize them, and mark favorites. Changes show up instantly for everyone.
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export default function FamilyShoppingPage() {
 
       <h3>Can my partner add items too?</h3>
       <p>
-        Yes. When you share a collection via invite link, anyone who joins can add products, rearrange items, and mark selections — just like you.
+        When you share a collection via invite link, anyone who joins can add products, rearrange items, and mark selections — just like you.
       </p>
 
       <h3>Do we both need accounts?</h3>
@@ -123,7 +123,7 @@ export default function FamilyShoppingPage() {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           "mainEntity": [
-            { "@type": "Question", "name": "Can my partner add items too?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. When you share a collection via invite link, anyone who joins can add products, rearrange items, and mark selections — just like you." } },
+            { "@type": "Question", "name": "Can my partner add items too?", "acceptedAnswer": { "@type": "Answer", "text": "When you share a collection via invite link, anyone who joins can add products, rearrange items, and mark selections — just like you." } },
             { "@type": "Question", "name": "Do we both need accounts?", "acceptedAnswer": { "@type": "Answer", "text": "To add items and collaborate, yes — both people need a free Tote account. But if you just want someone to view your picks, make the collection public and they can browse without an account." } },
             { "@type": "Question", "name": "Can we have separate collections?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely. Each person has their own private collections by default. You choose which ones to share. Share a \"New Home\" collection with your partner while keeping your personal \"Birthday Wishlist\" private." } },
             { "@type": "Question", "name": "How do we avoid buying the same thing?", "acceptedAnswer": { "@type": "Answer", "text": "Everything is in one shared board, so both people can see what's been saved and selected. Use selections to mark which items are \"claimed\" or decided on." } },

@@ -5,7 +5,7 @@ import styles from "../../docs/docs.module.css";
 export const metadata: Metadata = {
   title: "Wardrobe & Style Board",
   description:
-    "Build a wardrobe planner across every store. Curate seasonal capsule collections, organize by category, and track sale prices — all in one place.",
+    "Save clothes from any store into one style board. Build capsule wardrobes, organize by category, and watch for price drops — all in one place.",
   alternates: { canonical: "/use-cases/personal-style" },
   openGraph: {
     title: "Wardrobe & Style Board — Tote",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function PersonalStylePage() {
   return (
     <article className={styles.article}>
-      <h1>Your wardrobe planner, across every store</h1>
+      <h1>Stop forgetting where you saved that perfect jacket</h1>
       <p className={styles.lead}>
         Saving clothes across Zara, H&amp;M, Depop, and boutiques means forgetting what you saved where. Tote brings every piece into one style board you actually use.
       </p>
@@ -45,7 +45,7 @@ export default function PersonalStylePage() {
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Build seasonal collections</h3>
         <p className={styles.cardDescription}>
-          Create a collection for each season or style project — &ldquo;Spring 2025&rdquo;, &ldquo;Capsule Wardrobe&rdquo;, &ldquo;Vacation Outfits&rdquo;. Save pieces from any store into one curated board.
+          Create a collection for each season or style project — &ldquo;Spring {new Date().getFullYear()}&rdquo;, &ldquo;Capsule Wardrobe&rdquo;, &ldquo;Vacation Outfits&rdquo;. Save pieces from any store into one curated board.
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export default function PersonalStylePage() {
 
       <h3>Can I organize by season?</h3>
       <p>
-        Yes. Create a collection for each season — &ldquo;Spring 2025&rdquo;, &ldquo;Winter Basics&rdquo; — and save relevant pieces into each. You can also use slots within a collection to subdivide by category.
+        Absolutely. Create a collection for each season — &ldquo;Summer Essentials&rdquo;, &ldquo;Winter Basics&rdquo; — and save relevant pieces into each. You can also use slots within a collection to subdivide by category.
       </p>
 
       <h3>How do I track sale prices?</h3>
@@ -98,12 +98,12 @@ export default function PersonalStylePage() {
 
       <h3>Does it work with Zara, H&amp;M, and other fashion retailers?</h3>
       <p>
-        Yes. Tote works with virtually any online store — Zara, H&amp;M, ASOS, Depop, Nordstrom, Net-a-Porter, boutique shops, and more. If it has a product page, Tote can save it.
+        It works with just about any online store — Zara, H&amp;M, ASOS, Depop, Nordstrom, Net-a-Porter, boutiques, you name it. If you can see the product page, Tote can save it.
       </p>
 
       <h3>Can I share my style board with a friend?</h3>
       <p>
-        Yes. Share your collection via invite link for collaborative boards, or make it public so anyone with the link can browse your curated picks.
+        Of course. Share via invite link if you want to collaborate, or make it public so anyone with the link can browse your picks.
       </p>
 
       <h2>Related use cases</h2>
@@ -123,10 +123,10 @@ export default function PersonalStylePage() {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           "mainEntity": [
-            { "@type": "Question", "name": "Can I organize by season?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Create a collection for each season — \"Spring 2025\", \"Winter Basics\" — and save relevant pieces into each. You can also use slots within a collection to subdivide by category." } },
+            { "@type": "Question", "name": "Can I organize by season?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely. Create a collection for each season — \"Summer Essentials\", \"Winter Basics\" — and save relevant pieces into each. You can also use slots within a collection to subdivide by category." } },
             { "@type": "Question", "name": "How do I track sale prices?", "acceptedAnswer": { "@type": "Answer", "text": "Use the price refresh feature to update saved products with their current prices. This lets you spot discounts without visiting each store individually." } },
-            { "@type": "Question", "name": "Does it work with Zara, H&M, and other fashion retailers?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Tote works with virtually any online store — Zara, H&M, ASOS, Depop, Nordstrom, Net-a-Porter, boutique shops, and more. If it has a product page, Tote can save it." } },
-            { "@type": "Question", "name": "Can I share my style board with a friend?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Share your collection via invite link for collaborative boards, or make it public so anyone with the link can browse your curated picks." } },
+            { "@type": "Question", "name": "Does it work with Zara, H&M, and other fashion retailers?", "acceptedAnswer": { "@type": "Answer", "text": "It works with just about any online store — Zara, H&M, ASOS, Depop, Nordstrom, Net-a-Porter, boutiques, you name it. If you can see the product page, Tote can save it." } },
+            { "@type": "Question", "name": "Can I share my style board with a friend?", "acceptedAnswer": { "@type": "Answer", "text": "Of course. Share via invite link if you want to collaborate, or make it public so anyone with the link can browse your picks." } },
           ],
         }) }}
       />

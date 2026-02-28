@@ -5,12 +5,12 @@ import styles from "../docs/docs.module.css";
 export const metadata: Metadata = {
   title: "Use Cases",
   description:
-    "Discover how people use Tote to organize shopping for gifts, home renovations, wardrobes, family projects, and professional sourcing.",
+    "See how people use Tote to organize shopping — from holiday gift lists and home renovations to professional design sourcing.",
   alternates: { canonical: "/use-cases" },
   openGraph: {
     title: "Use Cases — Tote",
     description:
-      "Discover how people use Tote to organize shopping for gifts, home renovations, wardrobes, family projects, and professional sourcing.",
+      "See how people use Tote to organize shopping — from holiday gift lists and home renovations to professional design sourcing.",
   },
 };
 
@@ -78,7 +78,7 @@ const useCases = [
     href: "/use-cases/gift-shopping",
     title: "Gift Lists & Wishlists",
     description:
-      "Build wishlists for birthdays, holidays, and special occasions. Share them with family so everyone knows what to get.",
+      "Save gift ideas from any store, organize by occasion, and share with family so everyone knows what to get.",
     icon: GiftIcon,
     accent: "var(--color-lavender)",
   },
@@ -86,7 +86,7 @@ const useCases = [
     href: "/use-cases/home-renovation",
     title: "Home Renovation & Furnishing",
     description:
-      "Organize furniture and materials room by room. Track prices across stores and share boards with your partner or contractor.",
+      "Organize furniture and materials room by room. Compare prices across stores and share boards with your partner or contractor.",
     icon: HouseIcon,
     accent: "var(--color-powder-blue)",
   },
@@ -94,7 +94,7 @@ const useCases = [
     href: "/use-cases/personal-style",
     title: "Wardrobe & Style Board",
     description:
-      "Curate seasonal wardrobes and capsule collections. Save clothes from any store and watch for sales.",
+      "Save clothes from any store into one style board. Organize by season, build capsule wardrobes, and watch for price drops.",
     icon: HangerIcon,
     accent: "var(--color-periwinkle)",
   },
@@ -102,7 +102,7 @@ const useCases = [
     href: "/use-cases/family-shopping",
     title: "Shared Family Shopping",
     description:
-      "Shop together with your partner or family. One shared board for back-to-school, new home furnishing, or any group project.",
+      "Save and compare options together. Stay on budget for back-to-school, new home furnishing, or any group project.",
     icon: PeopleIcon,
     accent: "var(--color-peach)",
   },
@@ -110,7 +110,7 @@ const useCases = [
     href: "/use-cases/professional-projects",
     title: "Professional Design & Client Projects",
     description:
-      "Manage sourcing across multiple clients. Share curated mood boards for approval and track budgets per project.",
+      "Keep sourcing organized across clients. Share polished mood boards for approval and track budgets per project.",
     icon: GridIcon,
     accent: "var(--color-blush)",
   },
@@ -121,7 +121,7 @@ export default function UseCasesPage() {
     <article className={styles.article}>
       <h1>Use Cases</h1>
       <p className={styles.lead}>
-        Tote is a free cross-store shopping organizer. Here&apos;s how people use it to solve real shopping problems — from holiday gift lists to professional interior design sourcing.
+        Tote saves products from any store into one place. Here&apos;s how people use it — from holiday gift lists to professional design sourcing.
       </p>
 
       {useCases.map((uc) => (

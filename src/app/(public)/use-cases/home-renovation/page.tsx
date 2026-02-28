@@ -67,7 +67,7 @@ export default function HomeRenovationPage() {
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Share with your partner or contractor</h3>
         <p className={styles.cardDescription}>
-          Invite your partner to collaborate in real time, or share a read-only link with your contractor or designer. Everyone sees the same options and prices.
+          Invite your partner so you can both add and organize items, or share a read-only link with your contractor or designer. Everyone sees the same options and prices.
         </p>
       </div>
 
@@ -89,7 +89,7 @@ export default function HomeRenovationPage() {
 
       <h3>Can I set a budget per room?</h3>
       <p>
-        Yes. Each collection (room) can have its own budget. You can also set budgets on individual slots (categories) within a room for more granular control.
+        Each collection (room) can have its own budget. You can also set budgets on individual slots (categories) within a room for even more detail.
       </p>
 
       <h3>How do I share with my contractor?</h3>
@@ -99,12 +99,12 @@ export default function HomeRenovationPage() {
 
       <h3>Does it work with IKEA and Wayfair?</h3>
       <p>
-        Yes. Tote works with virtually any online store, including IKEA, Wayfair, Amazon, Etsy, CB2, West Elm, and local shops. If it has a product page, Tote can save it.
+        Tote works with just about any online store — IKEA, Wayfair, Amazon, Etsy, CB2, West Elm, local shops, and more. If you can see a product page, Tote can save it.
       </p>
 
       <h3>Can my partner and I both add items?</h3>
       <p>
-        Yes. Share the collection via invite link and both of you can save products, organize them, and mark selections. Changes sync in real time.
+        Share the collection via invite link and you can both save products, organize them, and mark selections. Changes show up instantly for both of you.
       </p>
 
       <h2>Related use cases</h2>
@@ -124,10 +124,10 @@ export default function HomeRenovationPage() {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           "mainEntity": [
-            { "@type": "Question", "name": "Can I set a budget per room?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Each collection (room) can have its own budget. You can also set budgets on individual slots (categories) within a room for more granular control." } },
+            { "@type": "Question", "name": "Can I set a budget per room?", "acceptedAnswer": { "@type": "Answer", "text": "Each collection (room) can have its own budget. You can also set budgets on individual slots (categories) within a room for even more detail." } },
             { "@type": "Question", "name": "How do I share with my contractor?", "acceptedAnswer": { "@type": "Answer", "text": "Make the collection public and send them the link — they can view everything without creating an account. If you want them to add items too, send an invite link instead." } },
-            { "@type": "Question", "name": "Does it work with IKEA and Wayfair?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Tote works with virtually any online store, including IKEA, Wayfair, Amazon, Etsy, CB2, West Elm, and local shops. If it has a product page, Tote can save it." } },
-            { "@type": "Question", "name": "Can my partner and I both add items?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Share the collection via invite link and both of you can save products, organize them, and mark selections. Changes sync in real time." } },
+            { "@type": "Question", "name": "Does it work with IKEA and Wayfair?", "acceptedAnswer": { "@type": "Answer", "text": "Tote works with just about any online store — IKEA, Wayfair, Amazon, Etsy, CB2, West Elm, local shops, and more. If you can see a product page, Tote can save it." } },
+            { "@type": "Question", "name": "Can my partner and I both add items?", "acceptedAnswer": { "@type": "Answer", "text": "Share the collection via invite link and you can both save products, organize them, and mark selections. Changes show up instantly for both of you." } },
           ],
         }) }}
       />
