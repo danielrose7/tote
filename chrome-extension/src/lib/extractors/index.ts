@@ -104,6 +104,16 @@ function findProduct(data: unknown): any {
     if (types.some((t) => t === "Product" || t === "IndividualProduct")) {
       return data;
     }
+    if (types.some((t) => t === "ProductGroup")) {
+      const d = data as any;
+      // Prefer a variant that has offers
+      if (Array.isArray(d.hasVariant)) {
+        const withOffers = d.hasVariant.find((v: any) => v?.offers);
+        if (withOffers) return withOffers;
+      }
+      // Fall back to the ProductGroup itself if it has top-level offers
+      if (d.offers) return d;
+    }
   }
 
   if ("@graph" in data && Array.isArray((data as any)["@graph"])) {
@@ -182,7 +192,7 @@ function extractOpenGraph(): Partial<ExtractedMetadata> {
 }
 
 // DOM-based price extraction (for JS-rendered content)
-function extractPriceFromDOM(): { price?: string; currency?: string } {
+function extractPriceFromDOM(productTitle?: string): { price?: string; currency?: string } {
   // Priority selectors - check sale prices FIRST (order matters!)
   // These indicate the actual/current price to pay, not original/list prices
   const salePriceSelectors = [
@@ -242,8 +252,9 @@ function extractPriceFromDOM(): { price?: string; currency?: string } {
     // Exclude via class wildcards
     '[class*="price"]:not([class*="compare"]):not([class*="was"]):not([class*="old"]):not([class*="list"]):not([class*="original"]):not([class*="strikethrough"]):not([class*="crossed"])',
     '[class*="Price"]:not([class*="Compare"]):not([class*="Was"]):not([class*="Old"]):not([class*="List"]):not([class*="Original"]):not([class*="Strikethrough"]):not([class*="Crossed"])',
-    // Exclude via data-testid patterns
+    // Exclude via data-testid / data-test patterns
     '[data-testid*="price"]:not([data-testid*="list"]):not([data-testid*="original"]):not([data-testid*="was"]):not([data-testid*="compare"])',
+    '[data-test*="price"]:not([data-test*="list"]):not([data-test*="original"]):not([data-test*="was"]):not([data-test*="compare"])',
   ];
 
   // First try itemprop with content attribute
@@ -276,58 +287,104 @@ function extractPriceFromDOM(): { price?: string; currency?: string } {
     }
   }
 
-  // Try CSS selectors
+  // Score all price candidates and return the best match
+  return bestScoredPrice(selectors, productTitle);
+}
+
+// Walk up the DOM to find the nearest preceding heading element
+function nearestHeading(el: Element): Element | null {
+  let node: Element | null = el.parentElement;
+  while (node && node !== document.body) {
+    let prev = node.previousElementSibling;
+    while (prev) {
+      if (/^H[1-6]$/.test(prev.tagName)) return prev;
+      const h = prev.querySelector("h1, h2, h3, h4, h5, h6");
+      if (h) return h;
+      prev = prev.previousElementSibling;
+    }
+    node = node.parentElement;
+  }
+  return document.querySelector("h1");
+}
+
+// Score a price element by how likely it is to be the main product price
+function scorePriceElement(el: Element, h1Text: string): number {
+  let score = 0;
+
+  // Walk ancestors looking for context signals
+  let node: Element | null = el;
+  while (node && node !== document.body) {
+    const cls = (node.getAttribute("class") ?? "").toLowerCase();
+    const id = (node.getAttribute("id") ?? "").toLowerCase();
+    const ctx = cls + " " + id;
+
+    // Penalize related/recommended/cross-sell sections
+    if (/related|recommend|upsell|cross.?sell|complementary|you.?may|complete.?your|kit\b/.test(ctx)) {
+      score -= 60;
+      break;
+    }
+    // Reward main product containers
+    if (/product.{0,10}(info|detail|main|form|summary)|pdp/.test(ctx)) {
+      score += 20;
+      break;
+    }
+    node = node.parentElement;
+  }
+
+  // Reward proximity to an add-to-cart button
+  const container = el.closest("form, [class*='product__info'], [class*='product-info'], [class*='product-detail']");
+  if (container?.querySelector('[name="add"], [class*="add-to-cart"], [class*="buy-now"]')) {
+    score += 25;
+  }
+
+  // Reward heading match with page title
+  const heading = nearestHeading(el);
+  if (heading && h1Text) {
+    const hText = heading.textContent?.trim().toLowerCase() ?? "";
+    if (hText === h1Text) score += 50;
+    else if (hText && (hText.includes(h1Text) || h1Text.includes(hText))) score += 25;
+  }
+
+  return score;
+}
+
+// Collect all price candidates from the DOM, score them, and return the best
+function bestScoredPrice(selectors: string[], productTitle?: string): { price?: string; currency?: string } {
+  // Use the provided product title (from JSON-LD/OG), fall back to h1, or skip heading match if nothing known
+  const titleText = (productTitle ?? document.querySelector("h1")?.textContent?.trim() ?? "").toLowerCase();
+  const seen = new Set<Element>();
+  const candidates: Array<{ price: string; currency: string; score: number }> = [];
+
+  const addCandidate = (el: Element, scoreBias = 0) => {
+    if (seen.has(el)) return;
+    seen.add(el);
+    const text = el.textContent?.trim();
+    if (!text) return;
+    const parsed = extractPriceFromText(text);
+    if (!parsed) return;
+    candidates.push({ ...parsed, score: scorePriceElement(el, titleText) + scoreBias });
+  };
+
+  // Labeled price elements (selectors with price classes/attributes)
   for (const selector of selectors) {
     try {
-      const elements = document.querySelectorAll(selector);
-      for (const el of elements) {
-        const text = el.textContent?.trim();
-        if (text) {
-          const result = extractPriceFromText(text);
-          if (result) return result;
-        }
-      }
+      for (const el of document.querySelectorAll(selector)) addCandidate(el);
     } catch {
       // Invalid selector
     }
   }
 
-  // Strategy: Look for "Add to cart" button area - price often near it
-  const addToCartBtn = document.querySelector(
-    'button[class*="add"], button[class*="cart"], [class*="add-to-cart"], [class*="buy"]'
-  );
-  if (addToCartBtn) {
-    // Check the button itself and nearby siblings
-    const parent = addToCartBtn.parentElement;
-    if (parent) {
-      const text = parent.textContent || "";
-      const result = extractPriceFromText(text);
-      if (result) return result;
-    }
-    // Check button's own text
-    const btnText = addToCartBtn.textContent || "";
-    const btnResult = extractPriceFromText(btnText);
-    if (btnResult) return btnResult;
-  }
-
-  // Strategy: Scan for elements with just a price (e.g., "$40")
-  // Look for short text nodes containing currency symbols
-  const allElements = document.querySelectorAll(
-    "div, span, p, button, [class*='h5'], [class*='h4'], [class*='h3']"
-  );
-  for (const el of allElements) {
-    // Skip if has many children (likely a container)
+  // Broad scan: short price-like text in generic elements (e.g. "$40" in a button or span with no price class)
+  // Slight score penalty vs labeled elements since provenance is less certain
+  for (const el of document.querySelectorAll("div, span, p, button")) {
     if (el.children.length > 2) continue;
-
-    const text = el.textContent?.trim() || "";
-    // Only check short text that looks like a price
-    if (text.length < 15 && /^[$£€¥]\d/.test(text)) {
-      const result = extractPriceFromText(text);
-      if (result) return result;
-    }
+    const text = el.textContent?.trim() ?? "";
+    if (text.length < 15 && /^[$£€¥]\d/.test(text)) addCandidate(el, -5);
   }
 
-  return {};
+  if (!candidates.length) return {};
+  candidates.sort((a, b) => b.score - a.score);
+  return { price: candidates[0].price, currency: candidates[0].currency };
 }
 
 // Detect platform
@@ -391,7 +448,10 @@ export function extractMetadata(): ExtractionResult {
   // Collect from all sources
   const jsonLd = extractJsonLd();
   const og = extractOpenGraph();
-  const domPrice = extractPriceFromDOM();
+  // Pass the best-known product title to DOM extraction for heading-match scoring.
+  // Prefers JSON-LD/OG over h1 since many sites don't use h1 for product names.
+  const knownTitle = jsonLd?.title || og.title || undefined;
+  const domPrice = extractPriceFromDOM(knownTitle);
   const domImage = extractImageFromDOM();
   const platform = detectPlatform();
 

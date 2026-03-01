@@ -409,16 +409,9 @@ describe("Sale Price Priority", () => {
         }
       </script>
     `;
+    // DOM order: related product cards ($25, $217) appear BEFORE the main product price ($197)
+    // so without JSON-LD extraction working, DOM scan would return $25 first
     document.body.innerHTML = `
-      <div class="product__info-container">
-        <h1>Sliders</h1>
-        <div class="price price--large price--show-badge">
-          <span class="price-item price-item--regular">$197.00 USD</span>
-        </div>
-        <button type="submit" name="add" class="product-form__submit">
-          <span>Add to cart</span>
-        </button>
-      </div>
       <section class="related-products">
         <h3>Complete Your Kit</h3>
         <div class="card">
@@ -434,6 +427,15 @@ describe("Sale Price Priority", () => {
           </div>
         </div>
       </section>
+      <div class="product__info-container">
+        <h1>Sliders</h1>
+        <div class="price price--large price--show-badge">
+          <span class="price-item price-item--regular">$197.00 USD</span>
+        </div>
+        <button type="submit" name="add" class="product-form__submit">
+          <span>Add to cart</span>
+        </button>
+      </div>
     `;
     const result = extractMetadata();
     expect(result.price).toBe("197.00");
