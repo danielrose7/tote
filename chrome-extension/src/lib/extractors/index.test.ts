@@ -387,6 +387,59 @@ describe("Sale Price Priority", () => {
     expect(result.price).toBe("29.99");
   });
 
+  it("prefers JSON-LD price over recommended product card prices (Smith Optics)", () => {
+    // Real-world case: Smith Optics Sliders page has $197 main product price in JSON-LD
+    // but a "Complete Your Kit" section with a $25 sunglass case card that appears
+    // earlier in the DOM price selector scan
+    document.head.innerHTML = `
+      <script type="application/ld+json">
+        {
+          "@type": "ProductGroup",
+          "name": "Sliders",
+          "brand": {"@type": "Brand", "name": "Smith Optics"},
+          "hasVariant": [{
+            "@type": "Product",
+            "name": "Sliders - Matte Olive Oil | Chromapop Brown",
+            "offers": {
+              "@type": "Offer",
+              "price": "197.00",
+              "priceCurrency": "USD"
+            }
+          }]
+        }
+      </script>
+    `;
+    document.body.innerHTML = `
+      <div class="product__info-container">
+        <h1>Sliders</h1>
+        <div class="price price--large price--show-badge">
+          <span class="price-item price-item--regular">$197.00 USD</span>
+        </div>
+        <button type="submit" name="add" class="product-form__submit">
+          <span>Add to cart</span>
+        </button>
+      </div>
+      <section class="related-products">
+        <h3>Complete Your Kit</h3>
+        <div class="card">
+          <h3>Large Sunglass Case</h3>
+          <div class="price">
+            <span class="price-item price-item--regular">$25.00 USD</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Wildcat</h3>
+          <div class="price">
+            <span class="price-item price-item--regular">Starting at $217.00 USD</span>
+          </div>
+        </div>
+      </section>
+    `;
+    const result = extractMetadata();
+    expect(result.price).toBe("197.00");
+    expect(result.currency).toBe("USD");
+  });
+
   it("extracts sale price from complex nested PriceDisplay component", () => {
     // Real-world case from retail site with list price and sale price
     setupDOM(`
