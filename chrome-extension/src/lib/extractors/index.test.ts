@@ -430,6 +430,73 @@ describe("Sale Price Priority", () => {
     });
   });
 
+  it("selects variant via Shopify add-to-cart form input[name=id] (JS-driven selection)", () => {
+    // When user clicks a color swatch, Shopify updates the hidden input before URL changes
+    document.head.innerHTML = `
+      <script type="application/ld+json">
+        {
+          "@type": "ProductGroup",
+          "name": "Wildcat",
+          "hasVariant": [
+            {
+              "@type": "Product",
+              "@id": "https://www.smithoptics.com/en-us/products/wildcat?variant=11111111111111",
+              "name": "Wildcat - Matte Black | ChromaPop Red Mirror",
+              "image": "https://cdn.shopify.com/matte-black.jpg",
+              "offers": { "price": "217.00", "priceCurrency": "USD" }
+            },
+            {
+              "@type": "Product",
+              "@id": "https://www.smithoptics.com/en-us/products/wildcat?variant=22222222222222",
+              "name": "Wildcat - White | ChromaPop Violet Mirror",
+              "image": "https://cdn.shopify.com/white-violet.jpg",
+              "offers": { "price": "217.00", "priceCurrency": "USD" }
+            }
+          ]
+        }
+      </script>
+    `;
+    // Simulate Shopify's add-to-cart form with the currently selected variant ID
+    document.body.innerHTML = `
+      <form action="/cart/add">
+        <input type="hidden" name="id" value="22222222222222">
+        <button type="submit">Add to cart</button>
+      </form>
+    `;
+    const result = extractMetadata();
+    expect(result.title).toBe("Wildcat - White | ChromaPop Violet Mirror");
+    expect(result.imageUrl).toBe("https://cdn.shopify.com/white-violet.jpg");
+    expect(result.price).toBe("217.00");
+  });
+
+  it("falls back to ProductGroup name and skips image when variant cannot be matched", () => {
+    // No URL param, no Shopify form — can't tell which variant is selected
+    document.head.innerHTML = `
+      <meta property="og:image" content="https://example.com/og-image.jpg">
+      <script type="application/ld+json">
+        {
+          "@type": "ProductGroup",
+          "name": "Wildcat",
+          "hasVariant": [
+            {
+              "@type": "Product",
+              "name": "Wildcat - Matte Black | ChromaPop Red Mirror",
+              "image": "https://cdn.shopify.com/matte-black.jpg",
+              "offers": { "price": "217.00", "priceCurrency": "USD" }
+            }
+          ]
+        }
+      </script>
+    `;
+    document.body.innerHTML = "";
+    const result = extractMetadata();
+    // Should use group name, not first variant's specific name
+    expect(result.title).toBe("Wildcat");
+    // Should use OG image, not the first (potentially wrong) variant's image
+    expect(result.imageUrl).toBe("https://example.com/og-image.jpg");
+    expect(result.price).toBe("217.00");
+  });
+
   it("prefers JSON-LD price over recommended product card prices (Smith Optics)", () => {
     // Real-world case: Smith Optics Sliders page has $197 main product price in JSON-LD
     // but a "Complete Your Kit" section with a $25 sunglass case card that appears

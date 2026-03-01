@@ -75,12 +75,19 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
   for (const script of scripts) {
     try {
       const data = JSON.parse(script.textContent || "");
-      const product = findProduct(data);
-      if (product) {
+      const match = findProduct(data);
+      if (match) {
+        const { product, groupName, variantMatched } = match;
         return {
-          title: product.name,
+          // When we couldn't match the selected variant, use the group name (e.g.
+          // "Wildcat") rather than the first variant's specific name ("Wildcat -
+          // Matte Black | ...") which would be wrong for the user's selection.
+          title: groupName ?? product.name,
           description: product.description,
-          imageUrl: extractImage(product.image),
+          // Only use the JSON-LD image when we matched the right variant.
+          // Otherwise, let og:image / DOM image take over since they more likely
+          // reflect what the user is actually viewing.
+          imageUrl: variantMatched ? extractImage(product.image) : undefined,
           price: extractProductPrice(product.offers)?.price,
           currency: extractProductPrice(product.offers)?.currency,
           brand: extractBrand(product.brand),
@@ -93,8 +100,19 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
   return null;
 }
 
-// Extract variant ID from URL (e.g. ?variant=47037333766382 on Shopify)
-function extractVariantIdFromUrl(): string | null {
+// Get the currently selected variant ID.
+// Prefers Shopify's add-to-cart form input (updated by JS on swatch click)
+// over the URL param, which may lag behind JS state.
+function extractCurrentVariantId(): string | null {
+  try {
+    // Shopify: the add-to-cart form has a hidden input[name="id"] with the
+    // currently selected variant ID, updated via JS when the user changes options
+    const variantInput = document.querySelector(
+      'form[action*="/cart/add"] input[name="id"]'
+    ) as HTMLInputElement | null;
+    if (variantInput?.value) return variantInput.value;
+  } catch {}
+  // Fall back to URL ?variant= parameter
   try {
     return new URLSearchParams(window.location.search).get("variant");
   } catch {
@@ -102,7 +120,16 @@ function extractVariantIdFromUrl(): string | null {
   }
 }
 
-function findProduct(data: unknown): any {
+interface ProductFindResult {
+  product: any;
+  // When we fell back to a hasVariant item without matching the selected variant,
+  // groupName holds the ProductGroup's name so we can use that instead of the
+  // variant-specific name (e.g. "Wildcat" instead of "Wildcat - Matte Black | ...").
+  groupName?: string;
+  variantMatched: boolean;
+}
+
+function findProduct(data: unknown): ProductFindResult | null {
   if (!data || typeof data !== "object") return null;
 
   if ("@type" in data) {
@@ -111,28 +138,27 @@ function findProduct(data: unknown): any {
       ? typed["@type"]
       : [typed["@type"]];
     if (types.some((t) => t === "Product" || t === "IndividualProduct")) {
-      return data;
+      return { product: data, variantMatched: true };
     }
     if (types.some((t) => t === "ProductGroup")) {
       const d = data as any;
       if (Array.isArray(d.hasVariant)) {
-        // Try to match the URL ?variant= parameter to pick the selected variant
-        const urlVariantId = extractVariantIdFromUrl();
-        if (urlVariantId) {
-          const urlMatched = d.hasVariant.find((v: any) => {
+        const variantId = extractCurrentVariantId();
+        if (variantId) {
+          const matched = d.hasVariant.find((v: any) => {
             const vid = String(
               v?.["@id"] ?? v?.productID ?? v?.sku ?? v?.identifier ?? ""
             );
-            return vid.includes(urlVariantId);
+            return vid.includes(variantId);
           });
-          if (urlMatched) return urlMatched;
+          if (matched) return { product: matched, variantMatched: true };
         }
-        // Fall back to first variant that has offers
+        // Couldn't identify the selected variant — fall back to first with offers
+        // but flag it so we can use the group name and skip variant-specific image
         const withOffers = d.hasVariant.find((v: any) => v?.offers);
-        if (withOffers) return withOffers;
+        if (withOffers) return { product: withOffers, groupName: d.name, variantMatched: false };
       }
-      // Fall back to the ProductGroup itself if it has top-level offers
-      if (d.offers) return d;
+      if (d.offers) return { product: d, variantMatched: true };
     }
   }
 
