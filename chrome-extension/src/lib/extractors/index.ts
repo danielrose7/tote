@@ -93,6 +93,15 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
   return null;
 }
 
+// Extract variant ID from URL (e.g. ?variant=47037333766382 on Shopify)
+function extractVariantIdFromUrl(): string | null {
+  try {
+    return new URLSearchParams(window.location.search).get("variant");
+  } catch {
+    return null;
+  }
+}
+
 function findProduct(data: unknown): any {
   if (!data || typeof data !== "object") return null;
 
@@ -106,8 +115,19 @@ function findProduct(data: unknown): any {
     }
     if (types.some((t) => t === "ProductGroup")) {
       const d = data as any;
-      // Prefer a variant that has offers
       if (Array.isArray(d.hasVariant)) {
+        // Try to match the URL ?variant= parameter to pick the selected variant
+        const urlVariantId = extractVariantIdFromUrl();
+        if (urlVariantId) {
+          const urlMatched = d.hasVariant.find((v: any) => {
+            const vid = String(
+              v?.["@id"] ?? v?.productID ?? v?.sku ?? v?.identifier ?? ""
+            );
+            return vid.includes(urlVariantId);
+          });
+          if (urlMatched) return urlMatched;
+        }
+        // Fall back to first variant that has offers
         const withOffers = d.hasVariant.find((v: any) => v?.offers);
         if (withOffers) return withOffers;
       }

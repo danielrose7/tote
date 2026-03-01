@@ -29,6 +29,9 @@ dist-ssr
 playwright-report
 .vercel
 
+# Scratch / debugging files
+tmp/
+
 # Environment files (keep out of version control)
 .env.production
 chrome-extension/.env.development

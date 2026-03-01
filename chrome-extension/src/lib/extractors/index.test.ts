@@ -387,6 +387,49 @@ describe("Sale Price Priority", () => {
     expect(result.price).toBe("29.99");
   });
 
+  it("selects variant matching URL ?variant= parameter (Smith Optics style)", () => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: { ...window.location, search: "?variant=47037333766382" },
+    });
+    document.head.innerHTML = `
+      <script type="application/ld+json">
+        {
+          "@type": "ProductGroup",
+          "name": "Sliders",
+          "hasVariant": [
+            {
+              "@type": "Product",
+              "@id": "https://www.smithoptics.com/en-us/products/sliders?variant=11111111111111",
+              "name": "Sliders - Matte Olive Oil | Chromapop Brown",
+              "image": "https://cdn.shopify.com/olive-oil.jpg",
+              "offers": { "price": "197.00", "priceCurrency": "USD" }
+            },
+            {
+              "@type": "Product",
+              "@id": "https://www.smithoptics.com/en-us/products/sliders?variant=47037333766382",
+              "name": "Sliders - Electric Supernova | Chromapop Blue Mirror",
+              "image": "https://cdn.shopify.com/electric-supernova.jpg",
+              "offers": { "price": "197.00", "priceCurrency": "USD" }
+            }
+          ]
+        }
+      </script>
+    `;
+    document.body.innerHTML = "";
+    const result = extractMetadata();
+    expect(result.title).toBe("Sliders - Electric Supernova | Chromapop Blue Mirror");
+    expect(result.imageUrl).toBe("https://cdn.shopify.com/electric-supernova.jpg");
+    expect(result.price).toBe("197.00");
+    // Restore
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: { ...window.location, search: "" },
+    });
+  });
+
   it("prefers JSON-LD price over recommended product card prices (Smith Optics)", () => {
     // Real-world case: Smith Optics Sliders page has $197 main product price in JSON-LD
     // but a "Complete Your Kit" section with a $25 sunglass case card that appears
