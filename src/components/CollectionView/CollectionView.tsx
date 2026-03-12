@@ -18,6 +18,7 @@ import {
 import { ProductCard } from "../ProductCard/ProductCard";
 import { SlotSection } from "../SlotSection/SlotSection";
 import { SortableSlotSection } from "../SlotSection/SortableSlotSection";
+import { SortableProductItem } from "../SlotSection/SortableProductItem";
 import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
 import { TableView } from "./TableView";
 import {
@@ -181,6 +182,7 @@ export function CollectionView({
   const [extensionAvailable, setExtensionAvailable] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [isReorderMode, setIsReorderMode] = useState(false);
+  const [isUngroupedReorderMode, setIsUngroupedReorderMode] = useState(false);
 
   // DnD sensors for slot reordering
   const sensors = useSensors(
@@ -327,6 +329,30 @@ export function CollectionView({
     if (!collectionBlock.children?.$isLoaded) return;
 
     // Find the indices of the dragged and target slots in the children list
+    const children = collectionBlock.children;
+    let fromIndex = -1;
+    let toIndex = -1;
+
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child && child.$isLoaded) {
+        if (child.$jazz.id === active.id) fromIndex = i;
+        if (child.$jazz.id === over.id) toIndex = i;
+      }
+    }
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      reorderBlockList(children, fromIndex, toIndex);
+    }
+  };
+
+  // Handle ungrouped product reordering via drag and drop
+  const handleUngroupedDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+    if (!collectionBlock.children?.$isLoaded) return;
+
     const children = collectionBlock.children;
     let fromIndex = -1;
     let toIndex = -1;
@@ -560,25 +586,55 @@ export function CollectionView({
           {/* Ungrouped Products */}
           {ungroupedProducts.length > 0 && (
             <div className={styles.ungroupedSection}>
-              {slots.length > 0 && (
-                <h3 className={styles.ungroupedTitle}>Ungrouped</h3>
-              )}
-              <div className={styles.grid}>
-                {ungroupedProducts.map((block) => {
-                  const blockId = block.$jazz.id;
-                  return (
-                    <ProductCard
-                      key={blockId}
-                      block={block}
-                      onEdit={onEditBlock}
-                      onDelete={onDeleteBlock}
-                      onRefresh={handleRefreshBlock}
-                      isRefreshing={refreshingBlockId === blockId}
-                      isEnqueued={enqueuedBlockIds.includes(blockId)}
-                    />
-                  );
-                })}
+              <div className={styles.ungroupedHeader}>
+                {slots.length > 0 && (
+                  <h3 className={styles.ungroupedTitle}>Ungrouped</h3>
+                )}
+                {ungroupedProducts.length > 1 && !isReorderMode && (
+                  <button
+                    type="button"
+                    onClick={() => setIsUngroupedReorderMode(!isUngroupedReorderMode)}
+                    className={isUngroupedReorderMode ? styles.doneButton : styles.reorderButton}
+                  >
+                    {isUngroupedReorderMode ? "Done" : "Reorder"}
+                  </button>
+                )}
               </div>
+              {isUngroupedReorderMode ? (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleUngroupedDragEnd}
+                >
+                  <SortableContext
+                    items={ungroupedProducts.map((p) => p.$jazz.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className={styles.productList}>
+                      {ungroupedProducts.map((block) => (
+                        <SortableProductItem key={block.$jazz.id} product={block} />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              ) : (
+                <div className={styles.grid}>
+                  {ungroupedProducts.map((block) => {
+                    const blockId = block.$jazz.id;
+                    return (
+                      <ProductCard
+                        key={blockId}
+                        block={block}
+                        onEdit={onEditBlock}
+                        onDelete={onDeleteBlock}
+                        onRefresh={handleRefreshBlock}
+                        isRefreshing={refreshingBlockId === blockId}
+                        isEnqueued={enqueuedBlockIds.includes(blockId)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </>
