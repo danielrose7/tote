@@ -1,0 +1,37 @@
+{
+  "name": "tote-ios",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@azure/core-asynciterator-polyfill": "^1.0.2",
+    "@bacons/text-decoder": "^0.0.0",
+    "@clerk/expo": "^3.1.2",
+    "@react-native-community/netinfo": "^12.0.1",
+    "expo": "~55.0.6",
+    "expo-auth-session": "^55.0.8",
+    "expo-crypto": "^55.0.9",
+    "expo-file-system": "^55.0.10",
+    "expo-secure-store": "^55.0.8",
+    "expo-share-extension": "^5.0.6",
+    "expo-sqlite": "^55.0.10",
+    "expo-status-bar": "~55.0.4",
+    "expo-web-browser": "^55.0.9",
+    "jazz-tools": "^0.19.14",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.2",
+    "react-native-get-random-values": "^1.11.0",
+    "readable-stream": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}

@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Tote",
+    "slug": "tote",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "tote",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tools.tote.app"
+    },
+    "plugins": [
+      [
+        "expo-share-extension",
+        {
+          "backgroundColor": {
+            "red": 255,
+            "green": 255,
+            "blue": 255,
+            "alpha": 1
+          }
+        }
+      ]
+    ]
+  }
+}
