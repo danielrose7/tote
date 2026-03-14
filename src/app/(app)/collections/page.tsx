@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount } from "jazz-tools/react";
-import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { useRouter, useSearchParams } from "next/navigation";
 import { JazzAccount, type Block, type SharedCollectionRef } from "../../../schema";
 import type { co } from "jazz-tools";
 import { Header } from "../../../components/Header";
@@ -10,12 +11,16 @@ import { CollectionList } from "../../../components/CollectionList/CollectionLis
 import { CreateCollectionDialog } from "../../../components/CreateCollectionDialog/CreateCollectionDialog";
 import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
 import { LeaveCollectionDialog } from "../../../components/LeaveCollectionDialog";
+import { SaveTabsDialog } from "../../../components/SaveTabsDialog";
 
 type LoadedBlock = co.loaded<typeof Block>;
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
 
 export default function CollectionsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useUser();
+  const enableSaveTabs = user?.publicMetadata?.enableSaveTabs === true;
   const me = useAccount(JazzAccount, {
     resolve: {
       profile: true,
@@ -37,8 +42,18 @@ export default function CollectionsPage() {
   const [isCreateCollectionDialogOpen, setIsCreateCollectionDialogOpen] = useState(false);
   const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const [isSaveTabsDialogOpen, setIsSaveTabsDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<LoadedBlock | null>(null);
   const [selectedSharedRef, setSelectedSharedRef] = useState<LoadedSharedRef | null>(null);
+
+  // Auto-open Save Tabs dialog when navigated with ?saveTabs=1
+  useEffect(() => {
+    if (enableSaveTabs && searchParams.get("saveTabs") === "1") {
+      setIsSaveTabsDialogOpen(true);
+      // Clean up the URL
+      router.replace("/collections", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const handleEditCollection = (block: LoadedBlock) => {
     setSelectedBlock(block);
@@ -86,6 +101,8 @@ export default function CollectionsPage() {
       <Header
         showAddCollection
         onAddCollectionClick={() => setIsCreateCollectionDialogOpen(true)}
+        showSaveTabs={enableSaveTabs}
+        onSaveTabsClick={() => setIsSaveTabsDialogOpen(true)}
       />
       <main>
         <CollectionList
@@ -113,6 +130,11 @@ export default function CollectionsPage() {
         onOpenChange={setIsLeaveDialogOpen}
         sharedRef={selectedSharedRef}
         onConfirm={confirmLeaveSharedCollection}
+      />
+      <SaveTabsDialog
+        open={isSaveTabsDialogOpen}
+        onOpenChange={setIsSaveTabsDialogOpen}
+        account={me}
       />
     </>
   );

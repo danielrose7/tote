@@ -28,9 +28,76 @@ chrome.runtime.onMessageExternal.addListener(
       return true; // Keep channel open for async response
     }
 
+    if (message.type === "GET_ALL_TABS") {
+      handleGetAllTabs(sender.origin)
+        .then((tabs) => sendResponse({ success: true, tabs }))
+        .catch((error) => sendResponse({ success: false, error: error.message }));
+      return true;
+    }
+
+    if (message.type === "EXTRACT_TAB_METADATA") {
+      handleExtractTabMetadata(message.tabId)
+        .then((metadata) => sendResponse({ success: true, metadata }))
+        .catch((error) => sendResponse({ success: false, error: error.message }));
+      return true;
+    }
+
     return false;
   }
 );
+
+// Non-extractable URL schemes
+const NON_EXTRACTABLE_SCHEMES = ["chrome://", "chrome-extension://", "about:", "edge://", "brave://", "devtools://"];
+
+interface TabInfo {
+  tabId: number;
+  url: string;
+  title: string;
+  favIconUrl?: string;
+  extractable: boolean;
+}
+
+// Get all open tabs, filtering out non-extractable and Tote app tabs
+async function handleGetAllTabs(senderOrigin?: string): Promise<TabInfo[]> {
+  const tabs = await chrome.tabs.query({});
+
+  return tabs
+    .filter((tab) => {
+      if (!tab.id || !tab.url) return false;
+      // Filter out the Tote app tab itself
+      if (senderOrigin && tab.url.startsWith(senderOrigin)) return false;
+      return true;
+    })
+    .map((tab) => {
+      const url = tab.url || "";
+      const extractable = !NON_EXTRACTABLE_SCHEMES.some((scheme) => url.startsWith(scheme));
+
+      return {
+        tabId: tab.id!,
+        url,
+        title: tab.title || url,
+        favIconUrl: tab.favIconUrl,
+        extractable,
+      };
+    });
+}
+
+// Extract metadata from an already-open tab via its content script
+async function handleExtractTabMetadata(tabId: number): Promise<ExtractedMetadata> {
+  const response = await chrome.tabs.sendMessage(tabId, {
+    type: "EXTRACT_METADATA",
+  } as MessagePayload);
+
+  if (response?.error) {
+    throw new Error(response.error);
+  }
+
+  if (!response?.data) {
+    throw new Error("No metadata extracted");
+  }
+
+  return response.data;
+}
 
 // Open a URL in a background tab, extract metadata, then close the tab
 async function handleRefreshLink(url: string): Promise<ExtractedMetadata> {

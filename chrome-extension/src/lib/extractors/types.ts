@@ -21,3 +21,11 @@ export interface MessagePayload {
   data?: ExtractedMetadata;
   error?: string;
 }
+
+export interface TabInfo {
+  tabId: number;
+  url: string;
+  title: string;
+  favIconUrl?: string;
+  extractable: boolean;
+}

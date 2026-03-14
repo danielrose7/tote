@@ -12,6 +12,8 @@ import { EditLinkDialog } from "../../../../components/EditLinkDialog";
 import { EditCollectionDialog } from "../../../../components/EditCollectionDialog";
 import { DeleteConfirmDialog } from "../../../../components/DeleteConfirmDialog";
 import { ShareCollectionDialog } from "../../../../components/ShareCollectionDialog";
+import { SaveTabsDialog } from "../../../../components/SaveTabsDialog";
+import { useUser } from "@clerk/nextjs";
 import { useToast } from "../../../../components/ToastNotification";
 
 type LoadedBlock = co.loaded<typeof Block>;
@@ -20,6 +22,8 @@ export default function CollectionDetailPage() {
   const router = useRouter();
   const params = useParams();
   const collectionId = params.id as string;
+  const { user } = useUser();
+  const enableSaveTabs = user?.publicMetadata?.enableSaveTabs === true;
 
   const me = useAccount(JazzAccount, {
     resolve: {
@@ -58,6 +62,7 @@ export default function CollectionDetailPage() {
   const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSaveTabsDialogOpen, setIsSaveTabsDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<LoadedBlock | null>(null);
 
   // Get all loaded blocks from owned collections
@@ -212,6 +217,8 @@ export default function CollectionDetailPage() {
       <Header
         showAddLink
         onAddLinkClick={() => setIsAddDialogOpen(true)}
+        showSaveTabs={enableSaveTabs}
+        onSaveTabsClick={() => setIsSaveTabsDialogOpen(true)}
         breadcrumbs={[
           { label: "Collections", href: "/collections" },
           { label: collectionBlock.name || "Untitled" },
@@ -258,6 +265,12 @@ export default function CollectionDetailPage() {
         collection={collectionBlock}
         allBlocks={allBlocks}
         account={me}
+      />
+      <SaveTabsDialog
+        open={isSaveTabsDialogOpen}
+        onOpenChange={setIsSaveTabsDialogOpen}
+        account={me}
+        collectionId={collectionId}
       />
     </>
   );

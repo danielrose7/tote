@@ -1,6 +1,6 @@
 import { useEffect, useState, Component, ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { SignedIn, SignedOut, useAuth } from "@clerk/chrome-extension";
+import { SignedIn, SignedOut, useAuth, useClerk, useUser } from "@clerk/chrome-extension";
 import { useCoState } from "jazz-tools/react";
 import { Group } from "jazz-tools";
 import { Block, BlockList } from "@tote/schema";
@@ -556,6 +556,67 @@ function SaveUI({
 }
 
 /**
+ * Header with user menu (sign out + save all tabs)
+ */
+function PopupHeader() {
+  const { signOut } = useClerk();
+  const { user } = useUser();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const enableSaveTabs = user?.publicMetadata?.enableSaveTabs === true;
+
+  const handleSignOut = async () => {
+    await signOut();
+    setMenuOpen(false);
+  };
+
+  const handleSaveAllTabs = () => {
+    chrome.tabs.create({ url: "https://tote.tools/collections?saveTabs=1" });
+    window.close();
+  };
+
+  return (
+    <header className="header">
+      <div className="header-left">
+        <div className="logo" />
+        <h1>Save to Tote</h1>
+      </div>
+      <SignedIn>
+        <div className="header-menu">
+          <button
+            className="header-avatar"
+            onClick={() => setMenuOpen(!menuOpen)}
+            title={user?.primaryEmailAddress?.emailAddress || "Account"}
+          >
+            {user?.imageUrl ? (
+              <img src={user.imageUrl} alt="" className="header-avatar-img" />
+            ) : (
+              <span className="header-avatar-fallback">
+                {(user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || "?").toUpperCase()}
+              </span>
+            )}
+          </button>
+          {menuOpen && (
+            <>
+              <div className="header-menu-backdrop" onClick={() => setMenuOpen(false)} />
+              <div className="header-dropdown">
+                {enableSaveTabs && (
+                  <button className="header-dropdown-item" onClick={handleSaveAllTabs}>
+                    Save All Tabs
+                  </button>
+                )}
+                <button className="header-dropdown-item header-dropdown-item--danger" onClick={handleSignOut}>
+                  Sign Out
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </SignedIn>
+    </header>
+  );
+}
+
+/**
  * Main popup content
  */
 function PopupContent() {
@@ -617,10 +678,7 @@ function PopupContent() {
 
   return (
     <div className="popup">
-      <header className="header">
-        <div className="logo" />
-        <h1>Save to Tote</h1>
-      </header>
+      <PopupHeader />
 
       {status === "loading" && (
         <div className="loading">

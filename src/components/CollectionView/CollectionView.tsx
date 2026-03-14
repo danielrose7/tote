@@ -28,73 +28,16 @@ import {
   removeFromSelection,
 } from "../../lib/slotHelpers";
 import { reorderBlockList } from "../../lib/blocks";
+import {
+  checkExtensionAvailable,
+  refreshViaExtension,
+  type ExtractedMetadata,
+} from "../../lib/extension";
 import styles from "./CollectionView.module.css";
 
 const VIEW_MODE_STORAGE_KEY = "tote:viewMode";
 
 type LoadedBlock = co.loaded<typeof Block>;
-
-interface ExtractedMetadata {
-  title?: string;
-  description?: string;
-  imageUrl?: string;
-  price?: string;
-}
-
-// Extension ID - set via env var or hardcode after publishing
-const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID || "";
-
-// Check if the Tote extension is available
-async function checkExtensionAvailable(): Promise<boolean> {
-  if (!EXTENSION_ID || typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
-    return false;
-  }
-
-  try {
-    const response = await new Promise<{ success: boolean } | undefined>((resolve) => {
-      chrome.runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (resp) => {
-        if (chrome.runtime.lastError) {
-          resolve(undefined);
-        } else {
-          resolve(resp);
-        }
-      });
-    });
-    return response?.success === true;
-  } catch {
-    return false;
-  }
-}
-
-// Refresh using the extension (opens page in background tab, extracts with full DOM)
-async function refreshViaExtension(url: string): Promise<ExtractedMetadata | null> {
-  if (!EXTENSION_ID) return null;
-
-  try {
-    const response = await new Promise<{ success: boolean; metadata?: ExtractedMetadata; error?: string }>((resolve) => {
-      chrome.runtime.sendMessage(
-        EXTENSION_ID,
-        { type: "REFRESH_LINK", url },
-        (resp) => {
-          if (chrome.runtime.lastError) {
-            resolve({ success: false, error: chrome.runtime.lastError.message });
-          } else {
-            resolve(resp);
-          }
-        }
-      );
-    });
-
-    if (response.success && response.metadata) {
-      return response.metadata;
-    }
-    console.warn("[Tote] Extension refresh failed:", response.error);
-    return null;
-  } catch (error) {
-    console.error("[Tote] Extension communication error:", error);
-    return null;
-  }
-}
 
 // Fallback: server-side extraction
 async function refreshViaServer(url: string): Promise<ExtractedMetadata | null> {

@@ -12,16 +12,20 @@ interface Breadcrumb {
 interface HeaderProps {
   onAddLinkClick?: () => void;
   onAddCollectionClick?: () => void;
+  onSaveTabsClick?: () => void;
   showAddLink?: boolean;
   showAddCollection?: boolean;
+  showSaveTabs?: boolean;
   breadcrumbs?: Breadcrumb[];
 }
 
 export function Header({
   onAddLinkClick,
   onAddCollectionClick,
+  onSaveTabsClick,
   showAddLink = false,
   showAddCollection = false,
+  showSaveTabs = false,
   breadcrumbs,
 }: HeaderProps) {
   return (
@@ -66,6 +70,15 @@ export function Header({
               className={styles.addButton}
             >
               + Add Collection
+            </button>
+          )}
+          {showSaveTabs && onSaveTabsClick && (
+            <button
+              type="button"
+              onClick={onSaveTabsClick}
+              className={styles.addButton}
+            >
+              Save My Tabs
             </button>
           )}
           <AuthButton />
