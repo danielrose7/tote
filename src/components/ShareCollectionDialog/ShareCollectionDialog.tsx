@@ -152,7 +152,10 @@ export function ShareCollectionDialog({
       const slug = collection.collectionData?.slug;
       const pubId = collection.collectionData?.publishedId;
       if (slug && pubId) {
-        syncPublishedCollectionToClerk(slug, pubId).catch(console.error);
+        syncPublishedCollectionToClerk(slug, pubId, {
+          name: collection.name,
+          description: collection.collectionData?.description,
+        }).catch(console.error);
       }
 
       showToast({
@@ -206,6 +209,16 @@ export function ShareCollectionDialog({
         await block.$jazz.waitForSync({ timeout: 5000 });
       }
 
+      // Sync updated name/description to Clerk metadata
+      const slug = collection.collectionData?.slug;
+      const pubId = collection.collectionData?.publishedId;
+      if (slug && pubId) {
+        syncPublishedCollectionToClerk(slug, pubId, {
+          name: collection.name,
+          description: collection.collectionData?.description,
+        }).catch(console.error);
+      }
+
       showToast({
         title: "Collection updated",
         description: "The public version has been updated with your changes",
@@ -256,9 +269,10 @@ export function ShareCollectionDialog({
         removePublishedCollectionFromClerk(oldSlug).catch(console.error);
       }
       if (publishedId) {
-        syncPublishedCollectionToClerk(newSlug, publishedId).catch(
-          console.error
-        );
+        syncPublishedCollectionToClerk(newSlug, publishedId, {
+          name: collection.name,
+          description: collection.collectionData?.description,
+        }).catch(console.error);
       }
 
       setSlugInput(newSlug);

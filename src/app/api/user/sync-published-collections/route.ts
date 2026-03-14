@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { slug, publishedId } = await request.json();
+    const { slug, publishedId, name, description } = await request.json();
 
     if (!slug || !publishedId) {
       return NextResponse.json(
@@ -52,8 +52,8 @@ export async function POST(request: Request) {
     const currentMetadata = user.public_metadata || {};
     const publishedCollections = currentMetadata.publishedCollections || {};
 
-    // Add/update the slug entry
-    publishedCollections[slug] = publishedId;
+    // Add/update the slug entry with metadata for SEO
+    publishedCollections[slug] = { id: publishedId, name, description };
 
     const response = await fetch(
       `https://api.clerk.com/v1/users/${userId}`,

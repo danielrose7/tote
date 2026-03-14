@@ -78,8 +78,42 @@ function PublicCollectionViewer({ collectionId }: { collectionId: string }) {
     );
   }
 
+  // Build JSON-LD structured data for the collection and its products
+  const products = collectProducts(collection);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: collection.name,
+    ...(collection.collectionData?.description && {
+      description: collection.collectionData.description,
+    }),
+    numberOfItems: products.length,
+    itemListElement: products.map((product, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "Product",
+        name: product.name,
+        ...(product.url && { url: product.url }),
+        ...(product.imageUrl && { image: product.imageUrl }),
+        ...(product.description && { description: product.description }),
+        ...(product.price && {
+          offers: {
+            "@type": "Offer",
+            price: product.price.replace(/[^0-9.]/g, ""),
+            priceCurrency: "USD",
+          },
+        }),
+      },
+    })),
+  };
+
   return (
     <div className={styles.pageContainer}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.titleSection}>
@@ -116,6 +150,53 @@ function PublicCollectionViewer({ collectionId }: { collectionId: string }) {
       </footer>
     </div>
   );
+}
+
+/** Extract all product data from a loaded collection for structured data */
+function collectProducts(collection: any): Array<{
+  name: string;
+  url?: string;
+  imageUrl?: string;
+  price?: string;
+  description?: string;
+}> {
+  const products: Array<{
+    name: string;
+    url?: string;
+    imageUrl?: string;
+    price?: string;
+    description?: string;
+  }> = [];
+
+  if (!collection.children?.$isLoaded) return products;
+
+  for (const child of collection.children) {
+    if (!child || !child.$isLoaded) continue;
+
+    if (child.type === "product") {
+      products.push({
+        name: child.name,
+        url: child.productData?.url,
+        imageUrl: child.productData?.imageUrl,
+        price: child.productData?.price,
+        description: child.productData?.description,
+      });
+    } else if (child.type === "slot" && child.children?.$isLoaded) {
+      for (const slotChild of child.children) {
+        if (slotChild && slotChild.$isLoaded && slotChild.type === "product") {
+          products.push({
+            name: slotChild.name,
+            url: slotChild.productData?.url,
+            imageUrl: slotChild.productData?.imageUrl,
+            price: slotChild.productData?.price,
+            description: slotChild.productData?.description,
+          });
+        }
+      }
+    }
+  }
+
+  return products;
 }
 
 function ChildBlocksLoader({

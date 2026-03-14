@@ -221,12 +221,13 @@ export function publishCollection(
  */
 export async function syncPublishedCollectionToClerk(
   slug: string,
-  publishedId: string
+  publishedId: string,
+  meta?: { name?: string; description?: string }
 ): Promise<void> {
   await fetch("/api/user/sync-published-collections", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ slug, publishedId }),
+    body: JSON.stringify({ slug, publishedId, name: meta?.name, description: meta?.description }),
   });
 }
 
