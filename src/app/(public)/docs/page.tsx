@@ -60,9 +60,9 @@ export default function DocsPage() {
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Chrome Extension</h3>
+        <h3 className={styles.cardTitle}>Browser Extension</h3>
         <p className={styles.cardDescription}>
-          Install and use the browser extension for one-click saving, right-click context menu, and more.
+          Install and use the extension on Chrome, Edge, Brave, or Arc for one-click saving, right-click context menu, and more.
         </p>
         <Link href="/docs/extension">Learn about the extension &rarr;</Link>
       </div>

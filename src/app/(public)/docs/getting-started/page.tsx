@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CHROME_WEB_STORE_URL } from "../../../../lib/constants";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
@@ -26,12 +27,12 @@ export default function GettingStartedPage() {
         Head to <a href="https://tote.tools">tote.tools</a> and sign up with your email or Google account. Your account keeps your saved products synced across all your devices.
       </p>
 
-      <h2>2. Install the Chrome Extension</h2>
+      <h2>2. Install the Browser Extension</h2>
       <p>
-        The browser extension is the fastest way to save products. Install it from the Chrome Web Store, then sign in with the same account you just created.
+        The browser extension is the fastest way to save products. <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">Install it from the Chrome Web Store</a> — it works on Chrome, Edge, Brave, and Arc. Then sign in with the same account you just created.
       </p>
       <p>
-        See the <a href="/docs/extension">Chrome Extension guide</a> for detailed setup instructions.
+        See the <a href="/docs/extension">Browser Extension guide</a> for detailed setup instructions.
       </p>
 
       <h2>3. Save Your First Product</h2>
@@ -82,9 +83,9 @@ export default function GettingStartedPage() {
         Tote works with virtually any online store. It reads standard product metadata (images, titles, prices) from the page, so it works on Amazon, IKEA, Etsy, Zara, small boutiques, and everything in between.
       </p>
 
-      <h3>Do I need the Chrome extension?</h3>
+      <h3>Do I need the browser extension?</h3>
       <p>
-        No. The extension makes saving products faster (one click), but you can also add products manually by pasting a URL in the web app. See <a href="/docs/adding-links">Adding Links</a> for details.
+        No. The extension makes saving products faster (one click) and works on Chrome, Edge, Brave, and Arc, but you can also add products manually by pasting a URL in the web app. See <a href="/docs/adding-links">Adding Links</a> for details.
       </p>
 
       <h3>Does Tote work on my phone?</h3>
@@ -100,7 +101,7 @@ export default function GettingStartedPage() {
           "mainEntity": [
             { "@type": "Question", "name": "Is Tote free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Tote is free to use — create an account, install the extension, and start saving products at no cost." } },
             { "@type": "Question", "name": "What stores does Tote work with?", "acceptedAnswer": { "@type": "Answer", "text": "Tote works with virtually any online store. It reads standard product metadata from the page, so it works on Amazon, IKEA, Etsy, Zara, small boutiques, and everything in between." } },
-            { "@type": "Question", "name": "Do I need the Chrome extension?", "acceptedAnswer": { "@type": "Answer", "text": "No. The extension makes saving products faster (one click), but you can also add products manually by pasting a URL in the web app." } },
+            { "@type": "Question", "name": "Do I need the browser extension?", "acceptedAnswer": { "@type": "Answer", "text": "No. The extension makes saving products faster (one click) and works on Chrome, Edge, Brave, and Arc, but you can also add products manually by pasting a URL in the web app." } },
             { "@type": "Question", "name": "Does Tote work on my phone?", "acceptedAnswer": { "@type": "Answer", "text": "The Tote web app works on any device with a browser. The Chrome extension is desktop-only, but you can add links manually from your phone by pasting product URLs." } },
           ],
         }) }}

@@ -1,29 +1,30 @@
 import type { Metadata } from "next";
+import { CHROME_WEB_STORE_URL } from "../../../../lib/constants";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Chrome Extension",
+  title: "Browser Extension",
   description:
-    "Install and use the Tote Chrome extension to save products with one click. Covers installation, one-click saving, right-click context menu, slot selection, and sign-in.",
+    "Install and use the Tote browser extension on Chrome, Edge, Brave, or Arc to save products with one click. Covers installation, one-click saving, right-click context menu, slot selection, and sign-in.",
   alternates: { canonical: "/docs/extension" },
   openGraph: {
-    title: "Chrome Extension — Tote",
+    title: "Browser Extension — Tote",
     description:
-      "Install and use the Tote Chrome extension to save products with one click from any online store.",
+      "Install and use the Tote browser extension on Chrome, Edge, Brave, or Arc to save products with one click from any online store.",
   },
 };
 
 export default function ExtensionPage() {
   return (
     <article className={styles.article}>
-      <h1>Chrome Extension</h1>
+      <h1>Browser Extension</h1>
       <p className={styles.lead}>
-        Tote is a free cross-store shopping organizer. The Chrome extension lets you save products from any online store with a single click or right-click.
+        Tote is a free cross-store shopping organizer. The browser extension lets you save products from any online store with a single click or right-click. It works on Chrome, Edge, Brave, Arc, and any Chromium-based browser.
       </p>
 
       <h2>Installing the Extension</h2>
       <ol>
-        <li>Open the <strong>Chrome Web Store</strong> and search for "Tote"</li>
+        <li>Visit the <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">Tote page on the Chrome Web Store</a> (this works for Edge, Brave, and Arc too)</li>
         <li>Click <strong>"Add to Chrome"</strong> and confirm the installation</li>
         <li>The Tote icon appears in your browser toolbar (you may need to click the puzzle-piece icon to pin it)</li>
       </ol>
@@ -85,7 +86,7 @@ export default function ExtensionPage() {
 
       <h2>Supported Stores</h2>
       <p>
-        Tote works on virtually any online store. It uses standard product metadata (Open Graph, JSON-LD, meta tags) to extract product details. Stores with richer metadata yield better results, but even a basic product page will capture the title, image, and URL.
+        Tote works on virtually any online store. It reads the page you're on to identify the product name, image, and price. Most stores provide enough information for a complete save, but even a basic product page will capture the title, image, and URL.
       </p>
 
       <h2>Troubleshooting</h2>
@@ -110,7 +111,7 @@ export default function ExtensionPage() {
 
       <h3>Does Tote work on Firefox or Safari?</h3>
       <p>
-        Tote currently supports Chrome (and Chromium-based browsers like Edge and Brave). A Safari extension is on the roadmap. In the meantime, you can use the web app on any browser to <a href="/docs/adding-links">add links manually</a>.
+        Tote works on Chrome, Edge, Brave, Arc, and any Chromium-based browser. A Safari extension is on the roadmap. In the meantime, you can use the web app on any browser to <a href="/docs/adding-links">add links manually</a>.
       </p>
 
       <h3>How do I pin the Tote extension to my toolbar?</h3>
@@ -129,7 +130,7 @@ export default function ExtensionPage() {
           "@context": "https://schema.org",
           "@type": "FAQPage",
           "mainEntity": [
-            { "@type": "Question", "name": "Does Tote work on Firefox or Safari?", "acceptedAnswer": { "@type": "Answer", "text": "Tote currently supports Chrome and Chromium-based browsers like Edge and Brave. A Safari extension is on the roadmap. You can use the web app on any browser to add links manually." } },
+            { "@type": "Question", "name": "Does Tote work on Firefox or Safari?", "acceptedAnswer": { "@type": "Answer", "text": "Tote works on Chrome, Edge, Brave, Arc, and any Chromium-based browser. A Safari extension is on the roadmap. You can use the web app on any browser to add links manually." } },
             { "@type": "Question", "name": "How do I pin the Tote extension to my toolbar?", "acceptedAnswer": { "@type": "Answer", "text": "Click the puzzle-piece icon in Chrome's toolbar, find Tote in the list, and click the pin icon next to it. The Tote icon will then stay visible in your toolbar." } },
             { "@type": "Question", "name": "Can I save products without opening the popup?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — right-click any product page and select \"Save to Tote\" from the context menu. The product is saved to your most recently used collection instantly." } },
           ],

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LandingAuthButtons } from "../../components/LandingAuthButtons";
+import { CHROME_WEB_STORE_URL } from "../../lib/constants";
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {
@@ -47,6 +48,14 @@ export default function HomePage() {
         </p>
         <div className={styles.cta}>
           <LandingAuthButtons />
+          <a
+            href={CHROME_WEB_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.secondaryButton}
+          >
+            Add to Chrome
+          </a>
         </div>
       </section>
 
@@ -57,7 +66,7 @@ export default function HomePage() {
           <div className={styles.step}>
             <span className={styles.stepNumber}>1</span>
             <h3>Save with one click</h3>
-            <p>Use our browser extension to save any product page instantly. No copying URLs or filling out forms.</p>
+            <p><a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer" className={styles.inlineLink}>Install the browser extension</a> to save any product page instantly. No copying URLs or filling out forms.</p>
           </div>
           <div className={styles.step}>
             <span className={styles.stepNumber}>2</span>
@@ -149,6 +158,7 @@ export default function HomePage() {
             <span className={styles.mountainLabel}>Made in Silverton, CO</span>
           </a>
           <nav className={styles.footerLinks}>
+            <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noopener noreferrer">Chrome Extension</a>
             <a href="/privacy">Privacy</a>
             <a href="/use-cases">Use Cases</a>
             <a href="/docs">Help</a>
