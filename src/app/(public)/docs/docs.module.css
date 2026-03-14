@@ -159,6 +159,45 @@
   color: var(--color-text-primary);
 }
 
+.anchorHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  scroll-margin-top: 80px;
+}
+
+.anchorLink {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--color-text-tertiary);
+  text-decoration: none !important;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast), transform 0.1s ease;
+}
+
+.anchorLink:hover {
+  color: var(--color-accent) !important;
+  background-color: var(--color-lavender);
+}
+
+.anchorLink:active {
+  transform: scale(0.9);
+}
+
+.anchorLinkCopied {
+  color: var(--color-success) !important;
+}
+
+.anchorTooltip {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-success);
+  margin-left: 2px;
+  white-space: nowrap;
+}
+
 .article p {
   margin: 0 0 var(--spacing-md) 0;
   font-size: var(--font-size-base);

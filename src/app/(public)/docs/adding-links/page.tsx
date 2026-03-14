@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AnchorHeading } from "../AnchorHeading";
 import styles from "../docs.module.css";
 
 export const metadata: Metadata = {
@@ -21,19 +22,19 @@ export default function AddingLinksPage() {
         Tote is a free cross-store shopping organizer. Save products using the Chrome extension for one-click saving, or add links manually from any device.
       </p>
 
-      <h2>Using the Browser Extension</h2>
+      <AnchorHeading as="h2" id="using-the-browser-extension">Using the Browser Extension</AnchorHeading>
       <p>
         The fastest way to save products is with the Tote browser extension for Chrome. Once installed, you can save any product page with a single click.
       </p>
 
-      <h3>Installing the Extension</h3>
+      <AnchorHeading as="h3" id="installing-the-extension">Installing the Extension</AnchorHeading>
       <ol>
         <li>Visit the Chrome Web Store and search for "Tote"</li>
         <li>Click "Add to Chrome" to install</li>
         <li>Sign in with your Tote account to sync your saved products</li>
       </ol>
 
-      <h3>Saving a Product</h3>
+      <AnchorHeading as="h3" id="saving-a-product">Saving a Product</AnchorHeading>
       <ol>
         <li>Navigate to any product page you want to save</li>
         <li>Click the Tote extension icon in your browser toolbar</li>
@@ -48,12 +49,12 @@ export default function AddingLinksPage() {
         </p>
       </div>
 
-      <h2>Adding Links Manually</h2>
+      <AnchorHeading as="h2" id="adding-links-manually">Adding Links Manually</AnchorHeading>
       <p>
         You can also add products directly from the Tote web app. This is useful when you're on a device without the extension or want to add a link someone shared with you.
       </p>
 
-      <h3>To Add a Link Manually</h3>
+      <AnchorHeading as="h3" id="to-add-a-link-manually">To Add a Link Manually</AnchorHeading>
       <ol>
         <li>Open the collection where you want to add the product</li>
         <li>Click "Add Link" in the header</li>
@@ -61,7 +62,7 @@ export default function AddingLinksPage() {
         <li>Tote will automatically fetch the product details</li>
       </ol>
 
-      <h2>What Gets Saved</h2>
+      <AnchorHeading as="h2" id="what-gets-saved">What Gets Saved</AnchorHeading>
       <p>
         When you save a product, Tote captures:
       </p>
@@ -73,32 +74,32 @@ export default function AddingLinksPage() {
         <li><strong>Description</strong> — a summary when available</li>
       </ul>
 
-      <h2>Right-Click "Save to Tote"</h2>
+      <AnchorHeading as="h2" id="right-click-save-to-tote">Right-Click "Save to Tote"</AnchorHeading>
       <p>
         With the Chrome extension installed, you can right-click any product page and select <strong>"Save to Tote"</strong> from the context menu. This saves the product to your most recently used collection without opening the extension popup.
       </p>
 
-      <h2>Product Notes</h2>
+      <AnchorHeading as="h2" id="product-notes">Product Notes</AnchorHeading>
       <p>
         After saving a product, you can add personal notes — size preferences, color choices, gift recipient, or anything else you want to remember. Click on a saved product to open its details and type in the notes field.
       </p>
 
-      <h2>Editing Saved Products</h2>
+      <AnchorHeading as="h2" id="editing-saved-products">Editing Saved Products</AnchorHeading>
       <p>
         You can edit the title, price, or notes of any saved product. Click on the product to open its details, make your changes, and they're saved automatically.
       </p>
 
-      <h2>Platform and Brand Detection</h2>
+      <AnchorHeading as="h2" id="platform-and-brand-detection">Platform and Brand Detection</AnchorHeading>
       <p>
         Tote automatically detects the store or marketplace (Amazon, IKEA, Etsy, etc.) and the product brand when this information is available on the page. This helps you filter and identify products at a glance.
       </p>
 
-      <h2>Refreshing Product Data</h2>
+      <AnchorHeading as="h2" id="refreshing-product-data">Refreshing Product Data</AnchorHeading>
       <p>
         Product details can change over time—prices drop, items sell out, listings get updated. Use the refresh button on any product to fetch the latest information from the original page.
       </p>
 
-      <h2>Related Guides</h2>
+      <AnchorHeading as="h2" id="related-guides">Related Guides</AnchorHeading>
       <ul>
         <li><a href="/docs/extension">Chrome Extension</a> — detailed extension setup, pinning, and troubleshooting</li>
         <li><a href="/docs/collections">Collections</a> — organize your saved products into groups</li>
