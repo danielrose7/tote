@@ -3,14 +3,14 @@ import Link from "next/link";
 import styles from "../docs/docs.module.css";
 
 export const metadata: Metadata = {
-  title: "Use Cases",
+  title: "Organize Wishlists, Renovation Projects, and Design Inspiration",
   description:
-    "See how people use Tote to organize shopping — from holiday gift lists and home renovations to professional design sourcing.",
+    "See how people use Tote to organize shopping — from holiday gift lists and home renovations to wardrobe planning and professional design sourcing.",
   alternates: { canonical: "/use-cases" },
   openGraph: {
-    title: "Use Cases — Tote",
+    title: "Organize Wishlists, Renovation Projects, and Design Inspiration — Tote",
     description:
-      "See how people use Tote to organize shopping — from holiday gift lists and home renovations to professional design sourcing.",
+      "See how people use Tote to organize shopping — from holiday gift lists and home renovations to wardrobe planning and professional design sourcing.",
   },
 };
 
@@ -79,6 +79,7 @@ const useCases = [
     title: "Gift Lists & Wishlists",
     description:
       "Save gift ideas from any store, organize by occasion, and share with family so everyone knows what to get.",
+    linkText: "Organize a gift list",
     icon: GiftIcon,
     accent: "var(--color-lavender)",
   },
@@ -87,6 +88,7 @@ const useCases = [
     title: "Home Renovation & Furnishing",
     description:
       "Organize furniture and materials room by room. Compare prices across stores and share boards with your partner or contractor.",
+    linkText: "Plan a home renovation",
     icon: HouseIcon,
     accent: "var(--color-powder-blue)",
   },
@@ -95,6 +97,7 @@ const useCases = [
     title: "Wardrobe & Style Board",
     description:
       "Save clothes from any store into one style board. Organize by season, build capsule wardrobes, and watch for price drops.",
+    linkText: "Build a style board",
     icon: HangerIcon,
     accent: "var(--color-periwinkle)",
   },
@@ -103,6 +106,7 @@ const useCases = [
     title: "Shared Family Shopping",
     description:
       "Save and compare options together. Stay on budget for back-to-school, new home furnishing, or any group project.",
+    linkText: "Shop together as a family",
     icon: PeopleIcon,
     accent: "var(--color-peach)",
   },
@@ -111,6 +115,7 @@ const useCases = [
     title: "Professional Design & Client Projects",
     description:
       "Keep sourcing organized across clients. Share polished mood boards for approval and track budgets per project.",
+    linkText: "Manage design projects",
     icon: GridIcon,
     accent: "var(--color-blush)",
   },
@@ -119,10 +124,30 @@ const useCases = [
 export default function UseCasesPage() {
   return (
     <article className={styles.article}>
-      <h1>Use Cases</h1>
+      <h1>How people use Tote</h1>
       <p className={styles.lead}>
-        Tote saves products from any store into one place. Here&apos;s how people use it — from holiday gift lists to professional design sourcing.
+        Tote helps you save products from any website and organize them into collections.
       </p>
+
+      <p>People use Tote for:</p>
+      <ul>
+        <li>Gift lists and wishlists</li>
+        <li>Home renovation planning</li>
+        <li>Interior design sourcing</li>
+        <li>Wardrobe planning and capsule wardrobes</li>
+        <li>Family shopping lists</li>
+        <li>Professional design and client projects</li>
+      </ul>
+
+      <h2>Example: planning a home renovation</h2>
+      <ol>
+        <li>Save products from different stores as you browse</li>
+        <li>Organize them by room using collections and slots</li>
+        <li>Compare prices and styles in one place</li>
+        <li>Share the board with your contractor or partner</li>
+      </ol>
+
+      <h2>Explore use cases</h2>
 
       {useCases.map((uc) => (
         <div key={uc.href} className={styles.card} style={{ "--card-accent": uc.accent } as React.CSSProperties}>
@@ -131,7 +156,7 @@ export default function UseCasesPage() {
             <uc.icon />
           </div>
           <p className={styles.cardDescription}>{uc.description}</p>
-          <Link href={uc.href}>Learn more &rarr;</Link>
+          <Link href={uc.href}>{uc.linkText} &rarr;</Link>
         </div>
       ))}
     </article>
