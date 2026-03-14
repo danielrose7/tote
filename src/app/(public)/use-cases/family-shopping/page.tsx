@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
+import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
   title: "Shared Family Shopping",
@@ -34,6 +35,18 @@ export default function FamilyShoppingPage() {
       <p>
         <a href="https://tote.tools/collections">Get started — it&apos;s free &rarr;</a>
       </p>
+
+      <AnswerBlock
+        question="How can families shop together online without the confusion?"
+        answer="When you're shopping as a family — for a new home, back-to-school, or a big group project — it's hard to stay on the same page. Tote gives everyone a shared board where you can save products from any store, compare options together, and keep track of what's been decided. No more duplicate purchases or lost links in group chats."
+        accent="var(--color-peach)"
+        steps={[
+          "Create a shared collection for your project",
+          "Everyone saves products from any store",
+          "Compare options and pick favorites together",
+          "Stay on budget with built-in tracking",
+        ]}
+      />
 
       <h2>The problem</h2>
       <p>

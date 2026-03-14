@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
+import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
   title: "Home Renovation & Furnishing",
@@ -35,6 +36,18 @@ export default function HomeRenovationPage() {
       <p>
         <a href="https://tote.tools/collections">Get started — it&apos;s free &rarr;</a>
       </p>
+
+      <AnswerBlock
+        question="How can you organize products for a home renovation project?"
+        answer="When you're planning a renovation, you end up comparing products from lots of different stores — lighting, flooring, fixtures, appliances, and more. Tote lets you save products from any website and organize them into collections by room or project phase. That makes it much easier to compare your options, keep track of what you've decided on, and share the plan with a contractor or partner."
+        accent="var(--color-powder-blue)"
+        steps={[
+          "Save furniture, fixtures, and materials from any store",
+          "Organize them into collections by room or category",
+          "Compare options and track prices in one place",
+          "Share the board with your partner or contractor",
+        ]}
+      />
 
       <h2>The problem</h2>
       <p>

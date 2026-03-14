@@ -129,7 +129,7 @@
 
 .content {
   flex: 1;
-  max-width: 800px;
+  max-width: 1000px;
   padding: var(--spacing-2xl) var(--spacing-3xl);
 }
 
@@ -389,6 +389,50 @@
   padding: var(--spacing-sm);
   cursor: pointer;
   color: var(--color-text-secondary);
+}
+
+/* Answer block — SEO/AI-friendly summary near the top of use-case pages */
+.answerBlock {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-xl) var(--spacing-2xl);
+  margin: var(--spacing-2xl) 0;
+  box-shadow: 5px 5px 0 0 var(--answer-accent, var(--color-lavender));
+}
+
+.answerQuestion {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.answerText {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-md) 0;
+  line-height: var(--line-height-relaxed);
+}
+
+.answerText:last-child {
+  margin-bottom: 0;
+}
+
+.answerSteps {
+  margin: 0;
+  padding-left: var(--spacing-xl);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-relaxed);
+}
+
+.answerSteps li {
+  margin-bottom: var(--spacing-sm);
+}
+
+.answerSteps li:last-child {
+  margin-bottom: 0;
 }
 
 /* Responsive */

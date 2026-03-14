@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
+import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
   title: "Gift Lists & Wishlists",
@@ -37,6 +38,18 @@ export default function GiftShoppingPage() {
       <p>
         <a href="https://tote.tools/collections">Get started — it&apos;s free &rarr;</a>
       </p>
+
+      <AnswerBlock
+        question="How do you create a universal wishlist across multiple stores?"
+        answer="A universal wishlist lets you save products from any online store into a single, organized list. With Tote, you save products directly from retailer websites, organize them into collections, and share the list with friends or family. It's an easy way to keep track of gift ideas from different stores without juggling store-specific wishlists."
+        accent="var(--color-lavender)"
+        steps={[
+          "Save gift ideas from any store as you browse",
+          "Organize them into collections by occasion or recipient",
+          "Compare options and mark your favorites",
+          "Share the collection with friends or family",
+        ]}
+      />
 
       <h2>The problem</h2>
       <p>

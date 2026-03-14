@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
+import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
   title: "Professional Design & Client Projects",
@@ -38,6 +39,18 @@ export default function ProfessionalProjectsPage() {
       <p>
         <a href="https://tote.tools/collections">Get started — it&apos;s free &rarr;</a>
       </p>
+
+      <AnswerBlock
+        question="How do designers organize product sourcing for client projects?"
+        answer="Designers and stylists often collect products from many different suppliers while putting together client projects. Tote helps you organize those items into shareable collections, making it easier to keep track of products, compare options side by side, and present curated ideas to clients — all without spreadsheets or scattered bookmarks."
+        accent="var(--color-blush)"
+        steps={[
+          "Save products from suppliers, retailers, and trade sites",
+          "Organize them into collections by client or project",
+          "Compare options and track budgets",
+          "Share a polished board with your client for review",
+        ]}
+      />
 
       <h2>The problem</h2>
       <p>

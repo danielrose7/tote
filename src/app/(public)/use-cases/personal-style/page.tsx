@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
+import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
   title: "Wardrobe & Style Board",
@@ -34,6 +35,18 @@ export default function PersonalStylePage() {
       <p>
         <a href="https://tote.tools/collections">Get started — it&apos;s free &rarr;</a>
       </p>
+
+      <AnswerBlock
+        question="How can you organize clothing and outfit ideas from different stores?"
+        answer="If you save clothing ideas from lots of different stores, it's easy to lose track of what you found where. Tote lets you save clothing items from any retailer and organize them into collections — like seasonal outfits, capsule wardrobes, or style inspiration boards. Everything lives in one place, so you can compare pieces and plan your wardrobe without digging through bookmarks."
+        accent="var(--color-periwinkle)"
+        steps={[
+          "Save clothes and accessories from any store",
+          "Organize them into style boards or seasonal collections",
+          "Compare pieces and pick your favorites",
+          "Share a board with friends for feedback",
+        ]}
+      />
 
       <h2>The problem</h2>
       <p>
