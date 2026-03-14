@@ -86,6 +86,24 @@ export default function SharingPage() {
         <li>Copy the public link to share anywhere</li>
       </ol>
 
+      <h3>Your Own Short Link</h3>
+      <p>
+        Every public collection gets your own unique, trustworthy link on tote.tools — with your username right in it so people know it&apos;s from you:
+      </p>
+      <p>
+        <code>tote.tools/s/yourname/summer-wishlist</code>
+      </p>
+      <p>
+        Tote creates this automatically from your collection name when you publish. You can change it to whatever you like in the Share dialog — great for social media bios, texts, or anywhere you want a link that&apos;s easy to recognize and trust.
+      </p>
+
+      <div className={styles.tip}>
+        <p>
+          <span className={styles.tipLabel}>Tip:</span>
+          To get your own short link, make sure you&apos;ve set a username in your account settings. Without a username, your public link will still work but will be longer.
+        </p>
+      </div>
+
       <h3>How Public Links Work</h3>
       <p>
         When you make a collection public, Tote creates a <strong>snapshot</strong> of your collection. This public copy is separate from your working collection—changes you make won't automatically appear on the public version.
@@ -142,6 +160,11 @@ export default function SharingPage() {
         For public links, open the Share dialog and click "Make Private" to revoke access immediately. For invite-based sharing, collaborators who have already joined retain access — this is a collaborative relationship, not a view-only broadcast.
       </p>
 
+      <h3>Can I customize my public collection link?</h3>
+      <p>
+        Yes! When you publish a collection, Tote creates a short link from the collection name. You can change it to whatever you like in the Share dialog — for example, <code>tote.tools/s/yourname/summer-wishlist</code>.
+      </p>
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify({
@@ -151,6 +174,7 @@ export default function SharingPage() {
             { "@type": "Question", "name": "Can people edit my shared collection?", "acceptedAnswer": { "@type": "Answer", "text": "It depends on the role you assign. When creating an invite link, you choose whether collaborators can view only, edit, or have full admin access." } },
             { "@type": "Question", "name": "Is my shared collection visible to everyone?", "acceptedAnswer": { "@type": "Answer", "text": "No. Shared collections are only accessible to people who have the invite link. You can make a collection public separately if you want anyone to see it without signing in." } },
             { "@type": "Question", "name": "How do I stop sharing a collection?", "acceptedAnswer": { "@type": "Answer", "text": "For public links, open the Share dialog and click \"Make Private\" to revoke access immediately. For invite-based sharing, collaborators who have already joined retain access." } },
+            { "@type": "Question", "name": "Can I customize my public collection link?", "acceptedAnswer": { "@type": "Answer", "text": "Yes! When you publish a collection, Tote creates a short link from the collection name. You can change it in the Share dialog to whatever you like." } },
           ],
         }) }}
       />
