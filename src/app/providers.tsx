@@ -30,10 +30,7 @@ function JazzProvider({ children }: { children: React.ReactNode }) {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      signInFallbackRedirectUrl="/collections"
-      signUpFallbackRedirectUrl="/collections"
-    >
+    <ClerkProvider>
       <JazzProvider>{children}</JazzProvider>
     </ClerkProvider>
   );

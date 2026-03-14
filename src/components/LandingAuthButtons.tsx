@@ -24,10 +24,10 @@ function LandingAuthButtonsInner() {
     <>
       <SignedOut>
         <div className={styles.buttons}>
-          <SignInButton mode="modal">
+          <SignInButton mode="modal" fallbackRedirectUrl="/collections">
             <button className={styles.button}>Log in</button>
           </SignInButton>
-          <SignUpButton mode="modal">
+          <SignUpButton mode="modal" fallbackRedirectUrl="/collections">
             <button className={`${styles.button} ${styles.buttonPrimary}`}>
               Sign up
             </button>
