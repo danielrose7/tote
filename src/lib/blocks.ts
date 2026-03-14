@@ -8,6 +8,7 @@
 import { Group, createInviteLink, type Account } from "jazz-tools";
 import type { co } from "jazz-tools";
 import { Block, BlockList } from "../schema";
+import { slugify } from "./slugify";
 
 // =============================================================================
 // Types
@@ -199,14 +200,48 @@ export function publishCollection(
     }
   }
 
-  // Update source collection with published ID
+  // Auto-generate slug from collection name if not already set
+  const slug =
+    sourceCollection.collectionData?.slug || slugify(sourceCollection.name);
+
+  // Update source collection with published ID and slug
   sourceCollection.$jazz.set("collectionData", {
     ...sourceCollection.collectionData,
     publishedId: publishedCollection.$jazz.id,
     publishedAt: new Date(),
+    slug,
   });
 
   return createdBlocks;
+}
+
+/**
+ * Sync a published collection's slug → ID mapping to Clerk metadata.
+ * Call after publishing or updating a slug.
+ */
+export async function syncPublishedCollectionToClerk(
+  slug: string,
+  publishedId: string
+): Promise<void> {
+  await fetch("/api/user/sync-published-collections", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug, publishedId }),
+  });
+}
+
+/**
+ * Remove a published collection's slug from Clerk metadata.
+ * Call when unpublishing.
+ */
+export async function removePublishedCollectionFromClerk(
+  slug: string
+): Promise<void> {
+  await fetch("/api/user/sync-published-collections", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slug }),
+  });
 }
 
 /**
@@ -219,11 +254,19 @@ export function unpublishCollection(sourceCollection: LoadedBlock): void {
     throw new Error("Can only unpublish collection blocks");
   }
 
+  const slug = sourceCollection.collectionData?.slug;
+
   sourceCollection.$jazz.set("collectionData", {
     ...sourceCollection.collectionData,
     publishedId: undefined,
     publishedAt: undefined,
+    slug: undefined,
   });
+
+  // Remove from Clerk metadata in the background
+  if (slug) {
+    removePublishedCollectionFromClerk(slug).catch(console.error);
+  }
 }
 
 /**

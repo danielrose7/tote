@@ -1,0 +1,238 @@
+"use client";
+
+import { JazzReactProvider, useCoState } from "jazz-tools/react";
+import { Block } from "../../../../../schema";
+import { apiKey } from "../../../../../apiKey";
+import styles from "../../../view/[id]/page.module.css";
+
+/**
+ * Shared client component for rendering a public collection in guest mode.
+ * Used by both /s/[username]/[slug] and /view/[id].
+ */
+export function PublicCollectionClient({
+  collectionId,
+}: {
+  collectionId: string;
+}) {
+  return (
+    <JazzReactProvider
+      guestMode
+      sync={{
+        peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
+      }}
+    >
+      <PublicCollectionViewer collectionId={collectionId} />
+    </JazzReactProvider>
+  );
+}
+
+function PublicCollectionViewer({ collectionId }: { collectionId: string }) {
+  const collection = useCoState(Block, collectionId as `co_z${string}`, {
+    resolve: {
+      children: {
+        $each: {
+          children: { $each: {} },
+        },
+      },
+    },
+  });
+
+  const isLoading =
+    !collection || !collection.$isLoaded || collection.type === undefined;
+
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.spinner} />
+          <p className={styles.loadingText}>Loading collection...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (collection.type !== "collection") {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.errorIcon}>!</div>
+          <h1 className={styles.title}>Not Found</h1>
+          <p className={styles.description}>This is not a valid collection.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isPublishedCollection = !!collection.collectionData?.sourceId;
+  if (!isPublishedCollection) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.errorIcon}>!</div>
+          <h1 className={styles.title}>Private Collection</h1>
+          <p className={styles.description}>
+            This collection is not publicly viewable.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.pageContainer}>
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <div className={styles.titleSection}>
+            {collection.collectionData?.color && (
+              <div
+                className={styles.colorIndicator}
+                style={{ backgroundColor: collection.collectionData.color }}
+              />
+            )}
+            <h1 className={styles.pageTitle}>{collection.name}</h1>
+          </div>
+          {collection.collectionData?.description && (
+            <p className={styles.pageDescription}>
+              {collection.collectionData.description}
+            </p>
+          )}
+        </div>
+      </header>
+
+      <main className={styles.main}>
+        <ChildBlocksLoader
+          collection={collection}
+          childBlockIds={collection.collectionData?.childBlockIds || []}
+        />
+      </main>
+
+      <footer className={styles.footer}>
+        <p>
+          Powered by{" "}
+          <a href="/" className={styles.footerLink}>
+            Tote
+          </a>
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+function ChildBlocksLoader({
+  collection,
+  childBlockIds,
+}: {
+  collection: any;
+  childBlockIds: string[];
+}) {
+  const childrenFromList: any[] = [];
+  if (collection.children?.$isLoaded) {
+    for (const child of collection.children) {
+      if (child && child.$isLoaded) {
+        childrenFromList.push(child);
+      }
+    }
+  }
+
+  const hasChildrenList = childrenFromList.length > 0;
+
+  if (!hasChildrenList && childBlockIds.length === 0) {
+    return (
+      <div className={styles.emptyState}>
+        <p>This collection is empty.</p>
+      </div>
+    );
+  }
+
+  if (hasChildrenList) {
+    const slots = childrenFromList.filter((b) => b.type === "slot");
+    const products = childrenFromList.filter((b) => b.type === "product");
+
+    return (
+      <>
+        {slots.map((slot: any) => (
+          <SlotRenderer key={slot.$jazz.id} slot={slot} />
+        ))}
+        {products.length > 0 && (
+          <div className={styles.productGrid}>
+            {products.map((block: any) => (
+              <ProductRenderer key={block.$jazz.id} block={block} />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <div className={styles.productGrid}>
+      {childBlockIds.map((blockId) => (
+        <ChildBlockRenderer key={blockId} blockId={blockId} />
+      ))}
+    </div>
+  );
+}
+
+function SlotRenderer({ slot }: { slot: any }) {
+  const products: any[] = [];
+  if (slot.children?.$isLoaded) {
+    for (const child of slot.children) {
+      if (child && child.$isLoaded && child.type === "product") {
+        products.push(child);
+      }
+    }
+  }
+
+  if (products.length === 0) return null;
+
+  return (
+    <div className={styles.slotSection}>
+      <h3 className={styles.slotTitle}>{slot.name || "Unnamed slot"}</h3>
+      <div className={styles.productGrid}>
+        {products.map((block: any) => (
+          <ProductRenderer key={block.$jazz.id} block={block} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductRenderer({ block }: { block: any }) {
+  const productData = block.productData;
+
+  return (
+    <a
+      href={productData?.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={styles.productCard}
+    >
+      {productData?.imageUrl && (
+        <div className={styles.productImage}>
+          <img src={productData.imageUrl} alt={block.name} />
+        </div>
+      )}
+      <div className={styles.productInfo}>
+        <h3 className={styles.productName}>{block.name}</h3>
+        {productData?.price && (
+          <p className={styles.productPrice}>{productData.price}</p>
+        )}
+        {productData?.description && (
+          <p className={styles.productDescription}>{productData.description}</p>
+        )}
+      </div>
+    </a>
+  );
+}
+
+function ChildBlockRenderer({ blockId }: { blockId: string }) {
+  const block = useCoState(Block, blockId as `co_z${string}`, {});
+
+  if (!block) {
+    return <div className={styles.productCard}>Loading...</div>;
+  }
+
+  if (block.type !== "product") return null;
+
+  return <ProductRenderer block={block} />;
+}

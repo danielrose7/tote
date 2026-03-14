@@ -5,5 +5,12 @@ export default function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <ClerkProvider>{children}</ClerkProvider>;
+  return (
+    <ClerkProvider
+      signInFallbackRedirectUrl="/collections"
+      signUpFallbackRedirectUrl="/collections"
+    >
+      {children}
+    </ClerkProvider>
+  );
 }

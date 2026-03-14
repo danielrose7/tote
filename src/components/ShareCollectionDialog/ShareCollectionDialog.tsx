@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
+import { useUser } from "@clerk/nextjs";
 import type { Block, JazzAccount } from "../../schema";
 import {
   isPublished,
@@ -9,10 +10,13 @@ import {
   publishCollection,
   unpublishCollection,
   republishCollection,
+  syncPublishedCollectionToClerk,
+  removePublishedCollectionFromClerk,
   generateCollectionInviteLink,
   type LoadedBlock,
   type SharingRole,
 } from "../../lib/blocks";
+import { slugify } from "../../lib/slugify";
 import { useToast } from "../ToastNotification";
 import styles from "./ShareCollectionDialog.module.css";
 
@@ -32,6 +36,8 @@ export function ShareCollectionDialog({
   account,
 }: ShareCollectionDialogProps) {
   const { showToast } = useToast();
+  const { user: clerkUser } = useUser();
+  const username = clerkUser?.username;
 
   // Invite state
   const [selectedRole, setSelectedRole] = useState<SharingRole>("reader");
@@ -44,19 +50,44 @@ export function ShareCollectionDialog({
   const [isRepublishing, setIsRepublishing] = useState(false);
   const [publishCopied, setPublishCopied] = useState(false);
 
+  // Slug editing state
+  const [editingSlug, setEditingSlug] = useState(false);
+  const [slugInput, setSlugInput] = useState("");
+  const [isSavingSlug, setIsSavingSlug] = useState(false);
+
   const published = isPublished(collection);
   const publishedId = collection.collectionData?.publishedId;
   const publishedAt = collection.collectionData?.publishedAt;
+  const currentSlug = collection.collectionData?.slug;
+
+  // Initialize slug input when dialog opens or slug changes
+  useEffect(() => {
+    if (currentSlug) {
+      setSlugInput(currentSlug);
+    } else {
+      setSlugInput(slugify(collection.name));
+    }
+  }, [currentSlug, collection.name]);
 
   // Don't show share dialog for published clones
   if (isPublishedClone(collection)) {
     return null;
   }
 
-  const getPublicLink = () => {
+  const getFriendlyLink = () => {
+    if (!published || !currentSlug || !username) return null;
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    return `${baseUrl}/s/${username}/${currentSlug}`;
+  };
+
+  const getFallbackLink = () => {
     if (!publishedId) return null;
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
     return `${baseUrl}/view/${publishedId}`;
+  };
+
+  const getPublicLink = () => {
+    return getFriendlyLink() || getFallbackLink();
   };
 
   const handleGenerateInvite = useCallback(async () => {
@@ -67,7 +98,6 @@ export function ShareCollectionDialog({
       const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
       const link = generateCollectionInviteLink(collection, selectedRole, baseUrl);
 
-      // Wait for the sharing group to sync (invite data is stored on the group)
       const sharingGroupId = collection.collectionData?.sharingGroupId;
       if (sharingGroupId) {
         const group = await Group.load(sharingGroupId as `co_z${string}`, {});
@@ -76,7 +106,6 @@ export function ShareCollectionDialog({
         }
       }
 
-      // Also wait for the collection to sync
       await collection.$jazz.waitForSync({ timeout: 10000 });
 
       setInviteLink(link);
@@ -111,8 +140,6 @@ export function ShareCollectionDialog({
     try {
       const createdBlocks = publishCollection(collection, allBlocks, account);
 
-      // Only add the published collection itself to the flat blocks list
-      // Child blocks are stored in nested children lists
       const publishedCollection = createdBlocks[0];
       if (account.root?.blocks?.$isLoaded) {
         account.root.blocks.$jazz.push(publishedCollection);
@@ -120,6 +147,13 @@ export function ShareCollectionDialog({
 
       await publishedCollection.$jazz.waitForSync({ timeout: 5000 });
       await collection.$jazz.waitForSync({ timeout: 5000 });
+
+      // Sync slug to Clerk metadata for friendly URL resolution
+      const slug = collection.collectionData?.slug;
+      const pubId = collection.collectionData?.publishedId;
+      if (slug && pubId) {
+        syncPublishedCollectionToClerk(slug, pubId).catch(console.error);
+      }
 
       showToast({
         title: "Collection published",
@@ -152,7 +186,6 @@ export function ShareCollectionDialog({
 
     setIsRepublishing(true);
     try {
-      // Get fresh allBlocks from account to ensure we have latest state
       const freshBlocks: LoadedBlock[] = [];
       for (const block of account.root.blocks) {
         if (block && block.$isLoaded) {
@@ -167,11 +200,8 @@ export function ShareCollectionDialog({
         account.root.blocks
       );
 
-      // Child blocks are now stored in nested children lists, not the flat blocks list
-      // Wait for collection to sync (it was updated in place)
       await collection.$jazz.waitForSync({ timeout: 5000 });
 
-      // Wait for child blocks to sync
       for (const block of createdChildBlocks) {
         await block.$jazz.waitForSync({ timeout: 5000 });
       }
@@ -200,7 +230,56 @@ export function ShareCollectionDialog({
       setPublishCopied(true);
       setTimeout(() => setPublishCopied(false), 2000);
     }
-  }, [publishedId]);
+  }, [publishedId, currentSlug, username]);
+
+  const handleSaveSlug = useCallback(async () => {
+    const newSlug = slugify(slugInput);
+    if (!newSlug || newSlug === currentSlug) {
+      setEditingSlug(false);
+      return;
+    }
+
+    setIsSavingSlug(true);
+    try {
+      const oldSlug = currentSlug;
+
+      // Update slug on the collection
+      collection.$jazz.set("collectionData", {
+        ...collection.collectionData,
+        slug: newSlug,
+      });
+
+      await collection.$jazz.waitForSync({ timeout: 5000 });
+
+      // Update Clerk metadata: remove old, add new
+      if (oldSlug) {
+        removePublishedCollectionFromClerk(oldSlug).catch(console.error);
+      }
+      if (publishedId) {
+        syncPublishedCollectionToClerk(newSlug, publishedId).catch(
+          console.error
+        );
+      }
+
+      setSlugInput(newSlug);
+      setEditingSlug(false);
+
+      showToast({
+        title: "URL updated",
+        description: "Your share link has been updated",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Failed to update slug:", error);
+      showToast({
+        title: "Failed to update URL",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "error",
+      });
+    } finally {
+      setIsSavingSlug(false);
+    }
+  }, [slugInput, currentSlug, publishedId, collection, showToast]);
 
   // Clear invite link when role changes
   const handleRoleChange = useCallback((role: SharingRole) => {
@@ -209,6 +288,7 @@ export function ShareCollectionDialog({
   }, []);
 
   const publicLink = getPublicLink();
+  const friendlyLink = getFriendlyLink();
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -303,6 +383,55 @@ export function ShareCollectionDialog({
                       {publishCopied ? "Copied!" : "Copy"}
                     </button>
                   </div>
+                )}
+
+                {/* Slug editor */}
+                {username && (
+                  <div className={styles.slugSection}>
+                    {editingSlug ? (
+                      <div className={styles.slugEditor}>
+                        <span className={styles.slugPrefix}>
+                          /s/{username}/
+                        </span>
+                        <input
+                          type="text"
+                          value={slugInput}
+                          onChange={(e) => setSlugInput(e.target.value)}
+                          className={styles.slugInput}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveSlug();
+                            if (e.key === "Escape") {
+                              setEditingSlug(false);
+                              setSlugInput(currentSlug || slugify(collection.name));
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveSlug}
+                          disabled={isSavingSlug}
+                          className={styles.slugSaveButton}
+                        >
+                          {isSavingSlug ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditingSlug(true)}
+                        className={styles.slugEditButton}
+                      >
+                        Edit URL slug
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {!username && published && (
+                  <p className={styles.slugHint}>
+                    Set a username in Settings to get a friendly share link.
+                  </p>
                 )}
 
                 {publishedAt && (

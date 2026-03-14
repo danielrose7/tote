@@ -22,7 +22,7 @@ function JazzProvider({ children }: { children: React.ReactNode }) {
       <ToastProvider>
         <OfflineBanner />
         {children}
-        <JazzInspector />
+        {process.env.NODE_ENV === "development" && <JazzInspector />}
       </ToastProvider>
     </JazzReactProviderWithClerk>
   );
@@ -30,7 +30,10 @@ function JazzProvider({ children }: { children: React.ReactNode }) {
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInFallbackRedirectUrl="/collections"
+      signUpFallbackRedirectUrl="/collections"
+    >
       <JazzProvider>{children}</JazzProvider>
     </ClerkProvider>
   );

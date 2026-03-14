@@ -31,6 +31,7 @@ const CollectionData = z.object({
   sourceId: z.string().optional(), // ID of the source draft (on published clone)
   publishedAt: z.date().optional(), // When last published
   childBlockIds: z.array(z.string()).optional(), // IDs of child blocks (for public view)
+  slug: z.string().optional(), // URL slug for friendly share links
 });
 
 const SlotData = z.object({

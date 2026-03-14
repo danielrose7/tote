@@ -288,6 +288,84 @@
   color: white;
 }
 
+/* Slug editing */
+.slugSection {
+  margin-bottom: var(--spacing-md);
+}
+
+.slugEditor {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.slugPrefix {
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-family: monospace;
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface);
+  white-space: nowrap;
+}
+
+.slugInput {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border: none;
+  font-size: var(--font-size-sm);
+  font-family: monospace;
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  min-width: 0;
+  outline: none;
+}
+
+.slugSaveButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-accent);
+  color: white;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.slugSaveButton:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+}
+
+.slugSaveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.slugEditButton {
+  padding: var(--spacing-xs) 0;
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.slugEditButton:hover {
+  color: var(--color-accent-hover);
+}
+
+.slugHint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin: 0 0 var(--spacing-md) 0;
+  line-height: 1.5;
+}
+
 /* Actions */
 .actions {
   display: flex;
