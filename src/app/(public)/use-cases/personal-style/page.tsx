@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default function PersonalStylePage() {
   return (
     <article className={styles.article}>
-      <h1>Stop forgetting where you saved that perfect jacket</h1>
+      <h1>Your style board, across every store you shop</h1>
       <p className={styles.lead}>
-        Saving clothes across Zara, H&amp;M, Depop, and boutiques means forgetting what you saved where. Tote brings every piece into one style board you actually use.
+        You saved a jacket on Zara, jeans on H&amp;M, shoes from a boutique. By the time you&apos;re ready to buy, you can&apos;t find any of it. Tote keeps every piece together — organized the way you think about your wardrobe.
       </p>
 
       <div className={styles.heroIllustration} aria-hidden="true">
@@ -48,12 +48,9 @@ export default function PersonalStylePage() {
         ]}
       />
 
-      <h2>The problem</h2>
       <p>
         You spot a jacket on Zara, save a pair of jeans on H&amp;M, bookmark shoes from a boutique, and screenshot a bag from Depop. Each store has its own wishlist — or no wishlist at all. By the time you&apos;re ready to buy, you can&apos;t remember what you saved, where you saved it, or whether it&apos;s still in stock.
       </p>
-
-      <h2>How Tote helps</h2>
 
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Build seasonal collections</h3>

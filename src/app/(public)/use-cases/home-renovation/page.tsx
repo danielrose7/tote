@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default function HomeRenovationPage() {
   return (
     <article className={styles.article}>
-      <h1>Stop losing track of furniture across 47 browser tabs</h1>
+      <h1>Every room. Every store. One board.</h1>
       <p className={styles.lead}>
-        Renovating means browsing dozens of stores for furniture, fixtures, and materials — then losing track of what goes where. Tote organizes everything room by room with prices and budgets.
+        Renovating means IKEA, Wayfair, a local shop, and forty browser tabs — with no clear picture of what goes where. Tote organizes everything room by room, with prices and budgets in one place.
       </p>
 
       <div className={styles.heroIllustration} aria-hidden="true">
@@ -49,12 +49,9 @@ export default function HomeRenovationPage() {
         ]}
       />
 
-      <h2>The problem</h2>
       <p>
         You&apos;re browsing IKEA for a sofa, Wayfair for a rug, a local shop for lighting, and Amazon for hardware. Each store has its own wishlist (or none at all). You&apos;re juggling browser tabs, screenshots, and a spreadsheet that&apos;s already out of date. Meanwhile, your budget is a moving target and your partner hasn&apos;t seen half the options.
       </p>
-
-      <h2>How Tote helps</h2>
 
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Organize room by room</h3>

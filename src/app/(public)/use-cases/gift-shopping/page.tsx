@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default function GiftShoppingPage() {
   return (
     <article className={styles.article}>
-      <h1>Never lose track of a gift idea again</h1>
+      <h1>The wishlist that actually travels with you</h1>
       <p className={styles.lead}>
-        Wishlists scattered across Amazon, store accounts, text messages, and spreadsheets? Tote puts every gift idea in one place — and makes sharing effortless.
+        Amazon lists, bookmarks, texts to yourself, screenshots — gift ideas scatter the moment you save them. Tote keeps everything in one place, organized by occasion, ready to share.
       </p>
 
       <div className={styles.heroIllustration} aria-hidden="true">
@@ -51,12 +51,9 @@ export default function GiftShoppingPage() {
         ]}
       />
 
-      <h2>The problem</h2>
       <p>
         You spot a perfect gift in June and save it somewhere — a browser bookmark, a text to yourself, an Amazon list. By December, you can&apos;t find it. Meanwhile, your family is asking what you want, and you&apos;re texting links back and forth. Someone buys the same thing twice. Nobody has a clear picture of what&apos;s been covered.
       </p>
-
-      <h2>How Tote helps</h2>
 
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>One collection per occasion</h3>

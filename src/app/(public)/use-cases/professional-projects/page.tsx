@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default function ProfessionalProjectsPage() {
   return (
     <article className={styles.article}>
-      <h1>Sourcing and mood boards your clients can actually use</h1>
+      <h1>Sourcing boards your clients can actually open</h1>
       <p className={styles.lead}>
-        If you&apos;re an interior designer, contractor, or stylist, you already know the pain of sourcing across dozens of stores for multiple clients at once. Tote keeps every project organized and easy to share.
+        You&apos;re sourcing for three clients, each with their own stores, budget, and taste. The current setup is a spreadsheet, a PDF mood board, and an email chain. Tote keeps every project separate and shareable — no PDF required.
       </p>
 
       <div className={styles.heroIllustration} aria-hidden="true">
@@ -52,12 +52,9 @@ export default function ProfessionalProjectsPage() {
         ]}
       />
 
-      <h2>The problem</h2>
       <p>
         You&apos;re sourcing materials for three clients at once. Each project has its own set of stores, budgets, and preferences. You&apos;re saving links in spreadsheets, emailing mood board PDFs, and losing track of which option the client liked. When prices change, your spreadsheet is already stale.
       </p>
-
-      <h2>How Tote helps</h2>
 
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Keep each project separate</h3>

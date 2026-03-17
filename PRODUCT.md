@@ -50,6 +50,12 @@ Things we explicitly won't do:
 - Add features that compromise core values
 - Optimize for engagement metrics
 
+## Copy & Brand Voice
+
+See [BRAND.md](./BRAND.md) for the full writing guide.
+
+The short version: calm, confident, direct. Specific over general. No hype, no dark patterns — in the product or in how we write about it.
+
 ## Design Principles
 
 1. **Simple over clever** - Obvious UX beats innovative UX

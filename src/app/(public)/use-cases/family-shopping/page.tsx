@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 export default function FamilyShoppingPage() {
   return (
     <article className={styles.article}>
-      <h1>Finally, a way to shop together without the chaos</h1>
+      <h1>Shop together — without the group chat</h1>
       <p className={styles.lead}>
-        Couples texting each other links. Families duplicating purchases. Nobody knows what&apos;s already been bought. Tote gives your household one place to shop together.
+        You text a link. They screenshot a different one. Someone buys the same gift you already ordered. Tote gives your household one shared board — so everyone sees the same options and nobody doubles up.
       </p>
 
       <div className={styles.heroIllustration} aria-hidden="true">
@@ -48,12 +48,9 @@ export default function FamilyShoppingPage() {
         ]}
       />
 
-      <h2>The problem</h2>
       <p>
         Your partner texts you a link to a couch. You screenshot a different one. Your sister-in-law buys the same birthday gift you already ordered. Back-to-school shopping turns into a mess of tabs, texts, and &ldquo;did you already buy that?&rdquo; messages. There&apos;s no shared view, no coordination, and no budget tracking.
       </p>
-
-      <h2>How Tote helps</h2>
 
       <div className={styles.card}>
         <h3 className={styles.cardTitle}>Shop together, stay in sync</h3>

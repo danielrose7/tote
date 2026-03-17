@@ -124,41 +124,24 @@ const useCases = [
 export default function UseCasesPage() {
   return (
     <article className={styles.article}>
-      <h1>How people use Tote</h1>
+      <h1>One place for everything you&apos;re saving</h1>
       <p className={styles.lead}>
-        Tote helps you save products from any website and organize them into collections.
+        From gift lists to renovation projects, Tote keeps your finds organized across every store you shop.
       </p>
 
-      <p>People use Tote for:</p>
-      <ul>
-        <li>Gift lists and wishlists</li>
-        <li>Home renovation planning</li>
-        <li>Interior design sourcing</li>
-        <li>Wardrobe planning and capsule wardrobes</li>
-        <li>Family shopping lists</li>
-        <li>Professional design and client projects</li>
-      </ul>
-
-      <h2>Example: planning a home renovation</h2>
-      <ol>
-        <li>Save products from different stores as you browse</li>
-        <li>Organize them by room using collections and slots</li>
-        <li>Compare prices and styles in one place</li>
-        <li>Share the board with your contractor or partner</li>
-      </ol>
-
-      <h2>Explore use cases</h2>
-
-      {useCases.map((uc) => (
-        <div key={uc.href} className={styles.card} style={{ "--card-accent": uc.accent } as React.CSSProperties}>
-          <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>{uc.title}</h3>
-            <uc.icon />
+      {useCases.map((uc) => {
+        const id = uc.href.split("/").pop();
+        return (
+          <div key={uc.href} id={id} className={styles.card} style={{ "--card-accent": uc.accent } as React.CSSProperties}>
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>{uc.title}</h3>
+              <uc.icon />
+            </div>
+            <p className={styles.cardDescription}>{uc.description}</p>
+            <Link href={uc.href}>{uc.linkText} &rarr;</Link>
           </div>
-          <p className={styles.cardDescription}>{uc.description}</p>
-          <Link href={uc.href}>{uc.linkText} &rarr;</Link>
-        </div>
-      ))}
+        );
+      })}
     </article>
   );
 }
