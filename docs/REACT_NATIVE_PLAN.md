@@ -8,7 +8,7 @@ An Expo-based iOS app whose primary job is the Share Extension — tap "Share" i
 
 Phases 1–3 complete. The app builds, runs on simulator, authenticates via Google/Apple OAuth, displays Jazz-synced collections, and handles the full share-to-save flow.
 
-**Share flow:** user shares a URL from Safari → extension saves URL to `Settings` → auto-closes → main app detects pending URL on foreground → `SaveProductSheet` loads page in hidden WebView → extracts metadata → user picks collection + optional slot → product saved with correct Jazz group ownership.
+**Share flow:** user shares a URL from Safari → Swift saves URL to App Group UserDefaults (`group.tools.tote.app`) → extension shows "Added to Tote" and auto-closes after 1.8s → main app reads pending URL via `AppGroupModule` on foreground → `SaveProductSheet` loads page in hidden WebView → extracts metadata → user picks collection + optional slot → product saved with correct Jazz group ownership.
 
 **Next up:** Phase 4 — real device testing and edge case hardening.
 
@@ -19,7 +19,11 @@ Phases 1–3 complete. The app builds, runs on simulator, authenticates via Goog
 ### Share extension stays dumb
 Jazz and Clerk are too heavy for the iOS share extension process (~120 MB memory limit). Attempting to initialise them in the extension caused crashes.
 
-**Decision:** the share extension only saves the URL to `Settings` and closes. All Jazz writes happen in the main app.
+**Decision:** the share extension only saves the URL to App Group UserDefaults (`group.tools.tote.app`) and auto-closes. All Jazz writes happen in the main app.
+
+**Note:** `Settings` (NSUserDefaults) is sandboxed per process and cannot cross the extension boundary. App Group UserDefaults is accessible from both processes.
+
+**Note:** do NOT import from `expo-share-extension` in the extension's JS — it triggers a `JavaScriptActor` thread crash. Use `NativeModules` directly if needed. Auto-close is handled in Swift via `DispatchQueue.main.asyncAfter` to avoid the JS→ObjC→NotificationCenter chain.
 
 > Jazz full docs: https://jazz.tools/llms-full.txt
 
@@ -66,7 +70,7 @@ mobile-app/src/
     CollectionPicker.tsx      # Collection + slot list, new collection option
 ```
 
-**`usePendingUrl`** — checks `Settings` for `tote_pending_shared_url` on mount and on every `AppState` change to `active`. Returns `{ pendingUrl, clearPendingUrl }`.
+**`usePendingUrl`** — calls `AppGroupModule.getPendingUrls()` on mount and on every `AppState` change to `active`. Clears the App Group store immediately after reading. Maintains a local queue so multiple pending URLs are presented one by one. Returns `{ pendingUrl, clearPendingUrl }`.
 
 **`extractorScript.ts`** — exports a string containing the extraction logic as an IIFE. Adapted directly from `chrome-extension/src/lib/extractors/index.ts`, with `window.ReactNativeWebView.postMessage(JSON.stringify(result))` at the end instead of returning. Injected via `webview.injectJavaScript()` on `onLoadEnd`.
 
