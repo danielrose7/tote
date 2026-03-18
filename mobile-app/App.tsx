@@ -8,22 +8,26 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Providers } from "./src/providers";
 import { useAccount, useIsAuthenticated } from "jazz-tools/expo";
 import { JazzAccount, Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
 import { usePendingUrl } from "./src/hooks/usePendingUrl";
 import { SaveProductSheet } from "./src/components/SaveProductSheet";
+import { CollectionDetailScreen } from "./src/screens/CollectionDetailScreen";
+import { RootStackParamList } from "./src/navigation/types";
 
 WebBrowser.maybeCompleteAuthSession();
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function SignInScreen() {
   const { startOAuthFlow: startGoogle } = useOAuth({ strategy: "oauth_google" });
   const { startOAuthFlow: startApple } = useOAuth({ strategy: "oauth_apple" });
 
-  async function handleSignIn(
-    startFlow: typeof startGoogle,
-  ) {
+  async function handleSignIn(startFlow: typeof startGoogle) {
     try {
       const { createdSessionId, setActive } = await startFlow();
       if (createdSessionId && setActive) {
@@ -48,15 +52,13 @@ function SignInScreen() {
         style={[styles.button, styles.buttonApple]}
         onPress={() => handleSignIn(startApple)}
       >
-        <Text style={[styles.buttonText, styles.buttonAppleText]}>
-          Continue with Apple
-        </Text>
+        <Text style={styles.buttonText}>Continue with Apple</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-function CollectionList() {
+function CollectionListScreen({ navigation }: any) {
   const me = useAccount(JazzAccount, {
     resolve: { root: { blocks: { $each: true } } },
   });
@@ -85,31 +87,36 @@ function CollectionList() {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.greeting}>
-        Hi, {user?.firstName ?? "there"}
-      </Text>
+      <Text style={styles.greeting}>Hi, {user?.firstName ?? "there"}</Text>
 
       <FlatList
         data={collections}
         keyExtractor={(item) => item?.$jazz?.id ?? ""}
         renderItem={({ item }) => (
-          <View style={styles.collectionCard}>
+          <TouchableOpacity
+            style={styles.collectionCard}
+            onPress={() =>
+              navigation.navigate("CollectionDetail", {
+                collectionId: item.$jazz.id,
+                collectionName: item.name ?? "Collection",
+              })
+            }
+            activeOpacity={0.7}
+          >
             <View
               style={[
                 styles.colorDot,
-                {
-                  backgroundColor:
-                    item?.collectionData?.color ?? "#6366f1",
-                },
+                { backgroundColor: item?.collectionData?.color ?? "#6366f1" },
               ]}
             />
-            <View>
+            <View style={styles.collectionInfo}>
               <Text style={styles.collectionName}>{item?.name}</Text>
               <Text style={styles.collectionCount}>
                 {item?.children?.length ?? 0} items
               </Text>
             </View>
-          </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>No collections yet</Text>
@@ -120,22 +127,35 @@ function CollectionList() {
   );
 }
 
-function AuthScreen() {
-  const isAuthenticated = useIsAuthenticated();
+function AppScreens() {
   const { pendingUrl, clearPendingUrl } = usePendingUrl();
 
+  return (
+    <>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="CollectionList"
+          component={CollectionListScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="CollectionDetail"
+          component={CollectionDetailScreen}
+          options={({ route }) => ({ title: route.params.collectionName })}
+        />
+      </Stack.Navigator>
+      {pendingUrl && (
+        <SaveProductSheet url={pendingUrl} onDismiss={clearPendingUrl} />
+      )}
+    </>
+  );
+}
+
+function AuthScreen() {
+  const isAuthenticated = useIsAuthenticated();
+
   if (isAuthenticated) {
-    return (
-      <>
-        <CollectionList />
-        {pendingUrl && (
-          <SaveProductSheet
-            url={pendingUrl}
-            onDismiss={clearPendingUrl}
-          />
-        )}
-      </>
-    );
+    return <AppScreens />;
   }
 
   return <SignInScreen />;
@@ -144,7 +164,9 @@ function AuthScreen() {
 export default function App() {
   return (
     <Providers>
-      <AuthScreen />
+      <NavigationContainer>
+        <AuthScreen />
+      </NavigationContainer>
     </Providers>
   );
 }
@@ -201,7 +223,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  buttonAppleText: {},
   link: {
     color: "#6366f1",
     fontSize: 16,
@@ -220,6 +241,9 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
+  collectionInfo: {
+    flex: 1,
+  },
   collectionName: {
     fontSize: 16,
     fontWeight: "600",
@@ -228,6 +252,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#9ca3af",
     marginTop: 2,
+  },
+  chevron: {
+    fontSize: 20,
+    color: "#d1d5db",
   },
   empty: {
     textAlign: "center",
