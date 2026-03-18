@@ -6,11 +6,11 @@ An Expo-based iOS app whose primary job is the Share Extension — tap "Share" i
 
 ## Status
 
-Phases 1–2 complete. The app builds, runs on simulator, authenticates via Google/Apple OAuth, and displays Jazz-synced collections.
+Phases 1–3 complete. The app builds, runs on simulator, authenticates via Google/Apple OAuth, displays Jazz-synced collections, and handles the full share-to-save flow.
 
-**Current share extension behaviour:** user shares a URL → extension saves it to `Settings` (NSUserDefaults) → auto-closes with "Open Tote to add to a collection." The main app does not yet handle the pending URL.
+**Share flow:** user shares a URL from Safari → extension saves URL to `Settings` → auto-closes → main app detects pending URL on foreground → `SaveProductSheet` loads page in hidden WebView → extracts metadata → user picks collection + optional slot → product saved with correct Jazz group ownership.
 
-**Next up:** Phase 3 — pending URL handling + save product flow in the main app.
+**Next up:** Phase 4 — real device testing and edge case hardening.
 
 ---
 
@@ -48,7 +48,7 @@ The extraction script is a self-contained IIFE adapted from `chrome-extension/sr
 ### ✅ Phase 2 — Main app auth + collection list
 `ClerkProvider` + `JazzExpoProvider`, shared keychain token cache, Google/Apple OAuth sign-in, collection list screen.
 
-### 🔲 Phase 3 — Pending URL → Save Product flow
+### ✅ Phase 3 — Pending URL → Save Product flow
 
 The main app handles the URL that the share extension stashed.
 
@@ -84,7 +84,6 @@ mobile-app/src/
 ### 🔲 Phase 4 — Polish
 - Real device testing (share from Safari on iPhone)
 - Edge cases: no metadata found, network error, not signed in when share triggers
-- Slot creation from within the save sheet
 
 ---
 
