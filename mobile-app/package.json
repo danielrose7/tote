@@ -27,6 +27,7 @@
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
     "react-native-get-random-values": "^1.11.0",
+    "react-native-webview": "^13.16.1",
     "readable-stream": "^4.7.0"
   },
   "devDependencies": {

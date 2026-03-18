@@ -1,6 +1,7 @@
 # Tote iOS App - Development Guide
 
 **See [../PRODUCT.md](../PRODUCT.md) for product principles and values.**
+**See [../docs/REACT_NATIVE_PLAN.md](../docs/REACT_NATIVE_PLAN.md) for the implementation plan and architecture decisions.**
 
 ## Getting Started
 
@@ -22,7 +23,7 @@ pnpm ios
 
 - **Expo** with `expo-share-extension` for iOS Share Extension
 - **Clerk** (`@clerk/expo`) for auth, shared Keychain token cache
-- **Jazz** (`jazz-tools/expo`) for local-first data sync
+- **Jazz** (`jazz-tools/expo`) for local-first data sync — full docs at https://jazz.tools/llms-full.txt
 - **Schema** shared from `../src/schema.ts` via Metro alias `@tote/schema`
 
 ## Key Files

@@ -12,6 +12,8 @@ import { Providers } from "./src/providers";
 import { useAccount, useIsAuthenticated } from "jazz-tools/expo";
 import { JazzAccount, Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
+import { usePendingUrl } from "./src/hooks/usePendingUrl";
+import { SaveProductSheet } from "./src/components/SaveProductSheet";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -120,9 +122,20 @@ function CollectionList() {
 
 function AuthScreen() {
   const isAuthenticated = useIsAuthenticated();
+  const { pendingUrl, clearPendingUrl } = usePendingUrl();
 
   if (isAuthenticated) {
-    return <CollectionList />;
+    return (
+      <>
+        <CollectionList />
+        {pendingUrl && (
+          <SaveProductSheet
+            url={pendingUrl}
+            onDismiss={clearPendingUrl}
+          />
+        )}
+      </>
+    );
   }
 
   return <SignInScreen />;
