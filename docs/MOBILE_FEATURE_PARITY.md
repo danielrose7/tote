@@ -41,7 +41,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | Open product URL | ✅ | ✅ |
 | Refresh product metadata | ✅ | ❌ |
 | Edit product (name, price, notes) | ✅ | ❌ |
-| Delete product | ✅ | ❌ |
+| Delete product | ✅ | ✅ |
 | Reorder products | ✅ | ❌ |
 
 ## Slots
