@@ -8,6 +8,7 @@ import {
   FlatList,
   ActivityIndicator,
 } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Providers } from "./src/providers";
@@ -141,7 +142,10 @@ function AppScreens() {
         <Stack.Screen
           name="CollectionDetail"
           component={CollectionDetailScreen}
-          options={({ route }) => ({ title: route.params.collectionName })}
+          options={({ route }) => ({
+            title: route.params.collectionName,
+            headerBackTitle: "Collections",
+          })}
         />
       </Stack.Navigator>
       {pendingUrl && (
@@ -163,11 +167,13 @@ function AuthScreen() {
 
 export default function App() {
   return (
-    <Providers>
-      <NavigationContainer>
-        <AuthScreen />
-      </NavigationContainer>
-    </Providers>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Providers>
+        <NavigationContainer>
+          <AuthScreen />
+        </NavigationContainer>
+      </Providers>
+    </GestureHandlerRootView>
   );
 }
 

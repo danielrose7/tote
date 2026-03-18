@@ -1,20 +1,83 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   StyleSheet,
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   Image,
   SectionList,
+  Alert,
+  Animated,
 } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useCoState } from "jazz-tools/expo";
-import { Block, BlockList } from "@tote/schema";
+import { Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
 import { RootStackParamList } from "../navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
+
+function ProductRow({
+  item,
+  onOpen,
+  onDelete,
+}: {
+  item: ProductItem;
+  onOpen: () => void;
+  onDelete: (ref: React.RefObject<Swipeable | null>) => void;
+}) {
+  const swipeRef = useRef<Swipeable>(null);
+
+  return (
+    <Swipeable
+      ref={swipeRef}
+      renderRightActions={(progress) => {
+        const translateX = progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [80, 0],
+          extrapolate: "clamp",
+        });
+        return (
+          <Animated.View style={[styles.deleteAction, { transform: [{ translateX }] }]}>
+            <TouchableOpacity
+              style={styles.deleteActionInner}
+              onPress={() => onDelete(swipeRef)}
+            >
+              <Text style={styles.deleteActionText}>Remove</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      }}
+      rightThreshold={40}
+      overshootRight={false}
+    >
+      <TouchableOpacity
+        style={styles.productRow}
+        onPress={onOpen}
+        activeOpacity={0.7}
+      >
+        {item.productData?.imageUrl ? (
+          <Image
+            source={{ uri: item.productData.imageUrl }}
+            style={styles.thumbnail}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
+        )}
+        <View style={styles.productInfo}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {item.name ?? "Untitled"}
+          </Text>
+          {item.productData?.price ? (
+            <Text style={styles.productPrice}>{item.productData.price}</Text>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    </Swipeable>
+  );
+}
 
 type ProductItem = typeof Block.prototype;
 
@@ -71,31 +134,43 @@ export function CollectionDetailScreen({ route }: Props) {
     if (url) WebBrowser.openBrowserAsync(url);
   }
 
+  function deleteProduct(item: ProductItem) {
+    // Remove from whichever parent contains it
+    const parent = slots.find((s) =>
+      s.children?.some((c) => c?.$jazz?.id === item.$jazz.id)
+    );
+    const list = parent ? parent.children : collection.children;
+    if (!list) return;
+    const idx = list.findIndex((c) => c?.$jazz?.id === item.$jazz.id);
+    if (idx !== -1) list.$jazz.splice(idx, 1);
+  }
+
+  function confirmDelete(item: ProductItem, swipeRef: React.RefObject<Swipeable | null>) {
+    Alert.alert(
+      "Remove product?",
+      item.name ?? "This product will be removed from the collection.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => swipeRef.current?.close(),
+        },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => deleteProduct(item),
+        },
+      ]
+    );
+  }
+
   function renderProduct({ item }: { item: ProductItem }) {
     return (
-      <TouchableOpacity
-        style={styles.productRow}
-        onPress={() => openProduct(item)}
-        activeOpacity={0.7}
-      >
-        {item.productData?.imageUrl ? (
-          <Image
-            source={{ uri: item.productData.imageUrl }}
-            style={styles.thumbnail}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
-        )}
-        <View style={styles.productInfo}>
-          <Text style={styles.productName} numberOfLines={2}>
-            {item.name ?? "Untitled"}
-          </Text>
-          {item.productData?.price ? (
-            <Text style={styles.productPrice}>{item.productData.price}</Text>
-          ) : null}
-        </View>
-      </TouchableOpacity>
+      <ProductRow
+        item={item}
+        onOpen={() => openProduct(item)}
+        onDelete={(swipeRef) => confirmDelete(item, swipeRef)}
+      />
     );
   }
 
@@ -216,5 +291,19 @@ const styles = StyleSheet.create({
     color: "#9ca3af",
     marginTop: 60,
     fontSize: 15,
+  },
+  deleteAction: {
+    width: 80,
+    backgroundColor: "#ef4444",
+  },
+  deleteActionInner: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  deleteActionText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
