@@ -1,43 +1,27 @@
 /**
  * Share Extension entry point.
  *
- * The URL is passed as initial props by the native Swift code
- * (ShareExtensionViewController.swift getShareData).
+ * The URL is written to the App Group shared container by
+ * ShareExtensionViewController.swift (Swift side) before this JS runs.
+ * JS just shows the confirmation UI and closes via NativeModules.
  *
- * We use openHostApp() to open the main Tote app with the URL embedded in
- * a deep-link query param, which is the correct cross-process handoff mechanism.
- * Settings (NSUserDefaults) is sandboxed per process so can't cross the boundary.
+ * Important: do NOT import from "expo-share-extension" here.
+ * That module triggers a JavaScriptActor thread crash in the extension context.
  */
 
-import React, { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  View,
-  TouchableOpacity,
-  Text,
-  AppRegistry,
-} from "react-native";
-import { close, openHostApp } from "expo-share-extension";
+import React from "react";
+import { StyleSheet, View, Text, AppRegistry } from "react-native";
 
 type Props = {
   url?: string;
   text?: string;
 };
 
-export default function ShareExtension(props: Props) {
-  const [ready, setReady] = useState(false);
-  const url = props.url || props.text;
+// Closing is handled by Swift (ShareExtensionViewController) after a delay.
+// JS only renders the confirmation UI.
 
-  useEffect(() => {
-    if (url) {
-      setReady(true);
-      // Open main app with the URL as a deep-link param, then close the sheet
-      setTimeout(() => {
-        openHostApp("?pendingUrl=" + encodeURIComponent(url));
-        close();
-      }, 600);
-    }
-  }, []);
+export default function ShareExtension(props: Props) {
+  const url = props.url || props.text;
 
   if (!url) {
     return (
@@ -45,11 +29,6 @@ export default function ShareExtension(props: Props) {
         <Text allowFontScaling={false} style={styles.title}>
           No link found
         </Text>
-        <TouchableOpacity style={styles.button} onPress={() => close()}>
-          <Text allowFontScaling={false} style={styles.buttonText}>
-            Close
-          </Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -60,10 +39,10 @@ export default function ShareExtension(props: Props) {
         ✓
       </Text>
       <Text allowFontScaling={false} style={styles.title}>
-        {ready ? "Opening Tote…" : "Saving…"}
+        Added to Tote
       </Text>
-      <Text allowFontScaling={false} style={styles.url} numberOfLines={2}>
-        {url}
+      <Text allowFontScaling={false} style={styles.subtitle}>
+        Open Tote to add it to a collection
       </Text>
     </View>
   );
@@ -87,23 +66,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111",
   },
-  url: {
-    fontSize: 13,
+  subtitle: {
+    fontSize: 14,
     color: "#9ca3af",
-    marginTop: 8,
+    marginTop: 6,
     textAlign: "center",
-  },
-  button: {
-    backgroundColor: "#6366f1",
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
 });
 

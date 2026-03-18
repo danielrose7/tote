@@ -1,53 +1,51 @@
 /**
- * Listens for deep links of the form tools.tote.app://?pendingUrl=<encoded-url>
- * sent by the share extension via openHostApp().
+ * Reads pending URLs from the App Group shared container written by the
+ * share extension (ShareExtensionViewController.swift → group.tools.tote.app).
  *
- * Maintains a queue so multiple shares without opening the app in between
- * are all presented one after the other.
+ * Maintains a queue so multiple shares before opening the app are all
+ * presented one after the other.
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Linking } from "react-native";
+import { AppState, AppStateStatus, NativeModules } from "react-native";
 
-function extractPendingUrl(deepLink: string): string | null {
+const { AppGroupModule } = NativeModules;
+
+async function fetchPendingUrls(): Promise<string[]> {
   try {
-    const match = deepLink.match(/[?&]pendingUrl=([^&]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
+    return await AppGroupModule.getPendingUrls();
   } catch {
-    return null;
+    return [];
   }
 }
 
 export function usePendingUrl() {
   const [queue, setQueue] = useState<string[]>([]);
-  const initialized = useRef(false);
+  const appState = useRef(AppState.currentState);
+  const loaded = useRef(false);
 
-  function enqueue(url: string) {
-    setQueue((prev) => [...prev, url]);
+  async function check() {
+    const urls = await fetchPendingUrls();
+    if (urls.length === 0) return;
+    // Clear from shared container immediately so they aren't re-read
+    AppGroupModule.clearPendingUrls();
+    setQueue((prev) => [...prev, ...urls.filter((u) => !prev.includes(u))]);
   }
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    if (loaded.current) return;
+    loaded.current = true;
 
-    // Check if the app was opened cold via the deep link
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        const pending = extractPendingUrl(url);
-        if (pending) enqueue(pending);
-      }
-    });
+    check();
 
-    // Listen for deep links while app is running in background
-    const sub = Linking.addEventListener("url", ({ url }) => {
-      const pending = extractPendingUrl(url);
-      if (pending) enqueue(pending);
+    const sub = AppState.addEventListener("change", (next: AppStateStatus) => {
+      if (appState.current !== "active" && next === "active") check();
+      appState.current = next;
     });
 
     return () => sub.remove();
   }, []);
 
-  // The current URL to show is the first item in the queue
   const pendingUrl = queue[0] ?? null;
 
   function clearPendingUrl() {
