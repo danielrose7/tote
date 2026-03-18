@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   SectionList,
-  Alert,
   Animated,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
@@ -25,7 +24,7 @@ function ProductRow({
 }: {
   item: ProductItem;
   onOpen: () => void;
-  onDelete: (ref: React.RefObject<Swipeable | null>) => void;
+  onDelete: () => void;
 }) {
   const swipeRef = useRef<Swipeable>(null);
 
@@ -42,7 +41,7 @@ function ProductRow({
           <Animated.View style={[styles.deleteAction, { transform: [{ translateX }] }]}>
             <TouchableOpacity
               style={styles.deleteActionInner}
-              onPress={() => onDelete(swipeRef)}
+              onPress={onDelete}
             >
               <Text style={styles.deleteActionText}>Remove</Text>
             </TouchableOpacity>
@@ -145,31 +144,12 @@ export function CollectionDetailScreen({ route }: Props) {
     if (idx !== -1) list.$jazz.splice(idx, 1);
   }
 
-  function confirmDelete(item: ProductItem, swipeRef: React.RefObject<Swipeable | null>) {
-    Alert.alert(
-      "Remove product?",
-      item.name ?? "This product will be removed from the collection.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-          onPress: () => swipeRef.current?.close(),
-        },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => deleteProduct(item),
-        },
-      ]
-    );
-  }
-
   function renderProduct({ item }: { item: ProductItem }) {
     return (
       <ProductRow
         item={item}
         onOpen={() => openProduct(item)}
-        onDelete={(swipeRef) => confirmDelete(item, swipeRef)}
+        onDelete={() => deleteProduct(item)}
       />
     );
   }
