@@ -22,6 +22,7 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 | Save product manually (paste URL) | ✅ | ❌ |
 | View product (image, title, price) | ✅ | ✅ |
 | Open product URL | ✅ | ✅ |
+| Refresh product metadata | ✅ | ❌ |
 | Edit product (name, price, notes) | ✅ | ❌ |
 | Delete product | ✅ | ❌ |
 | Reorder products | ✅ | ❌ |
@@ -36,6 +37,11 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 | Edit slot name | ✅ | ❌ |
 | Delete slot | ✅ | ❌ |
 | Reorder slots | ✅ | ❌ |
+| Slot budget (set limit, track total) | ✅ | ❌ |
+| Slot max selections | ✅ | ❌ |
+| Mark product as selected | ✅ | ❌ |
+| View selected count vs max | ✅ | ❌ |
+| View selected total vs budget | ✅ | ❌ |
 
 ## Sharing
 
