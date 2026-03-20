@@ -11,7 +11,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
@@ -131,43 +130,41 @@ function SlotEditModal({
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
       <KeyboardAvoidingView
         style={styles.modalOverlay}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
         <View style={styles.modalSheet}>
           <View style={styles.modalHandle} />
           <Text style={styles.modalTitle}>Edit Slot</Text>
 
-          <ScrollView keyboardShouldPersistTaps="handled">
-            <Text style={styles.fieldLabel}>Name</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={name}
-              onChangeText={setName}
-              placeholder="Slot name"
-              autoFocus
-            />
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Slot name"
+            autoFocus
+          />
 
-            <Text style={styles.fieldLabel}>Max selections</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={maxSelections}
-              onChangeText={setMaxSelections}
-              placeholder="No limit"
-              keyboardType="number-pad"
-            />
+          <Text style={styles.fieldLabel}>Max selections</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={maxSelections}
+            onChangeText={setMaxSelections}
+            placeholder="No limit"
+            keyboardType="number-pad"
+          />
 
-            <Text style={styles.fieldLabel}>Budget</Text>
-            <TextInput
-              style={styles.fieldInput}
-              value={budget}
-              onChangeText={setBudget}
-              placeholder="No budget"
-              keyboardType="decimal-pad"
-            />
-          </ScrollView>
+          <Text style={styles.fieldLabel}>Budget ($)</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={budget}
+            onChangeText={setBudget}
+            placeholder="No budget"
+            keyboardType="decimal-pad"
+          />
 
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
@@ -438,15 +435,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   sectionHeaderLeft: { flex: 1 },
-  modalOverlay: { flex: 1, justifyContent: "flex-end" },
-  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.3)" },
+  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
+  modalOverlay: { position: "absolute", bottom: 0, left: 0, right: 0 },
   modalSheet: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 20,
     paddingBottom: 36,
-    maxHeight: "70%",
   },
   modalHandle: {
     width: 36,
