@@ -52,6 +52,42 @@ pnpm build        # Production build
 3. **Offline works** - Jazz handles sync; don't assume network
 4. **Keep it simple** - Prefer boring solutions over clever ones
 
+## Jazz Mutation Patterns
+
+Jazz wraps CoMap and CoList objects in proxies that **throw on direct mutation**. Always use the `.$jazz` API.
+
+### CoMap fields — use `.$jazz.set()`
+
+```ts
+// ❌ Throws: "Cannot update a CoMap directly. Use $jazz.set instead."
+item.name = "New name";
+item.slotData = { ...item.slotData, maxSelections: 3 };
+
+// ✅ Correct
+item.$jazz.set("name", "New name");
+item.$jazz.set("slotData", { ...item.slotData, maxSelections: 3 });
+```
+
+### CoList items — use `.$jazz.splice()`
+
+```ts
+// ❌ Throws: "Cannot mutate COList directly. Use .$jazz.splice instead."
+list.splice(idx, 1);
+
+// ✅ Correct
+const idx = list.findIndex((c) => c?.$jazz?.id === item.$jazz.id);
+if (idx !== -1) list.$jazz.splice(idx, 1);
+```
+
+### Reading is fine directly
+
+```ts
+// ✅ Read normally — no $jazz needed
+const name = item.name;
+const children = collection.children;
+const id = item.$jazz.id; // ID is on $jazz though
+```
+
 ## UI Conventions
 
 - **Use "Add" not "Create"** - Button labels should say "Add Collection", "Add Link", etc. (not "Create" or "New")
