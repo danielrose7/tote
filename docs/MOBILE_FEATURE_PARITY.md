@@ -51,14 +51,14 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | View products grouped by slot | ✅ | ✅ |
 | Ungrouped section | ✅ | ✅ |
 | Create slot | ✅ | ✅ (via save sheet) |
-| Edit slot name | ✅ | ❌ |
+| Edit slot name | ✅ | ✅ |
 | Delete slot | ✅ | ❌ |
 | Reorder slots | ✅ | ❌ |
 | Slot budget (set limit, track total) | ✅ | ❌ |
 | Slot max selections | ✅ | ❌ |
-| Mark product as selected | ✅ | ❌ |
-| View selected count vs max | ✅ | ❌ |
-| View selected total vs budget | ✅ | ❌ |
+| Mark product as selected | ✅ | ✅ |
+| View selected count vs max | ✅ | ✅ |
+| View selected total vs budget | ✅ | ✅ |
 
 ## Sharing
 
