@@ -1,7 +1,8 @@
 # Tote iOS App - Development Guide
 
 **See [../PRODUCT.md](../PRODUCT.md) for product principles and values.**
-**See [../docs/REACT_NATIVE_PLAN.md](../docs/REACT_NATIVE_PLAN.md) for the implementation plan and architecture decisions.**
+**See [../docs/MOBILE_ROADMAP.md](../docs/MOBILE_ROADMAP.md) for the feature roadmap.**
+**See [../docs/MOBILE_FEATURE_PARITY.md](../docs/MOBILE_FEATURE_PARITY.md) for web vs iOS feature parity.**
 
 ## Getting Started
 
@@ -44,3 +45,39 @@ The share extension (`index.share.tsx`) runs in a separate iOS process. It:
 4. Auto-closes the share sheet
 
 Auth is shared via Keychain access group `group.tools.tote.app`.
+
+## Jazz Mutation Patterns
+
+Jazz wraps CoMap and CoList objects in proxies that **throw on direct mutation**. Always use the `.$jazz` API.
+
+### CoMap fields — use `.$jazz.set()`
+
+```ts
+// ❌ Throws: "Cannot update a CoMap directly. Use $jazz.set instead."
+item.name = "New name";
+item.slotData = { ...item.slotData, maxSelections: 3 };
+
+// ✅ Correct
+item.$jazz.set("name", "New name");
+item.$jazz.set("slotData", { ...item.slotData, maxSelections: 3 });
+```
+
+### CoList items — use `.$jazz.splice()`
+
+```ts
+// ❌ Throws: "Cannot mutate COList directly. Use .$jazz.splice instead."
+list.splice(idx, 1);
+
+// ✅ Correct
+const idx = list.findIndex((c) => c?.$jazz?.id === item.$jazz.id);
+if (idx !== -1) list.$jazz.splice(idx, 1);
+```
+
+### Reading is fine directly
+
+```ts
+// ✅ Read normally — no $jazz needed
+const name = item.name;
+const children = collection.children;
+const id = item.$jazz.id; // ID is on $jazz though
+```

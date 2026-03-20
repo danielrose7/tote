@@ -7,6 +7,7 @@ import {
   TextInput,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Block } from "@tote/schema";
 
 type CollectionBlock = typeof Block.prototype;
@@ -22,10 +23,11 @@ interface Props {
   onSelect: (selection: Selection) => void;
   onCreateCollection: (name: string) => void;
   onCreateSlot: (collection: CollectionBlock, slotName: string) => void;
+  defaultExpandedId?: string;
 }
 
-export function CollectionPicker({ collections, onSelect, onCreateCollection, onCreateSlot }: Props) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+export function CollectionPicker({ collections, onSelect, onCreateCollection, onCreateSlot, defaultExpandedId }: Props) {
+  const [expandedId, setExpandedId] = useState<string | null>(defaultExpandedId ?? null);
   const [newSlotForId, setNewSlotForId] = useState<string | null>(null);
   const [newSlotName, setNewSlotName] = useState("");
   const [showNewCollection, setShowNewCollection] = useState(false);
@@ -63,11 +65,13 @@ export function CollectionPicker({ collections, onSelect, onCreateCollection, on
           (c): c is SlotBlock => c !== null && c.type === "slot"
         ) ?? []);
 
+        const isDefault = id === defaultExpandedId;
+
         return (
           <View key={id}>
             {/* Collection row — always tappable to expand */}
             <TouchableOpacity
-              style={styles.collectionRow}
+              style={[styles.collectionRow, isDefault && styles.collectionRowDefault]}
               onPress={() => setExpandedId(isExpanded ? null : id)}
             >
               <View
@@ -76,7 +80,10 @@ export function CollectionPicker({ collections, onSelect, onCreateCollection, on
                   { backgroundColor: collection.collectionData?.color ?? "#6366f1" },
                 ]}
               />
-              <Text style={styles.collectionName}>{collection.name}</Text>
+              <Text style={[styles.collectionName, isDefault && styles.collectionNameDefault]}>
+                {collection.name}
+              </Text>
+              {isDefault && <Ionicons name="checkmark" size={16} color="#6366f1" />}
               <Text style={styles.chevron}>{isExpanded ? "▾" : "›"}</Text>
             </TouchableOpacity>
 
@@ -189,6 +196,12 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f3f4f6",
     gap: 10,
   },
+  collectionRowDefault: {
+    backgroundColor: "rgba(99, 102, 241, 0.07)",
+    marginHorizontal: -4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
   colorDot: {
     width: 11,
     height: 11,
@@ -198,6 +211,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: "#111827",
+  },
+  collectionNameDefault: {
+    color: "#6366f1",
+    fontWeight: "600",
   },
   chevron: {
     fontSize: 18,

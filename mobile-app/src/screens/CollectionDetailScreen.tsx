@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -19,6 +19,7 @@ import { useCoState } from "jazz-tools/expo";
 import { Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
 import { RootStackParamList } from "../navigation/types";
+import { SaveProductSheet } from "../components/SaveProductSheet";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
 type ProductItem = typeof Block.prototype;
@@ -235,8 +236,76 @@ function SlotHeader({ slot, title }: { slot: ProductItem | null; title: string }
   );
 }
 
-export function CollectionDetailScreen({ route }: Props) {
+function AddProductModal({
+  visible,
+  onClose,
+  onSubmit,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSubmit: (url: string) => void;
+}) {
+  const [url, setUrl] = useState("");
+
+  function handleSubmit() {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
+    setUrl("");
+    onClose();
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Add Product</Text>
+          <Text style={styles.fieldLabel}>Product URL</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={url}
+            onChangeText={setUrl}
+            placeholder="https://..."
+            autoFocus
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            returnKeyType="go"
+            onSubmitEditing={handleSubmit}
+          />
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSubmit}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+export function CollectionDetailScreen({ route, navigation }: Props) {
   const { collectionId } = route.params;
+  const [addingProduct, setAddingProduct] = useState(false);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Ionicons name="add" size={26} color="#6366f1" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   const collection = useCoState(Block, collectionId, {
     resolve: { children: { $each: { children: { $each: true } } } },
@@ -353,6 +422,15 @@ export function CollectionDetailScreen({ route }: Props) {
           contentContainerStyle={styles.list}
           stickySectionHeadersEnabled={false}
         />
+      )}
+
+      <AddProductModal
+        visible={addingProduct}
+        onClose={() => setAddingProduct(false)}
+        onSubmit={(url) => setPendingUrl(url)}
+      />
+      {pendingUrl && (
+        <SaveProductSheet url={pendingUrl} onDismiss={() => setPendingUrl(null)} defaultCollectionId={collectionId} />
       )}
     </View>
   );

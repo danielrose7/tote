@@ -32,9 +32,10 @@ type Stage = "loading" | "preview" | "saving" | "done";
 interface Props {
   url: string;
   onDismiss: () => void;
+  defaultCollectionId?: string;
 }
 
-export function SaveProductSheet({ url, onDismiss }: Props) {
+export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props) {
   const [stage, setStage] = useState<Stage>("loading");
   const [metadata, setMetadata] = useState<Metadata | null>(null);
   const webViewRef = useRef<WebView>(null);
@@ -244,6 +245,7 @@ export function SaveProductSheet({ url, onDismiss }: Props) {
                 onSelect={({ collection, slot }) => handleSave(collection, slot)}
                 onCreateCollection={handleCreateCollection}
                 onCreateSlot={handleCreateSlot}
+                defaultExpandedId={defaultCollectionId}
               />
             )}
 

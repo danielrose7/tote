@@ -36,7 +36,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | Feature | Web | iOS |
 |---|---|---|
 | Save product via extension | ✅ (Chrome) | ✅ (Share sheet) |
-| Save product manually (paste URL) | ✅ | ❌ |
+| Save product manually (paste URL) | ✅ | ✅ |
 | View product (image, title, price) | ✅ | ✅ |
 | Open product URL | ✅ | ✅ |
 | Refresh product metadata | ✅ | ❌ |
