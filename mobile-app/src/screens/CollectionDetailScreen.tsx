@@ -23,6 +23,7 @@ import { Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
 import { RootStackParamList } from "../navigation/types";
 import { SaveProductSheet } from "../components/SaveProductSheet";
+import { ShareCollectionSheet } from "../components/ShareCollectionSheet";
 import { formatPrice } from "../lib/formatPrice";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
@@ -544,6 +545,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [editingCollection, setEditingCollection] = useState(false);
+  const [sharingCollection, setSharingCollection] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
 
   const collection = useCoState(Block, collectionId, {
@@ -557,6 +559,9 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         <View style={styles.headerButtons}>
           <TouchableOpacity onPress={() => setEditingCollection(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="pencil-outline" size={20} color="#6366f1" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setSharingCollection(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="share-outline" size={20} color="#6366f1" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="add" size={26} color="#6366f1" />
@@ -704,6 +709,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         />
       )}
 
+      {sharingCollection && (
+        <ShareCollectionSheet
+          collection={collection}
+          visible
+          onClose={() => setSharingCollection(false)}
+        />
+      )}
       {editingCollection && (
         <EditCollectionModal
           collection={collection}

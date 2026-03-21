@@ -64,8 +64,8 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 
 | Feature | Web | iOS |
 |---|---|---|
-| Share collection (public URL) | ✅ | ❌ |
-| Custom short link | ✅ | ❌ |
+| Share collection (public URL) | ✅ | ✅ |
+| Custom short link | ✅ | ✅ |
 | Accept invite to shared collection | ✅ | ❌ |
 
 ## Auth & Account

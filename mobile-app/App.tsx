@@ -107,6 +107,18 @@ function CollectionCard({
   );
 }
 
+function CollectionSkeleton() {
+  return (
+    <View style={styles.skeletonCard}>
+      <View style={styles.skeletonDot} />
+      <View style={styles.skeletonInfo}>
+        <View style={styles.skeletonName} />
+        <View style={styles.skeletonCount} />
+      </View>
+    </View>
+  );
+}
+
 function CollectionListScreen({ navigation }: any) {
   const me = useAccount(JazzAccount, {
     resolve: { root: { blocks: { $each: true } } },
@@ -121,6 +133,7 @@ function CollectionListScreen({ navigation }: any) {
     );
   }
 
+  const blocksLoaded = me.root?.blocks != null;
   const collections =
     me?.root?.blocks?.filter(
       (b: typeof Block.prototype | null) => b?.type === "collection",
@@ -164,7 +177,15 @@ function CollectionListScreen({ navigation }: any) {
           />
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>No collections yet</Text>
+          !blocksLoaded ? (
+            <>
+              <CollectionSkeleton />
+              <CollectionSkeleton />
+              <CollectionSkeleton />
+            </>
+          ) : (
+            <Text style={styles.empty}>No collections yet</Text>
+          )
         }
       />
       <StatusBar style="auto" />
@@ -323,6 +344,19 @@ const styles = StyleSheet.create({
     marginTop: 40,
     fontSize: 15,
   },
+  skeletonCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#f9fafb",
+    borderRadius: 12,
+    marginBottom: 10,
+    gap: 12,
+  },
+  skeletonDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: "#e5e7eb" },
+  skeletonInfo: { flex: 1, gap: 6 },
+  skeletonName: { height: 14, borderRadius: 4, backgroundColor: "#e5e7eb", width: "55%" },
+  skeletonCount: { height: 11, borderRadius: 4, backgroundColor: "#f3f4f6", width: "30%" },
   deleteAction: { width: 80, backgroundColor: "#ef4444" },
   deleteActionInner: { flex: 1, justifyContent: "center", alignItems: "center" },
   deleteActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
