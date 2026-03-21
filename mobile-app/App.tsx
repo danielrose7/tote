@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useAuth, useOAuth, useUser } from "@clerk/expo";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -8,8 +8,9 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Animated,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Providers } from "./src/providers";
@@ -60,6 +61,49 @@ function SignInScreen() {
   );
 }
 
+function CollectionCard({
+  item,
+  onPress,
+  onDelete,
+}: {
+  item: typeof Block.prototype;
+  onPress: () => void;
+  onDelete: () => void;
+}) {
+  const swipeRef = useRef<Swipeable>(null);
+
+  return (
+    <Swipeable
+      ref={swipeRef}
+      renderRightActions={(progress) => {
+        const translateX = progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [80, 0],
+          extrapolate: "clamp",
+        });
+        return (
+          <Animated.View style={[styles.deleteAction, { transform: [{ translateX }] }]}>
+            <TouchableOpacity style={styles.deleteActionInner} onPress={onDelete}>
+              <Text style={styles.deleteActionText}>Delete</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      }}
+      rightThreshold={40}
+      overshootRight={false}
+    >
+      <TouchableOpacity style={styles.collectionCard} onPress={onPress} activeOpacity={0.7}>
+        <View style={[styles.colorDot, { backgroundColor: item?.collectionData?.color ?? "#6366f1" }]} />
+        <View style={styles.collectionInfo}>
+          <Text style={styles.collectionName}>{item?.name}</Text>
+          <Text style={styles.collectionCount}>{item?.children?.length ?? 0} items</Text>
+        </View>
+        <Text style={styles.chevron}>›</Text>
+      </TouchableOpacity>
+    </Swipeable>
+  );
+}
+
 function CollectionListScreen({ navigation }: any) {
   const me = useAccount(JazzAccount, {
     resolve: { root: { blocks: { $each: true } } },
@@ -80,6 +124,13 @@ function CollectionListScreen({ navigation }: any) {
       (b: typeof Block.prototype | null) => b?.type === "collection",
     ) ?? [];
 
+  function deleteCollection(item: typeof Block.prototype) {
+    const list = me?.root?.blocks;
+    if (!list) return;
+    const idx = list.findIndex((b) => b?.$jazz?.id === item.$jazz.id);
+    if (idx !== -1) list.$jazz.splice(idx, 1);
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -95,23 +146,16 @@ function CollectionListScreen({ navigation }: any) {
         data={collections}
         keyExtractor={(item) => item?.$jazz?.id ?? ""}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.collectionCard}
+          <CollectionCard
+            item={item}
             onPress={() =>
               navigation.navigate("CollectionDetail", {
                 collectionId: item.$jazz.id,
                 collectionName: item.name ?? "Collection",
               })
             }
-            activeOpacity={0.7}
-          >
-            <View style={[styles.colorDot, { backgroundColor: item?.collectionData?.color ?? "#6366f1" }]} />
-            <View style={styles.collectionInfo}>
-              <Text style={styles.collectionName}>{item?.name}</Text>
-              <Text style={styles.collectionCount}>{item?.children?.length ?? 0} items</Text>
-            </View>
-            <Text style={styles.chevron}>›</Text>
-          </TouchableOpacity>
+            onDelete={() => deleteCollection(item)}
+          />
         )}
         ListEmptyComponent={
           <Text style={styles.empty}>No collections yet</Text>
@@ -263,4 +307,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
     fontSize: 15,
   },
+  deleteAction: { width: 80, backgroundColor: "#ef4444" },
+  deleteActionInner: { flex: 1, justifyContent: "center", alignItems: "center" },
+  deleteActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
 });
