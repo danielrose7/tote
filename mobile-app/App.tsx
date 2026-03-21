@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { useAuth, useOAuth, useUser } from "@clerk/expo";
+import { useOAuth, useUser } from "@clerk/expo";
 import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   FlatList,
   ActivityIndicator,
   Animated,
+  Image,
 } from "react-native";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
@@ -20,7 +21,9 @@ import * as WebBrowser from "expo-web-browser";
 import { usePendingUrl } from "./src/hooks/usePendingUrl";
 import { SaveProductSheet } from "./src/components/SaveProductSheet";
 import { CollectionDetailScreen } from "./src/screens/CollectionDetailScreen";
+import { AccountSettingsScreen } from "./src/screens/AccountSettingsScreen";
 import { RootStackParamList } from "./src/navigation/types";
+import { Ionicons } from "@expo/vector-icons";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -108,7 +111,6 @@ function CollectionListScreen({ navigation }: any) {
   const me = useAccount(JazzAccount, {
     resolve: { root: { blocks: { $each: true } } },
   });
-  const { signOut } = useAuth();
   const { user } = useUser();
 
   if (!me) {
@@ -135,8 +137,12 @@ function CollectionListScreen({ navigation }: any) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Tote</Text>
-        <TouchableOpacity onPress={() => signOut()}>
-          <Text style={styles.link}>Sign Out</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("AccountSettings")} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          {user?.imageUrl ? (
+            <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+          ) : (
+            <Ionicons name="person-circle-outline" size={28} color="#6b7280" />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -184,6 +190,11 @@ function AppScreens() {
             title: route.params.collectionName,
             headerBackTitle: "Collections",
           })}
+        />
+        <Stack.Screen
+          name="AccountSettings"
+          component={AccountSettingsScreen}
+          options={{ title: "Account", headerBackTitle: "Collections" }}
         />
       </Stack.Navigator>
       {pendingUrl && (
@@ -300,6 +311,11 @@ const styles = StyleSheet.create({
   chevron: {
     fontSize: 20,
     color: "#d1d5db",
+  },
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   empty: {
     textAlign: "center",

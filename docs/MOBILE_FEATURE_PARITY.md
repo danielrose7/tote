@@ -75,7 +75,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | Sign in (Google) | ✅ | ✅ |
 | Sign in (Apple) | ✅ | ✅ |
 | Sign out | ✅ | ✅ |
-| Account settings | ✅ | ❌ |
+| Account settings | ✅ | ✅ |
 
 ## Other
 
