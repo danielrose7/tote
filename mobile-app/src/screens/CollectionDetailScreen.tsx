@@ -410,6 +410,78 @@ function SlotHeader({ slot, title, onDelete }: { slot: ProductItem | null; title
   );
 }
 
+const PRESET_COLORS = [
+  "#6366f1", "#8b5cf6", "#ec4899", "#f43f5e", "#f97316",
+  "#eab308", "#22c55e", "#14b8a6", "#3b82f6", "#06b6d4",
+];
+
+function EditCollectionModal({
+  collection,
+  visible,
+  onClose,
+}: {
+  collection: ProductItem;
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(collection.name ?? "");
+  const [color, setColor] = useState(collection.collectionData?.color ?? PRESET_COLORS[0]);
+
+  function handleSave() {
+    collection.$jazz.set("name", name.trim() || collection.name);
+    collection.$jazz.set("collectionData", { ...collection.collectionData, color });
+    onClose();
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Edit Collection</Text>
+
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Collection name"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleSave}
+          />
+
+          <Text style={styles.fieldLabel}>Color</Text>
+          <View style={styles.swatches}>
+            {PRESET_COLORS.map((c) => (
+              <TouchableOpacity
+                key={c}
+                style={[styles.swatch, { backgroundColor: c }, color === c && styles.swatchSelected]}
+                onPress={() => setColor(c)}
+              >
+                {color === c && <Ionicons name="checkmark" size={14} color="#fff" />}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
 function AddProductModal({
   visible,
   onClose,
@@ -471,21 +543,28 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [addingProduct, setAddingProduct] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+  const [editingCollection, setEditingCollection] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Ionicons name="add" size={26} color="#6366f1" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
 
   const collection = useCoState(Block, collectionId, {
     resolve: { children: { $each: { children: { $each: true } } } },
   });
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: collection?.name ?? route.params.collectionName,
+      headerRight: () => (
+        <View style={styles.headerButtons}>
+          <TouchableOpacity onPress={() => setEditingCollection(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="pencil-outline" size={20} color="#6366f1" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="add" size={26} color="#6366f1" />
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, [navigation, collection?.name]);
 
   if (!collection) {
     return (
@@ -625,6 +704,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         />
       )}
 
+      {editingCollection && (
+        <EditCollectionModal
+          collection={collection}
+          visible
+          onClose={() => setEditingCollection(false)}
+        />
+      )}
       <AddProductModal
         visible={addingProduct}
         onClose={() => setAddingProduct(false)}
@@ -774,6 +860,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalSaveText: { fontSize: 15, color: "#fff", fontWeight: "600" },
+  headerButtons: { flexDirection: "row", alignItems: "center", gap: 14 },
+  swatches: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 4 },
+  swatch: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  swatchSelected: { borderWidth: 2.5, borderColor: "rgba(0,0,0,0.2)" },
   modalDelete: { marginTop: 12, paddingVertical: 12, alignItems: "center" },
   modalDeleteText: { fontSize: 15, color: "#ef4444", fontWeight: "500" },
   leftActions: { flexDirection: "row", width: 160 },

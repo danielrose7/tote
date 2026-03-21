@@ -1,3 +1,4 @@
+import React from "react";
 import { useAuth, useOAuth, useUser } from "@clerk/expo";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -104,17 +105,10 @@ function CollectionListScreen({ navigation }: any) {
             }
             activeOpacity={0.7}
           >
-            <View
-              style={[
-                styles.colorDot,
-                { backgroundColor: item?.collectionData?.color ?? "#6366f1" },
-              ]}
-            />
+            <View style={[styles.colorDot, { backgroundColor: item?.collectionData?.color ?? "#6366f1" }]} />
             <View style={styles.collectionInfo}>
               <Text style={styles.collectionName}>{item?.name}</Text>
-              <Text style={styles.collectionCount}>
-                {item?.children?.length ?? 0} items
-              </Text>
+              <Text style={styles.collectionCount}>{item?.children?.length ?? 0} items</Text>
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
