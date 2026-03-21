@@ -11,7 +11,10 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
+import { WebView, WebViewMessageEvent } from "react-native-webview";
+import { extractorScript } from "../lib/extractorScript";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -20,6 +23,7 @@ import { Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
 import { RootStackParamList } from "../navigation/types";
 import { SaveProductSheet } from "../components/SaveProductSheet";
+import { formatPrice } from "../lib/formatPrice";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
 type ProductItem = typeof Block.prototype;
@@ -30,24 +34,114 @@ type Section = {
   data: ProductItem[];
 };
 
+function ProductRefresher({
+  item,
+  onDone,
+}: {
+  item: ProductItem;
+  onDone: () => void;
+}) {
+  const webViewRef = useRef<WebView>(null);
+  const url = item.productData?.url;
+
+  if (!url) {
+    onDone();
+    return null;
+  }
+
+  function handleLoadEnd() {
+    webViewRef.current?.injectJavaScript(extractorScript);
+  }
+
+  function handleMessage(event: WebViewMessageEvent) {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data);
+      if (msg.type === "METADATA_RESULT") {
+        const d = msg.data;
+        if (d.title) item.$jazz.set("name", d.title);
+        item.$jazz.set("productData", {
+          ...item.productData,
+          url,
+          ...(d.imageUrl ? { imageUrl: d.imageUrl } : {}),
+          ...(d.price ? { price: d.price } : {}),
+          ...(d.price ? { priceValue: parseFloat(d.price) || item.productData?.priceValue } : {}),
+          ...(d.description ? { description: d.description } : {}),
+        });
+      }
+    } catch {}
+    onDone();
+  }
+
+  return (
+    <View style={styles.hidden}>
+      <WebView
+        ref={webViewRef}
+        source={{ uri: url }}
+        onLoadEnd={handleLoadEnd}
+        onMessage={handleMessage}
+        javaScriptEnabled
+        domStorageEnabled
+        userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+      />
+    </View>
+  );
+}
+
 function ProductRow({
   item,
   isSelected,
+  isRefreshing,
+  isQueued,
   onOpen,
   onToggleSelected,
   onDelete,
+  onEdit,
+  onRefresh,
 }: {
   item: ProductItem;
   isSelected: boolean;
+  isRefreshing: boolean;
+  isQueued: boolean;
   onOpen: () => void;
   onToggleSelected: (() => void) | null;
   onDelete: () => void;
+  onEdit: () => void;
+  onRefresh: () => void;
 }) {
   const swipeRef = useRef<Swipeable>(null);
 
   return (
     <Swipeable
       ref={swipeRef}
+      renderLeftActions={(progress) => {
+        const translateX = progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [-160, 0],
+          extrapolate: "clamp",
+        });
+        return (
+          <Animated.View style={[styles.leftActions, { transform: [{ translateX }] }]}>
+            <TouchableOpacity
+              style={styles.editActionInner}
+              onPress={() => {
+                swipeRef.current?.close();
+                onEdit();
+              }}
+            >
+              <Text style={styles.editActionText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.refreshActionInner}
+              onPress={() => {
+                swipeRef.current?.close();
+                onRefresh();
+              }}
+            >
+              <Text style={styles.refreshActionText}>Refresh</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      }}
       renderRightActions={(progress) => {
         const translateX = progress.interpolate({
           inputRange: [0, 1],
@@ -62,29 +156,43 @@ function ProductRow({
           </Animated.View>
         );
       }}
+      leftThreshold={40}
       rightThreshold={40}
+      overshootLeft={false}
       overshootRight={false}
     >
       <TouchableOpacity
-        style={styles.productRow}
+        style={[styles.productRow, isQueued && styles.productRowQueued]}
         onPress={onOpen}
         activeOpacity={0.7}
       >
-        {item.productData?.imageUrl ? (
-          <Image
-            source={{ uri: item.productData.imageUrl }}
-            style={styles.thumbnail}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
-        )}
+        <View>
+          {item.productData?.imageUrl ? (
+            <Image
+              source={{ uri: item.productData.imageUrl }}
+              style={[styles.thumbnail, (isRefreshing || isQueued) && styles.thumbnailRefreshing]}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
+          )}
+          {isRefreshing && (
+            <View style={styles.thumbnailSpinner}>
+              <ActivityIndicator size="small" color="#6366f1" />
+            </View>
+          )}
+          {isQueued && (
+            <View style={styles.thumbnailSpinner}>
+              <Ionicons name="time-outline" size={18} color="#6366f1" />
+            </View>
+          )}
+        </View>
         <View style={styles.productInfo}>
           <Text style={styles.productName} numberOfLines={2}>
             {item.name ?? "Untitled"}
           </Text>
           {item.productData?.price ? (
-            <Text style={styles.productPrice}>{item.productData.price}</Text>
+            <Text style={styles.productPrice}>{formatPrice(item.productData.price)}</Text>
           ) : null}
         </View>
         {onToggleSelected && (
@@ -99,6 +207,67 @@ function ProductRow({
         )}
       </TouchableOpacity>
     </Swipeable>
+  );
+}
+
+function EditProductModal({
+  item,
+  visible,
+  onClose,
+}: {
+  item: ProductItem;
+  visible: boolean;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(item.name ?? "");
+  const [price, setPrice] = useState(item.productData?.price ?? "");
+
+  function handleSave() {
+    item.$jazz.set("name", name.trim() || item.name);
+    item.$jazz.set("productData", { ...item.productData, price: price.trim() || undefined });
+    onClose();
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Edit Product</Text>
+
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Product name"
+            autoFocus
+          />
+
+          <Text style={styles.fieldLabel}>Price</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={price}
+            onChangeText={setPrice}
+            placeholder="e.g. $49.99"
+            keyboardType="decimal-pad"
+          />
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 }
 
@@ -296,6 +465,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const { collectionId } = route.params;
   const [addingProduct, setAddingProduct] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+  const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -368,6 +539,14 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     });
   }
 
+  function startBulkRefresh() {
+    const allProducts = [
+      ...slots.flatMap((s) => s.children?.filter((b): b is ProductItem => b?.type === "product") ?? []),
+      ...directProducts,
+    ].filter((p) => p.productData?.url);
+    if (allProducts.length > 0) setRefreshQueue(allProducts);
+  }
+
   function deleteProduct(item: ProductItem) {
     const parent = slots.find((s) =>
       s.children?.some((c) => c?.$jazz?.id === item.$jazz.id)
@@ -388,9 +567,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       <ProductRow
         item={item}
         isSelected={isSelected}
+        isRefreshing={refreshQueue[0]?.$jazz?.id === item.$jazz.id}
+        isQueued={refreshQueue.slice(1).some((q) => q.$jazz?.id === item.$jazz.id)}
         onOpen={() => openProduct(item)}
         onToggleSelected={slot ? () => toggleSelected(item, slot) : null}
         onDelete={() => deleteProduct(item)}
+        onEdit={() => setEditingProduct(item)}
+        onRefresh={() => setRefreshQueue([item])}
       />
     );
   }
@@ -421,6 +604,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           }
           contentContainerStyle={styles.list}
           stickySectionHeadersEnabled={false}
+          onRefresh={startBulkRefresh}
+          refreshing={refreshQueue.length > 0}
         />
       )}
 
@@ -429,6 +614,20 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         onClose={() => setAddingProduct(false)}
         onSubmit={(url) => setPendingUrl(url)}
       />
+      {editingProduct && (
+        <EditProductModal
+          item={editingProduct}
+          visible
+          onClose={() => setEditingProduct(null)}
+        />
+      )}
+      {refreshQueue.length > 0 && (
+        <ProductRefresher
+          key={refreshQueue[0].$jazz.id}
+          item={refreshQueue[0]}
+          onDone={() => setRefreshQueue((q) => q.slice(1))}
+        />
+      )}
       {pendingUrl && (
         <SaveProductSheet url={pendingUrl} onDismiss={() => setPendingUrl(null)} defaultCollectionId={collectionId} />
       )}
@@ -559,7 +758,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalSaveText: { fontSize: 15, color: "#fff", fontWeight: "600" },
+  leftActions: { flexDirection: "row", width: 160 },
+  editActionInner: { width: 80, backgroundColor: "#6366f1", justifyContent: "center", alignItems: "center" },
+  editActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  refreshActionInner: { width: 80, backgroundColor: "#8b5cf6", justifyContent: "center", alignItems: "center" },
+  refreshActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
   deleteAction: { width: 80, backgroundColor: "#ef4444" },
   deleteActionInner: { flex: 1, justifyContent: "center", alignItems: "center" },
   deleteActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  productRowQueued: { opacity: 0.5 },
+  thumbnailRefreshing: { opacity: 0.4 },
+  thumbnailSpinner: { position: "absolute", inset: 0, justifyContent: "center", alignItems: "center" },
+  hidden: { width: 0, height: 0, overflow: "hidden" },
 });

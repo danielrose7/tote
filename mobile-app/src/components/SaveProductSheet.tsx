@@ -14,6 +14,7 @@ import { useAccount } from "jazz-tools/expo";
 import { Group } from "jazz-tools";
 import { JazzAccount, Block, BlockList } from "@tote/schema";
 import { extractorScript } from "../lib/extractorScript";
+import { formatPrice } from "../lib/formatPrice";
 import { ProductSkeleton } from "./ProductSkeleton";
 import { CollectionPicker } from "./CollectionPicker";
 
@@ -232,7 +233,7 @@ export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props)
                 </Text>
                 {metadata.price && (
                   <Text style={styles.productPrice}>
-                    {metadata.currency === "USD" ? "$" : (metadata.currency ? metadata.currency + " " : "")}{metadata.price}
+                    {formatPrice(metadata.price)}
                   </Text>
                 )}
               </View>
