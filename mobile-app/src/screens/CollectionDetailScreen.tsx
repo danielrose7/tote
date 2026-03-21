@@ -275,10 +275,12 @@ function SlotEditModal({
   slot,
   visible,
   onClose,
+  onDelete,
 }: {
   slot: ProductItem;
   visible: boolean;
   onClose: () => void;
+  onDelete: () => void;
 }) {
   const [name, setName] = useState(slot.name ?? "");
   const [maxSelections, setMaxSelections] = useState(
@@ -344,13 +346,16 @@ function SlotEditModal({
               <Text style={styles.modalSaveText}>Save</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity style={styles.modalDelete} onPress={onDelete}>
+            <Text style={styles.modalDeleteText}>Delete Slot</Text>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 }
 
-function SlotHeader({ slot, title }: { slot: ProductItem | null; title: string }) {
+function SlotHeader({ slot, title, onDelete }: { slot: ProductItem | null; title: string; onDelete: () => void }) {
   const [editing, setEditing] = useState(false);
 
   if (!slot) {
@@ -400,7 +405,7 @@ function SlotHeader({ slot, title }: { slot: ProductItem | null; title: string }
           <Ionicons name="settings-outline" size={16} color="#9ca3af" />
         </TouchableOpacity>
       </View>
-      <SlotEditModal slot={slot} visible={editing} onClose={() => setEditing(false)} />
+      <SlotEditModal slot={slot} visible={editing} onClose={() => setEditing(false)} onDelete={() => { setEditing(false); onDelete(); }} />
     </>
   );
 }
@@ -547,6 +552,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     if (allProducts.length > 0) setRefreshQueue(allProducts);
   }
 
+  function deleteSlot(slot: ProductItem) {
+    const list = collection.children;
+    if (!list) return;
+    const idx = list.findIndex((c) => c?.$jazz?.id === slot.$jazz.id);
+    if (idx !== -1) list.$jazz.splice(idx, 1);
+  }
+
   function deleteProduct(item: ProductItem) {
     const parent = slots.find((s) =>
       s.children?.some((c) => c?.$jazz?.id === item.$jazz.id)
@@ -599,7 +611,11 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           renderItem={renderProduct}
           renderSectionHeader={({ section }) =>
             section.title ? (
-              <SlotHeader slot={section.slot} title={section.title} />
+              <SlotHeader
+                slot={section.slot}
+                title={section.title}
+                onDelete={() => section.slot && deleteSlot(section.slot)}
+              />
             ) : null
           }
           contentContainerStyle={styles.list}
@@ -758,6 +774,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalSaveText: { fontSize: 15, color: "#fff", fontWeight: "600" },
+  modalDelete: { marginTop: 12, paddingVertical: 12, alignItems: "center" },
+  modalDeleteText: { fontSize: 15, color: "#ef4444", fontWeight: "500" },
   leftActions: { flexDirection: "row", width: 160 },
   editActionInner: { width: 80, backgroundColor: "#6366f1", justifyContent: "center", alignItems: "center" },
   editActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
