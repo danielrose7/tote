@@ -39,8 +39,8 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | Save product manually (paste URL) | ✅ | ✅ |
 | View product (image, title, price) | ✅ | ✅ |
 | Open product URL | ✅ | ✅ |
-| Refresh product metadata | ✅ | ❌ |
-| Edit product (name, price, notes) | ✅ | ❌ |
+| Refresh product metadata | ✅ | ✅ |
+| Edit product (name, price, notes) | ✅ | ✅ (name + price) |
 | Delete product | ✅ | ✅ |
 | Reorder products | ✅ | ❌ |
 
@@ -54,8 +54,8 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | Edit slot name | ✅ | ✅ |
 | Delete slot | ✅ | ❌ |
 | Reorder slots | ✅ | ❌ |
-| Slot budget (set limit, track total) | ✅ | ❌ |
-| Slot max selections | ✅ | ❌ |
+| Slot budget (set limit, track total) | ✅ | ✅ |
+| Slot max selections | ✅ | ✅ |
 | Mark product as selected | ✅ | ✅ |
 | View selected count vs max | ✅ | ✅ |
 | View selected total vs budget | ✅ | ✅ |
