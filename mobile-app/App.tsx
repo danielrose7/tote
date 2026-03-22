@@ -19,7 +19,9 @@ import { useAccount, useIsAuthenticated } from "jazz-tools/expo";
 import { JazzAccount, Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
 import { usePendingUrl } from "./src/hooks/usePendingUrl";
+import { useInviteLink } from "./src/hooks/useInviteLink";
 import { SaveProductSheet } from "./src/components/SaveProductSheet";
+import { AcceptInviteSheet } from "./src/components/AcceptInviteSheet";
 import { CollectionDetailScreen } from "./src/screens/CollectionDetailScreen";
 import { AccountSettingsScreen } from "./src/screens/AccountSettingsScreen";
 import { RootStackParamList } from "./src/navigation/types";
@@ -194,6 +196,7 @@ function CollectionListScreen({ navigation }: any) {
 
 function AppScreens() {
   const { pendingUrl, clearPendingUrl } = usePendingUrl();
+  const { invite, clearInvite } = useInviteLink();
 
   return (
     <>
@@ -220,6 +223,12 @@ function AppScreens() {
       </Stack.Navigator>
       {pendingUrl && (
         <SaveProductSheet url={pendingUrl} onDismiss={clearPendingUrl} />
+      )}
+      {invite && (
+        <AcceptInviteSheet
+          invite={invite}
+          onClose={clearInvite}
+        />
       )}
     </>
   );

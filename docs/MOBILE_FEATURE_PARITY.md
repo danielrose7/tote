@@ -9,7 +9,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 |  | Low Effort | High Effort |
 |---|---|---|
 | **High Impact** | Delete product • Mark product as selected • View selected count + budget total • Save product manually (paste URL) | Refresh product metadata • Slot budget + max selections UI |
-| **Low Impact** | — | Reorder items/slots/collections • Accept collection invite |
+| **Low Impact** | — | Reorder items/slots/collections |
 
 **Quick wins** (high impact, low effort — do these next):
 1. **Delete product** — swipe-to-delete, single Jazz field update
@@ -66,7 +66,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 |---|---|---|
 | Share collection (public URL) | ✅ | ✅ |
 | Custom short link | ✅ | ✅ |
-| Accept invite to shared collection | ✅ | ❌ |
+| Accept invite to shared collection | ✅ | ✅ |
 
 ## Auth & Account
 
