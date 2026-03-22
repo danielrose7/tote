@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   Image,
   SectionList,
+  ScrollView,
   Animated,
   Modal,
   TextInput,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { extractorScript } from "../lib/extractorScript";
@@ -539,6 +541,93 @@ function AddProductModal({
   );
 }
 
+function ProductGridCard({
+  item,
+  columnWidth,
+  onPress,
+}: {
+  item: ProductItem;
+  columnWidth: number;
+  onPress: () => void;
+}) {
+  const [imageHeight, setImageHeight] = useState(150);
+  const imageUrl = item.productData?.imageUrl;
+
+  useEffect(() => {
+    if (!imageUrl) return;
+    Image.getSize(
+      imageUrl,
+      (w, h) => {
+        if (w > 0) setImageHeight(Math.round((columnWidth * h) / w));
+      },
+      () => {}
+    );
+  }, [imageUrl, columnWidth]);
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.gridCard}>
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={{ width: "100%", height: imageHeight }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={styles.gridImagePlaceholder} />
+      )}
+      <View style={styles.gridCardInfo}>
+        <Text style={styles.gridCardName} numberOfLines={3}>
+          {item.name ?? "Untitled"}
+        </Text>
+        {item.productData?.price ? (
+          <Text style={styles.gridCardPrice}>{formatPrice(item.productData.price)}</Text>
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function MasonryGrid({
+  items,
+  onPress,
+}: {
+  items: ProductItem[];
+  onPress: (item: ProductItem) => void;
+}) {
+  const screenWidth = Dimensions.get("window").width;
+  const columnWidth = Math.floor((screenWidth - 48) / 2); // 20+20 padding + 8 gap
+
+  const leftItems = items.filter((_, i) => i % 2 === 0);
+  const rightItems = items.filter((_, i) => i % 2 === 1);
+
+  return (
+    <ScrollView contentContainerStyle={styles.masonryContainer}>
+      <View style={styles.masonryColumns}>
+        <View style={{ width: columnWidth }}>
+          {leftItems.map((item) => (
+            <ProductGridCard
+              key={item.$jazz.id}
+              item={item}
+              columnWidth={columnWidth}
+              onPress={() => onPress(item)}
+            />
+          ))}
+        </View>
+        <View style={{ width: columnWidth }}>
+          {rightItems.map((item) => (
+            <ProductGridCard
+              key={item.$jazz.id}
+              item={item}
+              columnWidth={columnWidth}
+              onPress={() => onPress(item)}
+            />
+          ))}
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
 export function CollectionDetailScreen({ route, navigation }: Props) {
   const { collectionId } = route.params;
   const [addingProduct, setAddingProduct] = useState(false);
@@ -547,6 +636,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [editingCollection, setEditingCollection] = useState(false);
   const [sharingCollection, setSharingCollection] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   const collection = useCoState(Block, collectionId, {
     resolve: { children: { $each: { children: { $each: true } } } },
@@ -563,13 +653,19 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           <TouchableOpacity onPress={() => setSharingCollection(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="share-outline" size={20} color="#6366f1" />
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setViewMode((m) => (m === "list" ? "grid" : "list"))}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name={viewMode === "list" ? "grid-outline" : "list-outline"} size={20} color="#6366f1" />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="add" size={26} color="#6366f1" />
           </TouchableOpacity>
         </View>
       ),
     });
-  }, [navigation, collection?.name]);
+  }, [navigation, collection?.name, viewMode]);
 
   if (!collection) {
     return (
@@ -686,8 +782,16 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         <Text style={styles.itemCount}>{totalItems} items</Text>
       </View>
 
-      {sections.length === 0 ? (
+      {totalItems === 0 ? (
         <Text style={styles.empty}>No items yet</Text>
+      ) : viewMode === "grid" ? (
+        <MasonryGrid
+          items={[
+            ...slots.flatMap((s) => s.children?.filter((b): b is ProductItem => b?.type === "product") ?? []),
+            ...directProducts,
+          ]}
+          onPress={openProduct}
+        />
       ) : (
         <SectionList
           sections={sections}
@@ -890,4 +994,16 @@ const styles = StyleSheet.create({
   thumbnailRefreshing: { opacity: 0.4 },
   thumbnailSpinner: { position: "absolute", inset: 0, justifyContent: "center", alignItems: "center" },
   hidden: { width: 0, height: 0, overflow: "hidden" },
+  masonryContainer: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
+  masonryColumns: { flexDirection: "row", gap: 8 },
+  gridCard: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 12,
+    marginBottom: 8,
+    overflow: "hidden",
+  },
+  gridImagePlaceholder: { height: 130, backgroundColor: "#e5e7eb" },
+  gridCardInfo: { padding: 8, paddingBottom: 10 },
+  gridCardName: { fontSize: 13, fontWeight: "500", color: "#111", lineHeight: 18 },
+  gridCardPrice: { fontSize: 12, color: "#6b7280", marginTop: 3 },
 });

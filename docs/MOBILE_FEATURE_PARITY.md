@@ -28,7 +28,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | Edit collection name/color | ✅ | ❌ |
 | Delete collection | ✅ | ❌ |
 | View collection detail | ✅ | ✅ |
-| Grid / list view modes | ✅ | ❌ (list only) |
+| Grid / list view modes | ✅ | ✅ |
 | Reorder collections | ✅ | ❌ |
 
 ## Products
