@@ -26,6 +26,7 @@ import * as WebBrowser from "expo-web-browser";
 import { RootStackParamList } from "../navigation/types";
 import { SaveProductSheet } from "../components/SaveProductSheet";
 import { ShareCollectionSheet } from "../components/ShareCollectionSheet";
+import { useViewMode } from "../hooks/useViewMode";
 import { formatPrice } from "../lib/formatPrice";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
@@ -636,7 +637,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [editingCollection, setEditingCollection] = useState(false);
   const [sharingCollection, setSharingCollection] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const { viewMode, setViewMode } = useViewMode();
 
   const collection = useCoState(Block, collectionId, {
     resolve: { children: { $each: { children: { $each: true } } } },
