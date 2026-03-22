@@ -124,7 +124,6 @@ function CollectionListScreen({ navigation }: any) {
     resolve: { root: { blocks: { $each: true } } },
   });
   const { user } = useUser();
-
   if (!me) {
     return (
       <View style={styles.centered}>
@@ -210,6 +209,7 @@ function AppScreens() {
           options={({ route }) => ({
             title: route.params.collectionName,
             headerBackTitle: "Collections",
+            fullScreenGestureEnabled: false,
           })}
         />
         <Stack.Screen
