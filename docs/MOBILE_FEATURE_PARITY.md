@@ -9,7 +9,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 |  | Low Effort | High Effort |
 |---|---|---|
 | **High Impact** | Delete product • Mark product as selected • View selected count + budget total • Save product manually (paste URL) | Refresh product metadata • Slot budget + max selections UI |
-| **Low Impact** | Edit collection name/color • Edit/delete slot • Delete collection • View selected total vs budget (display only) | Reorder items/slots/collections • Grid view mode • Share collection • Accept collection invite |
+| **Low Impact** | — | Reorder items/slots/collections • Accept collection invite |
 
 **Quick wins** (high impact, low effort — do these next):
 1. **Delete product** — swipe-to-delete, single Jazz field update
@@ -25,8 +25,8 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 |---|---|---|
 | List all collections | ✅ | ✅ |
 | Create collection | ✅ | ✅ (via save sheet) |
-| Edit collection name/color | ✅ | ❌ |
-| Delete collection | ✅ | ❌ |
+| Edit collection name/color | ✅ | ✅ (from detail screen) |
+| Delete collection | ✅ | ✅ (swipe on list) |
 | View collection detail | ✅ | ✅ |
 | Grid / list view modes | ✅ | ✅ |
 | Reorder collections | ✅ | ❌ |
@@ -52,7 +52,7 @@ Ranking missing features by **impact** (does it unblock real user workflows?) an
 | Ungrouped section | ✅ | ✅ |
 | Create slot | ✅ | ✅ (via save sheet) |
 | Edit slot name | ✅ | ✅ |
-| Delete slot | ✅ | ❌ |
+| Delete slot | ✅ | ✅ (from slot settings) |
 | Reorder slots | ✅ | ❌ |
 | Slot budget (set limit, track total) | ✅ | ✅ |
 | Slot max selections | ✅ | ✅ |
