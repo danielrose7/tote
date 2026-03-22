@@ -18,6 +18,10 @@ See [MOBILE_FEATURE_PARITY.md](./MOBILE_FEATURE_PARITY.md) for the full feature 
 - Edit / delete slots and collections
 - Share collection (public URL)
 
+## Pending deployment steps
+
+- **Universal Links (invite flow):** Replace `XXXXXXXXXX` in `src/app/.well-known/apple-app-site-association/route.ts` with the Apple Developer Team ID (found at developer.apple.com → Account → Membership), then deploy the web app and run `pnpm ios` to rebuild with the `associatedDomains` entitlement. Until then, `tote://invite/...` (custom scheme) links work but `https://tote.tools/invite/...` links open in Safari.
+
 ## Shipped
 
 - Collection list
