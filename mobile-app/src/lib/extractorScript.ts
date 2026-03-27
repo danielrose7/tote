@@ -2,6 +2,10 @@
  * Injected into the hidden WebView via injectJavaScript().
  * Adapted from chrome-extension/src/lib/extractors/index.ts —
  * same logic, wrapped as an IIFE, posts result via ReactNativeWebView.
+ *
+ * TODO: This is a hand-ported ES5 duplicate of chrome-extension/src/lib/extractors/index.ts.
+ * Any fixes to the extraction logic must be applied in both places. Consider
+ * extracting to a shared package so changes only need to happen once.
  */
 export const extractorScript = `
 (function() {
@@ -121,6 +125,27 @@ export const extractorScript = `
       return null;
     }
 
+    function resolveUrl(url) {
+      if (!url) return undefined;
+      if (url.indexOf('http://') === 0 || url.indexOf('https://') === 0) return url;
+      try { return new URL(url, window.location.href).href; } catch(e) { return url; }
+    }
+
+    function urlPathMatchesPage(url) {
+      try {
+        var resolved = new URL(url, window.location.href);
+        if (resolved.origin !== window.location.origin) return true;
+        var normalize = function(p) { return p.replace(/\\/+$/, '').toLowerCase(); };
+        return normalize(resolved.pathname) === normalize(window.location.pathname);
+      } catch(e) { return true; }
+    }
+
+    function productCanonicalUrl(product) {
+      var offers = product && product.offers;
+      var offerUrl = Array.isArray(offers) ? (offers[0] && offers[0].url) : (offers && offers.url);
+      return offerUrl || (product && product.url) || (product && product['@id']) || undefined;
+    }
+
     function extractJsonLd() {
       var scripts = document.querySelectorAll('script[type="application/ld+json"]');
       for (var i = 0; i < scripts.length; i++) {
@@ -129,11 +154,13 @@ export const extractorScript = `
           var match = findProduct(data);
           if (match) {
             var p = match.product;
+            var canonicalUrl = productCanonicalUrl(p);
+            if (canonicalUrl && !urlPathMatchesPage(canonicalUrl)) return null;
             var priceInfo = extractProductPrice(p.offers);
             return {
               title: match.groupName || p.name,
               description: p.description,
-              imageUrl: match.variantMatched ? extractImage(p.image) : undefined,
+              imageUrl: match.variantMatched ? resolveUrl(extractImage(p.image)) : undefined,
               price: priceInfo.price,
               currency: priceInfo.currency,
               brand: extractBrand(p.brand),
@@ -158,7 +185,7 @@ export const extractorScript = `
       return {
         title: getMeta(['og:title', 'twitter:title']) || document.title || undefined,
         description: getMeta(['og:description', 'twitter:description', 'description']),
-        imageUrl: getMeta(['og:image', 'twitter:image']),
+        imageUrl: getMeta(['og:image', 'og:image:secure_url', 'twitter:image']),
         price: getMeta(['product:price:amount', 'og:price:amount']),
         currency: getMeta(['product:price:currency', 'og:price:currency']),
         brand: getMeta(['product:brand', 'og:brand']),

@@ -1,3 +1,6 @@
+// TODO: This extraction logic is duplicated in mobile-app/src/lib/extractorScript.ts
+// (hand-ported to ES5 for WebView injection). Any fixes here must be manually
+// applied there too. Consider extracting to a shared package to avoid drift.
 import type { ExtractedMetadata, ExtractionResult } from "./types";
 
 // Decode HTML entities (e.g. &quot; → ") safely using a textarea
