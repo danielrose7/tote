@@ -7,11 +7,6 @@ settings:
 overrides:
   jazz-tools: ^0.19.8
 
-patchedDependencies:
-  expo-modules-core@55.0.17:
-    hash: 5eb55f874da4361a5102b20b803db0c056881f592f025348e3d6a3d3702d699a
-    path: patches/expo-modules-core@55.0.17.patch
-
 importers:
 
   .:
@@ -10146,13 +10141,13 @@ snapshots:
       - supports-color
       - typescript
 
-  expo-modules-core@55.0.17(patch_hash=5eb55f874da4361a5102b20b803db0c056881f592f025348e3d6a3d3702d699a)(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
+  expo-modules-core@55.0.17(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0):
     dependencies:
       invariant: 2.2.4
       react: 19.1.0
       react-native: 0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10)
 
-  expo-modules-core@55.0.17(patch_hash=5eb55f874da4361a5102b20b803db0c056881f592f025348e3d6a3d3702d699a)(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0):
+  expo-modules-core@55.0.17(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0):
     dependencies:
       invariant: 2.2.4
       react: 19.2.0
@@ -10221,7 +10216,7 @@ snapshots:
       expo-font: 55.0.4(expo@55.0.8)(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       expo-keep-awake: 55.0.4(expo@55.0.8)(react@19.1.0)
       expo-modules-autolinking: 55.0.11(typescript@5.6.2)
-      expo-modules-core: 55.0.17(patch_hash=5eb55f874da4361a5102b20b803db0c056881f592f025348e3d6a3d3702d699a)(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
+      expo-modules-core: 55.0.17(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10))(react@19.1.0)
       pretty-format: 29.7.0
       react: 19.1.0
       react-native: 0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(utf-8-validate@5.0.10)
@@ -10262,7 +10257,7 @@ snapshots:
       expo-font: 55.0.4(expo@55.0.8)(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       expo-keep-awake: 55.0.4(expo@55.0.8)(react@19.2.0)
       expo-modules-autolinking: 55.0.11(typescript@5.9.3)
-      expo-modules-core: 55.0.17(patch_hash=5eb55f874da4361a5102b20b803db0c056881f592f025348e3d6a3d3702d699a)(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
+      expo-modules-core: 55.0.17(react-native@0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10))(react@19.2.0)
       pretty-format: 29.7.0
       react: 19.2.0
       react-native: 0.83.2(@babel/core@7.28.5)(@react-native/metro-config@0.84.1(@babel/core@7.28.5))(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@5.0.10)
