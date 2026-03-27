@@ -66,6 +66,38 @@ function extractPriceFromText(
   return { price, currency };
 }
 
+// Resolve a potentially-relative URL to an absolute one using the current page origin.
+function resolveUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  try {
+    return new URL(url, window.location.href).href;
+  } catch {
+    return url;
+  }
+}
+
+// Check whether a URL from JSON-LD refers to the current page.
+// Only applies when same-origin — cross-origin URLs (e.g. in tests or CDN-hosted
+// JSON-LD) are considered a match to avoid false negatives.
+function urlPathMatchesPage(url: string): boolean {
+  try {
+    const resolved = new URL(url, window.location.href);
+    if (resolved.origin !== window.location.origin) return true;
+    const normalize = (p: string) => p.replace(/\/+$/, "").toLowerCase();
+    return normalize(resolved.pathname) === normalize(window.location.pathname);
+  } catch {
+    return true;
+  }
+}
+
+// Extract the canonical URL from a product object (offers.url, @id, or url field).
+function productCanonicalUrl(product: any): string | undefined {
+  const offers = product?.offers;
+  const offerUrl = Array.isArray(offers) ? offers[0]?.url : offers?.url;
+  return offerUrl || product?.url || product?.["@id"] || undefined;
+}
+
 // JSON-LD Extraction
 function extractJsonLd(): Partial<ExtractedMetadata> | null {
   const scripts = document.querySelectorAll(
@@ -78,6 +110,17 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
       const match = findProduct(data);
       if (match) {
         const { product, groupName, variantMatched } = match;
+
+        // If the JSON-LD product has an explicit same-origin URL that doesn't
+        // match the current page path, this data is stale (e.g. from a previous
+        // SPA navigation on sites like Sézane that don't update JSON-LD on
+        // client-side routing). Fall back to og: tags which are typically kept
+        // up-to-date by the SPA router.
+        const canonicalUrl = productCanonicalUrl(product);
+        if (canonicalUrl && !urlPathMatchesPage(canonicalUrl)) {
+          return null;
+        }
+
         return {
           // When we couldn't match the selected variant, use the group name (e.g.
           // "Wildcat") rather than the first variant's specific name ("Wildcat -
@@ -87,7 +130,7 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
           // Only use the JSON-LD image when we matched the right variant.
           // Otherwise, let og:image / DOM image take over since they more likely
           // reflect what the user is actually viewing.
-          imageUrl: variantMatched ? extractImage(product.image) : undefined,
+          imageUrl: variantMatched ? resolveUrl(extractImage(product.image)) : undefined,
           price: extractProductPrice(product.offers)?.price,
           currency: extractProductPrice(product.offers)?.currency,
           brand: extractBrand(product.brand),
@@ -230,7 +273,7 @@ function extractOpenGraph(): Partial<ExtractedMetadata> {
       "twitter:description",
       "description",
     ]),
-    imageUrl: getMeta(["og:image", "twitter:image"]),
+    imageUrl: getMeta(["og:image", "og:image:secure_url", "twitter:image"]),
     price: getMeta(["product:price:amount", "og:price:amount"]),
     currency: getMeta(["product:price:currency", "og:price:currency"]),
     brand: getMeta(["product:brand", "og:brand"]),

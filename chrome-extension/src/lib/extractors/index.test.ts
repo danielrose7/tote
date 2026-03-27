@@ -570,4 +570,59 @@ describe("Sale Price Priority", () => {
     const result = extractMetadata();
     expect(result.price).toBe("44.97");
   });
+
+  it("ignores stale JSON-LD after SPA navigation when product URL doesn't match page (Sézane style)", () => {
+    // Simulate: user navigated white → green-stripe → white via client-side routing.
+    // JSON-LD is stale from the green-stripe page; og: tags were updated by the SPA router.
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: {
+        ...window.location,
+        href: "http://localhost/product/tomboy-shirt/white",
+        pathname: "/product/tomboy-shirt/white",
+        origin: "http://localhost",
+      },
+    });
+    document.head.innerHTML = `
+      <meta property="og:title" content="Tomboy Shirt - White - Organic Cotton">
+      <meta property="og:image" content="https://cdn.example.com/white-shirt.jpg">
+      <meta property="product:price:amount" content="110.00">
+      <meta property="product:price:currency" content="USD">
+      <script type="application/ld+json">
+        {
+          "@type": "Product",
+          "name": "Tomboy Shirt - Ecru Green Stripes",
+          "image": "https://cdn.example.com/green-stripes.jpg",
+          "offers": {
+            "url": "http://localhost/product/tomboy-shirt/ecru-green-stripes",
+            "price": "110",
+            "priceCurrency": "USD"
+          }
+        }
+      </script>
+    `;
+    document.body.innerHTML = "";
+    const result = extractMetadata();
+    // Should fall back to og: tags, not use stale JSON-LD
+    expect(result.title).toBe("Tomboy Shirt - White - Organic Cotton");
+    expect(result.imageUrl).toBe("https://cdn.example.com/white-shirt.jpg");
+    expect(result.price).toBe("110.00");
+    // Restore
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      writable: true,
+      value: { ...window.location, href: "http://localhost/", pathname: "/", origin: "http://localhost" },
+    });
+  });
+
+  it("uses og:image:secure_url when og:image is absent (Wakakuu style)", () => {
+    document.head.innerHTML = `
+      <meta property="og:title" content="Cardigan Coco Light grey">
+      <meta property="og:image:secure_url" content="https://www.wakakuu.com/storage/product_image_001.jpg">
+    `;
+    document.body.innerHTML = "";
+    const result = extractMetadata();
+    expect(result.imageUrl).toBe("https://www.wakakuu.com/storage/product_image_001.jpg");
+  });
 });
