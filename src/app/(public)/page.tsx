@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LandingAuthButtons } from "../../components/LandingAuthButtons";
 import { CHROME_WEB_STORE_URL } from "../../lib/constants";
 import styles from "./landing.module.css";
@@ -14,6 +15,51 @@ export const metadata: Metadata = {
       "Save products from any online store in one place. Organize with collections, track prices, and share wishlists.",
   },
 };
+
+const useCases = [
+  {
+    href: "/use-cases/gift-shopping",
+    title: "Gift Lists & Wishlists",
+    description: "Save gift ideas from any store, organized by occasion, ready to share.",
+    accent: "var(--color-lavender)",
+  },
+  {
+    href: "/use-cases/home-renovation",
+    title: "Home Renovation",
+    description: "Organize furniture and materials room by room. Compare prices across stores.",
+    accent: "var(--color-powder-blue)",
+  },
+  {
+    href: "/use-cases/personal-style",
+    title: "Wardrobe & Style",
+    description: "Save clothes from any store into one style board. Watch for price drops.",
+    accent: "var(--color-periwinkle)",
+  },
+  {
+    href: "/use-cases/family-shopping",
+    title: "Family Shopping",
+    description: "Save and compare options together for back-to-school, new home, and more.",
+    accent: "var(--color-peach)",
+  },
+];
+
+const featureCallouts = [
+  {
+    title: "Organize your way",
+    description: "Collections for any project, season, or goal.",
+    accent: "var(--color-blush)",
+  },
+  {
+    title: "Prices that update",
+    description: "Refresh any saved product to see the current price.",
+    accent: "var(--color-peach)",
+  },
+  {
+    title: "Private by design",
+    description: "No tracking, no ads, no selling your shopping habits.",
+    accent: "var(--color-powder-blue)",
+  },
+];
 
 export default function HomePage() {
   return (
@@ -44,7 +90,7 @@ export default function HomePage() {
           A cart that doesn't<br />belong to a store
         </h1>
         <p className={styles.subtitle}>
-          Tote keeps your saved products in one place, wherever you shop
+          Save anything from any store. One place to find it when you're ready to buy.
         </p>
         <div className={styles.cta}>
           <LandingAuthButtons />
@@ -81,58 +127,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Feature: Collections */}
+      {/* Use cases */}
       <section id="features" className={styles.section}>
-        <div className={styles.featureBlock}>
-          <svg className={styles.featureGraphic} viewBox="0 0 200 200" aria-hidden="true">
-            <rect x="20" y="40" width="70" height="90" rx="8" className={styles.shapeBlush} />
-            <rect x="50" y="60" width="70" height="90" rx="8" className={styles.shapeLavender} />
-            <rect x="80" y="80" width="70" height="90" rx="8" className={styles.shapePeriwinkle} />
-          </svg>
-          <div className={styles.featureContent}>
-            <h2 className={styles.featureTitle}>Organize your way</h2>
-            <p className={styles.featureDescription}>
-              Create collections for different projects, seasons, or goals.
-              Whether it's a home renovation, gift ideas, or your personal style board—keep
-              everything sorted exactly how you think about it.
-            </p>
-          </div>
+        <h2 className={styles.sectionTitle}>Built for how you actually shop</h2>
+        <div className={styles.useCaseGrid}>
+          {useCases.map((uc) => (
+            <Link
+              key={uc.href}
+              href={uc.href}
+              className={styles.useCaseCard}
+              style={{ "--uc-accent": uc.accent } as React.CSSProperties}
+            >
+              <h3 className={styles.useCaseTitle}>{uc.title}</h3>
+              <p className={styles.useCaseDesc}>{uc.description}</p>
+              <span className={styles.useCaseLink}>Learn more →</span>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* Feature: Price tracking */}
+      {/* Feature callouts */}
       <section className={styles.section}>
-        <div className={styles.featureBlock}>
-          <svg className={styles.featureGraphic} viewBox="0 0 200 200" aria-hidden="true">
-            <circle cx="100" cy="100" r="60" className={styles.shapePeach} />
-            <path d="M70 100 L90 120 L130 80" stroke="currentColor" strokeWidth="6" fill="none" strokeLinecap="round" strokeLinejoin="round" className={styles.shapeCheck} />
-          </svg>
-          <div className={styles.featureContent}>
-            <h2 className={styles.featureTitle}>Prices that stay up to date</h2>
-            <p className={styles.featureDescription}>
-              Refresh your saved products to see current prices.
-              Know when something goes on sale or sells out—so you
-              can act at the right moment.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature: Privacy */}
-      <section className={styles.section}>
-        <div className={styles.featureBlock}>
-          <svg className={styles.featureGraphic} viewBox="0 0 200 200" aria-hidden="true">
-            <path d="M100 30 L160 60 L160 110 C160 150 100 180 100 180 C100 180 40 150 40 110 L40 60 Z" className={styles.shapePowder} />
-            <circle cx="100" cy="100" r="20" className={styles.shapeWhite} />
-          </svg>
-          <div className={styles.featureContent}>
-            <h2 className={styles.featureTitle}>Your data stays yours</h2>
-            <p className={styles.featureDescription}>
-              No tracking, no ads, no selling your shopping habits.
-              Tote is built for you, not advertisers. Your data is
-              private and syncs securely across your devices.
-            </p>
-          </div>
+        <div className={styles.featureCallouts}>
+          {featureCallouts.map((f) => (
+            <div
+              key={f.title}
+              className={styles.featureCallout}
+              style={{ "--fc-accent": f.accent } as React.CSSProperties}
+            >
+              <div className={styles.featureCalloutAccent} aria-hidden="true" />
+              <h3 className={styles.featureCalloutTitle}>{f.title}</h3>
+              <p className={styles.featureCalloutDesc}>{f.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
