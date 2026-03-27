@@ -4,19 +4,12 @@ See [MOBILE_FEATURE_PARITY.md](./MOBILE_FEATURE_PARITY.md) for the full feature 
 
 ## Up Next
 
-### 1. Edit product name / price
-*Medium effort*
+### 1. Reorder items/slots/collections
+*High effort*
 
-- Long-press a product row to edit name and price inline
-- Useful when the extractor gets metadata wrong or price changes
-- Parity item: **Edit product (name, price, notes)**
-
-## Later
-
-- Refresh product metadata (re-run extraction on demand)
-- Slot budget + max selections UI (set limits, not just view them)
-- Edit / delete slots and collections
-- Share collection (public URL)
+- Add drag-and-drop affordances for collections, slots, and products
+- Persist ordering in Jazz so mobile and web stay in sync
+- Parity item: **Reorder collections / slots / products**
 
 ## Pending deployment steps
 
@@ -33,3 +26,13 @@ See [MOBILE_FEATURE_PARITY.md](./MOBILE_FEATURE_PARITY.md) for the full feature 
 - Save product manually (+ button on collection detail → URL input → SaveProductSheet)
 - Product selection (tap checkbox) + slot progress (count / budget)
 - Edit slot (gear icon → bottom sheet with name, max selections, budget)
+- Edit product name + price
+- Refresh product metadata (swipe-left action, re-extracts via WebView)
+- Share collection (public URL via publish/unpublish flow)
+- Custom short link (inline slug editor in ShareCollectionSheet)
+- Accept invite to shared collection (deep link parsing)
+- Grid / list view toggle (persisted to AsyncStorage)
+- Edit collection name + color
+- Delete collection (swipe on list)
+- Delete slot (from slot settings)
+- Account settings (edit name, username)

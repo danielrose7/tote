@@ -2,20 +2,12 @@
 
 Tracks which web app features exist on iOS. Updated as mobile catches up.
 
-## Prioritization Matrix
-
-Ranking missing features by **impact** (does it unblock real user workflows?) and **effort** (implementation complexity on mobile).
+## Remaining Gaps
 
 |  | Low Effort | High Effort |
 |---|---|---|
-| **High Impact** | Delete product • Mark product as selected • View selected count + budget total • Save product manually (paste URL) | Refresh product metadata • Slot budget + max selections UI |
+| **High Impact** | — | — |
 | **Low Impact** | — | Reorder items/slots/collections |
-
-**Quick wins** (high impact, low effort — do these next):
-1. **Delete product** — swipe-to-delete, single Jazz field update
-2. **Mark product as selected** — tap to toggle `selectedProductIds` on the slot, logic already exists in `slotHelpers.ts`
-3. **View selected count + budget total** — read-only display in slot header, all data already loaded
-4. **Save product manually** — text input that feeds into the existing `SaveProductSheet`
 
 ---
 
