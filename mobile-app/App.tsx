@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useOAuth, useUser } from "@clerk/expo";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -26,6 +26,7 @@ import { CollectionDetailScreen } from "./src/screens/CollectionDetailScreen";
 import { AccountSettingsScreen } from "./src/screens/AccountSettingsScreen";
 import { RootStackParamList } from "./src/navigation/types";
 import { Ionicons } from "@expo/vector-icons";
+import { cleanupPublishedClonesFromRoot } from "./src/lib/shareCollection";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -134,10 +135,15 @@ function CollectionListScreen({ navigation }: any) {
     );
   }
 
+  useEffect(() => {
+    cleanupPublishedClonesFromRoot(me.root?.blocks);
+  }, [me.root?.blocks]);
+
   const blocksLoaded = me.root?.blocks != null;
   const collections =
     me?.root?.blocks?.filter(
-      (b: typeof Block.prototype | null) => b?.type === "collection",
+      (b: typeof Block.prototype | null) =>
+        b?.type === "collection" && !b?.collectionData?.sourceId,
     ) ?? [];
 
   function deleteCollection(item: typeof Block.prototype) {

@@ -57,14 +57,7 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
     if (!me) return;
     setLoading(true);
     try {
-      const createdBlocks = publishCollection(collection, me);
-
-      // Add created blocks to me.root.blocks for republish lookups
-      if (me.root?.blocks) {
-        for (const block of createdBlocks) {
-          me.root.blocks.$jazz.push(block);
-        }
-      }
+      publishCollection(collection, me);
 
       const slug = collection.collectionData?.slug;
       const pid = collection.collectionData?.publishedId;

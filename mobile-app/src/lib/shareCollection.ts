@@ -13,6 +13,35 @@ export function parameterize(text: string): string {
 }
 
 /**
+ * Remove leaked published clone references from the user's top-level root blocks.
+ * Published clones have `collectionData.sourceId` set and should not appear in the
+ * mobile home collection list.
+ */
+export function cleanupPublishedClonesFromRoot(
+  blocks:
+    | {
+        length: number;
+        [index: number]: (typeof Block.prototype) | null;
+        $jazz: { splice: (index: number, deleteCount: number) => void };
+      }
+    | null
+    | undefined
+): number {
+  if (!blocks) return 0;
+
+  let removed = 0;
+  for (let i = blocks.length - 1; i >= 0; i -= 1) {
+    const block = blocks[i];
+    if (block?.type === "collection" && block.collectionData?.sourceId) {
+      blocks.$jazz.splice(i, 1);
+      removed += 1;
+    }
+  }
+
+  return removed;
+}
+
+/**
  * Publish a collection by creating a group-owned public clone.
  * Returns all created blocks so the caller can add them to me.root.blocks.
  */
