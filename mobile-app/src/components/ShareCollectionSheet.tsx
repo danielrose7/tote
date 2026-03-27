@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Share,
   Linking,
+  TextInput,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,6 +21,7 @@ import {
   getShareUrl,
   syncPublishedToClerk,
   removePublishedFromClerk,
+  parameterize,
 } from "../lib/shareCollection";
 
 interface Props {
@@ -35,10 +37,21 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [editingSlug, setEditingSlug] = useState(false);
+  const [slugInput, setSlugInput] = useState("");
+  const [isSavingSlug, setIsSavingSlug] = useState(false);
+
+  useEffect(() => {
+    const currentSlug = collection.collectionData?.slug;
+    setSlugInput(currentSlug || parameterize(collection.name ?? ""));
+  }, [collection.collectionData?.slug, collection.name]);
 
   const publishedId = collection.collectionData?.publishedId;
   const isPublished = !!publishedId;
   const shareUrl = getShareUrl(collection, user?.username);
+  const defaultSlug = parameterize(collection.name ?? "");
+  const normalizedSlugInput = parameterize(slugInput);
+  const isDefaultSlug = normalizedSlugInput === defaultSlug;
 
   async function handlePublish() {
     if (!me) return;
@@ -96,6 +109,37 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
     await Share.share({ message: shareUrl, url: shareUrl });
   }
 
+  async function handleSaveSlug() {
+    const newSlug = normalizedSlugInput;
+    const currentSlug = collection.collectionData?.slug;
+    if (!newSlug || newSlug === currentSlug) {
+      setEditingSlug(false);
+      return;
+    }
+    setIsSavingSlug(true);
+    try {
+      const oldData = collection.collectionData;
+      collection.$jazz.set("collectionData", { ...oldData, slug: newSlug });
+      const token = await getToken();
+      if (token) {
+        if (currentSlug) await removePublishedFromClerk(currentSlug, token);
+        const pid = collection.collectionData?.publishedId;
+        if (pid) await syncPublishedToClerk(newSlug, pid, collection.name ?? "", token);
+      }
+      setSlugInput(newSlug);
+      setEditingSlug(false);
+    } catch (e) {
+      console.error("Failed to save slug", e);
+    } finally {
+      setIsSavingSlug(false);
+    }
+  }
+
+  function handleResetSlug() {
+    if (isDefaultSlug) return;
+    setSlugInput(defaultSlug);
+  }
+
   async function handleText() {
     if (!shareUrl) return;
     const name = collection.name ?? "a collection";
@@ -129,8 +173,74 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
             </View>
           ) : (
             <View style={styles.section}>
-              <Text style={styles.linkLabel}>Public link</Text>
-              <Text style={styles.linkUrl} numberOfLines={1}>{shareUrl}</Text>
+              <View style={styles.linkHeader}>
+                <Text style={styles.linkLabel}>Public link</Text>
+                {!editingSlug ? (
+                  <View style={styles.headerActions}>
+                    <TouchableOpacity onPress={() => setEditingSlug(true)} style={styles.inlineEditBtn}>
+                      <Ionicons name="pencil-outline" size={14} color="#6366f1" />
+                      <Text style={styles.inlineEditText}>Edit URL</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.unpublishBtn} onPress={handleUnpublish} disabled={loading}>
+                      {loading ? (
+                        <ActivityIndicator color="#ef4444" />
+                      ) : (
+                        <>
+                          <Ionicons name="remove-circle-outline" size={14} color="#ef4444" />
+                          <Text style={styles.unpublishText}>Unpublish</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <View style={styles.inlineEditActions}>
+                    {!isDefaultSlug ? (
+                      <TouchableOpacity style={styles.slugResetBtn} onPress={handleResetSlug}>
+                        <Text style={styles.slugResetBtnText}>Reset to default</Text>
+                      </TouchableOpacity>
+                    ) : null}
+                    <TouchableOpacity
+                      style={[styles.slugSaveBtn, isSavingSlug && styles.slugSaveBtnDisabled]}
+                      onPress={handleSaveSlug}
+                      disabled={isSavingSlug}
+                    >
+                      {isSavingSlug ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={styles.slugSaveBtnText}>Save</Text>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.slugCancelBtn}
+                      onPress={() => {
+                        setSlugInput(collection.collectionData?.slug ?? defaultSlug);
+                        setEditingSlug(false);
+                      }}
+                    >
+                      <Ionicons name="close" size={18} color="#6b7280" />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
+              {!editingSlug ? (
+                <Text style={styles.linkUrl} numberOfLines={1}>{shareUrl}</Text>
+              ) : (
+                <View style={styles.slugEditRow}>
+                  <Text style={styles.slugPrefix}>https://tote.tools/</Text>
+                  <Text style={styles.slugPathPrefix}>s/{user?.username}/</Text>
+                  <TextInput
+                    style={styles.slugInput}
+                    value={slugInput}
+                    onChangeText={setSlugInput}
+                    autoFocus
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleSaveSlug}
+                  />
+                </View>
+              )}
 
               <View style={styles.linkActions}>
                 <TouchableOpacity style={styles.linkBtn} onPress={handleCopy}>
@@ -146,14 +256,6 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
                   <Text style={styles.linkBtnText}>More</Text>
                 </TouchableOpacity>
               </View>
-
-              <TouchableOpacity style={styles.unpublishBtn} onPress={handleUnpublish} disabled={loading}>
-                {loading ? (
-                  <ActivityIndicator color="#ef4444" />
-                ) : (
-                  <Text style={styles.unpublishText}>Unpublish</Text>
-                )}
-              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -190,7 +292,33 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   primaryBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+  linkHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   linkLabel: { fontSize: 12, fontWeight: "600", color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.4 },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  inlineEditBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#eef2ff",
+  },
+  inlineEditText: { fontSize: 13, color: "#6366f1", fontWeight: "600" },
+  inlineEditActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   linkUrl: { fontSize: 14, color: "#374151", backgroundColor: "#f9fafb", padding: 10, borderRadius: 8 },
   linkActions: { flexDirection: "row", gap: 10 },
   linkBtn: {
@@ -206,9 +334,49 @@ const styles = StyleSheet.create({
   },
   linkBtnText: { fontSize: 14, color: "#6366f1", fontWeight: "600" },
   unpublishBtn: {
+    alignSelf: "flex-end",
+    flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    marginTop: 4,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#fef2f2",
   },
   unpublishText: { fontSize: 14, color: "#ef4444", fontWeight: "500" },
+  slugEditRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f9fafb",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 4,
+  },
+  slugPrefix: { fontSize: 13, color: "#9ca3af" },
+  slugPathPrefix: { fontSize: 13, color: "#9ca3af" },
+  slugInput: {
+    flex: 1,
+    fontSize: 13,
+    color: "#374151",
+    borderBottomWidth: 1,
+    borderBottomColor: "#6366f1",
+    paddingVertical: 2,
+  },
+  slugSaveBtn: {
+    backgroundColor: "#6366f1",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  slugSaveBtnDisabled: { opacity: 0.5 },
+  slugSaveBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  slugResetBtn: {
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: "#f3f4f6",
+  },
+  slugResetBtnText: { color: "#4b5563", fontSize: 13, fontWeight: "600" },
+  slugCancelBtn: { padding: 2 },
 });
