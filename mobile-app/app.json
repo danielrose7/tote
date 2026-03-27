@@ -15,7 +15,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "tools.tote.app",
-      "associatedDomains": ["applinks:tote.tools"]
+      "associatedDomains": [
+        "applinks:tote.tools"
+      ]
     },
     "plugins": [
       [
@@ -29,6 +31,9 @@
           }
         }
       ]
-    ]
+    ],
+    "android": {
+      "package": "tools.tote.app"
+    }
   }
 }

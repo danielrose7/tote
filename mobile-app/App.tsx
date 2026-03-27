@@ -31,6 +31,7 @@ import { cleanupPublishedClonesFromRoot } from "./src/lib/shareCollection";
 WebBrowser.maybeCompleteAuthSession();
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const HOME_COLLECTION_CARD_HEIGHT = 56;
 
 function SignInScreen() {
   const { startOAuthFlow: startGoogle } = useOAuth({ strategy: "oauth_google" });
@@ -102,7 +103,6 @@ function CollectionCard({
         <View style={[styles.colorDot, { backgroundColor: item?.collectionData?.color ?? "#6366f1" }]} />
         <View style={styles.collectionInfo}>
           <Text style={styles.collectionName}>{item?.name}</Text>
-          <Text style={styles.collectionCount}>{item?.children?.length ?? 0} items</Text>
         </View>
         <Text style={styles.chevron}>›</Text>
       </TouchableOpacity>
@@ -116,8 +116,8 @@ function CollectionSkeleton() {
       <View style={styles.skeletonDot} />
       <View style={styles.skeletonInfo}>
         <View style={styles.skeletonName} />
-        <View style={styles.skeletonCount} />
       </View>
+      <View style={styles.skeletonChevron} />
     </View>
   );
 }
@@ -321,7 +321,9 @@ const styles = StyleSheet.create({
   collectionCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    height: HOME_COLLECTION_CARD_HEIGHT,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     backgroundColor: "#f9fafb",
     borderRadius: 12,
     marginBottom: 10,
@@ -338,11 +340,6 @@ const styles = StyleSheet.create({
   collectionName: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  collectionCount: {
-    fontSize: 13,
-    color: "#9ca3af",
-    marginTop: 2,
   },
   chevron: {
     fontSize: 20,
@@ -362,16 +359,18 @@ const styles = StyleSheet.create({
   skeletonCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    height: HOME_COLLECTION_CARD_HEIGHT,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     backgroundColor: "#f9fafb",
     borderRadius: 12,
     marginBottom: 10,
     gap: 12,
   },
   skeletonDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: "#e5e7eb" },
-  skeletonInfo: { flex: 1, gap: 6 },
-  skeletonName: { height: 14, borderRadius: 4, backgroundColor: "#e5e7eb", width: "55%" },
-  skeletonCount: { height: 11, borderRadius: 4, backgroundColor: "#f3f4f6", width: "30%" },
+  skeletonInfo: { flex: 1 },
+  skeletonName: { height: 14, borderRadius: 5, backgroundColor: "#e5e7eb", width: "50%" },
+  skeletonChevron: { width: 12, height: 14, borderRadius: 4, backgroundColor: "#f3f4f6" },
   deleteAction: { width: 80, backgroundColor: "#ef4444" },
   deleteActionInner: { flex: 1, justifyContent: "center", alignItems: "center" },
   deleteActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },

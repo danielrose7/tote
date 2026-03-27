@@ -14,6 +14,7 @@ import {
   Platform,
   ActivityIndicator,
   Dimensions,
+  ActionSheetIOS,
 } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { extractorScript } from "../lib/extractorScript";
@@ -23,11 +24,23 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useCoState } from "jazz-tools/expo";
 import { Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
+import {
+  Sortable,
+  SortableGrid,
+  SortableGridItem,
+  SortableItem,
+  type SortableGridRenderItemProps,
+  type SortableRenderItemProps,
+} from "react-native-reanimated-dnd";
 import { RootStackParamList } from "../navigation/types";
 import { SaveProductSheet } from "../components/SaveProductSheet";
 import { ShareCollectionSheet } from "../components/ShareCollectionSheet";
 import { useViewMode } from "../hooks/useViewMode";
 import { formatPrice } from "../lib/formatPrice";
+import {
+  applySubsetOrderByIds,
+  reorderIdsFromPositions,
+} from "../lib/reorderBlocks";
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
 type ProductItem = typeof Block.prototype;
@@ -36,6 +49,18 @@ type Section = {
   title: string | null;
   slot: ProductItem | null; // null for ungrouped
   data: ProductItem[];
+};
+
+type ReorderSectionTarget = {
+  id: string;
+  title: string;
+  slot: ProductItem | null;
+  items: ProductItem[];
+};
+
+type ReorderableBlockItem = {
+  id: string;
+  block: ProductItem;
 };
 
 function ProductRefresher({
@@ -588,6 +613,93 @@ function ProductGridCard({
   );
 }
 
+function ReorderProductRow({ item }: { item: ProductItem }) {
+  return (
+    <View style={styles.reorderRow}>
+      {item.productData?.imageUrl ? (
+        <Image
+          source={{ uri: item.productData.imageUrl }}
+          style={styles.reorderThumbnail}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={[styles.reorderThumbnail, styles.thumbnailPlaceholder]} />
+      )}
+      <View style={styles.reorderRowMeta}>
+        <Text style={styles.reorderRowTitle} numberOfLines={2}>
+          {item.name ?? "Untitled"}
+        </Text>
+        {item.productData?.price ? (
+          <Text style={styles.reorderRowSubtitle}>{formatPrice(item.productData.price)}</Text>
+        ) : null}
+      </View>
+      <SortableItem.Handle>
+        <View style={styles.reorderHandle}>
+          <Ionicons name="reorder-three-outline" size={20} color="#6b7280" />
+        </View>
+      </SortableItem.Handle>
+    </View>
+  );
+}
+
+function ReorderGridCard({
+  item,
+  size,
+}: {
+  item: ProductItem;
+  size: number;
+}) {
+  const imageHeight = Math.round(size * 0.72);
+  const cardHeight = imageHeight + 106;
+
+  return (
+    <View style={[styles.reorderGridCard, { width: size, minHeight: cardHeight }]}>
+      <View style={[styles.reorderGridMedia, { height: imageHeight }]}>
+        {item.productData?.imageUrl ? (
+          <Image
+            source={{ uri: item.productData.imageUrl }}
+            style={styles.reorderGridImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.reorderGridImagePlaceholder} />
+        )}
+      </View>
+      <View style={styles.reorderGridInfo}>
+        <Text style={styles.reorderGridTitle} numberOfLines={3}>
+          {item.name ?? "Untitled"}
+        </Text>
+        <View style={styles.reorderGridFooter}>
+          {item.productData?.price ? (
+            <Text style={styles.reorderGridPrice}>{formatPrice(item.productData.price)}</Text>
+          ) : <View />}
+          <Ionicons name="reorder-three-outline" size={18} color="#6b7280" />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ReorderSlotCard({ slot }: { slot: ProductItem }) {
+  const itemCount =
+    slot.children?.filter((child) => child?.type === "product").length ?? 0;
+
+  return (
+    <View style={styles.reorderSlotCard}>
+      <View>
+        <Text style={styles.reorderSlotEyebrow}>Section</Text>
+        <Text style={styles.reorderSlotTitle}>{slot.name ?? "Untitled"}</Text>
+        <Text style={styles.reorderSlotSubtitle}>{itemCount} items</Text>
+      </View>
+      <SortableItem.Handle>
+        <View style={styles.reorderSlotHandle}>
+          <Ionicons name="reorder-three-outline" size={22} color="#4f46e5" />
+        </View>
+      </SortableItem.Handle>
+    </View>
+  );
+}
+
 function MasonryGrid({
   items,
   onPress,
@@ -636,6 +748,9 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
   const [editingCollection, setEditingCollection] = useState(false);
   const [sharingCollection, setSharingCollection] = useState(false);
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [activeReorderSectionId, setActiveReorderSectionId] = useState("ungrouped");
+  const [isGridReorderReady, setIsGridReorderReady] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
   const { viewMode, setViewMode } = useViewMode();
 
@@ -643,30 +758,53 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     resolve: { children: { $each: { children: { $each: true } } } },
   });
 
+  function openCollectionActions() {
+    const nextViewModeLabel =
+      viewMode === "list" ? "Switch to grid" : "Switch to list";
+
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: ["Cancel", "Edit collection", "Share collection", nextViewModeLabel, "Reorder items"],
+        cancelButtonIndex: 0,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 1) {
+          setEditingCollection(true);
+        } else if (buttonIndex === 2) {
+          setSharingCollection(true);
+        } else if (buttonIndex === 3) {
+          setViewMode((mode) => (mode === "list" ? "grid" : "list"));
+        } else if (buttonIndex === 4) {
+          setIsReorderMode(true);
+        }
+      }
+    );
+  }
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: collection?.name ?? route.params.collectionName,
       headerRight: () => (
-        <View style={styles.headerButtons}>
-          <TouchableOpacity onPress={() => setEditingCollection(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="pencil-outline" size={20} color="#6366f1" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSharingCollection(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="share-outline" size={20} color="#6366f1" />
-          </TouchableOpacity>
+        isReorderMode ? (
           <TouchableOpacity
-            onPress={() => setViewMode((m) => (m === "list" ? "grid" : "list"))}
+            onPress={() => setIsReorderMode(false)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name={viewMode === "list" ? "grid-outline" : "list-outline"} size={20} color="#6366f1" />
+            <Text style={styles.doneButton}>Done</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="add" size={26} color="#6366f1" />
-          </TouchableOpacity>
-        </View>
+        ) : (
+          <View style={styles.headerButtons}>
+            <TouchableOpacity onPress={openCollectionActions} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="ellipsis-horizontal-circle-outline" size={22} color="#6366f1" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="add" size={26} color="#6366f1" />
+            </TouchableOpacity>
+          </View>
+        )
       ),
     });
-  }, [navigation, collection?.name, viewMode]);
+  }, [navigation, collection?.name, viewMode, isReorderMode]);
 
   if (!collection) {
     return (
@@ -703,6 +841,31 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const totalItems =
     directProducts.length +
     slots.reduce((sum, s) => sum + (s.children?.length ?? 0), 0);
+
+  const reorderSections: ReorderSectionTarget[] = [
+    ...slots.map((slot) => ({
+      id: slot.$jazz.id,
+      title: slot.name ?? "Untitled",
+      slot,
+      items: slot.children?.filter((b): b is ProductItem => b?.type === "product") ?? [],
+    })),
+    ...(directProducts.length > 0 || slots.length === 0
+      ? [
+          {
+            id: "ungrouped",
+            title: slots.length > 0 ? "Ungrouped" : "Items",
+            slot: null,
+            items: directProducts,
+          },
+        ]
+      : []),
+  ];
+
+  useEffect(() => {
+    if (!reorderSections.some((section) => section.id === activeReorderSectionId)) {
+      setActiveReorderSectionId(reorderSections[0]?.id ?? "ungrouped");
+    }
+  }, [activeReorderSectionId, reorderSections]);
 
   function openProduct(item: ProductItem) {
     const url = item.productData?.url;
@@ -771,6 +934,139 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     );
   }
 
+  const activeReorderSection =
+    reorderSections.find((section) => section.id === activeReorderSectionId) ?? reorderSections[0];
+  const gridItemSize = Math.floor((Dimensions.get("window").width - 64) / 2);
+  const reorderSlotItems: ReorderableBlockItem[] = slots.map((slot) => ({
+    id: slot.$jazz.id,
+    block: slot,
+  }));
+  const activeReorderItems: ReorderableBlockItem[] =
+    activeReorderSection?.items.map((item) => ({
+      id: item.$jazz.id,
+      block: item,
+    })) ?? [];
+  const reorderGridHeight =
+    Math.ceil(activeReorderItems.length / 2) * (Math.round(gridItemSize * 0.72) + 106 + 12) - 12;
+  const reorderGridKey = `${activeReorderSection?.id ?? "none"}:${activeReorderItems
+    .map((item) => item.id)
+    .join(",")}`;
+
+  useEffect(() => {
+    if (isReorderMode && viewMode === "grid") {
+      console.log(
+        "[reorder-grid]",
+        activeReorderSection?.id,
+        activeReorderItems.map((item) => item.id)
+      );
+    }
+  }, [isReorderMode, viewMode, activeReorderSection?.id, activeReorderItems]);
+
+  useEffect(() => {
+    if (!(isReorderMode && viewMode === "grid" && activeReorderItems.length > 0)) {
+      setIsGridReorderReady(false);
+      return;
+    }
+
+    setIsGridReorderReady(false);
+
+    const handle = requestAnimationFrame(() => {
+      setIsGridReorderReady(true);
+    });
+
+    return () => {
+      cancelAnimationFrame(handle);
+    };
+  }, [isReorderMode, viewMode, reorderGridKey, activeReorderItems.length]);
+
+  function handleSlotDrop(_: string, __: number, positions?: Record<string, number>) {
+    if (!collection.children) return;
+
+    const orderedIds = reorderSlotItems
+      .slice()
+      .sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0))
+      .map((item) => item.id);
+    applySubsetOrderByIds(
+      collection.children as never,
+      orderedIds,
+      (item) => item?.type === "slot"
+    );
+  }
+
+  function handleActiveSectionDrop(_: string, __: number, positions?: Record<string, number>) {
+    if (!activeReorderSection) return;
+
+    const orderedIds = activeReorderItems
+      .slice()
+      .sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0))
+      .map((item) => item.id);
+
+    if (activeReorderSection.slot?.children) {
+      applySubsetOrderByIds(
+        activeReorderSection.slot.children as never,
+        orderedIds,
+        (item) => item?.type === "product"
+      );
+      return;
+    }
+
+    if (collection.children) {
+      applySubsetOrderByIds(
+        collection.children as never,
+        orderedIds,
+        (item) => item?.type === "product"
+      );
+    }
+  }
+
+  function renderReorderSlot({
+    item,
+    id,
+    ...rest
+  }: SortableRenderItemProps<ReorderableBlockItem>) {
+    return (
+      <SortableItem key={id} id={id} data={item} onDrop={handleSlotDrop} {...rest}>
+        <ReorderSlotCard slot={item.block} />
+      </SortableItem>
+    );
+  }
+
+  function renderReorderProduct({
+    item,
+    id,
+    ...rest
+  }: SortableRenderItemProps<ReorderableBlockItem>) {
+    return (
+      <SortableItem
+        key={id}
+        id={id}
+        data={item}
+        onDrop={handleActiveSectionDrop}
+        {...rest}
+      >
+        <ReorderProductRow item={item.block} />
+      </SortableItem>
+    );
+  }
+
+  function renderReorderGridItem({
+    item,
+    ...rest
+  }: SortableGridRenderItemProps<ReorderableBlockItem>) {
+        return (
+      <SortableGridItem
+        key={item.id}
+        id={item.id}
+        data={item}
+        onDrop={handleActiveSectionDrop}
+        style={{ width: gridItemSize, height: Math.round(gridItemSize * 0.72) + 106 }}
+        {...rest}
+      >
+        <ReorderGridCard item={item.block} size={gridItemSize} />
+      </SortableGridItem>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.collectionMeta}>
@@ -785,6 +1081,105 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 
       {totalItems === 0 ? (
         <Text style={styles.empty}>No items yet</Text>
+      ) : isReorderMode ? (
+        <View style={styles.reorderModeContainer}>
+          <View style={styles.reorderHintRow}>
+            <Text style={styles.reorderHintText}>
+              Drag slots first, then drag items inside the active slot.
+            </Text>
+          </View>
+
+          {slots.length > 1 ? (
+            <View style={styles.reorderSlotsBlock}>
+              <Text style={styles.reorderSlotsLabel}>Slots</Text>
+              <Sortable
+                data={reorderSlotItems}
+                renderItem={renderReorderSlot}
+                itemHeight={94}
+                gap={10}
+                useFlatList={false}
+                itemKeyExtractor={(item) => item.id}
+                contentContainerStyle={styles.reorderSlotsList}
+              />
+            </View>
+          ) : null}
+
+          {reorderSections.length > 1 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.reorderSectionTabs}
+              contentContainerStyle={styles.reorderSectionTabsContent}
+            >
+              {reorderSections.map((section) => {
+                const isActive = section.id === activeReorderSection?.id;
+                return (
+                  <TouchableOpacity
+                    key={section.id}
+                    style={[styles.reorderTab, isActive && styles.reorderTabActive]}
+                    onPress={() => setActiveReorderSectionId(section.id)}
+                  >
+                    <Text style={[styles.reorderTabLabel, isActive && styles.reorderTabLabelActive]}>
+                      {section.title}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          ) : null}
+
+          {activeReorderSection ? (
+            <View style={styles.reorderPanelFlex}>
+              <View style={styles.reorderPanelHeader}>
+                <Text style={styles.reorderPanelTitle}>{activeReorderSection.title}</Text>
+                <Text style={styles.reorderPanelMeta}>
+                  {activeReorderSection.items.length} items · {viewMode}
+                </Text>
+              </View>
+
+              {activeReorderSection.items.length === 0 ? (
+                <View style={styles.reorderEmptyState}>
+                  <Text style={styles.reorderEmptyText}>Nothing to reorder here yet.</Text>
+                </View>
+              ) : viewMode === "grid" ? (
+                <View
+                  style={[
+                    styles.reorderGridFrame,
+                    { height: Math.max(reorderGridHeight + 10, gridItemSize + 34) },
+                  ]}
+                >
+                  {isGridReorderReady ? (
+                    <SortableGrid
+                      key={reorderGridKey}
+                      data={activeReorderItems}
+                      renderItem={renderReorderGridItem}
+                      itemKeyExtractor={(item) => item.id}
+                      dimensions={{
+                        columns: 2,
+                        itemWidth: gridItemSize,
+                        itemHeight: Math.round(gridItemSize * 0.72) + 106,
+                        columnGap: 12,
+                        rowGap: 12,
+                      }}
+                      scrollEnabled={false}
+                      style={styles.reorderGrid}
+                      contentContainerStyle={styles.reorderGridContainer}
+                    />
+                  ) : null}
+                </View>
+              ) : (
+                <Sortable
+                  data={activeReorderItems}
+                  renderItem={renderReorderProduct}
+                  itemHeight={96}
+                  gap={10}
+                  itemKeyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.reorderItemsList}
+                />
+              )}
+            </View>
+          ) : null}
+        </View>
       ) : viewMode === "grid" ? (
         <MasonryGrid
           items={[
@@ -978,6 +1373,7 @@ const styles = StyleSheet.create({
   },
   modalSaveText: { fontSize: 15, color: "#fff", fontWeight: "600" },
   headerButtons: { flexDirection: "row", alignItems: "center", gap: 14 },
+  doneButton: { color: "#4f46e5", fontSize: 16, fontWeight: "600" },
   swatches: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 4 },
   swatch: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   swatchSelected: { borderWidth: 2.5, borderColor: "rgba(0,0,0,0.2)" },
@@ -995,6 +1391,162 @@ const styles = StyleSheet.create({
   thumbnailRefreshing: { opacity: 0.4 },
   thumbnailSpinner: { position: "absolute", inset: 0, justifyContent: "center", alignItems: "center" },
   hidden: { width: 0, height: 0, overflow: "hidden" },
+  reorderModeContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 16,
+    gap: 10,
+    backgroundColor: "#f8fafc",
+  },
+  reorderHintRow: {
+    paddingHorizontal: 2,
+  },
+  reorderHintText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#6b7280",
+  },
+  reorderSlotsBlock: {
+    gap: 8,
+    paddingHorizontal: 2,
+  },
+  reorderSlotsLabel: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  reorderPanelFlex: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  reorderPanelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  reorderPanelTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  reorderPanelMeta: { fontSize: 13, color: "#6b7280", textTransform: "capitalize" },
+  reorderSlotsList: { gap: 10 },
+  reorderItemsList: { paddingBottom: 20 },
+  reorderSectionTabs: { flexGrow: 0 },
+  reorderSectionTabsContent: { gap: 8, paddingHorizontal: 2, paddingBottom: 2 },
+  reorderTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "#e5e7eb",
+  },
+  reorderTabActive: { backgroundColor: "#111827" },
+  reorderTabLabel: { fontSize: 13, fontWeight: "600", color: "#4b5563" },
+  reorderTabLabelActive: { color: "#fff" },
+  reorderSlotCard: {
+    height: 94,
+    borderRadius: 18,
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  reorderSlotEyebrow: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#6366f1",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  reorderSlotTitle: { fontSize: 18, fontWeight: "700", color: "#111827", marginTop: 4 },
+  reorderSlotSubtitle: { fontSize: 13, color: "#6b7280", marginTop: 4 },
+  reorderSlotHandle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#eef2ff",
+  },
+  reorderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    height: 84,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: "#f8fafc",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  reorderThumbnail: {
+    width: 52,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: "#e5e7eb",
+  },
+  reorderRowMeta: { flex: 1 },
+  reorderRowTitle: { fontSize: 15, fontWeight: "600", color: "#111827" },
+  reorderRowSubtitle: { marginTop: 4, fontSize: 13, color: "#6b7280" },
+  reorderHandle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+  },
+  reorderEmptyState: { flex: 1, alignItems: "center", justifyContent: "center" },
+  reorderEmptyText: { fontSize: 14, color: "#9ca3af" },
+  reorderGridFrame: {
+    overflow: "visible",
+  },
+  reorderGrid: {
+    backgroundColor: "transparent",
+  },
+  reorderGridContainer: { paddingTop: 4, paddingBottom: 30 },
+  reorderGridCard: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: "hidden",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  reorderGridMedia: {
+    width: "100%",
+    backgroundColor: "#f8fafc",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+  },
+  reorderGridImage: {
+    width: "100%",
+    height: "100%",
+  },
+  reorderGridImagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#e5e7eb",
+    borderRadius: 14,
+  },
+  reorderGridInfo: { flex: 1, padding: 12, gap: 8 },
+  reorderGridTitle: { fontSize: 14, fontWeight: "600", color: "#111827", lineHeight: 18 },
+  reorderGridFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  reorderGridPrice: { fontSize: 13, color: "#6b7280" },
   masonryContainer: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
   masonryColumns: { flexDirection: "row", gap: 8 },
   gridCard: {
