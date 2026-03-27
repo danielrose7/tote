@@ -3,7 +3,7 @@ import { Block, BlockList } from "@tote/schema";
 
 const BASE_URL = "https://tote.tools";
 
-function slugify(text: string): string {
+export function parameterize(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\-_\.~\s]/g, "")
@@ -100,7 +100,7 @@ export function publishCollection(
     }
   }
 
-  const slug = sourceCollection.collectionData?.slug || slugify(sourceCollection.name);
+  const slug = sourceCollection.collectionData?.slug || parameterize(sourceCollection.name);
 
   sourceCollection.$jazz.set("collectionData", {
     ...sourceCollection.collectionData,
