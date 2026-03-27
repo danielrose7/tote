@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --dev-client --localhost",
+    "start:clear": "expo start --dev-client --localhost --clear",
+    "start:lan": "expo start --dev-client --lan",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "ios:sim-clean": "LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild -workspace ios/Tote.xcworkspace -scheme Tote -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -derivedDataPath ios/build clean build",

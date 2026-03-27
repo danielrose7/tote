@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useOAuth, useUser } from "@clerk/expo";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Animated,
   Image,
+  RefreshControl,
 } from "react-native";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
@@ -31,7 +32,7 @@ import { cleanupPublishedClonesFromRoot } from "./src/lib/shareCollection";
 WebBrowser.maybeCompleteAuthSession();
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const HOME_COLLECTION_CARD_HEIGHT = 56;
+const HOME_COLLECTION_CARD_HEIGHT = 80;
 
 function SignInScreen() {
   const { startOAuthFlow: startGoogle } = useOAuth({ strategy: "oauth_google" });
@@ -122,9 +123,29 @@ function CollectionSkeleton() {
   );
 }
 
-function CollectionListScreen({ navigation }: any) {
+function CollectionListContent({
+  navigation,
+  refreshing,
+  onRefresh,
+}: {
+  navigation: any;
+  refreshing: boolean;
+  onRefresh: () => void;
+}) {
   const me = useAccount(JazzAccount, {
-    resolve: { root: { blocks: { $each: true } } },
+    resolve: {
+      root: {
+        blocks: {
+          $each: {
+            children: {
+              $each: {
+                children: { $each: true },
+              },
+            },
+          },
+        },
+      },
+    },
   });
   const { user } = useUser();
   if (!me) {
@@ -171,6 +192,13 @@ function CollectionListScreen({ navigation }: any) {
       <FlatList
         data={collections}
         keyExtractor={(item) => item?.$jazz?.id ?? ""}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#6366f1"
+          />
+        }
         renderItem={({ item }) => (
           <CollectionCard
             item={item}
@@ -197,6 +225,28 @@ function CollectionListScreen({ navigation }: any) {
       />
       <StatusBar style="auto" />
     </View>
+  );
+}
+
+function CollectionListScreen({ navigation }: any) {
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  function handleRefresh() {
+    setRefreshing(true);
+    setRefreshKey((value) => value + 1);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  }
+
+  return (
+    <CollectionListContent
+      key={refreshKey}
+      navigation={navigation}
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
+    />
   );
 }
 
@@ -323,7 +373,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: HOME_COLLECTION_CARD_HEIGHT,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 12,
     backgroundColor: "#f9fafb",
     borderRadius: 12,
     marginBottom: 10,
@@ -361,7 +411,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: HOME_COLLECTION_CARD_HEIGHT,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 12,
     backgroundColor: "#f9fafb",
     borderRadius: 12,
     marginBottom: 10,
@@ -369,8 +419,8 @@ const styles = StyleSheet.create({
   },
   skeletonDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: "#e5e7eb" },
   skeletonInfo: { flex: 1 },
-  skeletonName: { height: 14, borderRadius: 5, backgroundColor: "#e5e7eb", width: "50%" },
-  skeletonChevron: { width: 12, height: 14, borderRadius: 4, backgroundColor: "#f3f4f6" },
+  skeletonName: { height: 16, borderRadius: 5, backgroundColor: "#e5e7eb", width: "50%" },
+  skeletonChevron: { width: 12, height: 16, borderRadius: 4, backgroundColor: "#f3f4f6" },
   deleteAction: { width: 80, backgroundColor: "#ef4444" },
   deleteActionInner: { flex: 1, justifyContent: "center", alignItems: "center" },
   deleteActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },

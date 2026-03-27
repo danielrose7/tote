@@ -615,30 +615,30 @@ function ProductGridCard({
 
 function ReorderProductRow({ item }: { item: ProductItem }) {
   return (
-    <View style={styles.reorderRow}>
-      {item.productData?.imageUrl ? (
-        <Image
-          source={{ uri: item.productData.imageUrl }}
-          style={styles.reorderThumbnail}
-          resizeMode="cover"
-        />
-      ) : (
-        <View style={[styles.reorderThumbnail, styles.thumbnailPlaceholder]} />
-      )}
-      <View style={styles.reorderRowMeta}>
-        <Text style={styles.reorderRowTitle} numberOfLines={2}>
-          {item.name ?? "Untitled"}
-        </Text>
-        {item.productData?.price ? (
-          <Text style={styles.reorderRowSubtitle}>{formatPrice(item.productData.price)}</Text>
-        ) : null}
-      </View>
-      <SortableItem.Handle>
+    <SortableItem.Handle style={styles.reorderWholeHandle}>
+      <View style={styles.reorderRow}>
+        {item.productData?.imageUrl ? (
+          <Image
+            source={{ uri: item.productData.imageUrl }}
+            style={styles.reorderThumbnail}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.reorderThumbnail, styles.thumbnailPlaceholder]} />
+        )}
+        <View style={styles.reorderRowMeta}>
+          <Text style={styles.reorderRowTitle} numberOfLines={2}>
+            {item.name ?? "Untitled"}
+          </Text>
+          {item.productData?.price ? (
+            <Text style={styles.reorderRowSubtitle}>{formatPrice(item.productData.price)}</Text>
+          ) : null}
+        </View>
         <View style={styles.reorderHandle}>
           <Ionicons name="reorder-three-outline" size={20} color="#6b7280" />
         </View>
-      </SortableItem.Handle>
-    </View>
+      </View>
+    </SortableItem.Handle>
   );
 }
 
@@ -685,18 +685,18 @@ function ReorderSlotCard({ slot }: { slot: ProductItem }) {
     slot.children?.filter((child) => child?.type === "product").length ?? 0;
 
   return (
-    <View style={styles.reorderSlotCard}>
-      <View>
-        <Text style={styles.reorderSlotEyebrow}>Section</Text>
-        <Text style={styles.reorderSlotTitle}>{slot.name ?? "Untitled"}</Text>
-        <Text style={styles.reorderSlotSubtitle}>{itemCount} items</Text>
-      </View>
-      <SortableItem.Handle>
+    <SortableItem.Handle style={styles.reorderWholeHandle}>
+      <View style={styles.reorderSlotCard}>
+        <View>
+          <Text style={styles.reorderSlotEyebrow}>Slot</Text>
+          <Text style={styles.reorderSlotTitle}>{slot.name ?? "Untitled"}</Text>
+          <Text style={styles.reorderSlotSubtitle}>{itemCount} items</Text>
+        </View>
         <View style={styles.reorderSlotHandle}>
           <Ionicons name="reorder-three-outline" size={22} color="#4f46e5" />
         </View>
-      </SortableItem.Handle>
-    </View>
+      </View>
+    </SortableItem.Handle>
   );
 }
 
@@ -749,7 +749,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [editingCollection, setEditingCollection] = useState(false);
   const [sharingCollection, setSharingCollection] = useState(false);
   const [isReorderMode, setIsReorderMode] = useState(false);
-  const [activeReorderSectionId, setActiveReorderSectionId] = useState("ungrouped");
+  const [activeReorderTargetId, setActiveReorderTargetId] = useState("ungrouped");
   const [isGridReorderReady, setIsGridReorderReady] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
   const { viewMode, setViewMode } = useViewMode();
@@ -757,6 +757,25 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const collection = useCoState(Block, collectionId, {
     resolve: { children: { $each: { children: { $each: true } } } },
   });
+
+  function openReorderItemTargetPicker() {
+    const options = ["Cancel", ...reorderSections.map((section) => section.title)];
+
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex: 0,
+      },
+      (buttonIndex) => {
+        if (buttonIndex > 0) {
+          const target = reorderSections[buttonIndex - 1];
+          if (target) {
+            setActiveReorderTargetId(target.id);
+          }
+        }
+      }
+    );
+  }
 
   function openCollectionActions() {
     const nextViewModeLabel =
@@ -862,10 +881,14 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   ];
 
   useEffect(() => {
-    if (!reorderSections.some((section) => section.id === activeReorderSectionId)) {
-      setActiveReorderSectionId(reorderSections[0]?.id ?? "ungrouped");
+    const validTargets = [
+      ...(slots.length > 1 ? ["slots"] : []),
+      ...reorderSections.map((section) => section.id),
+    ];
+    if (!validTargets.includes(activeReorderTargetId)) {
+      setActiveReorderTargetId(validTargets[0] ?? "ungrouped");
     }
-  }, [activeReorderSectionId, reorderSections]);
+  }, [activeReorderTargetId, reorderSections, slots.length]);
 
   function openProduct(item: ProductItem) {
     const url = item.productData?.url;
@@ -935,7 +958,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   }
 
   const activeReorderSection =
-    reorderSections.find((section) => section.id === activeReorderSectionId) ?? reorderSections[0];
+    reorderSections.find((section) => section.id === activeReorderTargetId) ?? reorderSections[0];
+  const hasMultipleSlots = slots.length > 1;
   const gridItemSize = Math.floor((Dimensions.get("window").width - 64) / 2);
   const reorderSlotItems: ReorderableBlockItem[] = slots.map((slot) => ({
     id: slot.$jazz.id,
@@ -951,16 +975,6 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const reorderGridKey = `${activeReorderSection?.id ?? "none"}:${activeReorderItems
     .map((item) => item.id)
     .join(",")}`;
-
-  useEffect(() => {
-    if (isReorderMode && viewMode === "grid") {
-      console.log(
-        "[reorder-grid]",
-        activeReorderSection?.id,
-        activeReorderItems.map((item) => item.id)
-      );
-    }
-  }, [isReorderMode, viewMode, activeReorderSection?.id, activeReorderItems]);
 
   useEffect(() => {
     if (!(isReorderMode && viewMode === "grid" && activeReorderItems.length > 0)) {
@@ -1083,52 +1097,76 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         <Text style={styles.empty}>No items yet</Text>
       ) : isReorderMode ? (
         <View style={styles.reorderModeContainer}>
-          <View style={styles.reorderHintRow}>
-            <Text style={styles.reorderHintText}>
-              Drag slots first, then drag items inside the active slot.
-            </Text>
-          </View>
+          {hasMultipleSlots || reorderSections.length > 1 ? (
+            <View style={styles.reorderControls}>
+              <View style={styles.reorderScopeSwitch}>
+                {hasMultipleSlots ? (
+                  <TouchableOpacity
+                    style={[
+                      styles.reorderScopeButton,
+                      activeReorderTargetId === "slots" && styles.reorderScopeButtonActive,
+                    ]}
+                    onPress={() => setActiveReorderTargetId("slots")}
+                  >
+                    <Text
+                      style={[
+                        styles.reorderScopeButtonLabel,
+                        activeReorderTargetId === "slots" && styles.reorderScopeButtonLabelActive,
+                      ]}
+                    >
+                      Slots
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+                <TouchableOpacity
+                  style={[
+                    styles.reorderScopeButton,
+                    activeReorderTargetId !== "slots" && styles.reorderScopeButtonActive,
+                  ]}
+                  onPress={() => setActiveReorderTargetId(activeReorderSection?.id ?? reorderSections[0]?.id ?? "ungrouped")}
+                >
+                  <Text
+                    style={[
+                      styles.reorderScopeButtonLabel,
+                      activeReorderTargetId !== "slots" && styles.reorderScopeButtonLabelActive,
+                    ]}
+                  >
+                    Items
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          {slots.length > 1 ? (
-            <View style={styles.reorderSlotsBlock}>
-              <Text style={styles.reorderSlotsLabel}>Slots</Text>
+              {activeReorderTargetId !== "slots" && reorderSections.length > 1 ? (
+                <TouchableOpacity style={styles.reorderTargetPicker} onPress={openReorderItemTargetPicker}>
+                  <Text style={styles.reorderTargetPickerLabel}>Editing</Text>
+                  <View style={styles.reorderTargetPickerValueRow}>
+                    <Text style={styles.reorderTargetPickerValue} numberOfLines={1}>
+                      {activeReorderSection?.title ?? "Items"}
+                    </Text>
+                    <Ionicons name="chevron-down" size={16} color="#6b7280" />
+                  </View>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          ) : null}
+
+          {activeReorderTargetId === "slots" && hasMultipleSlots ? (
+            <View style={styles.reorderPanelFlex}>
+              <View style={styles.reorderPanelHeader}>
+                <Text style={styles.reorderPanelTitle}>Slots</Text>
+                <Text style={styles.reorderPanelMeta}>{slots.length} slots</Text>
+              </View>
               <Sortable
                 data={reorderSlotItems}
                 renderItem={renderReorderSlot}
-                itemHeight={94}
-                gap={10}
+                itemHeight={112}
+                gap={12}
                 useFlatList={false}
                 itemKeyExtractor={(item) => item.id}
                 contentContainerStyle={styles.reorderSlotsList}
               />
             </View>
-          ) : null}
-
-          {reorderSections.length > 1 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.reorderSectionTabs}
-              contentContainerStyle={styles.reorderSectionTabsContent}
-            >
-              {reorderSections.map((section) => {
-                const isActive = section.id === activeReorderSection?.id;
-                return (
-                  <TouchableOpacity
-                    key={section.id}
-                    style={[styles.reorderTab, isActive && styles.reorderTabActive]}
-                    onPress={() => setActiveReorderSectionId(section.id)}
-                  >
-                    <Text style={[styles.reorderTabLabel, isActive && styles.reorderTabLabelActive]}>
-                      {section.title}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          ) : null}
-
-          {activeReorderSection ? (
+          ) : activeReorderSection ? (
             <View style={styles.reorderPanelFlex}>
               <View style={styles.reorderPanelHeader}>
                 <Text style={styles.reorderPanelTitle}>{activeReorderSection.title}</Text>
@@ -1145,7 +1183,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
                 <View
                   style={[
                     styles.reorderGridFrame,
-                    { height: Math.max(reorderGridHeight + 10, gridItemSize + 34) },
+                    { height: Math.max(reorderGridHeight + gridItemSize, gridItemSize * 2) },
                   ]}
                 >
                   {isGridReorderReady ? (
@@ -1399,28 +1437,68 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: "#f8fafc",
   },
-  reorderHintRow: {
-    paddingHorizontal: 2,
+  reorderControls: {
+    gap: 10,
   },
-  reorderHintText: {
+  reorderScopeSwitch: {
+    flexDirection: "row",
+    alignSelf: "flex-start",
+    backgroundColor: "#e5e7eb",
+    borderRadius: 999,
+    padding: 4,
+    gap: 4,
+  },
+  reorderScopeButton: {
+    minWidth: 76,
+    height: 36,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reorderScopeButtonActive: {
+    backgroundColor: "#111827",
+  },
+  reorderScopeButtonLabel: {
     fontSize: 13,
-    lineHeight: 18,
-    color: "#6b7280",
+    fontWeight: "600",
+    color: "#4b5563",
   },
-  reorderSlotsBlock: {
-    gap: 8,
-    paddingHorizontal: 2,
+  reorderScopeButtonLabelActive: {
+    color: "#fff",
   },
-  reorderSlotsLabel: {
-    fontSize: 13,
+  reorderTargetPicker: {
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  reorderTargetPickerLabel: {
+    fontSize: 11,
     fontWeight: "700",
     color: "#6b7280",
     textTransform: "uppercase",
-    letterSpacing: 0.4,
+    letterSpacing: 0.8,
+  },
+  reorderTargetPickerValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  reorderTargetPickerValue: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
   },
   reorderPanelFlex: {
     flex: 1,
     minHeight: 0,
+    overflow: "visible",
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 12,
@@ -1435,21 +1513,10 @@ const styles = StyleSheet.create({
   },
   reorderPanelTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
   reorderPanelMeta: { fontSize: 13, color: "#6b7280", textTransform: "capitalize" },
-  reorderSlotsList: { gap: 10 },
+  reorderSlotsList: { paddingTop: 2, paddingBottom: 14 },
   reorderItemsList: { paddingBottom: 20 },
-  reorderSectionTabs: { flexGrow: 0 },
-  reorderSectionTabsContent: { gap: 8, paddingHorizontal: 2, paddingBottom: 2 },
-  reorderTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: "#e5e7eb",
-  },
-  reorderTabActive: { backgroundColor: "#111827" },
-  reorderTabLabel: { fontSize: 13, fontWeight: "600", color: "#4b5563" },
-  reorderTabLabelActive: { color: "#fff" },
   reorderSlotCard: {
-    height: 94,
+    height: 88,
     borderRadius: 18,
     backgroundColor: "#f8fafc",
     borderWidth: 1,
@@ -1475,6 +1542,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#eef2ff",
+  },
+  reorderWholeHandle: {
+    width: "100%",
   },
   reorderRow: {
     flexDirection: "row",
@@ -1513,7 +1583,7 @@ const styles = StyleSheet.create({
   reorderGrid: {
     backgroundColor: "transparent",
   },
-  reorderGridContainer: { paddingTop: 4, paddingBottom: 30 },
+  reorderGridContainer: { paddingTop: 4, paddingBottom: 40 },
   reorderGridCard: {
     flex: 1,
     borderRadius: 20,

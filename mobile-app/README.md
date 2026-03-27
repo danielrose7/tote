@@ -4,14 +4,22 @@ This file captures the iOS recovery flow we used when simulator builds or Metro 
 
 ## Fast paths
 
+- Daily iOS simulator dev loop:
+  - `cd mobile-app`
+  - `pnpm start`
 - Start Metro with a clear cache:
   - `cd mobile-app`
-  - `CI=1 npx expo start --dev-client --clear --port 8081`
+  - `pnpm start:clear`
 - Clean simulator build:
   - `cd mobile-app`
   - `pnpm ios:sim-clean`
 
 The `ios:sim-clean` script is defined in [package.json](/Users/dan/personal/tote/mobile-app/package.json).
+
+`pnpm start` uses:
+- `expo start --dev-client --localhost`
+
+This is the preferred path for simulator JS/UI work. It keeps the app on the custom dev client, but avoids the more fragile `CI=1` path we used during recovery.
 
 ## Deep reset (when JS changes do not show up)
 
@@ -27,11 +35,26 @@ Run from repo root unless noted:
    - `rm -rf ~/Library/Caches/Metro`
 4. Start Metro again:
    - `cd mobile-app`
-   - `CI=1 npx expo start --dev-client --clear --port 8081`
+   - `pnpm start:clear`
 5. Rebuild and reinstall simulator app:
    - `pnpm ios:sim-clean`
    - `xcrun simctl install booted ios/build/Build/Products/Debug-iphonesimulator/Tote.app`
    - `xcrun simctl launch booted tools.tote.app`
+
+## When rebuilds should be necessary
+
+Rebuild for:
+- native dependency changes
+- `Podfile` or pods changes
+- Expo config/plugin changes
+- Reanimated/Worklets/native module setup changes
+
+Reload should be enough for:
+- JS/TS logic
+- React UI/styling
+- most screen/component changes
+
+If a JS-only change does not show up after `pnpm start:clear` and relaunching the app, treat that as a dev-loop issue rather than the normal expected path.
 
 ## Known iOS codegen pitfall
 
