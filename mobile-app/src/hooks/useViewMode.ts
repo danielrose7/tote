@@ -13,9 +13,12 @@ export function useViewMode() {
     });
   }, []);
 
-  function setViewMode(m: ViewMode) {
-    setViewModeState(m);
-    AsyncStorage.setItem(KEY, m);
+  function setViewMode(next: ViewMode | ((current: ViewMode) => ViewMode)) {
+    setViewModeState((current) => {
+      const resolved = typeof next === "function" ? next(current) : next;
+      AsyncStorage.setItem(KEY, resolved);
+      return resolved;
+    });
   }
 
   return { viewMode, setViewMode };
