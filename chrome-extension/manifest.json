@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tote",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "One place, every store. Save anything from the web.",
   "homepage_url": "https://tote.tools",
   "icons": {

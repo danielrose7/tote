@@ -1,4 +1,4 @@
-import { useEffect, useState, Component, ErrorInfo, ReactNode } from "react";
+import { useEffect, useState, useRef, Component, ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { SignedIn, SignedOut, useAuth, useClerk, useUser } from "@clerk/chrome-extension";
 import { useCoState } from "jazz-tools/react";
@@ -139,6 +139,8 @@ function SlotSelector({
   const [inputValue, setInputValue] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const selectedSlot = value ? slots.find((s) => s.id === value) : null;
   const filteredSlots = inputValue
@@ -148,6 +150,32 @@ function SlotSelector({
     (s) => s.name.toLowerCase() === inputValue.toLowerCase()
   );
   const showCreateOption = inputValue.trim() && !exactMatch;
+
+  const openDropdown = () => {
+    if (!inputRef.current) return;
+    const rect = inputRef.current.getBoundingClientRect();
+    const maxHeight = 160;
+    const spaceBelow = window.innerHeight - rect.bottom - 4;
+    // Flip upward if not enough space below
+    if (spaceBelow < maxHeight && rect.top > maxHeight) {
+      setDropdownStyle({
+        position: "fixed",
+        bottom: window.innerHeight - rect.top + 4,
+        left: rect.left,
+        width: rect.width,
+        maxHeight,
+      });
+    } else {
+      setDropdownStyle({
+        position: "fixed",
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+        maxHeight: Math.min(maxHeight, spaceBelow),
+      });
+    }
+    setIsOpen(true);
+  };
 
   const handleSelect = (slotId: string) => {
     onChange(slotId);
@@ -189,19 +217,20 @@ function SlotSelector({
   return (
     <div className="slot-selector">
       <input
+        ref={inputRef}
         type="text"
         value={inputValue}
         onChange={(e) => {
           setInputValue(e.target.value);
-          if (!isOpen) setIsOpen(true);
+          if (!isOpen) openDropdown();
         }}
-        onFocus={() => setIsOpen(true)}
+        onFocus={openDropdown}
         onBlur={() => setTimeout(() => setIsOpen(false), 150)}
         placeholder="Add to slot (optional)"
         disabled={disabled}
       />
       {isOpen && !disabled && (
-        <ul className="slot-dropdown">
+        <ul className="slot-dropdown" style={dropdownStyle}>
           {filteredSlots.map((slot) => (
             <li
               key={slot.id}
