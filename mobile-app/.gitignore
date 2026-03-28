@@ -1,6 +1,5 @@
 node_modules/
 .expo/
-ios/
 android/
 *.jks
 *.p8
@@ -11,3 +10,22 @@ android/
 web-build/
 .env
 .env.local
+
+# iOS: keep source/project files visible to git, ignore generated artifacts
+ios/*
+!ios/Podfile
+!ios/Podfile.lock
+!ios/Podfile.properties.json
+!ios/.xcode.env
+!ios/Tote/
+!ios/Tote/**
+!ios/ToteShareExtension/
+!ios/ToteShareExtension/**
+!ios/Tote.xcodeproj/
+!ios/Tote.xcodeproj/**
+!ios/Tote.xcworkspace/
+!ios/Tote.xcworkspace/**
+ios/Pods/
+ios/build/
+ios/.xcode.env.local
+ios/**/*.xcuserdata/
