@@ -269,13 +269,13 @@ export default function HomePage() {
       <header className={styles.header}>
         <nav className={styles.nav}>
           <Link href="/" className={styles.wordmark}>tote</Link>
-          <div className={styles.navLinks}>
+          <div className={`${styles.navLinks} ${styles.desktopOnly}`}>
             <a href="#use-cases" className={styles.navLink}>Use cases</a>
             <a href="#audiences" className={styles.navLink}>Who it&apos;s for</a>
             <a href="#comparison" className={styles.navLink}>Why Tote</a>
             <Link href="/docs" className={styles.navLink}>Docs</Link>
           </div>
-          <div className={styles.navActions}>
+          <div className={`${styles.navActions} ${styles.desktopOnly}`}>
             <a
               href={CHROME_WEB_STORE_URL}
               target="_blank"
@@ -286,6 +286,36 @@ export default function HomePage() {
             </a>
             <LandingAuthButtons />
           </div>
+          <details className={styles.mobileMenu}>
+            <summary className={styles.mobileMenuButton} aria-label="Open menu">
+              <span className={styles.mobileMenuIcon} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            </summary>
+            <div className={styles.mobileMenuPanel}>
+              <div className={styles.mobileMenuLinks}>
+                <a href="#use-cases" className={styles.mobileMenuLink}>Use cases</a>
+                <a href="#audiences" className={styles.mobileMenuLink}>Who it&apos;s for</a>
+                <a href="#comparison" className={styles.mobileMenuLink}>Why Tote</a>
+                <Link href="/docs" className={styles.mobileMenuLink}>Docs</Link>
+              </div>
+              <div className={styles.mobileMenuActions}>
+                <a
+                  href={CHROME_WEB_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.mobileChromeLink}
+                >
+                  Add to Chrome
+                </a>
+                <div className={styles.mobileMenuAuth}>
+                  <LandingAuthButtons />
+                </div>
+              </div>
+            </div>
+          </details>
         </nav>
       </header>
 
