@@ -19,9 +19,8 @@
 		CA887B8474AB1C0DA3D717C9 /* libPods-ToteShareExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D0E0CAB8065AC8DF36DA68 /* libPods-ToteShareExtension.a */; };
 		D1A001000000000000000001 /* AppGroupModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000002 /* AppGroupModule.swift */; };
 		D1A001000000000000000003 /* AppGroupModule.m in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000004 /* AppGroupModule.m */; };
+		EF0A9B5566DB4785B78748FE /* ClerkViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20BE5A05F9344A5A18ECCAF /* ClerkViewFactory.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		EC4B7EC47083486FAB8AA932 /* ToteShareExtension.appex in Copy Files */ = {isa = PBXBuildFile; fileRef = 587F7F927B664B729A9951D0 /* ToteShareExtension.appex */; };
-		EF0A9B5566DB4785B78748FE = {isa = PBXBuildFile; fileRef = E20BE5A05F9344A5A18ECCAF /* ClerkViewFactory.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,13 +29,6 @@
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 7D12177554AC4AF4A4260915;
-			remoteInfo = ToteShareExtension;
-		};
-		7CBDB40CDCAC4FD6B7C979AE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 2D58E4825E114A62A477C054;
 			remoteInfo = ToteShareExtension;
 		};
 /* End PBXContainerItemProxy section */
@@ -52,6 +44,26 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D47F831D17D84CE8BEDEF2F2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E7E98F37C9694A488F0B0C63 /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F315F8A8B6BB47799B3F3FE3 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -59,30 +71,9 @@
 			dstSubfolderSpec = 13;
 			files = (
 				9B3687C7E8E44663BA9F2E30 /* ToteShareExtension.appex in Copy Files */,
-				EC4B7EC47083486FAB8AA932 /* ToteShareExtension.appex in Copy Files */,
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D47F831D17D84CE8BEDEF2F2 /* Embed Foundation Extensions */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Embed Foundation Extensions";
-			dstPath = "";
-			dstSubfolderSpec = 13;
-		};
-		E7E98F37C9694A488F0B0C63 /* Copy Files */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Copy Files";
-			dstPath = "";
-			dstSubfolderSpec = 13;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -104,14 +95,13 @@
 		D1A001000000000000000002 /* AppGroupModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppGroupModule.swift; path = Tote/AppGroupModule.swift; sourceTree = "<group>"; };
 		D1A001000000000000000004 /* AppGroupModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppGroupModule.m; path = Tote/AppGroupModule.m; sourceTree = "<group>"; };
 		E0D92B63AD2243BCB4A07538 /* Pods-ToteShareExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToteShareExtension.debug.xcconfig"; path = "Target Support Files/Pods-ToteShareExtension/Pods-ToteShareExtension.debug.xcconfig"; sourceTree = "<group>"; };
+		E20BE5A05F9344A5A18ECCAF /* ClerkViewFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClerkViewFactory.swift; path = Tote/ClerkViewFactory.swift; sourceTree = "<group>"; };
 		E846117E45F3775A5AB8AFE3 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ToteShareExtension/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Tote/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Tote-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Tote-Bridging-Header.h"; path = "Tote/Tote-Bridging-Header.h"; sourceTree = "<group>"; };
 		F63ADE7DA70FA1089A0A5F6E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Tote/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		FFF64AADAD5F46DD82EBFFC0 /* Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = Info.plist; path = Info.plist; sourceTree = "<group>"; };
-		587F7F927B664B729A9951D0 /* ToteShareExtension.appex */ = {isa = PBXFileReference; name = "ToteShareExtension.appex"; path = "ToteShareExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = wrapper.app-extension; includeInIndex = 0; };
-		E20BE5A05F9344A5A18ECCAF = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClerkViewFactory.swift; path = Tote/ClerkViewFactory.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,13 +118,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				CA887B8474AB1C0DA3D717C9 /* libPods-ToteShareExtension.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		126519ECE5454CFD88958A32 /* Embed Foundation Extensions */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -222,7 +205,6 @@
 				CD2E49528B164F21A2B7A0A1 /* ToteShareExtension */,
 				4E610283A10525B19AFA9A6A /* Pods */,
 				507C4FBA29B85CD551FDBE71 /* ExpoModulesProviders */,
-				3E14DAB1A3684107B7053D45 /* ToteShareExtension */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -234,7 +216,6 @@
 			children = (
 				13B07F961A680F5B00A75B9A /* Tote.app */,
 				7D75A8D406CA4267B4EBC293 /* ToteShareExtension.appex */,
-				587F7F927B664B729A9951D0 /* ToteShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -249,17 +230,6 @@
 			sourceTree = "<group>";
 		};
 		CD2E49528B164F21A2B7A0A1 /* ToteShareExtension */ = {
-			isa = PBXGroup;
-			children = (
-				0C25499830824171A93205B6 /* ShareExtensionViewController.swift */,
-				FFF64AADAD5F46DD82EBFFC0 /* Info.plist */,
-				11377C77A85144E4A2F77817 /* ToteShareExtension.entitlements */,
-			);
-			name = ToteShareExtension;
-			path = ToteShareExtension;
-			sourceTree = "<group>";
-		};
-		3E14DAB1A3684107B7053D45 /* ToteShareExtension */ = {
 			isa = PBXGroup;
 			children = (
 				0C25499830824171A93205B6 /* ShareExtensionViewController.swift */,
@@ -294,16 +264,15 @@
 			);
 			dependencies = (
 				0856355183DF4BEBB3607B73 /* PBXTargetDependency */,
-				2965C09A27E74C39989958A3 /* PBXTargetDependency */,
 			);
 			name = Tote;
-			productName = Tote;
-			productReference = 13B07F961A680F5B00A75B9A /* Tote.app */;
-			productType = "com.apple.product-type.application";
 			packageProductDependencies = (
 				5C29B0B34A7D411CAE6AA6E9 /* ClerkKit */,
 				B42AC54AE28B4CA9AFF7FC31 /* ClerkKitUI */,
 			);
+			productName = Tote;
+			productReference = 13B07F961A680F5B00A75B9A /* Tote.app */;
+			productType = "com.apple.product-type.application";
 		};
 		7D12177554AC4AF4A4260915 /* ToteShareExtension */ = {
 			isa = PBXNativeTarget;
@@ -327,25 +296,6 @@
 			productReference = 7D75A8D406CA4267B4EBC293 /* ToteShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		2D58E4825E114A62A477C054 /* ToteShareExtension */ = {
-			isa = PBXNativeTarget;
-			name = ToteShareExtension;
-			productName = ToteShareExtension;
-			productReference = 587F7F927B664B729A9951D0;
-			productType = "com.apple.product-type.app-extension";
-			buildConfigurationList = CB94248AB50E4B21B97900DC;
-			buildPhases = (
-				CAFF43E809B54E52A9FAFC2D /* Start Packager */,
-				C3A82C80F9034F59AEF9F9E6 /* Embed Foundation Extensions */,
-				126519ECE5454CFD88958A32 /* Embed Foundation Extensions */,
-				D6F454B02FC7432ABE1116FF /* Embed Foundation Extensions */,
-				1C5C886EA1DF448AAB6E4D1D /* Bundle React Native code and images */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -360,9 +310,6 @@
 					7D12177554AC4AF4A4260915 = {
 						LastSwiftMigration = 1250;
 					};
-					2D58E4825E114A62A477C054 = {
-						LastSwiftMigration = 1250;
-					};
 				};
 			};
 			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "Tote" */;
@@ -374,16 +321,15 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */,
+			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Tote */,
 				7D12177554AC4AF4A4260915 /* ToteShareExtension */,
-				2D58E4825E114A62A477C054 /* ToteShareExtension */,
-			);
-			packageReferences = (
-				0325AE4BCA8742F1AEE427AF /* clerk-ios */,
 			);
 		};
 /* End PBXProject section */
@@ -401,13 +347,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A604F576D7E244E69FBFA8C6 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		D6F454B02FC7432ABE1116FF /* Embed Foundation Extensions */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -660,76 +599,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		CAFF43E809B54E52A9FAFC2D /* Start Packager */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Start Packager";
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			shellPath = /bin/sh;
-			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"
-echo \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"
-if [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then
-  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then
-    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then
-      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"
-      exit 2
-    fi
-  else
-    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"
-  fi
-fi
-";
-		};
-		1C5C886EA1DF448AAB6E4D1D /* Bundle React Native code and images */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Bundle React Native code and images";
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			shellPath = /bin/sh;
-			shellScript = "set -e
-  NODE_BINARY=${NODE_BINARY:-node}
-  
-  # Source environment files
-  if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then
-    source \"$PODS_ROOT/../.xcode.env\"
-  fi
-  if [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then
-    source \"$PODS_ROOT/../.xcode.env.local\"
-  fi
-  
-  # Set project root
-  export PROJECT_ROOT=\"$PROJECT_DIR\"/..
-  
-  # Set entry file
-  export ENTRY_FILE=\"$PROJECT_ROOT/index.share.js\"
-  
-  # Set up Expo CLI
-  if [[ -z \"$CLI_PATH\" ]]; then
-    export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"
-  fi
-  
-  if [[ -z \"$BUNDLE_COMMAND\" ]]; then
-    export BUNDLE_COMMAND=\"export:embed\"
-  fi
-  
-  REACT_NATIVE_SCRIPTS_PATH=$(\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts'\")
-  WITH_ENVIRONMENT=\"$REACT_NATIVE_SCRIPTS_PATH/xcode/with-environment.sh\"
-  REACT_NATIVE_XCODE=\"$REACT_NATIVE_SCRIPTS_PATH/react-native-xcode.sh\"
-  
-  /bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -741,7 +610,7 @@ fi
 				D1A001000000000000000001 /* AppGroupModule.swift in Sources */,
 				D1A001000000000000000003 /* AppGroupModule.m in Sources */,
 				652C1ECF6583A942AFAB68C2 /* ExpoModulesProvider.swift in Sources */,
-				EF0A9B5566DB4785B78748FE /* ClerkViewFactory.swift */,
+				EF0A9B5566DB4785B78748FE /* ClerkViewFactory.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -754,14 +623,6 @@ fi
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		C3A82C80F9034F59AEF9F9E6 /* Embed Foundation Extensions */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				9FCC31A23AE64C1D8FB494EC /* ShareExtensionViewController.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -769,11 +630,6 @@ fi
 			isa = PBXTargetDependency;
 			target = 7D12177554AC4AF4A4260915 /* ToteShareExtension */;
 			targetProxy = 54022F826DB04F3FA7B10EBE /* PBXContainerItemProxy */;
-		};
-		2965C09A27E74C39989958A3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 2D58E4825E114A62A477C054 /* ToteShareExtension */;
-			targetProxy = 7CBDB40CDCAC4FD6B7C979AE /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -805,7 +661,7 @@ fi
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = tools.tote.app;
-				PRODUCT_NAME = "Tote";
+				PRODUCT_NAME = Tote;
 				SWIFT_OBJC_BRIDGING_HEADER = "Tote/Tote-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -836,7 +692,7 @@ fi
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = tools.tote.app;
-				PRODUCT_NAME = "Tote";
+				PRODUCT_NAME = Tote;
 				SWIFT_OBJC_BRIDGING_HEADER = "Tote/Tote-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -865,8 +721,8 @@ fi
 				PRODUCT_BUNDLE_IDENTIFIER = tools.tote.app.ShareExtension;
 				PRODUCT_NAME = ToteShareExtension;
 				SWIFT_VERSION = 5.0;
-				VERSIONING_SYSTEM = "apple-generic";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -892,8 +748,8 @@ fi
 				PRODUCT_NAME = ToteShareExtension;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
-				VERSIONING_SYSTEM = "apple-generic";
 				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -1019,45 +875,6 @@ fi
 			};
 			name = Release;
 		};
-		FEC14B0DDDBD4D98B924392E /* Debug */ = {
-			name = Debug;
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = "1";
-				INFOPLIST_FILE = ToteShareExtension/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = "15.1";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "tools.tote.app.ShareExtension";
-				PRODUCT_NAME = "ToteShareExtension";
-				SWIFT_VERSION = 5.0;
-				VERSIONING_SYSTEM = "apple-generic";
-				CODE_SIGN_ENTITLEMENTS = ToteShareExtension/ToteShareExtension.entitlements;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = "1.0.0";
-				ENABLE_ON_DEMAND_RESOURCES = NO;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-			};
-		};
-		5E6B4DCC5D6343CB815CD7FA /* Release */ = {
-			name = Release;
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = "1";
-				INFOPLIST_FILE = ToteShareExtension/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = "15.1";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "tools.tote.app.ShareExtension";
-				PRODUCT_NAME = "ToteShareExtension";
-				SWIFT_VERSION = 5.0;
-				VERSIONING_SYSTEM = "apple-generic";
-				CODE_SIGN_ENTITLEMENTS = ToteShareExtension/ToteShareExtension.entitlements;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = "1.0.0";
-				ENABLE_ON_DEMAND_RESOURCES = NO;
-			};
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1088,21 +905,12 @@ fi
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CB94248AB50E4B21B97900DC /* Build configuration list for PBXNativeTarget "ToteShareExtension" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				FEC14B0DDDBD4D98B924392E /* Debug */,
-				5E6B4DCC5D6343CB815CD7FA /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		0325AE4BCA8742F1AEE427AF = {
+		0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = https://github.com/clerk/clerk-ios.git;
+			repositoryURL = "https://github.com/clerk/clerk-ios.git";
 			requirement = {
 				kind = exactVersion;
 				version = 1.0.0;
@@ -1111,14 +919,14 @@ fi
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		5C29B0B34A7D411CAE6AA6E9 = {
+		5C29B0B34A7D411CAE6AA6E9 /* ClerkKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 0325AE4BCA8742F1AEE427AF;
+			package = 0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */;
 			productName = ClerkKit;
 		};
-		B42AC54AE28B4CA9AFF7FC31 = {
+		B42AC54AE28B4CA9AFF7FC31 /* ClerkKitUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 0325AE4BCA8742F1AEE427AF;
+			package = 0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */;
 			productName = ClerkKitUI;
 		};
 /* End XCSwiftPackageProductDependency section */

@@ -21,6 +21,22 @@ The `ios:sim-clean` script is defined in [package.json](/Users/dan/personal/tote
 
 This is the preferred path for simulator JS/UI work. It keeps the app on the custom dev client, but avoids the more fragile `CI=1` path we used during recovery.
 
+## Screen chrome
+
+For collection detail-style screens, prefer modern in-screen chrome over the default stacked iOS nav bar look:
+
+- hide the native stack header when the screen has its own visual top treatment
+- use compact floating controls near the safe-area top edge
+  - circular back button on the left
+  - circular menu/action buttons on the right
+  - a tinted or dark pill for strong completion actions like `Done`
+- put the actual page title in the screen flow near the top of the content, not centered in the nav bar
+- keep metadata like item count / mode under the title in a lighter secondary row
+- avoid dense rows of top-bar actions or heavy divider-based headers
+
+Current example:
+- [CollectionDetailScreen.tsx](/Users/dan/personal/tote/mobile-app/src/screens/CollectionDetailScreen.tsx)
+
 ## Deep reset (when JS changes do not show up)
 
 Run from repo root unless noted:

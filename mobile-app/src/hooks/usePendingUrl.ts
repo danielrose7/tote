@@ -47,10 +47,11 @@ export function usePendingUrl() {
   }, []);
 
   const pendingUrl = queue[0] ?? null;
+  const queueLength = queue.length;
 
   function clearPendingUrl() {
     setQueue((prev) => prev.slice(1));
   }
 
-  return { pendingUrl, clearPendingUrl };
+  return { pendingUrl, clearPendingUrl, queueLength };
 }

@@ -9,6 +9,28 @@ PODS:
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
+  - ClerkExpo (3.1.2):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - ClerkGoogleSignIn (3.1.2):
     - GoogleSignIn (~> 9.0)
     - hermes-engine
@@ -2296,6 +2318,7 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
+  - "ClerkExpo (from `../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios`)"
   - "ClerkGoogleSignIn (from `../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios`)"
   - "CojsonCoreRn (from `../../node_modules/.pnpm/cojson-core-rn@0.19.14_react-native@0.83.2_@babel+core@7.28.5_@react-native+metro-confi_4f6bc11f52ec4f0ca0872edbb783f1bf/node_modules/cojson-core-rn`)"
   - "EXApplication (from `../../node_modules/.pnpm/expo-application@55.0.9_expo@55.0.8/node_modules/expo-application/ios`)"
@@ -2412,6 +2435,8 @@ SPEC REPOS:
     - PromisesObjC
 
 EXTERNAL SOURCES:
+  ClerkExpo:
+    :path: "../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios"
   ClerkGoogleSignIn:
     :path: "../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios"
   CojsonCoreRn:
@@ -2623,6 +2648,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
   AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
+  ClerkExpo: f425c7a2448255e09aa121d1d6c4730fe4f7a40e
   ClerkGoogleSignIn: 5726d0ee68cca0663acef96705805e81110779a8
   CojsonCoreRn: 60590e69c789642214c5a4968c108f109bb20527
   EXApplication: 44f202420678bba77f603c373bd3fd033e6c21e9
@@ -2732,6 +2758,6 @@ SPEC CHECKSUMS:
   uniffi-bindgen-react-native: 076bf125ee96728ccca853fadd7f93bb31b7cf26
   Yoga: dd994d8c85dca5cc9b10f5df8c01f9ef1d0da191
 
-PODFILE CHECKSUM: 0348f40958833b49b2f54ccde112aeed18d80038
+PODFILE CHECKSUM: 08a78a5479f76371401a1179ee0e9c294d217f26
 
 COCOAPODS: 1.16.2

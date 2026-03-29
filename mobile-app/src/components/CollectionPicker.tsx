@@ -26,7 +26,13 @@ interface Props {
   defaultExpandedId?: string;
 }
 
-export function CollectionPicker({ collections, onSelect, onCreateCollection, onCreateSlot, defaultExpandedId }: Props) {
+export function CollectionPicker({
+  collections,
+  onSelect,
+  onCreateCollection,
+  onCreateSlot,
+  defaultExpandedId,
+}: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(defaultExpandedId ?? null);
   const [newSlotForId, setNewSlotForId] = useState<string | null>(null);
   const [newSlotName, setNewSlotName] = useState("");

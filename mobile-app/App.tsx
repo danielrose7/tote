@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useOAuth, useUser } from "@clerk/expo";
+import { useAuth, useOAuth, useSignIn, useSignUp, useUser } from "@clerk/expo";
 import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
@@ -11,12 +11,17 @@ import {
   Animated,
   Image,
   RefreshControl,
+  Alert,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { GestureHandlerRootView, Swipeable } from "react-native-gesture-handler";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Providers } from "./src/providers";
-import { useAccount, useIsAuthenticated } from "jazz-tools/expo";
+import { JazzProviders, Providers } from "./src/providers";
+import { useAccount } from "jazz-tools/expo";
 import { JazzAccount, Block } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
 import { usePendingUrl } from "./src/hooks/usePendingUrl";
@@ -37,6 +42,29 @@ const HOME_COLLECTION_CARD_HEIGHT = 80;
 function SignInScreen() {
   const { startOAuthFlow: startGoogle } = useOAuth({ strategy: "oauth_google" });
   const { startOAuthFlow: startApple } = useOAuth({ strategy: "oauth_apple" });
+  const { isLoaded: isSignInLoaded, signIn, setActive: setActiveSignIn } = useSignIn();
+  const { isLoaded: isSignUpLoaded, signUp, setActive: setActiveSignUp } = useSignUp();
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailMode, setEmailMode] = useState<"signIn" | "signUp">("signIn");
+  const [emailAddress, setEmailAddress] = useState("");
+  const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const emailActionLabel =
+    awaitingVerification
+      ? "Verify email"
+      : emailMode === "signIn"
+        ? "Sign in with email"
+        : "Create account";
+
+  function formatClerkError(err: unknown) {
+    const firstError = (err as { errors?: Array<{ longMessage?: string; message?: string }> })?.errors?.[0];
+    if (firstError?.longMessage) return firstError.longMessage;
+    if (firstError?.message) return firstError.message;
+    if (err instanceof Error && err.message) return err.message;
+    return "Please try again.";
+  }
 
   async function handleSignIn(startFlow: typeof startGoogle) {
     try {
@@ -49,23 +77,218 @@ function SignInScreen() {
     }
   }
 
+  async function handleEmailAuth() {
+    if (emailLoading) return;
+
+    setEmailLoading(true);
+
+    try {
+      if (awaitingVerification) {
+        if (!isSignUpLoaded || !signUp || !setActiveSignUp) return;
+
+        const attempt = await signUp.attemptEmailAddressVerification({
+          code: verificationCode.trim(),
+        });
+
+        if (attempt.status === "complete" && attempt.createdSessionId) {
+          await setActiveSignUp({ session: attempt.createdSessionId });
+          return;
+        }
+
+        Alert.alert("Verification not complete", "Please enter the latest code from your email.");
+        return;
+      }
+
+      if (emailMode === "signIn") {
+        if (!isSignInLoaded || !signIn || !setActiveSignIn) return;
+
+        const result = await signIn.create({
+          identifier: emailAddress.trim(),
+          password,
+        });
+
+        if (result.status === "complete" && result.createdSessionId) {
+          await setActiveSignIn({ session: result.createdSessionId });
+          return;
+        }
+
+        Alert.alert("Email sign in didn’t finish", "Please try again.");
+        return;
+      }
+
+      if (!isSignUpLoaded || !signUp) return;
+
+      await signUp.create({
+        emailAddress: emailAddress.trim(),
+        password,
+      });
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setAwaitingVerification(true);
+    } catch (err) {
+      console.error("Email auth error:", err);
+      Alert.alert(
+        emailMode === "signIn" ? "Email sign in failed" : "Email sign up failed",
+        formatClerkError(err),
+      );
+    } finally {
+      setEmailLoading(false);
+    }
+  }
+
+  function resetEmailFlow(nextMode?: "signIn" | "signUp") {
+    setAwaitingVerification(false);
+    setVerificationCode("");
+    setPassword("");
+    if (nextMode) setEmailMode(nextMode);
+  }
+
   return (
-    <View style={styles.centered}>
-      <Text style={styles.title}>Tote</Text>
-      <Text style={styles.subtitle}>Your personal product collection</Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => handleSignIn(startGoogle)}
+    <KeyboardAvoidingView
+      style={styles.centered}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        style={styles.signInScrollView}
+        contentContainerStyle={styles.signInScroll}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.buttonText}>Continue with Google</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, styles.buttonApple]}
-        onPress={() => handleSignIn(startApple)}
-      >
-        <Text style={styles.buttonText}>Continue with Apple</Text>
-      </TouchableOpacity>
-    </View>
+        <View style={styles.authStack}>
+          <View style={styles.authHero}>
+            <Text style={styles.title}>Tote</Text>
+            <Text style={styles.subtitle}>Your personal product collection</Text>
+          </View>
+          <View style={styles.authButtons}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => handleSignIn(startGoogle)}
+            >
+              <Text style={styles.buttonText}>Continue with Google</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonApple]}
+              onPress={() => handleSignIn(startApple)}
+            >
+              <Text style={styles.buttonText}>Continue with Apple</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.buttonSecondary]}
+              onPress={() => {
+                setShowEmailForm((value) => !value);
+                resetEmailFlow();
+              }}
+            >
+              <Text style={[styles.buttonText, styles.buttonSecondaryText]}>Continue with Email</Text>
+            </TouchableOpacity>
+          </View>
+
+          {showEmailForm && (
+            <View style={styles.emailCard}>
+              {!awaitingVerification && (
+                <View style={styles.emailModeRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.emailModeChip,
+                      emailMode === "signIn" && styles.emailModeChipActive,
+                    ]}
+                    onPress={() => resetEmailFlow("signIn")}
+                  >
+                    <Text
+                      style={[
+                        styles.emailModeChipText,
+                        emailMode === "signIn" && styles.emailModeChipTextActive,
+                      ]}
+                    >
+                      Sign In
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.emailModeChip,
+                      emailMode === "signUp" && styles.emailModeChipActive,
+                    ]}
+                    onPress={() => resetEmailFlow("signUp")}
+                  >
+                    <Text
+                      style={[
+                        styles.emailModeChipText,
+                        emailMode === "signUp" && styles.emailModeChipTextActive,
+                      ]}
+                    >
+                      Create Account
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {awaitingVerification ? (
+                <>
+                  <Text style={styles.emailHelper}>
+                    Enter the verification code Clerk emailed to {emailAddress.trim()}.
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={verificationCode}
+                    onChangeText={setVerificationCode}
+                    placeholder="Verification code"
+                    autoCapitalize="none"
+                    keyboardType="number-pad"
+                  />
+                </>
+              ) : (
+                <>
+                  <TextInput
+                    style={styles.input}
+                    value={emailAddress}
+                    onChangeText={setEmailAddress}
+                    placeholder="Email"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    autoCorrect={false}
+                    textContentType="emailAddress"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Password"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    textContentType={emailMode === "signIn" ? "password" : "newPassword"}
+                  />
+                </>
+              )}
+
+              <TouchableOpacity
+                style={[styles.button, emailLoading && styles.buttonDisabled]}
+                onPress={handleEmailAuth}
+                disabled={emailLoading}
+              >
+                <Text style={styles.buttonText}>
+                  {emailLoading ? "Working..." : emailActionLabel}
+                </Text>
+              </TouchableOpacity>
+
+              {awaitingVerification ? (
+                <TouchableOpacity onPress={() => resetEmailFlow("signUp")}>
+                  <Text style={styles.link}>Start over</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => resetEmailFlow(emailMode === "signIn" ? "signUp" : "signIn")}
+                >
+                  <Text style={styles.link}>
+                    {emailMode === "signIn"
+                      ? "Need an account? Create one"
+                      : "Already have an account? Sign in"}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -148,6 +371,12 @@ function CollectionListContent({
     },
   });
   const { user } = useUser();
+
+  useEffect(() => {
+    if (!me) return;
+    cleanupPublishedClonesFromRoot(me.root?.blocks);
+  }, [me, me?.root?.blocks]);
+
   if (!me) {
     return (
       <View style={styles.centered}>
@@ -155,10 +384,6 @@ function CollectionListContent({
       </View>
     );
   }
-
-  useEffect(() => {
-    cleanupPublishedClonesFromRoot(me.root?.blocks);
-  }, [me.root?.blocks]);
 
   const blocksLoaded = me.root?.blocks != null;
   const collections =
@@ -251,8 +476,16 @@ function CollectionListScreen({ navigation }: any) {
 }
 
 function AppScreens() {
-  const { pendingUrl, clearPendingUrl } = usePendingUrl();
+  const { pendingUrl, clearPendingUrl, queueLength } = usePendingUrl();
   const { invite, clearInvite } = useInviteLink();
+  const [defaultQueuedCollectionId, setDefaultQueuedCollectionId] = useState<string | undefined>(undefined);
+
+  function handleDismissPendingUrl() {
+    clearPendingUrl();
+    if (queueLength <= 1) {
+      setDefaultQueuedCollectionId(undefined);
+    }
+  }
 
   return (
     <>
@@ -265,11 +498,10 @@ function AppScreens() {
         <Stack.Screen
           name="CollectionDetail"
           component={CollectionDetailScreen}
-          options={({ route }) => ({
-            title: route.params.collectionName,
-            headerBackTitle: "Collections",
+          options={{
+            headerShown: false,
             fullScreenGestureEnabled: false,
-          })}
+          }}
         />
         <Stack.Screen
           name="AccountSettings"
@@ -278,7 +510,17 @@ function AppScreens() {
         />
       </Stack.Navigator>
       {pendingUrl && (
-        <SaveProductSheet url={pendingUrl} onDismiss={clearPendingUrl} />
+        <SaveProductSheet
+          key={pendingUrl}
+          url={pendingUrl}
+          onDismiss={handleDismissPendingUrl}
+          defaultCollectionId={defaultQueuedCollectionId}
+          autoApplyCollectionId={defaultQueuedCollectionId}
+          queueRemaining={Math.max(queueLength - 1, 0)}
+          onApplyCollectionToRemaining={(collectionId) =>
+            setDefaultQueuedCollectionId(collectionId ?? undefined)
+          }
+        />
       )}
       {invite && (
         <AcceptInviteSheet
@@ -290,14 +532,30 @@ function AppScreens() {
   );
 }
 
-function AuthScreen() {
-  const isAuthenticated = useIsAuthenticated();
+function JazzAppShell() {
+  return <AppScreens />;
+}
 
-  if (isAuthenticated) {
-    return <AppScreens />;
+function AuthScreen() {
+  const { isLoaded, userId } = useAuth();
+
+  if (!isLoaded) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#6366f1" />
+      </View>
+    );
   }
 
-  return <SignInScreen />;
+  if (!userId) {
+    return <SignInScreen />;
+  }
+
+  return (
+    <JazzProviders>
+      <JazzAppShell />
+    </JazzProviders>
+  );
 }
 
 export default function App() {
@@ -323,7 +581,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    justifyContent: "center",
     padding: 20,
   },
   header: {
@@ -335,12 +592,37 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     color: "#6b7280",
     marginTop: 8,
     marginBottom: 32,
+    textAlign: "center",
+  },
+  signInScroll: {
+    alignItems: "stretch",
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingTop: 32,
+    paddingBottom: 32,
+  },
+  signInScrollView: {
+    width: "100%",
+    alignSelf: "stretch",
+  },
+  authStack: {
+    width: "100%",
+    alignSelf: "stretch",
+    paddingHorizontal: 24,
+  },
+  authHero: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  authButtons: {
+    marginBottom: 4,
   },
   greeting: {
     fontSize: 16,
@@ -353,20 +635,87 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 10,
     width: "100%",
+    alignSelf: "stretch",
     alignItems: "center",
     marginBottom: 12,
   },
   buttonApple: {
     backgroundColor: "#000",
   },
+  buttonSecondary: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
   buttonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
+  buttonSecondaryText: {
+    color: "#111827",
+  },
+  emailCard: {
+    width: "100%",
+    alignSelf: "stretch",
+    marginTop: 12,
+    padding: 18,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#fff",
+  },
+  emailModeRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  emailModeChip: {
+    flex: 1,
+    borderRadius: 999,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    backgroundColor: "#f3f4f6",
+    alignItems: "center",
+  },
+  emailModeChipActive: {
+    backgroundColor: "#eef2ff",
+  },
+  emailModeChipText: {
+    color: "#4b5563",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  emailModeChipTextActive: {
+    color: "#4f46e5",
+  },
+  emailHelper: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#6b7280",
+    marginBottom: 12,
+  },
+  input: {
+    width: "100%",
+    alignSelf: "stretch",
+    borderWidth: 1,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#111827",
+    marginBottom: 12,
+    backgroundColor: "#fff",
+  },
   link: {
     color: "#6366f1",
-    fontSize: 16,
+    fontSize: 15,
+    textAlign: "center",
+    marginTop: 2,
   },
   collectionCard: {
     flexDirection: "row",

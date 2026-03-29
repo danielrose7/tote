@@ -136,7 +136,7 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
   async function handleText() {
     if (!shareUrl) return;
     const name = collection.name ?? "a collection";
-    const body = `Here's my ${name} picks on Tote: ${shareUrl}`;
+    const body = `Check out my ${name} collection on Tote: ${shareUrl}`;
     await Linking.openURL(`sms:?body=${encodeURIComponent(body)}`);
   }
 
@@ -171,7 +171,7 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
                 {!editingSlug ? (
                   <View style={styles.headerActions}>
                     <TouchableOpacity onPress={() => setEditingSlug(true)} style={styles.inlineEditBtn}>
-                      <Ionicons name="pencil-outline" size={14} color="#6366f1" />
+                      <Ionicons name="pencil-outline" size={15} color="#6366f1" />
                       <Text style={styles.inlineEditText}>Edit URL</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.unpublishBtn} onPress={handleUnpublish} disabled={loading}>
@@ -179,7 +179,7 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
                         <ActivityIndicator color="#ef4444" />
                       ) : (
                         <>
-                          <Ionicons name="remove-circle-outline" size={14} color="#ef4444" />
+                          <Ionicons name="remove-circle-outline" size={15} color="#ef4444" />
                           <Text style={styles.unpublishText}>Unpublish</Text>
                         </>
                       )}
@@ -294,19 +294,19 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   inlineEditBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    gap: 6,
+    minHeight: 44,
+    paddingHorizontal: 16,
     borderRadius: 999,
     backgroundColor: "#eef2ff",
   },
-  inlineEditText: { fontSize: 13, color: "#6366f1", fontWeight: "600" },
+  inlineEditText: { fontSize: 14, color: "#6366f1", fontWeight: "600" },
   inlineEditActions: {
     flexDirection: "row",
     alignItems: "center",
@@ -327,16 +327,17 @@ const styles = StyleSheet.create({
   },
   linkBtnText: { fontSize: 14, color: "#6366f1", fontWeight: "600" },
   unpublishBtn: {
-    alignSelf: "flex-end",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    minHeight: 44,
+    paddingHorizontal: 16,
     borderRadius: 999,
-    backgroundColor: "#fef2f2",
+    backgroundColor: "#fff1f2",
+    borderWidth: 1,
+    borderColor: "#ffe4e6",
   },
-  unpublishText: { fontSize: 14, color: "#ef4444", fontWeight: "500" },
+  unpublishText: { fontSize: 14, color: "#ef4444", fontWeight: "600" },
   slugEditRow: {
     flexDirection: "row",
     alignItems: "center",

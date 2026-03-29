@@ -40,7 +40,14 @@ export function AccountSettingsScreen({ navigation }: Props) {
   }
 
   async function handleSignOut() {
-    await signOut();
+    try {
+      await signOut();
+    } catch (e: any) {
+      const message = e?.message ?? "";
+      if (!message.includes("No active account")) {
+        console.error("Sign out error:", e);
+      }
+    }
   }
 
   return (

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Modal,
   SafeAreaView,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { useAccount } from "jazz-tools/expo";
@@ -34,12 +35,24 @@ interface Props {
   url: string;
   onDismiss: () => void;
   defaultCollectionId?: string;
+  queueRemaining?: number;
+  onApplyCollectionToRemaining?: (collectionId: string | null) => void;
+  autoApplyCollectionId?: string;
 }
 
-export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props) {
+export function SaveProductSheet({
+  url,
+  onDismiss,
+  defaultCollectionId,
+  queueRemaining = 0,
+  onApplyCollectionToRemaining,
+  autoApplyCollectionId,
+}: Props) {
   const [stage, setStage] = useState<Stage>("loading");
   const [metadata, setMetadata] = useState<Metadata | null>(null);
+  const [applyToRemaining, setApplyToRemaining] = useState(false);
   const webViewRef = useRef<WebView>(null);
+  const hasAutoSavedRef = useRef<string | null>(null);
 
   const me = useAccount(JazzAccount, {
     resolve: { root: { blocks: { $each: { children: { $each: { children: true } } } } } },
@@ -48,6 +61,26 @@ export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props)
   const collections = me?.root?.blocks?.filter(
     (b) => b !== null && b.type === "collection"
   ) ?? [];
+  const autoApplyCollection = autoApplyCollectionId
+    ? collections.find((item) => item?.$jazz.id === autoApplyCollectionId) ?? null
+    : null;
+
+  useEffect(() => {
+    setStage("loading");
+    setMetadata(null);
+    setApplyToRemaining(!!autoApplyCollectionId && queueRemaining > 0);
+    hasAutoSavedRef.current = null;
+  }, [url]);
+
+  useEffect(() => {
+    if (stage !== "preview" || !metadata || !autoApplyCollectionId) return;
+    if (hasAutoSavedRef.current === url) return;
+
+    if (!autoApplyCollection) return;
+
+    hasAutoSavedRef.current = url;
+    handleSave(autoApplyCollection);
+  }, [autoApplyCollection, autoApplyCollectionId, metadata, stage, url]);
 
   function handleMessage(event: WebViewMessageEvent) {
     try {
@@ -70,7 +103,11 @@ export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props)
     webViewRef.current?.injectJavaScript(extractorScript);
   }
 
-  async function handleSave(collection: typeof Block.prototype, slot?: typeof Block.prototype) {
+  async function handleSave(
+    collection: typeof Block.prototype,
+    slot?: typeof Block.prototype,
+    nextApplyCollectionId?: string | null
+  ) {
     if (!me || !metadata) return;
     setStage("saving");
 
@@ -114,8 +151,11 @@ export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props)
       );
 
       target.children.$jazz.push(product);
+      if (nextApplyCollectionId !== undefined) {
+        onApplyCollectionToRemaining?.(nextApplyCollectionId);
+      }
       setStage("done");
-      setTimeout(onDismiss, 800);
+      setTimeout(onDismiss, queueRemaining > 0 ? 300 : 800);
     } catch (e) {
       console.error("Save error:", e);
       setStage("preview");
@@ -185,16 +225,45 @@ export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props)
   }
 
   return (
-    <Modal animationType="slide" presentationStyle="pageSheet" onRequestClose={onDismiss}>
+    <Modal
+      animationType={autoApplyCollection ? "none" : "slide"}
+      presentationStyle="pageSheet"
+      onRequestClose={onDismiss}
+    >
       <SafeAreaView style={styles.sheet}>
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>
-            {stage === "loading" ? "Saving…" : stage === "saving" || stage === "done" ? "Saved ✓" : "Save to Tote"}
-          </Text>
-          <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
-            <Text style={styles.closeText}>✕</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.headerTitle}>
+              {stage === "loading" ? "Saving…" : stage === "saving" || stage === "done" ? "Saved ✓" : "Save to Tote"}
+            </Text>
+            {queueRemaining > 0 && stage === "preview" && (
+              <View style={styles.queueRow}>
+                <Text style={styles.queueText}>
+                  {queueRemaining} remaining after this
+                </Text>
+                <View style={styles.queueToggle}>
+                  <Text style={styles.queueToggleLabel}>Use selection for remaining</Text>
+                  <Switch
+                    value={applyToRemaining}
+                    onValueChange={(value) => {
+                      setApplyToRemaining(value);
+                      if (!value) {
+                        onApplyCollectionToRemaining?.(null);
+                      }
+                    }}
+                    trackColor={{ false: "#d1d5db", true: "#c7d2fe" }}
+                    thumbColor={applyToRemaining ? "#6366f1" : "#f9fafb"}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity onPress={onDismiss} style={styles.skipButton}>
+            <Text style={styles.skipButtonText}>
+              {queueRemaining > 0 ? "Skip" : "Close"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -240,14 +309,30 @@ export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props)
             </View>
 
             {/* Collection picker */}
-            {stage === "preview" && (
+            {stage === "preview" && !autoApplyCollection && (
               <CollectionPicker
                 collections={collections as any}
-                onSelect={({ collection, slot }) => handleSave(collection, slot)}
+                onSelect={({ collection, slot }) =>
+                  handleSave(
+                    collection,
+                    slot,
+                    applyToRemaining && queueRemaining > 0 ? collection.$jazz.id : null
+                  )
+                }
                 onCreateCollection={handleCreateCollection}
                 onCreateSlot={handleCreateSlot}
                 defaultExpandedId={defaultCollectionId}
               />
+            )}
+
+            {stage === "preview" && autoApplyCollection && (
+              <View style={styles.autoProcessingCard}>
+                <ActivityIndicator color="#6366f1" />
+                <Text style={styles.autoProcessingTitle}>Saving queued item</Text>
+                <Text style={styles.autoProcessingText}>
+                  Adding this link to {autoApplyCollection.name}.
+                </Text>
+              </View>
             )}
 
             {/* Saving indicator */}
@@ -255,7 +340,9 @@ export function SaveProductSheet({ url, onDismiss, defaultCollectionId }: Props)
               <View style={styles.savingRow}>
                 {stage === "saving"
                   ? <ActivityIndicator color="#6366f1" />
-                  : <Text style={styles.savedText}>Added to collection</Text>
+                  : <Text style={styles.savedText}>
+                      {queueRemaining > 0 ? "Added. Loading next item…" : "Added to collection"}
+                    </Text>
                 }
               </View>
             )}
@@ -273,24 +360,70 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#e5e7eb",
   },
+  headerText: {
+    flex: 1,
+    paddingRight: 12,
+  },
   headerTitle: {
     fontSize: 17,
     fontWeight: "600",
     color: "#111827",
   },
-  closeButton: {
-    padding: 4,
+  queueText: {
+    fontSize: 13,
+    color: "#6b7280",
   },
-  closeText: {
-    fontSize: 16,
-    color: "#9ca3af",
+  queueRow: {
+    marginTop: 6,
+    gap: 8,
+  },
+  queueToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  queueToggleLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  autoProcessingCard: {
+    marginTop: 8,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: "#f8fafc",
+    alignItems: "center",
+    gap: 8,
+  },
+  autoProcessingTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  autoProcessingText: {
+    fontSize: 13,
+    color: "#6b7280",
+    textAlign: "center",
+  },
+  skipButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#f3f4f6",
+  },
+  skipButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b7280",
   },
   hidden: {
     width: 0,

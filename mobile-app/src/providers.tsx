@@ -11,7 +11,7 @@ import { JazzAccount } from "@tote/schema";
 import { CLERK_PUBLISHABLE_KEY, JAZZ_API_KEY } from "./config";
 import { tokenCache } from "./tokenCache";
 
-function JazzAndAuth({ children }: { children: React.ReactNode }) {
+export function JazzProviders({ children }: { children: React.ReactNode }) {
   const clerk = useClerk();
 
   return (
@@ -34,7 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       tokenCache={tokenCache}
     >
       <ClerkLoaded>
-        <JazzAndAuth>{children}</JazzAndAuth>
+        {children}
       </ClerkLoaded>
     </ClerkProvider>
   );

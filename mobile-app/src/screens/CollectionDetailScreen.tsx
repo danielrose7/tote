@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -15,7 +15,9 @@ import {
   ActivityIndicator,
   Dimensions,
   ActionSheetIOS,
+  RefreshControl,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { extractorScript } from "../lib/extractorScript";
 import { Swipeable } from "react-native-gesture-handler";
@@ -41,6 +43,8 @@ import {
   applySubsetOrderByIds,
   reorderIdsFromPositions,
 } from "../lib/reorderBlocks";
+
+const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
 type ProductItem = typeof Block.prototype;
@@ -318,6 +322,23 @@ function SlotEditModal({
   const [budget, setBudget] = useState(
     slot.slotData?.budget ? (slot.slotData.budget / 100).toString() : ""
   );
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  useEffect(() => {
+    if (!(visible && confirmingDelete)) return;
+
+    const timeout = setTimeout(() => {
+      setConfirmingDelete(false);
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [visible, confirmingDelete]);
+
+  useEffect(() => {
+    if (!visible) {
+      setConfirmingDelete(false);
+    }
+  }, [visible]);
 
   function handleSave() {
     slot.$jazz.set("name", name.trim() || slot.name);
@@ -329,6 +350,15 @@ function SlotEditModal({
     onClose();
   }
 
+  function handleDeletePress() {
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      return;
+    }
+
+    onDelete();
+  }
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={onClose} />
@@ -338,7 +368,17 @@ function SlotEditModal({
       >
         <View style={styles.modalSheet}>
           <View style={styles.modalHandle} />
-          <Text style={styles.modalTitle}>Edit Slot</Text>
+          <View style={styles.modalHeaderRow}>
+            <Text style={styles.modalTitle}>Edit Slot</Text>
+            <TouchableOpacity
+              style={[styles.modalDeletePill, confirmingDelete && styles.modalDeletePillArmed]}
+              onPress={handleDeletePress}
+            >
+              <Text style={[styles.modalDeleteText, confirmingDelete && styles.modalDeleteTextArmed]}>
+                {confirmingDelete ? "Tap again to delete" : "Delete Slot"}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.fieldLabel}>Name</Text>
           <TextInput
@@ -375,9 +415,6 @@ function SlotEditModal({
               <Text style={styles.modalSaveText}>Save</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.modalDelete} onPress={onDelete}>
-            <Text style={styles.modalDeleteText}>Delete Slot</Text>
-          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -404,9 +441,18 @@ function SlotHeader({ slot, title, onDelete }: { slot: ProductItem | null; title
     (p) => p && selectedIds.includes(p.$jazz.id)
   );
   const selectedTotal = selectedProducts.reduce(
-    (sum, p) => sum + (p?.productData?.priceValue ?? 0),
+    (sum, p) => {
+      const rawPrice = p?.productData?.price;
+      const parsedPrice = rawPrice ? parseFloat(rawPrice.replace(/[^0-9.]/g, "")) : NaN;
+      const numericPrice = Number.isFinite(parsedPrice)
+        ? parsedPrice
+        : (p?.productData?.priceValue ?? 0);
+      return sum + numericPrice;
+    },
     0
   );
+  const formattedSelectedTotal = formatPrice(String(selectedTotal)) ?? `$${selectedTotal}`;
+  const formattedBudget = budget ? formatPrice(String(budget / 100)) ?? `$${budget / 100}` : null;
 
   const hasProgress = maxSelections || budget;
 
@@ -424,7 +470,7 @@ function SlotHeader({ slot, title, onDelete }: { slot: ProductItem | null; title
               ) : null}
               {budget ? (
                 <Text style={styles.slotProgressText}>
-                  ${(selectedTotal / 100).toFixed(0)} / ${(budget / 100).toFixed(0)}
+                  {formattedSelectedTotal} / {formattedBudget}
                 </Text>
               ) : null}
             </View>
@@ -703,9 +749,17 @@ function ReorderSlotCard({ slot }: { slot: ProductItem }) {
 function MasonryGrid({
   items,
   onPress,
+  header,
+  onScroll,
+  onRefresh,
+  refreshing = false,
 }: {
   items: ProductItem[];
   onPress: (item: ProductItem) => void;
+  header?: React.ReactNode;
+  onScroll?: any;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }) {
   const screenWidth = Dimensions.get("window").width;
   const columnWidth = Math.floor((screenWidth - 48) / 2); // 20+20 padding + 8 gap
@@ -714,7 +768,18 @@ function MasonryGrid({
   const rightItems = items.filter((_, i) => i % 2 === 1);
 
   return (
-    <ScrollView contentContainerStyle={styles.masonryContainer}>
+    <Animated.ScrollView
+      contentInsetAdjustmentBehavior="never"
+      contentContainerStyle={styles.masonryContainer}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6366f1" />
+        ) : undefined
+      }
+    >
+      {header}
       <View style={styles.masonryColumns}>
         <View style={{ width: columnWidth }}>
           {leftItems.map((item) => (
@@ -737,12 +802,13 @@ function MasonryGrid({
           ))}
         </View>
       </View>
-    </ScrollView>
+    </Animated.ScrollView>
   );
 }
 
 export function CollectionDetailScreen({ route, navigation }: Props) {
   const { collectionId } = route.params;
+  const insets = useSafeAreaInsets();
   const [addingProduct, setAddingProduct] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
@@ -753,6 +819,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [isGridReorderReady, setIsGridReorderReady] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
   const { viewMode, setViewMode } = useViewMode();
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   const collection = useCoState(Block, collectionId, {
     resolve: { children: { $each: { children: { $each: true } } } },
@@ -800,31 +867,6 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      title: collection?.name ?? route.params.collectionName,
-      headerRight: () => (
-        isReorderMode ? (
-          <TouchableOpacity
-            onPress={() => setIsReorderMode(false)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.doneButton}>Done</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.headerButtons}>
-            <TouchableOpacity onPress={openCollectionActions} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="ellipsis-horizontal-circle-outline" size={22} color="#6366f1" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setAddingProduct(true)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="add" size={26} color="#6366f1" />
-            </TouchableOpacity>
-          </View>
-        )
-      ),
-    });
-  }, [navigation, collection?.name, viewMode, isReorderMode]);
-
   if (!collection) {
     return (
       <View style={styles.centered}>
@@ -860,6 +902,36 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const totalItems =
     directProducts.length +
     slots.reduce((sum, s) => sum + (s.children?.length ?? 0), 0);
+  const displayTitle = collection.name ?? route.params.collectionName;
+  const topBarTop = insets.top + 8;
+  const pageHeaderTopPadding = topBarTop + 72;
+  const titleFadeStyle = {
+    opacity: scrollY.interpolate({
+      inputRange: [0, 28, 72],
+      outputRange: [1, 0.9, 0.08],
+      extrapolate: "clamp",
+    }),
+    transform: [
+      {
+        translateY: scrollY.interpolate({
+          inputRange: [0, 72],
+          outputRange: [0, -22],
+          extrapolate: "clamp",
+        }),
+      },
+    ],
+  };
+  const metaFadeStyle = {
+    opacity: scrollY.interpolate({
+      inputRange: [0, 22, 54],
+      outputRange: [1, 0.72, 0],
+      extrapolate: "clamp",
+    }),
+  };
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: true }
+  );
 
   const reorderSections: ReorderSectionTarget[] = [
     ...slots.map((slot) => ({
@@ -1081,145 +1153,218 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     );
   }
 
+  const pageHeader = (
+    <View style={[styles.pageHeader, { paddingTop: pageHeaderTopPadding }]}>
+      <Animated.View style={[styles.pageHeaderText, titleFadeStyle]}>
+        {isReorderMode ? (
+          <Text style={styles.pageEyebrow}>Reorder collection</Text>
+        ) : null}
+        <Text style={styles.pageTitle}>{displayTitle}</Text>
+        <Animated.View style={[styles.pageMetaRow, metaFadeStyle]}>
+          <View
+            style={[
+              styles.colorDot,
+              { backgroundColor: collection.collectionData?.color ?? "#6366f1" },
+            ]}
+          />
+          <Text style={styles.pageMetaText}>{totalItems} items</Text>
+          {isReorderMode ? (
+            <>
+              <Text style={styles.pageMetaDivider}>·</Text>
+              <Text style={styles.pageMetaText}>
+                {activeReorderTargetId === "slots" ? "Slots" : "Items"}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.pageMetaDivider}>·</Text>
+              <Text style={styles.pageMetaText}>{viewMode}</Text>
+            </>
+          )}
+        </Animated.View>
+      </Animated.View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <View style={styles.collectionMeta}>
-        <View
-          style={[
-            styles.colorDot,
-            { backgroundColor: collection.collectionData?.color ?? "#6366f1" },
-          ]}
-        />
-        <Text style={styles.itemCount}>{totalItems} items</Text>
+      <View style={[styles.statusScrim, { height: insets.top + 24 }]} pointerEvents="none" />
+      <View style={[styles.floatingTopBar, { top: topBarTop }]}>
+        <TouchableOpacity
+          style={styles.floatingCircleButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="chevron-back" size={18} color="#0f172a" />
+        </TouchableOpacity>
+
+        <View style={styles.floatingTopBarRight}>
+          {isReorderMode ? (
+            <TouchableOpacity
+              style={styles.donePillButton}
+              onPress={() => setIsReorderMode(false)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.donePillButtonText}>Done</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.floatingCircleButton}
+                onPress={() => setAddingProduct(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="add" size={20} color="#0f172a" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.floatingCircleButton}
+                onPress={openCollectionActions}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="ellipsis-horizontal" size={18} color="#0f172a" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
 
       {totalItems === 0 ? (
-        <Text style={styles.empty}>No items yet</Text>
+        <View style={styles.emptyStateContainer}>
+          {pageHeader}
+          <Text style={styles.empty}>No items yet</Text>
+        </View>
       ) : isReorderMode ? (
         <View style={styles.reorderModeContainer}>
-          {hasMultipleSlots || reorderSections.length > 1 ? (
-            <View style={styles.reorderControls}>
-              <View style={styles.reorderScopeSwitch}>
-                {hasMultipleSlots ? (
+          {pageHeader}
+          <View style={styles.reorderModeBody}>
+            {hasMultipleSlots || reorderSections.length > 1 ? (
+              <View style={styles.reorderControls}>
+                <View style={styles.reorderScopeSwitch}>
+                  {hasMultipleSlots ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.reorderScopeButton,
+                        activeReorderTargetId === "slots" && styles.reorderScopeButtonActive,
+                      ]}
+                      onPress={() => setActiveReorderTargetId("slots")}
+                    >
+                      <Text
+                        style={[
+                          styles.reorderScopeButtonLabel,
+                          activeReorderTargetId === "slots" && styles.reorderScopeButtonLabelActive,
+                        ]}
+                      >
+                        Slots
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
                   <TouchableOpacity
                     style={[
                       styles.reorderScopeButton,
-                      activeReorderTargetId === "slots" && styles.reorderScopeButtonActive,
+                      activeReorderTargetId !== "slots" && styles.reorderScopeButtonActive,
                     ]}
-                    onPress={() => setActiveReorderTargetId("slots")}
+                    onPress={() => setActiveReorderTargetId(activeReorderSection?.id ?? reorderSections[0]?.id ?? "ungrouped")}
                   >
                     <Text
                       style={[
                         styles.reorderScopeButtonLabel,
-                        activeReorderTargetId === "slots" && styles.reorderScopeButtonLabelActive,
+                        activeReorderTargetId !== "slots" && styles.reorderScopeButtonLabelActive,
                       ]}
                     >
-                      Slots
+                      Items
                     </Text>
                   </TouchableOpacity>
+                </View>
+
+                {activeReorderTargetId !== "slots" && reorderSections.length > 1 ? (
+                  <TouchableOpacity style={styles.reorderTargetPicker} onPress={openReorderItemTargetPicker}>
+                    <Text style={styles.reorderTargetPickerLabel}>Editing</Text>
+                    <View style={styles.reorderTargetPickerValueRow}>
+                      <Text style={styles.reorderTargetPickerValue} numberOfLines={1}>
+                        {activeReorderSection?.title ?? "Items"}
+                      </Text>
+                      <Ionicons name="chevron-down" size={16} color="#6b7280" />
+                    </View>
+                  </TouchableOpacity>
                 ) : null}
-                <TouchableOpacity
-                  style={[
-                    styles.reorderScopeButton,
-                    activeReorderTargetId !== "slots" && styles.reorderScopeButtonActive,
-                  ]}
-                  onPress={() => setActiveReorderTargetId(activeReorderSection?.id ?? reorderSections[0]?.id ?? "ungrouped")}
-                >
-                  <Text
+              </View>
+            ) : null}
+
+            {activeReorderTargetId === "slots" && hasMultipleSlots ? (
+              <View style={styles.reorderPanelFlex}>
+                <View style={styles.reorderPanelHeader}>
+                  <Text style={styles.reorderPanelTitle}>Slots</Text>
+                  <Text style={styles.reorderPanelMeta}>{slots.length} slots</Text>
+                </View>
+                <Sortable
+                  data={reorderSlotItems}
+                  renderItem={renderReorderSlot}
+                  itemHeight={112}
+                  gap={12}
+                  useFlatList={false}
+                  itemKeyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.reorderSlotsList}
+                />
+              </View>
+            ) : activeReorderSection ? (
+              <View style={styles.reorderPanelFlex}>
+                <View style={styles.reorderPanelHeader}>
+                  <Text style={styles.reorderPanelTitle}>{activeReorderSection.title}</Text>
+                  <Text style={styles.reorderPanelMeta}>
+                    {activeReorderSection.items.length} items · {viewMode}
+                  </Text>
+                </View>
+
+                {activeReorderSection.items.length === 0 ? (
+                  <View style={styles.reorderEmptyState}>
+                    <Text style={styles.reorderEmptyText}>Nothing to reorder here yet.</Text>
+                  </View>
+                ) : viewMode === "grid" ? (
+                  <View
                     style={[
-                      styles.reorderScopeButtonLabel,
-                      activeReorderTargetId !== "slots" && styles.reorderScopeButtonLabelActive,
+                      styles.reorderGridFrame,
+                      { height: Math.max(reorderGridHeight + gridItemSize, gridItemSize * 2) },
                     ]}
                   >
-                    Items
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              {activeReorderTargetId !== "slots" && reorderSections.length > 1 ? (
-                <TouchableOpacity style={styles.reorderTargetPicker} onPress={openReorderItemTargetPicker}>
-                  <Text style={styles.reorderTargetPickerLabel}>Editing</Text>
-                  <View style={styles.reorderTargetPickerValueRow}>
-                    <Text style={styles.reorderTargetPickerValue} numberOfLines={1}>
-                      {activeReorderSection?.title ?? "Items"}
-                    </Text>
-                    <Ionicons name="chevron-down" size={16} color="#6b7280" />
+                    {isGridReorderReady ? (
+                      <SortableGrid
+                        key={reorderGridKey}
+                        data={activeReorderItems}
+                        renderItem={renderReorderGridItem}
+                        itemKeyExtractor={(item) => item.id}
+                        dimensions={{
+                          columns: 2,
+                          itemWidth: gridItemSize,
+                          itemHeight: Math.round(gridItemSize * 0.72) + 106,
+                          columnGap: 12,
+                          rowGap: 12,
+                        }}
+                        scrollEnabled={false}
+                        style={styles.reorderGrid}
+                        contentContainerStyle={styles.reorderGridContainer}
+                      />
+                    ) : null}
                   </View>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          ) : null}
-
-          {activeReorderTargetId === "slots" && hasMultipleSlots ? (
-            <View style={styles.reorderPanelFlex}>
-              <View style={styles.reorderPanelHeader}>
-                <Text style={styles.reorderPanelTitle}>Slots</Text>
-                <Text style={styles.reorderPanelMeta}>{slots.length} slots</Text>
+                ) : (
+                  <Sortable
+                    data={activeReorderItems}
+                    renderItem={renderReorderProduct}
+                    itemHeight={96}
+                    gap={10}
+                    itemKeyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.reorderItemsList}
+                  />
+                )}
               </View>
-              <Sortable
-                data={reorderSlotItems}
-                renderItem={renderReorderSlot}
-                itemHeight={112}
-                gap={12}
-                useFlatList={false}
-                itemKeyExtractor={(item) => item.id}
-                contentContainerStyle={styles.reorderSlotsList}
-              />
-            </View>
-          ) : activeReorderSection ? (
-            <View style={styles.reorderPanelFlex}>
-              <View style={styles.reorderPanelHeader}>
-                <Text style={styles.reorderPanelTitle}>{activeReorderSection.title}</Text>
-                <Text style={styles.reorderPanelMeta}>
-                  {activeReorderSection.items.length} items · {viewMode}
-                </Text>
-              </View>
-
-              {activeReorderSection.items.length === 0 ? (
-                <View style={styles.reorderEmptyState}>
-                  <Text style={styles.reorderEmptyText}>Nothing to reorder here yet.</Text>
-                </View>
-              ) : viewMode === "grid" ? (
-                <View
-                  style={[
-                    styles.reorderGridFrame,
-                    { height: Math.max(reorderGridHeight + gridItemSize, gridItemSize * 2) },
-                  ]}
-                >
-                  {isGridReorderReady ? (
-                    <SortableGrid
-                      key={reorderGridKey}
-                      data={activeReorderItems}
-                      renderItem={renderReorderGridItem}
-                      itemKeyExtractor={(item) => item.id}
-                      dimensions={{
-                        columns: 2,
-                        itemWidth: gridItemSize,
-                        itemHeight: Math.round(gridItemSize * 0.72) + 106,
-                        columnGap: 12,
-                        rowGap: 12,
-                      }}
-                      scrollEnabled={false}
-                      style={styles.reorderGrid}
-                      contentContainerStyle={styles.reorderGridContainer}
-                    />
-                  ) : null}
-                </View>
-              ) : (
-                <Sortable
-                  data={activeReorderItems}
-                  renderItem={renderReorderProduct}
-                  itemHeight={96}
-                  gap={10}
-                  itemKeyExtractor={(item) => item.id}
-                  contentContainerStyle={styles.reorderItemsList}
-                />
-              )}
-            </View>
-          ) : null}
+            ) : null}
+          </View>
         </View>
       ) : viewMode === "grid" ? (
         <MasonryGrid
+          header={pageHeader}
+          onScroll={handleScroll}
+          onRefresh={startBulkRefresh}
+          refreshing={refreshQueue.length > 0}
           items={[
             ...slots.flatMap((s) => s.children?.filter((b): b is ProductItem => b?.type === "product") ?? []),
             ...directProducts,
@@ -1227,8 +1372,11 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           onPress={openProduct}
         />
       ) : (
-        <SectionList
+        <AnimatedSectionList
           sections={sections}
+          contentInsetAdjustmentBehavior="never"
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           keyExtractor={(item) => item?.$jazz?.id ?? Math.random().toString()}
           renderItem={renderProduct}
           renderSectionHeader={({ section }) =>
@@ -1240,6 +1388,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
               />
             ) : null
           }
+          ListHeaderComponent={pageHeader}
           contentContainerStyle={styles.list}
           stickySectionHeadersEnabled={false}
           onRefresh={startBulkRefresh}
@@ -1281,28 +1430,109 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         />
       )}
       {pendingUrl && (
-        <SaveProductSheet url={pendingUrl} onDismiss={() => setPendingUrl(null)} defaultCollectionId={collectionId} />
+        <SaveProductSheet
+          key={pendingUrl}
+          url={pendingUrl}
+          onDismiss={() => setPendingUrl(null)}
+          defaultCollectionId={collectionId}
+        />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  collectionMeta: {
+  container: { flex: 1, backgroundColor: "#f8fafc" },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8fafc" },
+  statusScrim: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 18,
+    backgroundColor: "#f8fafc",
+  },
+  floatingTopBar: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    zIndex: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  floatingTopBarRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  floatingCircleButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(226,232,240,0.9)",
+    shadowColor: "#0f172a",
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  donePillButton: {
+    minWidth: 68,
+    height: 42,
+    paddingHorizontal: 16,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#111827",
+    shadowColor: "#0f172a",
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  donePillButtonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  pageHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 96,
+    paddingBottom: 18,
+  },
+  pageHeaderText: {
+    gap: 8,
+  },
+  pageEyebrow: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#6366f1",
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+  },
+  pageTitle: {
+    fontSize: 34,
+    lineHeight: 38,
+    fontWeight: "700",
+    color: "#111827",
+    letterSpacing: -0.8,
+  },
+  pageMetaRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
+    flexWrap: "wrap",
   },
   colorDot: { width: 10, height: 10, borderRadius: 5 },
-  itemCount: { fontSize: 13, color: "#9ca3af" },
-  list: { paddingHorizontal: 20, paddingBottom: 40 },
+  pageMetaText: { fontSize: 14, color: "#6b7280", textTransform: "capitalize" },
+  pageMetaDivider: { fontSize: 14, color: "#cbd5e1" },
+  list: { paddingHorizontal: 20, paddingBottom: 40, backgroundColor: "#fff" },
+  emptyStateContainer: { flex: 1, backgroundColor: "#fff" },
   sectionHeader: {
     paddingTop: 24,
     paddingBottom: 8,
@@ -1323,10 +1553,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
+    paddingHorizontal: 12,
     gap: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#f3f4f6",
-    backgroundColor: "#fff",
+    marginBottom: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#eef2f7",
+    backgroundColor: "#f8fafc",
   },
   thumbnail: {
     width: 56,
@@ -1381,7 +1614,14 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginBottom: 16,
   },
-  modalTitle: { fontSize: 17, fontWeight: "700", marginBottom: 20 },
+  modalHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 20,
+  },
+  modalTitle: { flex: 1, fontSize: 17, fontWeight: "700" },
   fieldLabel: { fontSize: 12, fontWeight: "600", color: "#6b7280", textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 6, marginTop: 16 },
   fieldInput: {
     borderWidth: 1,
@@ -1410,13 +1650,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalSaveText: { fontSize: 15, color: "#fff", fontWeight: "600" },
-  headerButtons: { flexDirection: "row", alignItems: "center", gap: 14 },
-  doneButton: { color: "#4f46e5", fontSize: 16, fontWeight: "600" },
   swatches: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 4 },
   swatch: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   swatchSelected: { borderWidth: 2.5, borderColor: "rgba(0,0,0,0.2)" },
-  modalDelete: { marginTop: 12, paddingVertical: 12, alignItems: "center" },
-  modalDeleteText: { fontSize: 15, color: "#ef4444", fontWeight: "500" },
+  modalDeletePill: {
+    paddingHorizontal: 14,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    backgroundColor: "#fff5f5",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalDeletePillArmed: {
+    borderColor: "#fca5a5",
+    backgroundColor: "#fee2e2",
+  },
+  modalDeleteText: { fontSize: 14, color: "#dc2626", fontWeight: "600" },
+  modalDeleteTextArmed: { color: "#b91c1c" },
   leftActions: { flexDirection: "row", width: 160 },
   editActionInner: { width: 80, backgroundColor: "#6366f1", justifyContent: "center", alignItems: "center" },
   editActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
@@ -1431,11 +1683,14 @@ const styles = StyleSheet.create({
   hidden: { width: 0, height: 0, overflow: "hidden" },
   reorderModeContainer: {
     flex: 1,
+    paddingBottom: 16,
+    backgroundColor: "#f8fafc",
+  },
+  reorderModeBody: {
+    flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 10,
     paddingBottom: 16,
     gap: 10,
-    backgroundColor: "#f8fafc",
   },
   reorderControls: {
     gap: 10,
@@ -1617,7 +1872,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   reorderGridPrice: { fontSize: 13, color: "#6b7280" },
-  masonryContainer: { paddingHorizontal: 20, paddingBottom: 40, paddingTop: 8 },
+  masonryContainer: { paddingHorizontal: 20, paddingBottom: 40, backgroundColor: "#f8fafc" },
   masonryColumns: { flexDirection: "row", gap: 8 },
   gridCard: {
     backgroundColor: "#f9fafb",
