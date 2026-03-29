@@ -39,6 +39,7 @@
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px);
   box-shadow: 0 18px 50px rgba(45, 49, 66, 0.08);
+  position: relative;
 }
 
 .wordmark {
@@ -150,6 +151,18 @@
   border: 1px solid rgba(45, 49, 66, 0.08);
   background: rgba(255, 255, 255, 0.96);
   box-shadow: 0 18px 40px rgba(45, 49, 66, 0.08);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-0.35rem);
+  transition:
+    max-height 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 180ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    margin-top 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding-top 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding-bottom 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 180ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .mobileMenuLinks,
@@ -200,6 +213,12 @@
 .mobileMenuLink:hover,
 .mobileChromeLink:hover {
   background: rgba(45, 49, 66, 0.05);
+}
+
+.mobileMenu[open] .mobileMenuPanel {
+  max-height: 32rem;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .hero,
@@ -806,7 +825,8 @@
 
   .nav {
     align-items: center;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    padding-right: 5rem;
   }
 
   .desktopOnly {
@@ -815,27 +835,43 @@
 
   .mobileMenu {
     display: block;
-    position: relative;
+    position: static;
     margin-left: auto;
     width: 3rem;
     flex: 0 0 3rem;
   }
 
   .mobileMenu[open] {
-    position: relative;
+    width: 100%;
+    flex-basis: 100%;
+    margin-left: 0;
+    padding-top: 0.85rem;
   }
 
   .mobileMenuButton {
     margin-left: 0;
+    position: absolute;
+    top: 0.9rem;
+    right: 1rem;
   }
 
   .mobileMenuPanel {
-    position: absolute;
-    top: calc(100% + 0.6rem);
-    right: 0;
-    width: min(22rem, calc(100vw - 2rem));
+    position: static;
+    width: 100%;
+    margin: 0 0.1rem;
     border-top-left-radius: 18px;
     border-top-right-radius: 18px;
+    box-shadow: none;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-color: transparent;
+  }
+
+  .mobileMenu[open] .mobileMenuPanel {
+    margin-top: 0.85rem;
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+    border-color: rgba(45, 49, 66, 0.08);
   }
 
   .navLink,
