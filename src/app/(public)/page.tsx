@@ -9,14 +9,14 @@ import { CHROME_WEB_STORE_URL } from "../../lib/constants";
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {
-  title: "Save from any store. Organize in one place.",
+  title: "Save from any store. Decide in one place.",
   description:
-    "Tote keeps products from every store in one place. Save links, organize collections, compare options, refresh prices, and share boards without spreadsheets.",
+    "Save products from any store, compare options in one place, refresh prices later, and keep the budget and shortlist moving.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Tote — Save from any store. Organize in one place.",
+    title: "Tote — Save from any store. Decide in one place.",
     description:
-      "Keep products from every store in one place. Organized by project, person, room, or season.",
+      "Save from any store, compare in one place, and move from scattered links to a clear shortlist.",
   },
 };
 
@@ -31,6 +31,7 @@ const sourceStores = [
   "Grace Rose Farm",
   "Anthropologie",
   "Etsy",
+  "eBay",
   "Depop",
   "REI",
   "Patagonia",
@@ -55,31 +56,37 @@ const sourceStores = [
   "Bosch",
 ];
 
+const sourceCategories = [
+  "Major retailers",
+  "Indie shops",
+  "Anywhere online",
+];
+
 const principles = [
   {
-    title: "Everything in one place",
+    title: "Keep every option in one place",
     description:
-      "Store wishlists stop at the store boundary. Tote keeps your finds together, even when they come from ten different sites.",
+      "You save across stores, marketplaces, and brand sites. Tote keeps the options together instead of scattering them across tabs and wishlists.",
   },
   {
-    title: "Built around real projects",
+    title: "Organize by the decision you’re making",
     description:
-      "Organize by room, person, season, client, or event. Tote fits the way people actually save before they buy.",
+      "You organize by room, person, season, client, or event, so the collection still makes sense when you come back later.",
   },
   {
-    title: "Refresh prices when it matters",
+    title: "Refresh prices before you decide",
     description:
-      "Come back later and update what you saved. Tote helps you check current pricing before you buy, share, or decide.",
+      "You can come back later and update what you saved, so you’re looking at current pricing before you buy, share, or choose.",
   },
   {
-    title: "Budgets and selections built in",
+    title: "Keep the budget and shortlist together",
     description:
-      "Track what makes the shortlist, set limits, and keep a running total as a project starts taking shape.",
+      "You track what makes the shortlist, set limits, and keep a running total in the same place the decision is happening.",
   },
   {
-    title: "Private by design + works offline",
+    title: "Private by design",
     description:
-      "No ads. No tracking. No selling your shopping habits. Sharing is opt-in, and your saved links stay useful even when you're offline.",
+      "No ads. No tracking. No selling your shopping habits. Sharing is opt-in, and your saved links stay useful even when you’re offline.",
   },
 ];
 
@@ -128,7 +135,7 @@ const useCases = [
 
 const audiences = [
   {
-    title: "For people who save before they buy",
+    title: "For people who compare before they decide",
     description:
       "You research, compare, and collect ideas over time. Tote gives those saved links a real home.",
   },
@@ -323,10 +330,10 @@ export default function HomePage() {
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>A cart that doesn&apos;t belong to a store</p>
-            <h1 className={styles.heroTitle}>Save from any store. Organize in one place.</h1>
+            <h1 className={styles.heroTitle}>Save from any store. Decide in one place.</h1>
             <p className={styles.heroSubtitle}>
-              Keep products from every site in collections that make sense to you: room by room,
-              person by person, season by season, client by client.
+              You save products from different stores into one collection, organize them by project
+              or person, refresh prices later, and keep the shortlist moving.
             </p>
             <div className={styles.heroActions}>
               <LandingAuthButtons />
@@ -340,7 +347,7 @@ export default function HomePage() {
               </a>
             </div>
             <p className={styles.heroNote}>
-              Save links from the stores you already use. Refresh prices later. Keep budgets and shortlists in the same place.
+              Save links from the stores you already use. Come back with fewer tabs, a clearer budget, and a shortlist you can actually use.
             </p>
           </div>
 
@@ -360,10 +367,18 @@ export default function HomePage() {
 
         <section className={styles.sourceSection} aria-labelledby="source-heading">
           <div className={styles.sectionIntro}>
-            <p className={styles.sectionLabel}>Save links from big names and local shops</p>
+            <p className={styles.sectionLabel}>Save from anywhere</p>
             <h2 id="source-heading" className={styles.sectionTitle}>
-              Tote works across the stores you actually shop.
+              Big retailers, indie shops, and the rest of the internet.
             </h2>
+            <p className={styles.sectionBody}>
+              If you can shop it online, you can save it to Tote.
+            </p>
+          </div>
+          <div className={styles.sourceCategories}>
+            {sourceCategories.map((category) => (
+              <span key={category} className={styles.sourceCategory}>{category}</span>
+            ))}
           </div>
           <div className={styles.sourcePills}>
             {sourceStores.map((store) => (
@@ -375,11 +390,11 @@ export default function HomePage() {
         <section id="use-cases" className={styles.showcaseSection}>
           <div className={styles.showcaseCopy}>
             <p className={styles.sectionLabel}>Use cases</p>
-            <h2 className={styles.sectionTitle}>One product. A lot of real jobs.</h2>
+            <h2 className={styles.sectionTitle}>One place to compare, shortlist, and decide.</h2>
             <p className={styles.sectionBody}>
-              Tote is for the stretch between finding something and deciding on it. People use it
-              for gift lists, room plans, style boards, shared family projects, and client sourcing
-              because it keeps everything from different stores in one organized place.
+              When a project spans five stores, saved links are the easy part. The hard part is
+              keeping everything usable later. Tote gives you one place to compare, share, and
+              decide.
             </p>
             <div className={styles.useCaseGrid}>
               {useCases.map((useCase) => (
@@ -442,10 +457,11 @@ export default function HomePage() {
         <section id="comparison" className={styles.comparisonSection}>
           <div className={styles.sectionIntro}>
             <p className={styles.sectionLabel}>Us vs. the usual workaround</p>
-            <h2 className={styles.sectionTitle}>Center the work. Stop rebuilding the system around it.</h2>
+            <h2 className={styles.sectionTitle}>Most tools help you save. Tote helps you finish the decision.</h2>
             <p className={styles.sectionBody}>
-              Bookmarks, store wishlists, spreadsheets, and group chats each solve one slice of the
-              problem. Tote brings the important pieces together in one place.
+              Bookmarks, store wishlists, spreadsheets, and group chats each help with one piece of
+              the job. Tote keeps the options, price checks, budget, shortlist, and sharing in the
+              same place.
             </p>
           </div>
           <div className={styles.comparisonScroller}>
@@ -486,7 +502,7 @@ export default function HomePage() {
         <section id="audiences" className={styles.audienceSection}>
           <div className={styles.sectionIntro}>
             <p className={styles.sectionLabel}>Who it&apos;s for</p>
-            <h2 className={styles.sectionTitle}>Understands the way people actually save.</h2>
+            <h2 className={styles.sectionTitle}>Built for the way you save before you buy.</h2>
           </div>
           <div className={styles.audienceGrid}>
             {audiences.map((audience) => (
@@ -504,14 +520,14 @@ export default function HomePage() {
             <h2 className={styles.sectionTitle}>Tote respects the fact that your shopping life is yours.</h2>
             <p className={styles.sectionBody}>
               No tracking, no ads, and no selling your behavior to someone else. Save privately,
-              share when you choose, and keep control of what stays personal.
+              share when you choose, and keep your saved links useful even when you&apos;re offline.
             </p>
           </div>
         </section>
 
         <section className={styles.finalCta}>
           <p className={styles.sectionLabel}>Start here</p>
-          <h2 className={styles.finalTitle}>The wishlist, sourcing board, and project cart that travels with you.</h2>
+          <h2 className={styles.finalTitle}>From scattered links to a clear shortlist.</h2>
           <p className={styles.finalBody}>
             Use Tote the next time you start a gift list, plan a room, save outfit ideas, or source
             options for someone else.
