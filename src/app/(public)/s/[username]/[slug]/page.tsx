@@ -103,5 +103,10 @@ export default async function FriendlyUrlPage(props: { params: Params }) {
     );
   }
 
-  return <PublicCollectionClient collectionId={result.collectionId} />;
+  return (
+    <PublicCollectionClient
+      collectionId={result.collectionId}
+      creatorUsername={username}
+    />
+  );
 }

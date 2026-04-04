@@ -16,6 +16,7 @@ interface EditCollectionDialogProps {
   onOpenChange: (open: boolean) => void;
   block: LoadedBlock | null;
   account: co.loaded<typeof JazzAccount>;
+  onDeleteCollection?: (deletedBlock: LoadedBlock) => void;
 }
 
 const PRESET_COLORS = [
@@ -35,7 +36,6 @@ const validationSchema = Yup.object({
   name: Yup.string()
     .required("Collection name is required")
     .max(50, "Collection name must be 50 characters or less"),
-  description: Yup.string().max(200, "Description must be 200 characters or less"),
   color: Yup.string().required("Color is required"),
 });
 
@@ -44,6 +44,7 @@ export function EditCollectionDialog({
   onOpenChange,
   block,
   account,
+  onDeleteCollection,
 }: EditCollectionDialogProps) {
   const { showToast } = useToast();
   const isOnline = useOnlineStatus();
@@ -59,7 +60,6 @@ export function EditCollectionDialog({
   const formik = useFormik({
     initialValues: {
       name: "",
-      description: "",
       color: PRESET_COLORS[0],
     },
     validationSchema,
@@ -72,7 +72,6 @@ export function EditCollectionDialog({
       // Update collectionData
       block.$jazz.set("collectionData", {
         ...block.collectionData,
-        description: values.description.trim() || undefined,
         color: values.color,
       });
 
@@ -91,7 +90,6 @@ export function EditCollectionDialog({
     if (block) {
       formik.setValues({
         name: block.name || "",
-        description: collectionData?.description || "",
         color: collectionData?.color || PRESET_COLORS[0],
       });
     }
@@ -118,6 +116,7 @@ export function EditCollectionDialog({
     if (!block || !account.root?.blocks?.$isLoaded) return;
     if (deleteConfirmation.toLowerCase() !== confirmPhrase) return;
 
+    const deletedBlock = block;
     const blockName = block.name;
 
     // Get all loaded blocks for the recursive delete
@@ -138,6 +137,7 @@ export function EditCollectionDialog({
 
     setDeleteConfirmation("");
     onOpenChange(false);
+    onDeleteCollection?.(deletedBlock);
   };
 
   return (
@@ -169,26 +169,6 @@ export function EditCollectionDialog({
               />
               {formik.touched.name && formik.errors.name && (
                 <div className={styles.error}>{formik.errors.name}</div>
-              )}
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label htmlFor="description" className={styles.label}>
-                Description (optional)
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formik.values.description}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                placeholder="What's this collection for?"
-                className={styles.textarea}
-                rows={3}
-                maxLength={200}
-              />
-              {formik.touched.description && formik.errors.description && (
-                <div className={styles.error}>{formik.errors.description}</div>
               )}
             </div>
 

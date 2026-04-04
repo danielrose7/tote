@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { JazzReactProvider, useCoState } from "jazz-tools/react";
 import { Block } from "../../../../../schema";
 import { apiKey } from "../../../../../apiKey";
@@ -11,8 +13,10 @@ import styles from "../../../view/[id]/page.module.css";
  */
 export function PublicCollectionClient({
   collectionId,
+  creatorUsername,
 }: {
   collectionId: string;
+  creatorUsername?: string;
 }) {
   return (
     <JazzReactProvider
@@ -21,12 +25,21 @@ export function PublicCollectionClient({
         peer: `wss://cloud.jazz.tools/?key=${apiKey}`,
       }}
     >
-      <PublicCollectionViewer collectionId={collectionId} />
+      <PublicCollectionViewer
+        collectionId={collectionId}
+        creatorUsername={creatorUsername}
+      />
     </JazzReactProvider>
   );
 }
 
-function PublicCollectionViewer({ collectionId }: { collectionId: string }) {
+function PublicCollectionViewer({
+  collectionId,
+  creatorUsername,
+}: {
+  collectionId: string;
+  creatorUsername?: string;
+}) {
   const collection = useCoState(Block, collectionId as `co_z${string}`, {
     resolve: {
       children: {
@@ -64,6 +77,7 @@ function PublicCollectionViewer({ collectionId }: { collectionId: string }) {
   }
 
   const isPublishedCollection = !!collection.collectionData?.sourceId;
+  const publicLayout = collection.collectionData?.publicLayout ?? "minimal";
   if (!isPublishedCollection) {
     return (
       <div className={styles.container}>
@@ -114,22 +128,48 @@ function PublicCollectionViewer({ collectionId }: { collectionId: string }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
+      <header
+        className={`${styles.header} ${publicLayout === "feature" ? styles.headerFeature : styles.headerMinimal}`}
+      >
+        <div
+          className={`${styles.headerContent} ${publicLayout === "feature" ? styles.headerContentFeature : ""}`}
+        >
           <div className={styles.titleSection}>
-            {collection.collectionData?.color && (
-              <div
-                className={styles.colorIndicator}
-                style={{ backgroundColor: collection.collectionData.color }}
-              />
+            <div className={styles.titleBlock}>
+              <div className={styles.titleRow}>
+                {collection.collectionData?.color && (
+                  <div
+                    className={styles.colorIndicator}
+                    style={{ backgroundColor: collection.collectionData.color }}
+                  />
+                )}
+                <h1 className={styles.pageTitle}>{collection.name}</h1>
+              </div>
+              {creatorUsername && (
+                <p className={styles.attribution}>Created by {creatorUsername}</p>
+              )}
+            </div>
+            {collection.collectionData?.allowCloning && (
+              <div className={styles.headerAction}>
+                <TemplateCta collectionId={collectionId} />
+              </div>
             )}
-            <h1 className={styles.pageTitle}>{collection.name}</h1>
           </div>
           {collection.collectionData?.description && (
-            <p className={styles.pageDescription}>
+            <p
+              className={`${styles.pageDescription} ${publicLayout === "feature" ? styles.pageDescriptionFeature : ""}`}
+            >
               {collection.collectionData.description}
             </p>
           )}
+          <div className={styles.pageMeta}>
+            <span>{products.length} {products.length === 1 ? "item" : "items"}</span>
+            {collection.children?.$isLoaded && (
+              <span>
+                {collection.children.filter((child) => child && child.$isLoaded && child.type === "slot").length} sections
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
@@ -149,6 +189,48 @@ function PublicCollectionViewer({ collectionId }: { collectionId: string }) {
         </p>
       </footer>
     </div>
+  );
+}
+
+function TemplateCta({ collectionId }: { collectionId: string }) {
+  const cloneHref = `/clone/${collectionId}`;
+
+  return (
+    <>
+      <SignedIn>
+        <Link href={cloneHref} className={styles.headerActionButton}>
+          <CopyIcon />
+          <span>Make a copy</span>
+        </Link>
+      </SignedIn>
+      <SignedOut>
+        <SignUpButton mode="modal" fallbackRedirectUrl={cloneHref}>
+          <button type="button" className={styles.headerActionButton}>
+            <CopyIcon />
+            <span>Make a copy</span>
+          </button>
+        </SignUpButton>
+      </SignedOut>
+    </>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
   );
 }
 
@@ -300,6 +382,9 @@ function ProductRenderer({ block }: { block: any }) {
         )}
         {productData?.description && (
           <p className={styles.productDescription}>{productData.description}</p>
+        )}
+        {productData?.notes && (
+          <p className={styles.productNote}>{productData.notes}</p>
         )}
       </div>
     </a>

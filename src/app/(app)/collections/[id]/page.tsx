@@ -101,6 +101,9 @@ export default function CollectionDetailPage() {
     return null;
   }, [allBlocks, collectionId, directCollection]);
 
+  const canUseSharedCollection = isSharedCollection
+    && collectionBlock?.collectionData?.allowCloning === true;
+
   const handleEditBlock = (block: LoadedBlock) => {
     setSelectedBlock(block);
     setIsEditDialogOpen(true);
@@ -232,6 +235,11 @@ export default function CollectionDetailPage() {
           onDeleteBlock={handleDeleteBlock}
           onEditCollection={() => setIsEditCollectionDialogOpen(true)}
           onShareCollection={() => setIsShareDialogOpen(true)}
+          onUseCollection={
+            canUseSharedCollection
+              ? () => router.push(`/clone/${collectionId}`)
+              : undefined
+          }
         />
       </main>
       <AddLinkDialog
@@ -252,6 +260,7 @@ export default function CollectionDetailPage() {
         onOpenChange={setIsEditCollectionDialogOpen}
         block={collectionBlock}
         account={me}
+        onDeleteCollection={() => router.replace("/collections")}
       />
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}

@@ -23,7 +23,9 @@ const CollectionData = z.object({
   color: z.string().optional(),
   description: z.string().optional(),
   viewMode: z.enum(["grid", "table"]).optional(),
+  publicLayout: z.enum(["minimal", "feature"]).optional(),
   budget: z.number().optional(),
+  allowCloning: z.boolean().optional(),
   // Sharing fields for collaborator access
   sharingGroupId: z.string().optional(), // Group ID for invite-based sharing
   // Publishing fields for draft/publish workflow
@@ -126,6 +128,8 @@ export const JazzAccount = co
             color: "#6366f1",
             description: "Your personal collection of product links",
             viewMode: "grid",
+            publicLayout: "minimal",
+            allowCloning: true,
             sharingGroupId: ownerGroup.$jazz.id,
           },
           children: childrenList,
@@ -163,6 +167,8 @@ export const JazzAccount = co
                 color: "#6366f1",
                 description: "Your personal collection of product links",
                 viewMode: "grid",
+                publicLayout: "minimal",
+                allowCloning: true,
                 sharingGroupId: ownerGroup.$jazz.id,
               },
               children: childrenList,

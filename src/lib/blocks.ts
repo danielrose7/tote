@@ -109,6 +109,7 @@ export function publishCollection(
   }
 
   const createdBlocks: LoadedBlock[] = [];
+  const allowCloning = sourceCollection.collectionData?.allowCloning ?? true;
 
   // Create a Group for the published version - everyone can read
   const group = Group.create({ owner });
@@ -124,6 +125,8 @@ export function publishCollection(
       name: sourceCollection.name,
       collectionData: {
         ...sourceCollection.collectionData,
+        publicLayout: sourceCollection.collectionData?.publicLayout ?? "minimal",
+        allowCloning,
         sourceId: sourceCollection.$jazz.id, // Points back to draft
         publishedId: undefined, // Published clone doesn't have its own published version
         publishedAt: new Date(),
@@ -207,6 +210,7 @@ export function publishCollection(
   // Update source collection with published ID and slug
   sourceCollection.$jazz.set("collectionData", {
     ...sourceCollection.collectionData,
+    allowCloning,
     publishedId: publishedCollection.$jazz.id,
     publishedAt: new Date(),
     slug,
@@ -388,7 +392,9 @@ export function republishCollection(
     color: sourceCollection.collectionData?.color,
     description: sourceCollection.collectionData?.description,
     viewMode: sourceCollection.collectionData?.viewMode,
+    publicLayout: sourceCollection.collectionData?.publicLayout ?? "minimal",
     budget: sourceCollection.collectionData?.budget,
+    allowCloning: sourceCollection.collectionData?.allowCloning ?? true,
     // Update timestamp
     publishedAt: new Date(),
   });
@@ -396,10 +402,107 @@ export function republishCollection(
   // Update publishedAt on source
   sourceCollection.$jazz.set("collectionData", {
     ...sourceCollection.collectionData,
+    allowCloning: sourceCollection.collectionData?.allowCloning ?? true,
     publishedAt: new Date(),
   });
 
   return createdBlocks;
+}
+
+/**
+ * Duplicate a collection into the current user's account.
+ * Used for "Use this list" flows on shared and public pages.
+ */
+export function duplicateCollectionToAccount(
+  sourceCollection: LoadedBlock,
+  owner: Account
+): LoadedBlock {
+  if (sourceCollection.type !== "collection") {
+    throw new Error("Can only duplicate collection blocks");
+  }
+
+  const ownerGroup = Group.create({ owner });
+  ownerGroup.addMember(owner, "admin");
+
+  const clonedChildrenList = BlockList.create([], { owner: ownerGroup });
+
+  const duplicatedCollection = Block.create(
+    {
+      type: "collection",
+      name: sourceCollection.name,
+      collectionData: {
+        color: sourceCollection.collectionData?.color,
+        description: sourceCollection.collectionData?.description,
+        viewMode: sourceCollection.collectionData?.viewMode,
+        publicLayout: sourceCollection.collectionData?.publicLayout ?? "minimal",
+        budget: sourceCollection.collectionData?.budget,
+        sharingGroupId: ownerGroup.$jazz.id,
+      },
+      children: clonedChildrenList,
+      createdAt: new Date(),
+    },
+    { owner: ownerGroup }
+  ) as LoadedBlock;
+
+  if (sourceCollection.children?.$isLoaded) {
+    for (const child of sourceCollection.children) {
+      if (!child || !child.$isLoaded) continue;
+
+      if (child.type === "slot") {
+        const slotChildrenList = BlockList.create([], { owner: ownerGroup });
+
+        const duplicatedSlot = Block.create(
+          {
+            type: "slot",
+            name: child.name,
+            slotData: child.slotData,
+            children: slotChildrenList,
+            sortOrder: child.sortOrder,
+            createdAt: child.createdAt,
+          },
+          { owner: ownerGroup }
+        ) as LoadedBlock;
+
+        clonedChildrenList.$jazz.push(duplicatedSlot);
+
+        if (child.children?.$isLoaded) {
+          for (const slotChild of child.children) {
+            if (!slotChild || !slotChild.$isLoaded || slotChild.type !== "product") {
+              continue;
+            }
+
+            const duplicatedProduct = Block.create(
+              {
+                type: "product",
+                name: slotChild.name,
+                productData: slotChild.productData,
+                sortOrder: slotChild.sortOrder,
+                createdAt: slotChild.createdAt,
+              },
+              { owner: ownerGroup }
+            ) as LoadedBlock;
+
+            slotChildrenList.$jazz.push(duplicatedProduct);
+          }
+        }
+      } else if (child.type === "product") {
+        const duplicatedProduct = Block.create(
+          {
+            type: "product",
+            name: child.name,
+            productData: child.productData,
+            sortOrder: child.sortOrder,
+            createdAt: child.createdAt,
+          },
+          { owner: ownerGroup }
+        ) as LoadedBlock;
+
+        clonedChildrenList.$jazz.push(duplicatedProduct);
+      }
+    }
+  }
+
+  return duplicatedCollection;
 }
 
 // =============================================================================

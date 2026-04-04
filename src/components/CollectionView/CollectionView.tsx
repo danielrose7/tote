@@ -106,6 +106,7 @@ interface CollectionViewProps {
   onDeleteBlock?: (block: LoadedBlock) => void;
   onEditCollection?: (block: LoadedBlock) => void;
   onShareCollection?: () => void;
+  onUseCollection?: () => void;
 }
 
 export function CollectionView({
@@ -115,6 +116,7 @@ export function CollectionView({
   onDeleteBlock,
   onEditCollection,
   onShareCollection,
+  onUseCollection,
 }: CollectionViewProps) {
   const [refreshingBlockId, setRefreshingBlockId] = useState<string | null>(null);
   const [enqueuedBlockIds, setEnqueuedBlockIds] = useState<string[]>([]);
@@ -319,13 +321,38 @@ export function CollectionView({
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.titleSection}>
-            {collectionData?.color && (
-              <div
-                className={styles.colorIndicator}
-                style={{ backgroundColor: collectionData.color }}
-              />
+            <div className={styles.titleInfo}>
+              {collectionData?.color && (
+                <div
+                  className={styles.colorIndicator}
+                  style={{ backgroundColor: collectionData.color }}
+                />
+              )}
+              <h1 className={styles.title}>{collectionBlock.name}</h1>
+            </div>
+            {onUseCollection && (
+              <button
+                type="button"
+                onClick={onUseCollection}
+                className={styles.headerActionButton}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <span>Make a copy</span>
+              </button>
             )}
-            <h1 className={styles.title}>{collectionBlock.name}</h1>
             {onShareCollection && (
               <button
                 type="button"

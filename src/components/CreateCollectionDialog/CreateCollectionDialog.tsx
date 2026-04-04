@@ -74,6 +74,8 @@ export function CreateCollectionDialog({
               description: values.description.trim() || undefined,
               color: values.color,
               viewMode: "grid",
+              publicLayout: "minimal",
+              allowCloning: true,
               sharingGroupId: ownerGroup.$jazz.id, // Store the group ID for invites
             },
             children: childrenList,
