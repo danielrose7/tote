@@ -10,6 +10,13 @@ import {
 import Link from "next/link";
 import styles from "../AuthButton.module.css";
 
+interface LandingAuthButtonsProps {
+  showSignIn?: boolean;
+  signInLabel?: string;
+  signUpLabel?: string;
+  signedInLabel?: string;
+}
+
 function AuthButtonsFallback() {
   return (
     <div className={styles.buttons}>
@@ -19,34 +26,41 @@ function AuthButtonsFallback() {
   );
 }
 
-function LandingAuthButtonsInner() {
+function LandingAuthButtonsInner({
+  showSignIn = true,
+  signInLabel = "Log in",
+  signUpLabel = "Sign up",
+  signedInLabel = "Open Tote",
+}: LandingAuthButtonsProps) {
   return (
     <>
       <SignedOut>
         <div className={styles.buttons}>
-          <SignInButton mode="modal" fallbackRedirectUrl="/collections">
-            <button className={styles.button}>Log in</button>
-          </SignInButton>
+          {showSignIn ? (
+            <SignInButton mode="modal" fallbackRedirectUrl="/collections">
+              <button className={styles.button}>{signInLabel}</button>
+            </SignInButton>
+          ) : null}
           <SignUpButton mode="modal" fallbackRedirectUrl="/collections">
             <button className={`${styles.button} ${styles.buttonPrimary}`}>
-              Sign up
+              {signUpLabel}
             </button>
           </SignUpButton>
         </div>
       </SignedOut>
       <SignedIn>
         <Link href="/collections" className={`${styles.button} ${styles.buttonPrimary}`}>
-          Open Tote
+          {signedInLabel}
         </Link>
       </SignedIn>
     </>
   );
 }
 
-export function LandingAuthButtons() {
+export function LandingAuthButtons(props: LandingAuthButtonsProps) {
   return (
     <Suspense fallback={<AuthButtonsFallback />}>
-      <LandingAuthButtonsInner />
+      <LandingAuthButtonsInner {...props} />
     </Suspense>
   );
 }

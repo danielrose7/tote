@@ -226,6 +226,7 @@
 .principlesSection,
 .showcaseSection,
 .audienceSection,
+.questionsSection,
 .comparisonSection,
 .privacySection,
 .finalCta,
@@ -371,6 +372,7 @@
 .principlesSection,
 .showcaseSection,
 .audienceSection,
+.questionsSection,
 .comparisonSection,
 .privacySection,
 .finalCta {
@@ -436,6 +438,7 @@
 
 .principlesGrid,
 .audienceGrid,
+.questionsGrid,
 .comparisonGrid {
   display: grid;
   gap: 1.25rem;
@@ -448,6 +451,7 @@
 
 .principleCard,
 .audienceCard,
+.questionCard,
 .comparisonCard,
 .useCaseCard,
 .checklistCard,
@@ -459,6 +463,7 @@
 
 .principleCard,
 .audienceCard,
+.questionCard,
 .comparisonCard,
 .checklistCard,
 .privacyPanel {
@@ -468,6 +473,7 @@
 
 .principleCard h3,
 .audienceCard h3,
+.questionCard h3,
 .comparisonCard h3,
 .useCaseCard h3 {
   margin: 0 0 0.8rem;
@@ -478,6 +484,7 @@
 
 .principleCard p,
 .audienceCard p,
+.questionCard p,
 .comparisonCard p,
 .useCaseCard p,
 .checklistCard,
@@ -589,6 +596,10 @@
 
 .audienceGrid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.questionsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .comparisonScroller {
@@ -786,6 +797,10 @@
 
   .audienceGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .questionsGrid {
+    grid-template-columns: 1fr;
   }
 
   .checklistCard {

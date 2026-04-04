@@ -62,6 +62,29 @@ const sourceCategories = [
   "Anywhere online",
 ];
 
+const questions = [
+  {
+    question: "Why not just use bookmarks or notes?",
+    answer:
+      "Bookmarks and notes help you save a link. Tote helps you come back later with images, pricing, collections, and a shortlist that still makes sense.",
+  },
+  {
+    question: "Does Tote only work with big retailers?",
+    answer:
+      "No. Tote works across major retailers, resale sites, indie shops, and the rest of the web wherever you shop online.",
+  },
+  {
+    question: "Can I come back later when I’m ready to decide?",
+    answer:
+      "That’s the point. Save now, revisit later, refresh prices when it matters, and keep the decision moving in one place.",
+  },
+  {
+    question: "Is Tote private?",
+    answer:
+      "Yes. No ads, no tracking, and no selling your shopping behavior. Sharing is opt-in, and your saved links stay useful offline.",
+  },
+];
+
 const principles = [
   {
     title: "Keep every option in one place",
@@ -135,7 +158,7 @@ const useCases = [
 
 const audiences = [
   {
-    title: "For people who compare before they decide",
+    title: "For people who compare",
     description:
       "You research, compare, and collect ideas over time. Tote gives those saved links a real home.",
   },
@@ -330,13 +353,16 @@ export default function HomePage() {
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
             <p className={styles.eyebrow}>A cart that doesn&apos;t belong to a store</p>
-            <h1 className={styles.heroTitle}>Save from any store. Decide in one place.</h1>
+            <h1 className={styles.heroTitle}>Save anything you might buy — from any store.</h1>
             <p className={styles.heroSubtitle}>
-              You save products from different stores into one collection, organize them by project
-              or person, refresh prices later, and keep the shortlist moving.
+              Organize it once. Revisit it when you&apos;re ready to decide.
             </p>
             <div className={styles.heroActions}>
-              <LandingAuthButtons />
+              <LandingAuthButtons
+                showSignIn={false}
+                signUpLabel="Save your first item"
+                signedInLabel="Save your next item"
+              />
               <a
                 href={CHROME_WEB_STORE_URL}
                 target="_blank"
@@ -347,7 +373,7 @@ export default function HomePage() {
               </a>
             </div>
             <p className={styles.heroNote}>
-              Save links from the stores you already use. Come back with fewer tabs, a clearer budget, and a shortlist you can actually use.
+              Save what you find now. Come back with fewer tabs, a clearer budget, and a shortlist you can actually use.
             </p>
           </div>
 
@@ -392,9 +418,8 @@ export default function HomePage() {
             <p className={styles.sectionLabel}>Use cases</p>
             <h2 className={styles.sectionTitle}>One place to compare, shortlist, and decide.</h2>
             <p className={styles.sectionBody}>
-              When a project spans five stores, saved links are the easy part. The hard part is
-              keeping everything usable later. Tote gives you one place to compare, share, and
-              decide.
+              When a project spans five stores, saving links is the easy part. Keeping them useful
+              later is harder. Tote gives you one place to compare, share, and decide.
             </p>
             <div className={styles.useCaseGrid}>
               {useCases.map((useCase) => (
@@ -514,6 +539,21 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className={styles.questionsSection}>
+          <div className={styles.sectionIntro}>
+            <p className={styles.sectionLabel}>Questions</p>
+            <h2 className={styles.sectionTitle}>What people usually want to know first.</h2>
+          </div>
+          <div className={styles.questionsGrid}>
+            {questions.map((item) => (
+              <article key={item.question} className={styles.questionCard}>
+                <h3>{item.question}</h3>
+                <p>{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="privacy" className={styles.privacySection}>
           <div className={styles.privacyPanel}>
             <p className={styles.sectionLabel}>Private by design</p>
@@ -533,7 +573,11 @@ export default function HomePage() {
             options for someone else.
           </p>
           <div className={styles.heroActions}>
-            <LandingAuthButtons />
+            <LandingAuthButtons
+              showSignIn={false}
+              signUpLabel="Save your first item"
+              signedInLabel="Save your next item"
+            />
             <a
               href={CHROME_WEB_STORE_URL}
               target="_blank"
