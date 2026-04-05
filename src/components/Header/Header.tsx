@@ -16,6 +16,7 @@ interface HeaderProps {
   showAddLink?: boolean;
   showAddCollection?: boolean;
   showSaveTabs?: boolean;
+  showImport?: boolean;
   breadcrumbs?: Breadcrumb[];
 }
 
@@ -26,6 +27,7 @@ export function Header({
   showAddLink = false,
   showAddCollection = false,
   showSaveTabs = false,
+  showImport = false,
   breadcrumbs,
 }: HeaderProps) {
   return (
