@@ -53,17 +53,6 @@ interface CuratePageClientProps {
 	initialSessionId?: string | null;
 }
 
-interface SessionSnapshot {
-	phase: Phase;
-	topic: string;
-	questions: { id: string; text: string }[];
-	answers: Answers;
-	progress: ProgressEntry[];
-	result: Result | null;
-	error: string | null;
-	urlsData?: UrlsData | null;
-}
-
 interface UrlsData {
 	sections: { title: string; slug: string; urls: string[] }[];
 	mock?: boolean;
@@ -148,10 +137,6 @@ function formatStepLabel(step: string): string {
 	);
 }
 
-function storageKey(sessionId: string) {
-	return `curate-session:${sessionId}`;
-}
-
 function sleep(ms: number) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -187,7 +172,6 @@ export function CuratePageClient({
 	const [urlsData, setUrlsData] = useState<UrlsData | null>(null);
 	const [extractionProgress, setExtractionProgress] = useState<ExtractionProgress | null>(null);
 	const progressEndRef = useRef<HTMLDivElement>(null);
-	const hasLoadedSnapshotRef = useRef(false);
 	const extractionStartedRef = useRef(false);
 
 	const { showToast } = useToast();
@@ -292,56 +276,13 @@ export function CuratePageClient({
 			entry.step.startsWith("found-urls-"),
 	);
 
+	// Load topic from Jazz session when available
 	useEffect(() => {
-		if (!sessionId || hasLoadedSnapshotRef.current || typeof window === "undefined") {
-			return;
-		}
-
-		hasLoadedSnapshotRef.current = true;
-		const raw = window.localStorage.getItem(storageKey(sessionId));
-		if (!raw) {
-			if (initialSessionId) {
-				// Interview questions already fired before this page connected — show form directly.
-				// Realtime or reconnect will advance phase if we're past this point.
-				setPhase("interview");
-				setQuestions([...defaultQuestions]);
-			}
-			return;
-		}
-
-		try {
-			const snapshot = JSON.parse(raw) as SessionSnapshot;
-			setPhase(snapshot.phase);
-			setTopic(snapshot.topic);
-			setQuestions(
-				snapshot.questions.length > 0 ? snapshot.questions : [...defaultQuestions],
-			);
-			setAnswers(snapshot.answers);
-			setProgress(snapshot.progress);
-			setResult(snapshot.result);
-			setError(snapshot.error);
-			if (snapshot.urlsData) setUrlsData(snapshot.urlsData);
-		} catch {
-			setPhase(initialSessionId ? "started" : "idle");
-			setQuestions(initialSessionId ? [...defaultQuestions] : []);
-		}
-	}, [initialSessionId, sessionId]);
-
-	useEffect(() => {
-		if (!sessionId || typeof window === "undefined") return;
-
-		const snapshot: SessionSnapshot = {
-			phase,
-			topic,
-			questions,
-			answers,
-			progress,
-			result,
-			error,
-			urlsData,
-		};
-		window.localStorage.setItem(storageKey(sessionId), JSON.stringify(snapshot));
-	}, [answers, error, phase, progress, questions, result, sessionId, topic, urlsData]);
+		if (!sessionId || topic) return;
+		const jazzSession = getJazzSession();
+		if (jazzSession?.topic) setTopic(jazzSession.topic);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [sessionId, me.$isLoaded]);
 
 	// Drive phase transitions from realtime messages
 	useEffect(() => {
@@ -583,9 +524,6 @@ export function CuratePageClient({
 	}
 
 	function handleReset() {
-		if (sessionId && typeof window !== "undefined") {
-			window.localStorage.removeItem(storageKey(sessionId));
-		}
 		setPhase("idle");
 		setTopic("");
 		setSessionId(null);
@@ -602,8 +540,8 @@ export function CuratePageClient({
 		setError(null);
 		setUrlsData(null);
 		setExtractionProgress(null);
-		hasLoadedSnapshotRef.current = false;
 		extractionStartedRef.current = false;
+		jazzSessionRef.current = null;
 		window.location.href = "/curate";
 	}
 

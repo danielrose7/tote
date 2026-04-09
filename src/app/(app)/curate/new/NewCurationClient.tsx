@@ -56,12 +56,6 @@ export function NewCurationClient() {
 			}
 		}
 
-		// Save to localStorage so CuratePageClient can restore topic and phase on mount
-		window.localStorage.setItem(
-			`curate-session:${sessionId}`,
-			JSON.stringify({ phase: "started", topic: topic.trim(), questions: [], answers: { audience: "", lens: "", constraints: "", mode: "debug" }, progress: [], result: null, error: null }),
-		);
-
 		window.location.href = `/curate/${sessionId}`;
 	}
 
