@@ -24,5 +24,6 @@ export async function GET(
 				}
 			: null,
 		urlSections: session?.urlSections ?? null,
+		tokenUsage: session?.tokenUsage ?? null,
 	});
 }

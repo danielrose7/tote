@@ -122,6 +122,16 @@ const milestoneLabels: Record<string, string> = {
 	complete: "Collection written",
 };
 
+// claude-sonnet-4-6 pricing: $3/1M input, $15/1M output
+function estimateCost(inputTokens: number, outputTokens: number): number {
+	return (inputTokens / 1_000_000) * 3 + (outputTokens / 1_000_000) * 15;
+}
+
+function formatCost(inputTokens: number, outputTokens: number): string {
+	const cost = estimateCost(inputTokens, outputTokens);
+	return cost < 0.01 ? `<$0.01` : `~$${cost.toFixed(2)}`;
+}
+
 function formatStepLabel(step: string): string {
 	if (step.startsWith("searching-")) return "Searching";
 	if (step.startsWith("found-urls-")) return "URLs found";
@@ -171,6 +181,7 @@ export function CuratePageClient({
 	const [importing, setImporting] = useState(false);
 	const [urlsData, setUrlsData] = useState<UrlsData | null>(null);
 	const [extractionProgress, setExtractionProgress] = useState<ExtractionProgress | null>(null);
+	const [tokenUsage, setTokenUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
 	const progressEndRef = useRef<HTMLDivElement>(null);
 	const extractionStartedRef = useRef(false);
 
@@ -218,6 +229,7 @@ export function CuratePageClient({
 					}
 				}
 				if (snap.urlSections) setUrlsData({ sections: snap.urlSections, mock: false });
+				if (snap.tokenUsage) setTokenUsage(snap.tokenUsage);
 			}
 		} catch {
 			// ignore
@@ -479,7 +491,7 @@ export function CuratePageClient({
 		return null;
 	}
 
-	// Update Jazz session whenever phase or result changes
+	// Update Jazz session whenever phase, result, or token usage changes
 	useEffect(() => {
 		if (!sessionId || !me.$isLoaded) return;
 		const jazzSession = getJazzSession();
@@ -488,8 +500,12 @@ export function CuratePageClient({
 		if (result?.title) jazzSession.$jazz.set("title", result.title);
 		if (result?.sectionCount != null) jazzSession.$jazz.set("sectionCount", result.sectionCount);
 		if (result?.itemCount != null) jazzSession.$jazz.set("itemCount", result.itemCount);
+		if (tokenUsage) {
+			jazzSession.$jazz.set("inputTokens", tokenUsage.inputTokens);
+			jazzSession.$jazz.set("outputTokens", tokenUsage.outputTokens);
+		}
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [phase, result, sessionId, me.$isLoaded]);
+	}, [phase, result, tokenUsage, sessionId, me.$isLoaded]);
 
 	const hasSyncedRef = useRef(false);
 	useEffect(() => {
@@ -891,6 +907,14 @@ export function CuratePageClient({
 						<h2 className={styles.resultTitle}>{result.title}</h2>
 						<p className={styles.resultMeta}>
 							{result.sectionCount} sections · {result.itemCount} items
+							{tokenUsage && (
+								<>
+									{" · "}
+									<span title={`${tokenUsage.inputTokens.toLocaleString()} in / ${tokenUsage.outputTokens.toLocaleString()} out`}>
+										{formatCost(tokenUsage.inputTokens, tokenUsage.outputTokens)}
+									</span>
+								</>
+							)}
 						</p>
 
 						{importPayload && (

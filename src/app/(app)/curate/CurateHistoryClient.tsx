@@ -4,6 +4,12 @@ import { useAccount } from "jazz-tools/react";
 import { JazzAccount } from "../../../schema";
 import styles from "./curate.module.css";
 
+// claude-sonnet-4-6: $3/1M input, $15/1M output
+function formatCost(inputTokens: number, outputTokens: number): string {
+	const cost = (inputTokens / 1_000_000) * 3 + (outputTokens / 1_000_000) * 15;
+	return cost < 0.01 ? "<$0.01" : `~$${cost.toFixed(2)}`;
+}
+
 const phaseLabel: Record<string, string> = {
 	interview: "Interview",
 	started: "Starting",
@@ -56,6 +62,14 @@ export function CurateHistoryClient() {
 								</a>
 								<span className={styles.sessionDate}>
 									{s.createdAt?.toLocaleDateString()}
+									{s.inputTokens != null && s.outputTokens != null && (
+										<span
+											className={styles.sessionCost}
+											title={`${s.inputTokens.toLocaleString()} in / ${s.outputTokens.toLocaleString()} out`}
+										>
+											{formatCost(s.inputTokens, s.outputTokens)}
+										</span>
+									)}
 								</span>
 							</li>
 						))}

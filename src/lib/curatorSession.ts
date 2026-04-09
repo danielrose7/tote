@@ -4,13 +4,18 @@
  * Uses the `redis` package with KV_REDIS_URL (Vercel Redis / Upstash).
  * Falls back to the local session file when KV_REDIS_URL is not set.
  *
- * Only the completed result is persisted server-side — in-progress state lives
- * in the browser via Inngest Realtime + localStorage.
+ * Phase and result are persisted server-side at each transition — in-progress
+ * state lives in the browser via Inngest Realtime.
  */
 
 import { createClient } from "redis";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+
+export interface TokenUsage {
+	inputTokens: number;
+	outputTokens: number;
+}
 
 export interface CuratorSessionData {
 	phase?: "interview" | "planning" | "extracting" | "curating" | "complete" | "error";
@@ -19,6 +24,7 @@ export interface CuratorSessionData {
 	itemCount?: number;
 	json?: string;
 	urlSections?: { title: string; slug: string; urls: string[] }[];
+	tokenUsage?: TokenUsage;
 }
 
 export interface CuratorSessionResult extends CuratorSessionData {

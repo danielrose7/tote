@@ -226,7 +226,7 @@ export const curateCollection = inngest.createFunction(
 		);
 
 		// Step 3: Plan the collection structure
-		const plan = await step.run("plan-collection", async () => {
+		const planResult = await step.run("plan-collection", async () => {
 			console.log("[curate-collection] plan:start", {
 				at: nowIso(),
 				sessionId,
@@ -264,8 +264,9 @@ export const curateCollection = inngest.createFunction(
 				sectionCount: parsed.sections.length,
 				sections: parsed.sections.map((section) => section.slug),
 			});
-			return parsed;
+			return { ...parsed, usage: response.usage };
 		});
+		const plan = planResult;
 
 		await step.realtime.publish("planned", ch.progress, {
 			step: "planned",
@@ -277,6 +278,8 @@ export const curateCollection = inngest.createFunction(
 		// Each section is its own named step so it's individually memoized/retryable
 		const isMock = process.env.CURATOR_MOCK === "true";
 		const urlSections: UrlSection[] = [];
+		let totalInputTokens = planResult.usage?.input_tokens ?? 0;
+		let totalOutputTokens = planResult.usage?.output_tokens ?? 0;
 
 		if (isMock) {
 			// In mock mode, skip URL discovery entirely and use fixture sections as-is.
@@ -342,7 +345,7 @@ export const curateCollection = inngest.createFunction(
 							slug,
 							textPreview: text.slice(0, 500),
 						});
-						return { urls: [] };
+						return { urls: [], usage: null };
 					}
 					console.log("[curate-collection] find-urls:done", {
 						at: nowIso(),
@@ -351,7 +354,7 @@ export const curateCollection = inngest.createFunction(
 						slug,
 						urlCount: parsed.urls.length,
 					});
-					return { urls: parsed.urls };
+					return { urls: parsed.urls, usage: response.usage };
 				} catch (error) {
 					console.error("[curate-collection] find-urls:error", {
 						at: nowIso(),
@@ -360,9 +363,12 @@ export const curateCollection = inngest.createFunction(
 						slug,
 						error: error instanceof Error ? error.message : String(error),
 					});
-					return { urls: [] };
+					return { urls: [], usage: null };
 				}
 			});
+
+			totalInputTokens += found.usage?.input_tokens ?? 0;
+			totalOutputTokens += found.usage?.output_tokens ?? 0;
 
 			const domains = found.urls
 				.map((u) => {
@@ -522,12 +528,23 @@ export const curateCollection = inngest.createFunction(
 				sectionCount: collection.sections.length,
 				itemCount,
 				json: collectionJson,
+				usage: response.usage,
 			};
+		});
+
+		totalInputTokens += result.usage?.input_tokens ?? 0;
+		totalOutputTokens += result.usage?.output_tokens ?? 0;
+		const tokenUsage = { inputTokens: totalInputTokens, outputTokens: totalOutputTokens };
+
+		console.log("[curate-collection] token-totals", {
+			at: nowIso(),
+			sessionId,
+			...tokenUsage,
 		});
 
 		// Persist result so sync route can recover it if browser was closed at completion
 		await step.run("persist-session-result", () =>
-			writeSession(sessionId, { phase: "complete", ...result }),
+			writeSession(sessionId, { phase: "complete", tokenUsage, ...result }),
 		);
 
 		await step.realtime.publish("result", ch.result, result);
