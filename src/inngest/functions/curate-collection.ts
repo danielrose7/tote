@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { inngest } from "../client";
+import { writeSession, patchSession } from "../../lib/curatorSession";
 import { curationChannel } from "../channels";
 import {
 	CURATOR_SYSTEM_PROMPT,
@@ -75,13 +76,13 @@ async function writeSessionState(
 	sessionId: string,
 	data: { urlSections: UrlSection[]; mock: boolean },
 ) {
-	const dir = join(process.cwd(), "collections", ".sessions");
-	await mkdir(dir, { recursive: true });
-	await writeFile(
-		join(dir, `${sessionId}.json`),
-		JSON.stringify(data),
-		"utf-8",
-	);
+	try {
+		const dir = join(process.cwd(), "collections", ".sessions");
+		await mkdir(dir, { recursive: true });
+		await writeFile(join(dir, `${sessionId}.json`), JSON.stringify(data), "utf-8");
+	} catch {
+		// Best-effort — fails silently in serverless environments
+	}
 }
 
 function planTokenLimit(mode: CurationMode) {
@@ -173,6 +174,11 @@ export const curateCollection = inngest.createFunction(
 			step: "interview-sent",
 			message: "Interview questions sent — waiting for your answers.",
 		});
+
+		// Persist phase so reconnect can show the interview form without realtime replay
+		await step.run("persist-interview-phase", () =>
+			patchSession(sessionId, { phase: "interview" }),
+		);
 
 		// Step 2: Wait for interview answers (human-in-the-loop)
 		const answersEvent = await step.waitForEvent("wait-for-answers", {
@@ -366,7 +372,10 @@ export const curateCollection = inngest.createFunction(
 
 		// Persist URL data so the browser can re-fetch if the realtime connection drops
 		await step.run("persist-session-urls", () =>
-			writeSessionState(sessionId, { urlSections, mock: isMock }),
+			Promise.all([
+				writeSessionState(sessionId, { urlSections, mock: isMock }),
+				patchSession(sessionId, { urlSections }),
+			]),
 		);
 
 		await step.realtime.publish("urls-ready", ch.urls, {
@@ -455,17 +464,18 @@ export const curateCollection = inngest.createFunction(
 				throw new Error(`Failed to parse collection: ${text.slice(0, 200)}`);
 			}
 
+			const collectionJson = JSON.stringify(collection);
 			const slug = parameterize(collection.title);
 			const timestamp = formatTimestamp(new Date());
 			const fileName = `${slug}-${timestamp}.json`;
-			const collectionsDir = join(process.cwd(), "collections");
 
-			await mkdir(collectionsDir, { recursive: true });
-			await writeFile(
-				join(collectionsDir, fileName),
-				JSON.stringify(collection),
-				"utf-8",
-			);
+			try {
+				const collectionsDir = join(process.cwd(), "collections");
+				await mkdir(collectionsDir, { recursive: true });
+				await writeFile(join(collectionsDir, fileName), collectionJson, "utf-8");
+			} catch {
+				// File write is best-effort — fails silently in serverless environments
+			}
 
 			const itemCount = collection.sections.reduce(
 				(n, s) => n + s.items.length,
@@ -486,14 +496,20 @@ export const curateCollection = inngest.createFunction(
 				title: collection.title,
 				sectionCount: collection.sections.length,
 				itemCount,
+				json: collectionJson,
 			};
 		});
+
+		// Persist result so sync route can recover it if browser was closed at completion
+		await step.run("persist-session-result", () =>
+			writeSession(sessionId, { phase: "complete", ...result }),
+		);
 
 		await step.realtime.publish("result", ch.result, result);
 
 		await step.realtime.publish("complete", ch.progress, {
 			step: "complete",
-			message: `Done. Written to ${result.filePath}`,
+			message: "Done.",
 		});
 
 		return { filePath: result.filePath };

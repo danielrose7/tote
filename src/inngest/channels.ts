@@ -27,6 +27,7 @@ export const curationChannel = realtime.channel({
 				title: z.string(),
 				sectionCount: z.number(),
 				itemCount: z.number(),
+				json: z.string(),
 			}),
 		},
 		urls: {

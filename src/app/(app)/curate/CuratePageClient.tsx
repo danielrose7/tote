@@ -2,10 +2,18 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRealtime } from "inngest/react";
+import { useAccount } from "jazz-tools/react";
 import { curationChannel } from "../../../inngest/channels";
 import { checkExtensionAvailable, refreshViaExtension } from "../../../lib/extension";
 import { MOCK_EXTRACTED_ITEMS } from "../../../inngest/fixtures/extracted-items";
-import { fetchRealtimeToken, readCollectionJson } from "./actions";
+import { fetchRealtimeToken } from "./actions";
+import { useToast } from "../../../components/ToastNotification";
+import { BlockList, CuratorSession, CuratorSessionList, JazzAccount } from "../../../schema";
+import {
+	type ImportPayload,
+	createCollectionFromPayload,
+	validatePayload,
+} from "../../../lib/importPayload";
 import styles from "./curate.module.css";
 import type { ExtractedItem } from "../../../inngest/types";
 
@@ -199,11 +207,16 @@ export function CuratePageClient({
 	const [result, setResult] = useState<Result | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [copied, setCopied] = useState(false);
+	const [importPayload, setImportPayload] = useState<ImportPayload | null>(null);
+	const [importing, setImporting] = useState(false);
 	const [urlsData, setUrlsData] = useState<UrlsData | null>(null);
 	const [extractionProgress, setExtractionProgress] = useState<ExtractionProgress | null>(null);
 	const progressEndRef = useRef<HTMLDivElement>(null);
 	const hasLoadedSnapshotRef = useRef(false);
 	const extractionStartedRef = useRef(false);
+
+	const { showToast } = useToast();
+	const me = useAccount(JazzAccount, { resolve: { root: { blocks: true, curatorSessions: true } } });
 
 	const topics = ["interview", "progress", "result", "urls"] as const;
 	const channel = useMemo(
@@ -235,11 +248,47 @@ export function CuratePageClient({
 				const snap = await res.json();
 				if (snap.phase) setPhase(snap.phase);
 				if (snap.progress?.length > 0) setProgress(snap.progress);
-				if (snap.result) setResult(snap.result);
-				if (snap.urlSections) setUrlsData({ sections: snap.urlSections, mock: false });
+				if (snap.result) {
+					setResult(snap.result);
+					if (snap.result.json) {
+						try {
+							setImportPayload(validatePayload(JSON.parse(snap.result.json)));
+						} catch {
+							// ignore
+						}
+					}
+				}
+				if (snap.urlSections) {
+					setUrlsData({ sections: snap.urlSections, mock: false });
+					// If no explicit phase came back, we're in extraction (urls ready, not yet complete)
+					if (!snap.phase) setPhase("extracting");
+				}
 			}
 		} catch {
 			// ignore
+		}
+	}
+
+	async function handleImport() {
+		if (!importPayload || !me.$isLoaded || !me.root) return;
+		setImporting(true);
+		try {
+			const collectionBlock = createCollectionFromPayload(importPayload, me);
+
+			if (!me.root.blocks) {
+				me.root.$jazz.set("blocks", BlockList.create([collectionBlock], me));
+			} else if (me.root.blocks.$isLoaded) {
+				me.root.blocks.$jazz.push(collectionBlock);
+			}
+
+			window.location.href = `/collections/${collectionBlock.$jazz.id}`;
+		} catch (err) {
+			showToast({
+				title: "Import failed",
+				description: err instanceof Error ? err.message : "Unknown error",
+				variant: "error",
+			});
+			setImporting(false);
 		}
 	}
 
@@ -278,7 +327,9 @@ export function CuratePageClient({
 		const raw = window.localStorage.getItem(storageKey(sessionId));
 		if (!raw) {
 			if (initialSessionId) {
-				setPhase("started");
+				// Interview questions already fired before this page connected — show form directly.
+				// Realtime or reconnect will advance phase if we're past this point.
+				setPhase("interview");
 				setQuestions([...defaultQuestions]);
 			}
 			return;
@@ -362,6 +413,11 @@ export function CuratePageClient({
 		if (resultMsg) {
 			setResult(resultMsg.data);
 			setPhase("complete");
+			try {
+				setImportPayload(validatePayload(JSON.parse(resultMsg.data.json)));
+			} catch {
+				// ignore — user can still copy JSON manually
+			}
 		}
 
 		const urlsMsg = messages.byTopic.urls;
@@ -494,6 +550,29 @@ export function CuratePageClient({
 	}, [selectedAudience, audienceNotes, selectedLenses, lensNotes, selectedConstraints, constraintNotes]);
 
 	// Sync from Inngest on initial connection — catches up state missed while realtime was down
+	// Keep a ref to the active Jazz session so we can update it on phase transitions
+	const jazzSessionRef = useRef<typeof CuratorSession.prototype | null>(null);
+
+	function findJazzSession(sid: string) {
+		if (!me.$isLoaded || !me.root?.curatorSessions?.$isLoaded) return null;
+		for (const s of me.root.curatorSessions) {
+			if (s?.sessionId === sid) return s;
+		}
+		return null;
+	}
+
+	// Update Jazz session whenever phase or result changes
+	useEffect(() => {
+		if (!sessionId || !me.$isLoaded) return;
+		const jazzSession = jazzSessionRef.current ?? findJazzSession(sessionId);
+		if (!jazzSession) return;
+		jazzSession.$jazz.set("phase", phase);
+		if (result?.title) jazzSession.$jazz.set("title", result.title);
+		if (result?.sectionCount != null) jazzSession.$jazz.set("sectionCount", result.sectionCount);
+		if (result?.itemCount != null) jazzSession.$jazz.set("itemCount", result.itemCount);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [phase, result, sessionId]);
+
 	const hasSyncedRef = useRef(false);
 	useEffect(() => {
 		if (!sessionId || hasSyncedRef.current || phase === "complete" || phase === "error" || phase === "idle") return;
@@ -547,6 +626,20 @@ export function CuratePageClient({
 		setSessionId(newSessionId);
 		setPhase("started");
 		setQuestions([...defaultQuestions]);
+
+		// Track session in Jazz so it appears in history
+		if (me.$isLoaded && me.root) {
+			const jazzSession = CuratorSession.create(
+				{ sessionId: newSessionId, topic: topic.trim(), phase: "started", createdAt: new Date() },
+				me,
+			);
+			jazzSessionRef.current = jazzSession;
+			if (!me.root.curatorSessions) {
+				me.root.$jazz.set("curatorSessions", CuratorSessionList.create([jazzSession], me));
+			} else if (me.root.curatorSessions.$isLoaded) {
+				me.root.curatorSessions.$jazz.push(jazzSession);
+			}
+		}
 	}
 
 	async function handleAnswers(e: React.FormEvent) {
@@ -596,6 +689,30 @@ export function CuratePageClient({
 		<main className={styles.main}>
 			<div className={styles.container}>
 				<h1 className={styles.heading}>Collection Curator</h1>
+
+				{phase === "idle" && me.root?.curatorSessions?.$isLoaded && me.root.curatorSessions.length > 0 && (
+					<section className={styles.sessionHistory}>
+						<h2 className={styles.sessionHistoryHeading}>Past sessions</h2>
+						<ul className={styles.sessionList}>
+							{[...me.root.curatorSessions]
+								.filter((s): s is NonNullable<typeof s> => s != null)
+								.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+								.map((s) => (
+									<li key={s.sessionId} className={styles.sessionItem}>
+										<a href={`/curate/${s.sessionId}`} className={styles.sessionLink}>
+											<span className={styles.sessionTopic}>{s.title ?? s.topic}</span>
+											<span className={`${styles.sessionPhase} ${styles[`phase_${s.phase}`]}`}>
+												{s.phase}
+											</span>
+										</a>
+										<span className={styles.sessionDate}>
+											{s.createdAt.toLocaleDateString()}
+										</span>
+									</li>
+								))}
+						</ul>
+					</section>
+				)}
 
 				{phase === "idle" && (
 					<form onSubmit={handleStart} className={styles.form}>
@@ -988,9 +1105,37 @@ export function CuratePageClient({
 						<p className={styles.resultMeta}>
 							{result.sectionCount} sections · {result.itemCount} items
 						</p>
-						<p className={styles.resultPath}>
-							<code>{result.filePath}</code>
-						</p>
+
+						{importPayload && (
+							<div className={styles.importPreview}>
+								{importPayload.intro && (
+									<p className={styles.importIntro}>{importPayload.intro}</p>
+								)}
+								{importPayload.warnings && importPayload.warnings.length > 0 && (
+									<div className={styles.warnings}>
+										{importPayload.warnings.map((w) => (
+											<p key={w} className={styles.warning}>{w}</p>
+										))}
+									</div>
+								)}
+								<div className={styles.importSections}>
+									{importPayload.sections.map((section) => (
+										<div key={section.title} className={styles.importSection}>
+											<h3 className={styles.importSectionTitle}>{section.title}</h3>
+											<ul className={styles.importItemList}>
+												{section.items.map((item) => (
+													<li key={item.sourceRowId || item.sourceUrl || item.title} className={styles.importItem}>
+														<span className={styles.importItemName}>{item.title || item.sourceUrl}</span>
+														{item.price && <span className={styles.importItemPrice}>{item.price}</span>}
+													</li>
+												))}
+											</ul>
+										</div>
+									))}
+								</div>
+							</div>
+						)}
+
 						<div className={styles.actions}>
 							<button
 								type="button"
@@ -1003,17 +1148,24 @@ export function CuratePageClient({
 								type="button"
 								className={styles.secondaryButton}
 								onClick={async () => {
-									const json = await readCollectionJson(result.filePath);
-									await navigator.clipboard.writeText(json);
+									if (!importPayload) return;
+									await navigator.clipboard.writeText(JSON.stringify(importPayload, null, 2));
 									setCopied(true);
 									setTimeout(() => setCopied(false), 2000);
 								}}
 							>
 								{copied ? "Copied!" : "Copy JSON"}
 							</button>
-							<a href="/import" className={styles.primaryButton}>
-								Import to Tote
-							</a>
+							{importPayload && (
+								<button
+									type="button"
+									className={styles.primaryButton}
+									onClick={handleImport}
+									disabled={importing || !me.$isLoaded || !me.root}
+								>
+									{importing ? "Importing..." : "Add to Tote"}
+								</button>
+							)}
 						</div>
 					</div>
 				)}

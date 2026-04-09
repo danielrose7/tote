@@ -23,6 +23,90 @@
 	font-size: 0.9rem;
 }
 
+.sessionHistory {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.sessionHistoryHeading {
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--color-text-secondary);
+	margin: 0;
+}
+
+.sessionList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.sessionItem {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.sessionLink {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 1;
+	text-decoration: none;
+	color: inherit;
+	padding: 0.4rem 0;
+}
+
+.sessionLink:hover .sessionTopic {
+	text-decoration: underline;
+}
+
+.sessionTopic {
+	flex: 1;
+	font-size: 0.9rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sessionPhase {
+	font-size: 0.75rem;
+	padding: 0.15rem 0.4rem;
+	border-radius: 999px;
+	background: var(--color-border);
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+}
+
+.phase_complete {
+	background: #d1fae5;
+	color: #065f46;
+}
+
+.phase_error {
+	background: #fee2e2;
+	color: #991b1b;
+}
+
+.phase_interview,
+.phase_running,
+.phase_extracting {
+	background: #fef9c3;
+	color: #713f12;
+}
+
+.sessionDate {
+	font-size: 0.75rem;
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+}
+
 .form {
 	display: flex;
 	flex-direction: column;
@@ -436,13 +520,79 @@
 	margin: 0 0 0.75rem;
 }
 
-.resultPath {
-	margin: 0 0 1.25rem;
+.importPreview {
+	margin: 1rem 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
 }
 
-.resultPath code {
+.warnings {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.warning {
 	font-size: 0.8rem;
+	color: #92400e;
+	background: #fef3c7;
+	border-radius: 4px;
+	padding: 0.375rem 0.625rem;
+	margin: 0;
+}
+
+.importIntro {
+	font-size: 0.875rem;
 	color: var(--color-text-secondary);
+	margin: 0;
+}
+
+.importSections {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.importSection {
+	border: 1px solid var(--color-border);
+	border-radius: 8px;
+	padding: 0.875rem 1rem;
+}
+
+.importSectionTitle {
+	font-size: 0.85rem;
+	font-weight: 600;
+	margin: 0 0 0.5rem;
+}
+
+.importItemList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.importItem {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.5rem;
+	font-size: 0.825rem;
+}
+
+.importItemName {
+	color: var(--color-text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.importItemPrice {
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 
 .extractionList {

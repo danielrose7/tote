@@ -1,19 +1,7 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import type { CurationMode, SectionPlan, ExtractedSection } from "./types";
+import { CURATOR_PERSONA } from "./workspace/CURATOR";
 
-function loadCuratorPersona(): string {
-	try {
-		return readFileSync(
-			join(process.cwd(), "src/inngest/workspace/CURATOR.md"),
-			"utf-8",
-		);
-	} catch {
-		return "";
-	}
-}
-
-export const CURATOR_SYSTEM_PROMPT = `${loadCuratorPersona()}`;
+export const CURATOR_SYSTEM_PROMPT = CURATOR_PERSONA;
 
 export const URL_DISCOVERY_SYSTEM_PROMPT = `You are a product URL finder for a curation tool. Your job is to use web search to find product page URLs at independent retailers.
 

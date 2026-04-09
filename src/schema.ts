@@ -93,6 +93,23 @@ export const JazzProfile = co.profile({
   firstName: z.string(),
 });
 
+// =============================================================================
+// Curator Session Tracking
+// =============================================================================
+
+/** Tracks a single AI curation run — persisted in Jazz so the user can revisit past sessions */
+export const CuratorSession = co.map({
+  sessionId: z.string(),
+  topic: z.string(),
+  phase: z.string(), // mirrors CuratePageClient Phase type
+  createdAt: z.date(),
+  title: z.string().optional(),
+  sectionCount: z.number().optional(),
+  itemCount: z.number().optional(),
+});
+
+export const CuratorSessionList = co.list(CuratorSession);
+
 /** The account root is an app-specific per-user private `CoMap`
  *  where you can store top-level objects for that user */
 export const AccountRoot = co.map({
@@ -100,6 +117,7 @@ export const AccountRoot = co.map({
   defaultBlockId: z.string().optional(),
   clerkUserId: z.string().optional(),
   sharedWithMe: SharedWithMeList.optional(), // Collections others have shared with this user
+  curatorSessions: CuratorSessionList.optional(),
 });
 
 export const JazzAccount = co
