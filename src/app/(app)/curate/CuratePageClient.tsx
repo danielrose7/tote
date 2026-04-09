@@ -252,6 +252,9 @@ export function CuratePageClient({
 				me.root.blocks.$jazz.push(collectionBlock);
 			}
 
+			// Link collection back to this curation session
+			getJazzSession()?.$jazz.set("collectionId", collectionBlock.$jazz.id);
+
 			window.location.href = `/collections/${collectionBlock.$jazz.id}`;
 		} catch (err) {
 			showToast({
@@ -520,53 +523,32 @@ export function CuratePageClient({
 		}));
 	}, [selectedAudience, audienceNotes, selectedLenses, lensNotes, selectedConstraints, constraintNotes]);
 
-	// Sync from Inngest on initial connection — catches up state missed while realtime was down
 	// Keep a ref to the active Jazz session so we can update it on phase transitions
 	const jazzSessionRef = useRef<typeof CuratorSession.prototype | null>(null);
-	const jazzSessionCreatedRef = useRef(false);
 
-	function findJazzSession(sid: string) {
-		if (!me.$isLoaded || !me.root?.curatorSessions?.$isLoaded) return null;
+	function getJazzSession(): typeof CuratorSession.prototype | null {
+		if (jazzSessionRef.current) return jazzSessionRef.current;
+		if (!me.$isLoaded || !me.root?.curatorSessions?.$isLoaded || !sessionId) return null;
 		for (const s of me.root.curatorSessions) {
-			if (s?.sessionId === sid) return s;
+			if (s?.sessionId === sessionId) {
+				jazzSessionRef.current = s;
+				return s;
+			}
 		}
 		return null;
 	}
 
-	// Create Jazz session record on mount if one doesn't exist yet (e.g. navigated from /curate/new)
-	useEffect(() => {
-		if (!sessionId || !topic || !me.$isLoaded || !me.root || jazzSessionCreatedRef.current) return;
-		const existing = findJazzSession(sessionId);
-		if (existing) {
-			jazzSessionRef.current = existing;
-			jazzSessionCreatedRef.current = true;
-			return;
-		}
-		jazzSessionCreatedRef.current = true;
-		const jazzSession = CuratorSession.create(
-			{ sessionId, topic, phase, createdAt: new Date() },
-			me,
-		);
-		jazzSessionRef.current = jazzSession;
-		if (!me.root.curatorSessions) {
-			me.root.$jazz.set("curatorSessions", CuratorSessionList.create([jazzSession], me));
-		} else if (me.root.curatorSessions.$isLoaded) {
-			me.root.curatorSessions.$jazz.push(jazzSession);
-		}
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [sessionId, topic, me.$isLoaded]);
-
 	// Update Jazz session whenever phase or result changes
 	useEffect(() => {
 		if (!sessionId || !me.$isLoaded) return;
-		const jazzSession = jazzSessionRef.current ?? findJazzSession(sessionId);
+		const jazzSession = getJazzSession();
 		if (!jazzSession) return;
 		jazzSession.$jazz.set("phase", phase);
 		if (result?.title) jazzSession.$jazz.set("title", result.title);
 		if (result?.sectionCount != null) jazzSession.$jazz.set("sectionCount", result.sectionCount);
 		if (result?.itemCount != null) jazzSession.$jazz.set("itemCount", result.itemCount);
 	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [phase, result, sessionId]);
+	}, [phase, result, sessionId, me.$isLoaded]);
 
 	const hasSyncedRef = useRef(false);
 	useEffect(() => {

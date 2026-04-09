@@ -106,6 +106,7 @@ export const CuratorSession = co.map({
   title: z.string().optional(),
   sectionCount: z.number().optional(),
   itemCount: z.number().optional(),
+  collectionId: z.string().optional(), // Jazz Block ID of the imported collection
 });
 
 export const CuratorSessionList = co.list(CuratorSession);

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useAccount } from "jazz-tools/react";
+import { CuratorSession, CuratorSessionList, JazzAccount } from "../../../../schema";
 import styles from "../curate.module.css";
 
 const QUICK_FILLS = [
@@ -18,6 +20,8 @@ export function NewCurationClient() {
 	const [topic, setTopic] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const me = useAccount(JazzAccount, { resolve: { root: { curatorSessions: true } } });
 
 	async function handleStart(e: React.FormEvent) {
 		e.preventDefault();
@@ -38,11 +42,26 @@ export function NewCurationClient() {
 		}
 
 		const { sessionId } = await res.json();
-		// Save topic so CuratePageClient can create the Jazz session record on mount
+
+		// Create Jazz session immediately — before navigating
+		if (me.$isLoaded && me.root) {
+			const jazzSession = CuratorSession.create(
+				{ sessionId, topic: topic.trim(), phase: "started", createdAt: new Date() },
+				me,
+			);
+			if (!me.root.curatorSessions) {
+				me.root.$jazz.set("curatorSessions", CuratorSessionList.create([jazzSession], me));
+			} else if (me.root.curatorSessions.$isLoaded) {
+				me.root.curatorSessions.$jazz.push(jazzSession);
+			}
+		}
+
+		// Save to localStorage so CuratePageClient can restore topic and phase on mount
 		window.localStorage.setItem(
 			`curate-session:${sessionId}`,
 			JSON.stringify({ phase: "started", topic: topic.trim(), questions: [], answers: { audience: "", lens: "", constraints: "", mode: "debug" }, progress: [], result: null, error: null }),
 		);
+
 		window.location.href = `/curate/${sessionId}`;
 	}
 
