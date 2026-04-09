@@ -960,13 +960,9 @@ export function CuratePageClient({
 				{phase === "error" && (
 					<div className={styles.errorBox}>
 						<p>{error ?? "Something went wrong."}</p>
-						<button
-							type="button"
-							className={styles.secondaryButton}
-							onClick={handleReset}
-						>
-							Try again
-						</button>
+						<a href="/curate/new" className={styles.primaryButton}>
+							Start new curation
+						</a>
 					</div>
 				)}
 			</div>

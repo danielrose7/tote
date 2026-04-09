@@ -143,6 +143,17 @@ export const curateCollection = inngest.createFunction(
 				if: "async.data.sessionId == event.data.sessionId",
 			},
 		],
+		onFailure: async ({ event, step }) => {
+			const sessionId = (event.data.event as CurationStartEvent).data.sessionId;
+			console.error("[curate-collection] run-failed", {
+				at: nowIso(),
+				sessionId,
+				error: event.data.error,
+			});
+			await step.run("persist-failure-phase", () =>
+				patchSession(sessionId, { phase: "error" }),
+			);
+		},
 	},
 	async ({ event, step }) => {
 		const { sessionId, topic } = event.data;

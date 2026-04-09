@@ -22,7 +22,7 @@ export function CurateHistoryClient() {
 	const sessions =
 		me.root?.curatorSessions?.$isLoaded
 			? [...me.root.curatorSessions]
-					.filter((s): s is NonNullable<typeof s> => s != null)
+					.filter((s): s is NonNullable<typeof s> => s != null && !!s.createdAt)
 					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 			: [];
 
@@ -55,7 +55,7 @@ export function CurateHistoryClient() {
 									</span>
 								</a>
 								<span className={styles.sessionDate}>
-									{s.createdAt.toLocaleDateString()}
+									{s.createdAt?.toLocaleDateString()}
 								</span>
 							</li>
 						))}
