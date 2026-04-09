@@ -23,6 +23,32 @@
 	font-size: 0.9rem;
 }
 
+.historyHeader {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.backLink {
+	font-size: 0.85rem;
+	color: var(--color-text-secondary);
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.backLink:hover {
+	text-decoration: underline;
+}
+
+.inlineLink {
+	color: inherit;
+}
+
+.inlineLink:hover {
+	text-decoration: underline;
+}
+
 .sessionHistory {
 	display: flex;
 	flex-direction: column;

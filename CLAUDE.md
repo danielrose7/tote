@@ -45,6 +45,13 @@ pnpm test         # Run extraction tests
 pnpm build        # Production build
 ```
 
+## Curator Dev UI
+
+The dev-only collection curator lives at `/dev/curate`.
+
+- Workflow background: [docs/CURATOR_WORKFLOW.md](./docs/CURATOR_WORKFLOW.md)
+- Inngest Realtime React hooks reference: [https://www.inngest.com/docs-markdown/features/realtime/react-hooks](https://www.inngest.com/docs-markdown/features/realtime/react-hooks)
+
 ## Guidelines
 
 1. **Privacy first** - No analytics, tracking, or data collection

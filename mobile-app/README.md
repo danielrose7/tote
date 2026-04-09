@@ -13,6 +13,12 @@ This file captures the iOS recovery flow we used when simulator builds or Metro 
 - Clean simulator build:
   - `cd mobile-app`
   - `pnpm ios:sim-clean`
+- Re-apply fragile generated iOS overrides:
+  - `cd mobile-app`
+  - `pnpm ios:sync-overrides`
+- Check whether generated iOS files drifted from our source-of-truth copies:
+  - `cd mobile-app`
+  - `pnpm ios:check-overrides`
 
 The `ios:sim-clean` script is defined in [package.json](/Users/dan/personal/tote/mobile-app/package.json).
 
@@ -20,6 +26,26 @@ The `ios:sim-clean` script is defined in [package.json](/Users/dan/personal/tote
 - `expo start --dev-client --localhost`
 
 This is the preferred path for simulator JS/UI work. It keeps the app on the custom dev client, but avoids the more fragile `CI=1` path we used during recovery.
+
+## Generated iOS overrides
+
+Some iOS files are effectively generated or rewritten during prebuild / share-extension setup,
+but we still need local app-specific edits in them for the Safari -> Tote share handoff to work.
+
+Source of truth:
+- [ios-overrides](/Users/dan/personal/tote/mobile-app/ios-overrides)
+
+Current protection:
+- `pnpm ios`
+- `pnpm ios:sim-clean`
+
+Both now run `pnpm ios:sync-overrides` first, so those fragile files get copied back into `ios/`
+before building.
+
+If you run `expo prebuild` manually or something rewrites the extension files again:
+1. run `pnpm ios:sync-overrides`
+2. optionally run `pnpm ios:check-overrides`
+3. rebuild
 
 ## Screen chrome
 
@@ -93,3 +119,75 @@ Current project workaround:
 - `SWIFT_STRICT_CONCURRENCY = minimal`
 
 These are also set in [Podfile](/Users/dan/personal/tote/mobile-app/ios/Podfile).
+
+## App Store checklist
+
+Before shipping Tote to the App Store, we should verify all of the following:
+
+Build/tooling:
+- app builds cleanly from `pnpm ios:sim-clean`
+- release/archive build succeeds in Xcode
+- app is built with the current required iOS SDK for submission
+- starting in April 2026, iOS apps uploaded to App Store Connect must be built with the iOS 26 SDK or later
+
+Branding/assets:
+- final app icon set is in `ios/Tote/Images.xcassets`
+- launch/splash assets are final
+- any App Store marketing images are prepared
+
+Product page metadata:
+- app name
+- subtitle
+- description
+- keywords
+- primary category and secondary category if needed
+- support URL
+- marketing URL if we want one
+- privacy policy URL
+
+Screenshots / previews:
+- at least one complete iPhone screenshot set is ready
+- use the latest required App Store Connect screenshot sizes
+- screenshots match the actual current UI
+- optional app preview video if we want one
+
+Privacy / compliance:
+- App Privacy answers are completed in App Store Connect
+- privacy policy is published and accurate
+- permission usage strings are present and reviewed
+- third-party SDK data collection is included in privacy answers
+- export compliance is answered
+
+App review readiness:
+- sign in works for Apple / Google / email
+- logout/session expiry works cleanly
+- Safari share extension works reliably
+- collection share / publish / unpublish flow works
+- destructive actions are deliberate and recoverable enough
+- no debug banners, placeholder copy, test names, or temporary alerts remain
+- app can be reviewed without a developer machine or Metro running
+- review notes and demo/test credentials are prepared if App Review needs them
+
+Account / business setup:
+- Apple Developer account is active
+- App Store Connect app record exists
+- bundle identifier / signing / certificates are correct
+- Paid Apps agreement / tax / banking are complete if needed
+
+Release controls:
+- version and build number are updated
+- age rating is set
+- content rights / licensing questions are answered if applicable
+- TestFlight build is distributed for final QA
+- do one final device pass on at least one recent iPhone before submission
+
+Useful Apple references:
+- [Submit your apps and games today](https://developer.apple.com/app-store/submitting/)
+- [App Store Connect workflow](https://developer.apple.com/help/app-store-connect/get-started/app-store-connect-workflow)
+- [App information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information)
+- [Manage app privacy](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy)
+- [App privacy details](https://developer.apple.com/app-store/app-privacy-details/)
+- [Upload app previews and screenshots](https://developer.apple.com/help/app-store-connect/manage-app-information/upload-app-previews-and-screenshots/)
+- [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/)
+- [App Review Guidelines](https://developer.apple.com/appstore/resources/approval/guidelines.html)
+- [App Store submissions now open for the latest OS releases](https://developer.apple.com/news/?id=6lxhtioi)

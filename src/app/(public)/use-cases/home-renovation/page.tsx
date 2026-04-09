@@ -4,14 +4,14 @@ import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
-  title: "Home Renovation & Furnishing",
+  title: "Home Renovation Organizer for Furniture, Materials, and Budgets",
   description:
-    "Organize your renovation room by room. Track furniture and material prices across IKEA, Wayfair, and local shops — all in one place with budgets and sharing.",
+    "Organize a home renovation room by room. Track furniture, fixtures, and material prices across stores, set budgets, and share plans with your partner or contractor.",
   alternates: { canonical: "/use-cases/home-renovation" },
   openGraph: {
-    title: "Home Renovation & Furnishing — Tote",
+    title: "Home Renovation Organizer for Furniture, Materials, and Budgets — Tote",
     description:
-      "Organize your renovation room by room. Track prices across stores and share boards with your partner or contractor.",
+      "Plan a renovation room by room, track prices across stores, and share boards with your partner or contractor.",
   },
 };
 
@@ -38,13 +38,12 @@ export default function HomeRenovationPage() {
       </p>
 
       <AnswerBlock
-        question="How can you organize products for a home renovation project?"
-        answer="When you're planning a renovation, you end up comparing products from lots of different stores — lighting, flooring, fixtures, appliances, and more. Tote lets you save products from any website and organize them into collections by room or project phase. That makes it much easier to compare your options, keep track of what you've decided on, and share the plan with a contractor or partner."
+        question="How do you keep renovation decisions usable across different stores?"
+        answer="Save furniture, fixtures, and materials from different stores, come back later to compare them room by room, keep the budget visible, and share the shortlist with the people involved. Tote keeps the project usable after the moment you save it."
         accent="var(--color-powder-blue)"
         steps={[
           "Save furniture, fixtures, and materials from any store",
-          "Organize them into collections by room or category",
-          "Compare options and track prices in one place",
+          "Compare options and keep the project moving room by room",
           "Share the board with your partner or contractor",
         ]}
       />
@@ -53,33 +52,38 @@ export default function HomeRenovationPage() {
         You&apos;re browsing IKEA for a sofa, Wayfair for a rug, a local shop for lighting, and Amazon for hardware. Each store has its own wishlist (or none at all). You&apos;re juggling browser tabs, screenshots, and a spreadsheet that&apos;s already out of date. Meanwhile, your budget is a moving target and your partner hasn&apos;t seen half the options.
       </p>
 
+      <h2>From scattered tabs to room-by-room decisions</h2>
+
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Organize room by room</h3>
+        <h3 className={styles.cardTitle}>Save from every store</h3>
         <p className={styles.cardDescription}>
-          Create a collection for each room — living room, kitchen, bedroom. Add slots within each collection for categories like seating, lighting, or storage. Everything stays organized the way you think about your space.
+          IKEA, Wayfair, Etsy, brand sites, local shops. Everything lands in one place instead of getting split across tabs, screenshots, and a spreadsheet.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Track prices across every store</h3>
+        <h3 className={styles.cardTitle}>Keep the project moving room by room</h3>
         <p className={styles.cardDescription}>
-          Save products from IKEA, Wayfair, Amazon, Etsy, or any online shop. Refresh prices to catch sales or see when items sell out — no more checking each store manually.
+          Group options by room, compare categories side by side, refresh prices when it matters, and keep the current shortlist visible without rebuilding it every time.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Set and track budgets</h3>
+        <h3 className={styles.cardTitle}>Share the same plan</h3>
         <p className={styles.cardDescription}>
-          Set a budget for each room or each category. As you select items, Tote totals up your selections so you can see at a glance whether you&apos;re on track or need to make trade-offs.
+          Invite your partner to collaborate or send a link to your contractor or designer. Everyone sees the same options, prices, and priorities.
         </p>
       </div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Share with your partner or contractor</h3>
-        <p className={styles.cardDescription}>
-          Invite your partner so you can both add and organize items, or share a read-only link with your contractor or designer. Everyone sees the same options and prices.
-        </p>
-      </div>
+      <h2>Try this setup</h2>
+      <p>
+        A simple renovation board usually works best:
+      </p>
+      <ul>
+        <li>Create one collection per room: &ldquo;Living Room&rdquo;, &ldquo;Kitchen&rdquo;, &ldquo;Primary Bedroom&rdquo;</li>
+        <li>Add slots only where they help the decision: &ldquo;Seating&rdquo;, &ldquo;Lighting&rdquo;, &ldquo;Rugs&rdquo;, or &ldquo;Hardware&rdquo;</li>
+        <li>Set a budget before you start comparing products, then use selections to mark the current front-runner</li>
+      </ul>
 
       <h2>How it works</h2>
       <ol className={styles.stepList}>
@@ -91,7 +95,7 @@ export default function HomeRenovationPage() {
       <div className={styles.tip}>
         <p>
           <span className={styles.tipLabel}>Tip:</span>
-          Use one collection per room and slots for each category (e.g., &ldquo;Living Room &gt; Seating&rdquo;, &ldquo;Living Room &gt; Lighting&rdquo;). This keeps your renovation organized even as it scales to dozens of items.
+          When a room gets crowded, trim the list back to a real shortlist. The goal is not to save everything. It is to keep the decision moving.
         </p>
       </div>
 

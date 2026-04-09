@@ -45,6 +45,9 @@ class ShareExtensionViewController: UIViewController {
   var reactNativeFactory: RCTReactNativeFactory?
   var reactNativeFactoryDelegate: RCTReactNativeFactoryDelegate?
   private var isCleanedUp = false
+  private let pendingUrlsKey = "pendingUrls"
+  private let pendingUrlDebugKey = "pendingUrlDebug"
+  private var queuedPendingUrlsThisSession = Set<String>()
 
   deinit {
     print("🧹 ShareExtensionViewController deinit")
@@ -271,6 +274,54 @@ class ShareExtensionViewController: UIViewController {
     let alpha = dict["alpha"] ?? 1
     return UIColor(red: red / 255.0, green: green / 255.0, blue: blue / 255.0, alpha: alpha)
   }
+
+  private func sharedDefaults() -> UserDefaults? {
+    guard let appGroup = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String else {
+      print("Could not find AppGroup in info.plist")
+      return nil
+    }
+
+    return UserDefaults(suiteName: appGroup)
+  }
+
+  private func enqueuePendingUrl(_ url: String) {
+    guard let defaults = sharedDefaults(), !url.isEmpty else {
+      return
+    }
+
+    let normalizedUrl = url.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !normalizedUrl.isEmpty else {
+      return
+    }
+
+    guard queuedPendingUrlsThisSession.insert(normalizedUrl).inserted else {
+      appendPendingUrlDebugEvent("skip-duplicate-session|\(normalizedUrl)")
+      print("[ShareExtension] Skipping duplicate pending URL in current share session: \(normalizedUrl)")
+      return
+    }
+
+    var pendingUrls = defaults.stringArray(forKey: pendingUrlsKey) ?? []
+    pendingUrls.append(normalizedUrl)
+    defaults.set(pendingUrls, forKey: pendingUrlsKey)
+    defaults.synchronize()
+    appendPendingUrlDebugEvent("enqueue|\(normalizedUrl)|count=\(pendingUrls.count)")
+    print("[ShareExtension] Queued pending URL: \(normalizedUrl)")
+  }
+
+  private func appendPendingUrlDebugEvent(_ event: String) {
+    guard let defaults = sharedDefaults() else {
+      return
+    }
+
+    let timestamp = ISO8601DateFormatter().string(from: Date())
+    var events = defaults.stringArray(forKey: pendingUrlDebugKey) ?? []
+    events.append("\(timestamp)|\(event)")
+    if events.count > 30 {
+      events = Array(events.suffix(30))
+    }
+    defaults.set(events, forKey: pendingUrlDebugKey)
+    defaults.synchronize()
+  }
   
   private func getShareData(completion: @escaping ([String: Any]?) -> Void) {
     guard let extensionItems = extensionContext?.inputItems as? [NSExtensionItem] else {
@@ -287,6 +338,7 @@ class ShareExtensionViewController: UIViewController {
     for item in extensionItems {
       for provider in item.attachments ?? [] {
         if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+          self.appendPendingUrlDebugEvent("provider-url")
           group.enter()
           provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { (urlItem, error) in
             DispatchQueue.main.async {
@@ -344,6 +396,7 @@ class ShareExtensionViewController: UIViewController {
                   }
                 } else {
                   sharedItems["url"] = sharedURL.absoluteString
+                  self.enqueuePendingUrl(sharedURL.absoluteString)
                 }
               }
               group.leave()
@@ -354,6 +407,7 @@ class ShareExtensionViewController: UIViewController {
         // Check for propertyList separately (not else-if) to handle preprocessing results
         // Safari provides both URL and propertyList when JavaScript preprocessing is enabled
         if provider.hasItemConformingToTypeIdentifier(UTType.propertyList.identifier) {
+          self.appendPendingUrlDebugEvent("provider-propertyList")
           group.enter()
           provider.loadItem(forTypeIdentifier: UTType.propertyList.identifier, options: nil) { (item, error) in
             DispatchQueue.main.async {
@@ -368,16 +422,19 @@ class ShareExtensionViewController: UIViewController {
 
         // Only check for plain text if no URL was found
         if !provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) && provider.hasItemConformingToTypeIdentifier(UTType.text.identifier) {
+          self.appendPendingUrlDebugEvent("provider-text")
           group.enter()
           provider.loadItem(forTypeIdentifier: UTType.text.identifier, options: nil) { (textItem, error) in
             DispatchQueue.main.async {
               if let text = textItem as? String {
                 sharedItems["text"] = text
+                self.enqueuePendingUrl(text)
               }
               group.leave()
             }
           }
         } else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+          self.appendPendingUrlDebugEvent("provider-image")
           group.enter()
           provider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { (imageItem, error) in
             DispatchQueue.main.async {
@@ -483,6 +540,7 @@ class ShareExtensionViewController: UIViewController {
             }
           }
         } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+          self.appendPendingUrlDebugEvent("provider-movie")
           group.enter()
           provider.loadItem(forTypeIdentifier: UTType.movie.identifier, options: nil) { (videoItem, error) in
             DispatchQueue.main.async {

@@ -4,21 +4,21 @@ import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
-  title: "Professional Design & Client Projects",
+  title: "Interior Design Sourcing Board for Client Projects",
   description:
-    "Manage material sourcing across multiple clients. Organize options by project, share curated mood boards for approval, and track budgets per client.",
+    "Organize interior design sourcing by client and project. Save products from any supplier, share mood boards for approval, and track budgets in one place.",
   alternates: { canonical: "/use-cases/professional-projects" },
   openGraph: {
-    title: "Professional Design & Client Projects — Tote",
+    title: "Interior Design Sourcing Board for Client Projects — Tote",
     description:
-      "Manage sourcing across multiple clients. Share curated mood boards for approval and track budgets per project.",
+      "Create sourcing boards for client projects, share mood boards for approval, and track budgets across suppliers.",
   },
 };
 
 export default function ProfessionalProjectsPage() {
   return (
     <article className={styles.article}>
-      <h1>Sourcing boards your clients can actually open</h1>
+      <h1>Create sourcing boards clients can actually review</h1>
       <p className={styles.lead}>
         You&apos;re sourcing for three clients, each with their own stores, budget, and taste. The current setup is a spreadsheet, a PDF mood board, and an email chain. Tote keeps every project separate and shareable — no PDF required.
       </p>
@@ -41,14 +41,13 @@ export default function ProfessionalProjectsPage() {
       </p>
 
       <AnswerBlock
-        question="How do designers organize product sourcing for client projects?"
-        answer="Designers and stylists often collect products from many different suppliers while putting together client projects. Tote helps you organize those items into shareable collections, making it easier to keep track of products, compare options side by side, and present curated ideas to clients — all without spreadsheets or scattered bookmarks."
+        question="How do you keep sourcing decisions usable across client projects?"
+        answer="Save products from different suppliers into one client-facing board, come back later to compare them, keep the shortlist and budget moving, and share the same link for review. Tote keeps sourcing usable after the first round of saves."
         accent="var(--color-blush)"
         steps={[
           "Save products from suppliers, retailers, and trade sites",
-          "Organize them into collections by client or project",
-          "Compare options and track budgets",
-          "Share a polished board with your client for review",
+          "Compare options and keep the shortlist moving",
+          "Share one board with your client for review",
         ]}
       />
 
@@ -56,33 +55,38 @@ export default function ProfessionalProjectsPage() {
         You&apos;re sourcing materials for three clients at once. Each project has its own set of stores, budgets, and preferences. You&apos;re saving links in spreadsheets, emailing mood board PDFs, and losing track of which option the client liked. When prices change, your spreadsheet is already stale.
       </p>
 
+      <h2>From sourcing links to a client-ready shortlist</h2>
+
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Keep each project separate</h3>
+        <h3 className={styles.cardTitle}>Save from every supplier</h3>
         <p className={styles.cardDescription}>
-          Create a collection for each client or project. Use slots to organize by room, category, or material type. Switch between projects without mixing anything up.
+          Trade sites, retail stores, wholesale suppliers, brand sites. Everything lands in one board instead of getting split across spreadsheets and PDFs.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Share a polished board with clients</h3>
+        <h3 className={styles.cardTitle}>Keep the shortlist moving</h3>
         <p className={styles.cardDescription}>
-          Make a collection public and send the link to your client. They see a clean, visual board with images, prices, and links — no account needed. Great for review meetings.
+          Compare options by room or category, keep the budget visible, and narrow the board to what the client actually needs to review.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Track project budgets</h3>
+        <h3 className={styles.cardTitle}>Share one client-ready board</h3>
         <p className={styles.cardDescription}>
-          Set a budget for each project or category. As you select items, the running total updates automatically. Present options that fit the budget — no guesswork.
+          Send one link instead of a PDF, a spreadsheet, and an email thread. The client sees the same shortlist you are working from.
         </p>
       </div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Keep prices current</h3>
-        <p className={styles.cardDescription}>
-          Refresh prices across all saved products before a client meeting. Know immediately what&apos;s changed, what&apos;s on sale, and what&apos;s gone out of stock.
-        </p>
-      </div>
+      <h2>Try this setup</h2>
+      <p>
+        A clean sourcing workflow usually stays simple:
+      </p>
+      <ul>
+        <li>Create one collection per client or per project phase</li>
+        <li>Add slots only where they help the review: &ldquo;Living Room&rdquo;, &ldquo;Lighting&rdquo;, &ldquo;Tile&rdquo;, or &ldquo;Hardware&rdquo;</li>
+        <li>Set a budget before you share and use selections to highlight the shortlist you want the client to review</li>
+      </ul>
 
       <h2>How it works</h2>
       <ol className={styles.stepList}>
@@ -94,7 +98,7 @@ export default function ProfessionalProjectsPage() {
       <div className={styles.tip}>
         <p>
           <span className={styles.tipLabel}>Tip:</span>
-          Use selections with limits to present curated shortlists. For example, save 10 sofa options but select your top 3 recommendations — the client sees your picks highlighted.
+          Clients do not need every option you found. They need the shortlist you are ready to stand behind.
         </p>
       </div>
 

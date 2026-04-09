@@ -192,6 +192,9 @@ export const curateCollection = inngest.createFunction(
 				step: "error",
 				message: "Timed out waiting for answers. Start a new session to try again.",
 			});
+			await step.run("persist-error-phase", () =>
+				patchSession(sessionId, { phase: "error" }),
+			);
 			return;
 		}
 
@@ -206,6 +209,10 @@ export const curateCollection = inngest.createFunction(
 			step: "answers-received",
 			message: "Answers received. Planning collection...",
 		});
+
+		await step.run("persist-running-phase", () =>
+			patchSession(sessionId, { phase: "planning" }),
+		);
 
 		// Step 3: Plan the collection structure
 		const plan = await step.run("plan-collection", async () => {
@@ -374,7 +381,7 @@ export const curateCollection = inngest.createFunction(
 		await step.run("persist-session-urls", () =>
 			Promise.all([
 				writeSessionState(sessionId, { urlSections, mock: isMock }),
-				patchSession(sessionId, { urlSections }),
+				patchSession(sessionId, { phase: "extracting", urlSections }),
 			]),
 		);
 
@@ -400,6 +407,9 @@ export const curateCollection = inngest.createFunction(
 				step: "error",
 				message: "Timed out waiting for extraction results. Start a new session to try again.",
 			});
+			await step.run("persist-extraction-timeout", () =>
+				patchSession(sessionId, { phase: "error" }),
+			);
 			return;
 		}
 
@@ -422,6 +432,10 @@ export const curateCollection = inngest.createFunction(
 			step: "curating",
 			message: "Curating final shortlist...",
 		});
+
+		await step.run("persist-curating-phase", () =>
+			patchSession(sessionId, { phase: "curating" }),
+		);
 
 		const result = await step.run("curate-and-write", async () => {
 			const startedAt = Date.now();

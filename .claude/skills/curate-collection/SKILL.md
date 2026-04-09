@@ -158,7 +158,14 @@ For each section:
 
 ## Step 6 — Output
 
-Emit **only** the JSON — no preamble, no explanation, no markdown wrapper.
+Write the JSON to a file in `/tmp/` using the Bash tool, then tell the user the file path.
+
+- Write to `collections/` in the repo root
+- Filename format: parameterized collection title + datetime, e.g. `the-considered-gardeners-kit-20260405-1423.json`
+  - Parameterize the title: lowercase, spaces and special characters replaced with hyphens, hyphens collapsed
+  - Datetime: `YYYYMMDD-HHMM` in local time
+- Content: single minified line (no pretty-printing, no newlines within the JSON)
+- After writing, output only: the file path on one line, so the user can copy from the file without terminal line-wrap artifacts
 
 ---
 

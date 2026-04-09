@@ -4,14 +4,14 @@ import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
-  title: "Shared Family Shopping",
+  title: "Shared Shopping List App for Couples and Families",
   description:
-    "Finally, a way to shop together without the chaos. Coordinate purchases, avoid duplicates, and stay on budget for back-to-school, new homes, and group projects.",
+    "Create a shared shopping list for couples and families. Save products from any store, compare options together, avoid duplicates, and stay on budget.",
   alternates: { canonical: "/use-cases/family-shopping" },
   openGraph: {
-    title: "Shared Family Shopping — Tote",
+    title: "Shared Shopping List App for Couples and Families — Tote",
     description:
-      "Finally, a way to shop together without the chaos. One shared board for any group shopping project.",
+      "Shop together with one shared shopping board for furniture, school supplies, gifts, or any household project.",
   },
 };
 
@@ -20,7 +20,7 @@ export default function FamilyShoppingPage() {
     <article className={styles.article}>
       <h1>Shop together — without the group chat</h1>
       <p className={styles.lead}>
-        You text a link. They screenshot a different one. Someone buys the same gift you already ordered. Tote gives your household one shared board — so everyone sees the same options and nobody doubles up.
+        You text a link. They screenshot a different one. Someone buys the same thing twice. Tote gives your household one shared shopping board, so everyone sees the same options and decisions in one place.
       </p>
 
       <div className={styles.heroIllustration} aria-hidden="true">
@@ -37,48 +37,53 @@ export default function FamilyShoppingPage() {
       </p>
 
       <AnswerBlock
-        question="How can families shop together online without the confusion?"
-        answer="When you're shopping as a family — for a new home, back-to-school, or a big group project — it's hard to stay on the same page. Tote gives everyone a shared board where you can save products from any store, compare options together, and keep track of what's been decided. No more duplicate purchases or lost links in group chats."
+        question="How do you keep a shared shopping project usable with another person?"
+        answer="Save links from different stores into one shared board, come back later to compare them together, keep the shortlist moving, and let everyone work from the same plan. Tote replaces text-thread chaos with one place to decide."
         accent="var(--color-peach)"
         steps={[
           "Create a shared collection for your project",
           "Everyone saves products from any store",
           "Compare options and pick favorites together",
-          "Stay on budget with built-in tracking",
+          "Buy from the same shortlist instead of guessing",
         ]}
       />
 
       <p>
-        Your partner texts you a link to a couch. You screenshot a different one. Your sister-in-law buys the same birthday gift you already ordered. Back-to-school shopping turns into a mess of tabs, texts, and &ldquo;did you already buy that?&rdquo; messages. There&apos;s no shared view, no coordination, and no budget tracking.
+        Your partner texts you a link to a couch. You screenshot a different one. Back-to-school shopping turns into a mess of tabs, texts, and &ldquo;did you already buy that?&rdquo; messages. There&apos;s no shared view, no coordination, and no budget tracking.
       </p>
 
+      <h2>From group chat chaos to one shared decision</h2>
+
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Shop together, stay in sync</h3>
+        <h3 className={styles.cardTitle}>Save into one board</h3>
         <p className={styles.cardDescription}>
-          Share a collection with your partner or family via invite link. Everyone can add products, organize them, and mark favorites. Changes show up instantly for everyone.
+          Instead of sending links back and forth, both people save into the same collection. The options stay visible to everyone.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>One collection per project</h3>
+        <h3 className={styles.cardTitle}>Keep the shortlist moving together</h3>
         <p className={styles.cardDescription}>
-          Create separate collections for &ldquo;New Apartment&rdquo;, &ldquo;Back to School&rdquo;, &ldquo;Holiday Gifts&rdquo;, or any shared shopping project. Keep each project focused and organized.
+          Compare picks side by side, mark favorites, and keep one current version of the decision instead of debating across screenshots.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Stay on budget together</h3>
+        <h3 className={styles.cardTitle}>Buy from the same plan</h3>
         <p className={styles.cardDescription}>
-          Set a shared budget on any collection. As items are selected, the running total updates for everyone — so you both know where the spending stands.
+          Budgets, picks, and priorities stay in one place, so both people know what is still under consideration and what is already decided.
         </p>
       </div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Compare options side by side</h3>
-        <p className={styles.cardDescription}>
-          Both partners save their picks. Use selections to vote on favorites. See all the options in one place instead of scrolling through a text thread.
-        </p>
-      </div>
+      <h2>Try this setup</h2>
+      <p>
+        A shared project board usually works best when it stays narrow:
+      </p>
+      <ul>
+        <li>Create one collection for a real project such as &ldquo;New Apartment&rdquo; or &ldquo;Back to School&rdquo;</li>
+        <li>Add slots only where they help: room-based slots or simple stages like &ldquo;Comparing&rdquo; and &ldquo;Picked&rdquo;</li>
+        <li>Invite the other person right away so both people save into the same shortlist from the start</li>
+      </ul>
 
       <h2>How it works</h2>
       <ol className={styles.stepList}>
@@ -90,7 +95,7 @@ export default function FamilyShoppingPage() {
       <div className={styles.tip}>
         <p>
           <span className={styles.tipLabel}>Tip:</span>
-          For big projects like furnishing a new home, use slots to divide the collection by room or category. Each person can focus on different areas while contributing to the same board.
+          If a shared board starts feeling noisy, split it by project. One board for &ldquo;New Apartment&rdquo; usually works better than one giant board for everything.
         </p>
       </div>
 
@@ -101,7 +106,7 @@ export default function FamilyShoppingPage() {
         When you share a collection via invite link, anyone who joins can add products, rearrange items, and mark selections — just like you.
       </p>
 
-      <h3>Do we both need accounts?</h3>
+      <h3>Do we both need accounts for a shared shopping list?</h3>
       <p>
         To add items and collaborate, yes — both people need a free Tote account. But if you just want someone to view your picks, make the collection public and they can browse without an account.
       </p>
@@ -134,7 +139,7 @@ export default function FamilyShoppingPage() {
           "@type": "FAQPage",
           "mainEntity": [
             { "@type": "Question", "name": "Can my partner add items too?", "acceptedAnswer": { "@type": "Answer", "text": "When you share a collection via invite link, anyone who joins can add products, rearrange items, and mark selections — just like you." } },
-            { "@type": "Question", "name": "Do we both need accounts?", "acceptedAnswer": { "@type": "Answer", "text": "To add items and collaborate, yes — both people need a free Tote account. But if you just want someone to view your picks, make the collection public and they can browse without an account." } },
+            { "@type": "Question", "name": "Do we both need accounts for a shared shopping list?", "acceptedAnswer": { "@type": "Answer", "text": "To add items and collaborate, yes — both people need a free Tote account. But if you just want someone to view your picks, make the collection public and they can browse without an account." } },
             { "@type": "Question", "name": "Can we have separate collections?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely. Each person has their own private collections by default. You choose which ones to share. Share a \"New Home\" collection with your partner while keeping your personal \"Birthday Wishlist\" private." } },
             { "@type": "Question", "name": "How do we avoid buying the same thing?", "acceptedAnswer": { "@type": "Answer", "text": "Everything is in one shared board, so both people can see what's been saved and selected. Use selections to mark which items are \"claimed\" or decided on." } },
           ],

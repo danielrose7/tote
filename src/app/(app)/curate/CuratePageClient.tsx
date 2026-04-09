@@ -23,7 +23,7 @@ type Phase =
 	| "idle"
 	| "started"
 	| "interview"
-	| "running"
+	| "planning"
 	| "extracting"
 	| "complete"
 	| "error";
@@ -113,31 +113,6 @@ function buildAnswerString(selected: string | string[], notes: string): string {
 	if (!notes.trim()) return base;
 	return base ? `${base} — ${notes.trim()}` : notes.trim();
 }
-
-interface QuickFillPreset {
-	label: string;
-	topic: string;
-	audience: { selected: string; notes: string };
-	lens: { selected: string[]; notes: string };
-	constraints: { selected: string[]; notes: string };
-}
-
-const QUICK_FILL_PRESETS: QuickFillPreset[] = [
-	{
-		label: "Baby gear (3mo)",
-		topic: "Baby gear for a 3-month-old — natural materials, considered design, small condo in Salt Lake City",
-		audience: { selected: "A specific person", notes: "New parents in a small condo" },
-		lens: { selected: ["Looks good and holds up"], notes: "" },
-		constraints: { selected: ["No constraints"], notes: "" },
-	},
-	{
-		label: "Gardening gear",
-		topic: "Considered gardening gear — tools, workwear, and footwear that serious gardeners reach for",
-		audience: { selected: "Me", notes: "" },
-		lens: { selected: ["What enthusiasts actually use"], notes: "" },
-		constraints: { selected: ["Avoid Amazon"], notes: "" },
-	},
-];
 
 function buildConstraintsString(selected: string[], notes: string): string {
 	const isUnconstrained = selected.includes("No constraints") && selected.length === 1;
@@ -258,11 +233,7 @@ export function CuratePageClient({
 						}
 					}
 				}
-				if (snap.urlSections) {
-					setUrlsData({ sections: snap.urlSections, mock: false });
-					// If no explicit phase came back, we're in extraction (urls ready, not yet complete)
-					if (!snap.phase) setPhase("extracting");
-				}
+				if (snap.urlSections) setUrlsData({ sections: snap.urlSections, mock: false });
 			}
 		} catch {
 			// ignore
@@ -384,7 +355,7 @@ export function CuratePageClient({
 			const { step, message, detail } = latestProgress.data;
 
 			if (step === "answers-received") {
-				setPhase("running");
+				setPhase("planning");
 			}
 
 			if (
@@ -421,7 +392,7 @@ export function CuratePageClient({
 		}
 
 		const urlsMsg = messages.byTopic.urls;
-		if (urlsMsg && phase === "running") {
+		if (urlsMsg && phase === "planning") {
 			setUrlsData(urlsMsg.data);
 			setPhase("extracting");
 		}
@@ -535,7 +506,7 @@ export function CuratePageClient({
 				return;
 			}
 
-			setPhase("running");
+			setPhase("planning");
 		})();
 	}, [phase, urlsData, sessionId]);
 
@@ -552,6 +523,7 @@ export function CuratePageClient({
 	// Sync from Inngest on initial connection — catches up state missed while realtime was down
 	// Keep a ref to the active Jazz session so we can update it on phase transitions
 	const jazzSessionRef = useRef<typeof CuratorSession.prototype | null>(null);
+	const jazzSessionCreatedRef = useRef(false);
 
 	function findJazzSession(sid: string) {
 		if (!me.$isLoaded || !me.root?.curatorSessions?.$isLoaded) return null;
@@ -560,6 +532,29 @@ export function CuratePageClient({
 		}
 		return null;
 	}
+
+	// Create Jazz session record on mount if one doesn't exist yet (e.g. navigated from /curate/new)
+	useEffect(() => {
+		if (!sessionId || !topic || !me.$isLoaded || !me.root || jazzSessionCreatedRef.current) return;
+		const existing = findJazzSession(sessionId);
+		if (existing) {
+			jazzSessionRef.current = existing;
+			jazzSessionCreatedRef.current = true;
+			return;
+		}
+		jazzSessionCreatedRef.current = true;
+		const jazzSession = CuratorSession.create(
+			{ sessionId, topic, phase, createdAt: new Date() },
+			me,
+		);
+		jazzSessionRef.current = jazzSession;
+		if (!me.root.curatorSessions) {
+			me.root.$jazz.set("curatorSessions", CuratorSessionList.create([jazzSession], me));
+		} else if (me.root.curatorSessions.$isLoaded) {
+			me.root.curatorSessions.$jazz.push(jazzSession);
+		}
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [sessionId, topic, me.$isLoaded]);
 
 	// Update Jazz session whenever phase or result changes
 	useEffect(() => {
@@ -575,7 +570,7 @@ export function CuratePageClient({
 
 	const hasSyncedRef = useRef(false);
 	useEffect(() => {
-		if (!sessionId || hasSyncedRef.current || phase === "complete" || phase === "error" || phase === "idle") return;
+		if (!sessionId || hasSyncedRef.current || phase === "complete" || phase === "error") return;
 		hasSyncedRef.current = true;
 		syncFromInngest(sessionId).then(() => {
 			// Reset extraction ref so it can re-run if urlSections were restored
@@ -588,59 +583,6 @@ export function CuratePageClient({
 		progressEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [progress]);
 
-	async function handleStart(e: React.FormEvent) {
-		e.preventDefault();
-		if (!topic.trim()) return;
-
-		const res = await fetch("/api/curate/start", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ topic }),
-		});
-
-		if (!res.ok) {
-			setError("Failed to start curation. Check CURATOR_ENABLED.");
-			setPhase("error");
-			return;
-		}
-
-		const { sessionId: newSessionId } = await res.json();
-		if (typeof window !== "undefined") {
-			const snapshot: SessionSnapshot = {
-				phase: "started",
-				topic: topic.trim(),
-				questions: [...defaultQuestions],
-				answers,
-				progress: [],
-				result: null,
-				error: null,
-			};
-			window.localStorage.setItem(
-				storageKey(newSessionId),
-				JSON.stringify(snapshot),
-			);
-			// Update URL without navigation — keeps component mounted so the
-			// realtime subscription is live before the first workflow event arrives.
-			window.history.pushState(null, "", `/curate/${newSessionId}`);
-		}
-		setSessionId(newSessionId);
-		setPhase("started");
-		setQuestions([...defaultQuestions]);
-
-		// Track session in Jazz so it appears in history
-		if (me.$isLoaded && me.root) {
-			const jazzSession = CuratorSession.create(
-				{ sessionId: newSessionId, topic: topic.trim(), phase: "started", createdAt: new Date() },
-				me,
-			);
-			jazzSessionRef.current = jazzSession;
-			if (!me.root.curatorSessions) {
-				me.root.$jazz.set("curatorSessions", CuratorSessionList.create([jazzSession], me));
-			} else if (me.root.curatorSessions.$isLoaded) {
-				me.root.curatorSessions.$jazz.push(jazzSession);
-			}
-		}
-	}
 
 	async function handleAnswers(e: React.FormEvent) {
 		e.preventDefault();
@@ -680,91 +622,16 @@ export function CuratePageClient({
 		setExtractionProgress(null);
 		hasLoadedSnapshotRef.current = false;
 		extractionStartedRef.current = false;
-		if (typeof window !== "undefined") {
-			window.history.pushState(null, "", "/curate");
-		}
+		window.location.href = "/curate";
 	}
 
 	return (
 		<main className={styles.main}>
 			<div className={styles.container}>
-				<h1 className={styles.heading}>Collection Curator</h1>
-
-				{phase === "idle" && me.root?.curatorSessions?.$isLoaded && me.root.curatorSessions.length > 0 && (
-					<section className={styles.sessionHistory}>
-						<h2 className={styles.sessionHistoryHeading}>Past sessions</h2>
-						<ul className={styles.sessionList}>
-							{[...me.root.curatorSessions]
-								.filter((s): s is NonNullable<typeof s> => s != null)
-								.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-								.map((s) => (
-									<li key={s.sessionId} className={styles.sessionItem}>
-										<a href={`/curate/${s.sessionId}`} className={styles.sessionLink}>
-											<span className={styles.sessionTopic}>{s.title ?? s.topic}</span>
-											<span className={`${styles.sessionPhase} ${styles[`phase_${s.phase}`]}`}>
-												{s.phase}
-											</span>
-										</a>
-										<span className={styles.sessionDate}>
-											{s.createdAt.toLocaleDateString()}
-										</span>
-									</li>
-								))}
-						</ul>
-					</section>
-				)}
-
-				{phase === "idle" && (
-					<form onSubmit={handleStart} className={styles.form}>
-						<p className={styles.subheading}>
-							Describe what you want to curate. Be specific — include context,
-							occasion, or a source like an email or product category.
-						</p>
-						<div className={styles.inputGroup}>
-							<label htmlFor="topic" className={styles.label}>
-								Topic
-							</label>
-							<textarea
-								id="topic"
-								className={styles.textarea}
-								rows={4}
-								value={topic}
-								onChange={(e) => setTopic(e.target.value)}
-								placeholder="e.g. Considered gardening gear — tools, workwear, and footwear that serious gardeners reach for"
-							/>
-							<div className={styles.quickFills}>
-								<span className={styles.quickFillLabel}>Quick fill:</span>
-								{QUICK_FILL_PRESETS.map((preset) => (
-									<button
-										key={preset.label}
-										type="button"
-										className={styles.quickFillChip}
-										onClick={() => {
-											setTopic(preset.topic);
-											setSelectedAudience(preset.audience.selected);
-											setAudienceNotes(preset.audience.notes);
-											setSelectedLenses(preset.lens.selected);
-											setLensNotes(preset.lens.notes);
-											setSelectedConstraints(preset.constraints.selected);
-											setConstraintNotes(preset.constraints.notes);
-										}}
-									>
-										{preset.label}
-									</button>
-								))}
-							</div>
-						</div>
-						<div className={styles.actions}>
-							<button
-								type="submit"
-								className={styles.primaryButton}
-								disabled={!topic.trim()}
-							>
-								Start curation
-							</button>
-						</div>
-					</form>
-				)}
+				<div className={styles.historyHeader}>
+					<h1 className={styles.heading}>{topic || "Collection Curator"}</h1>
+					<a href="/curate" className={styles.backLink}>All sessions</a>
+				</div>
 
 				{phase === "started" && (
 					<p className={styles.subheading}>

@@ -1,5 +1,5 @@
-import { CuratePageClient } from "./CuratePageClient";
+import { CurateHistoryClient } from "./CurateHistoryClient";
 
 export default function CuratePage() {
-	return <CuratePageClient />;
+	return <CurateHistoryClient />;
 }

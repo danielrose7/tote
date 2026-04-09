@@ -13,7 +13,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 export interface CuratorSessionData {
-	phase?: "interview" | "complete";
+	phase?: "interview" | "planning" | "extracting" | "curating" | "complete" | "error";
 	title?: string;
 	sectionCount?: number;
 	itemCount?: number;

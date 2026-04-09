@@ -4,14 +4,14 @@ import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
-  title: "Gift Lists & Wishlists",
+  title: "Gift Wishlist App for Birthdays, Holidays, and Registries",
   description:
-    "Never lose track of a gift idea again. Build wishlists for birthdays, holidays, and special occasions — then share them so family knows exactly what to get.",
+    "Create a gift wishlist from any store. Organize birthday lists, holiday wishlists, and registry ideas in one place, then share them with family.",
   alternates: { canonical: "/use-cases/gift-shopping" },
   openGraph: {
-    title: "Gift Lists & Wishlists — Tote",
+    title: "Gift Wishlist App for Birthdays, Holidays, and Registries — Tote",
     description:
-      "Build wishlists for birthdays, holidays, and special occasions. Share them so family knows exactly what to get.",
+      "Create and share gift wishlists for birthdays, holidays, and special occasions across every store you shop.",
   },
 };
 
@@ -40,14 +40,13 @@ export default function GiftShoppingPage() {
       </p>
 
       <AnswerBlock
-        question="How do you create a universal wishlist across multiple stores?"
-        answer="A universal wishlist lets you save products from any online store into a single, organized list. With Tote, you save products directly from retailer websites, organize them into collections, and share the list with friends or family. It's an easy way to keep track of gift ideas from different stores without juggling store-specific wishlists."
+        question="How do you keep a gift wishlist usable across different stores?"
+        answer="Save links from different stores, come back later to compare them, mark the gifts that matter most, and share the shortlist when you&apos;re ready. Tote keeps the list usable after the moment you save it."
         accent="var(--color-lavender)"
         steps={[
           "Save gift ideas from any store as you browse",
-          "Organize them into collections by occasion or recipient",
-          "Compare options and mark your favorites",
-          "Share the collection with friends or family",
+          "Compare options and keep a shortlist moving in one place",
+          "Share the list when family asks what to get",
         ]}
       />
 
@@ -55,45 +54,50 @@ export default function GiftShoppingPage() {
         You spot a perfect gift in June and save it somewhere — a browser bookmark, a text to yourself, an Amazon list. By December, you can&apos;t find it. Meanwhile, your family is asking what you want, and you&apos;re texting links back and forth. Someone buys the same thing twice. Nobody has a clear picture of what&apos;s been covered.
       </p>
 
+      <h2>From scattered links to a clear shortlist</h2>
+
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>One collection per occasion</h3>
+        <h3 className={styles.cardTitle}>Save from any store</h3>
         <p className={styles.cardDescription}>
-          Create a collection for &ldquo;Holiday {new Date().getFullYear()}&rdquo;, &ldquo;Mom&apos;s Birthday&rdquo;, or &ldquo;Wedding Registry Ideas&rdquo;. Save gift ideas from any store — Amazon, Etsy, small boutiques, anywhere — all in one place.
+          Amazon, Etsy, small boutiques, brand sites — wherever you find the gift, it lands in the same list instead of disappearing into tabs or notes.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Share with family</h3>
+        <h3 className={styles.cardTitle}>Keep the shortlist moving</h3>
         <p className={styles.cardDescription}>
-          Send an invite link so family members can view your wishlist, or make it public so anyone with the link can browse. No app download or account required for viewers.
+          Compare options side by side, mark favorites, and use selections when you want to signal &ldquo;pick one of these&rdquo; instead of leaving people guessing.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Mark your favorites</h3>
+        <h3 className={styles.cardTitle}>Share when it matters</h3>
         <p className={styles.cardDescription}>
-          Use selections to highlight the items you want most. Set a selection limit to signal &ldquo;pick one of these three&rdquo; instead of guessing.
+          Send the list to family or make it public when you&apos;re ready. Everyone sees the same shortlist, so duplicate gifts and back-and-forth messages drop off fast.
         </p>
       </div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Track prices across stores</h3>
-        <p className={styles.cardDescription}>
-          Refresh prices to see what&apos;s on sale or sold out. Know the best time to buy without checking every store manually.
-        </p>
-      </div>
+      <h2>Try this setup</h2>
+      <p>
+        A simple gift list usually works best:
+      </p>
+      <ul>
+        <li>Create one collection for the occasion: &ldquo;Holiday Wishlist {new Date().getFullYear()}&rdquo;, &ldquo;Birthday Wishlist&rdquo;, or &ldquo;Registry Ideas&rdquo;</li>
+        <li>Add slots only if they help the decision: &ldquo;Big gifts&rdquo;, &ldquo;Under $50&rdquo;, or one slot per recipient</li>
+        <li>Use selections to mark the gifts you actually want family to focus on</li>
+      </ul>
 
       <h2>How it works</h2>
       <ol className={styles.stepList}>
         <li><span><strong>Save gift ideas as you browse.</strong> Install the Chrome extension, then click to save any product page to a gift collection. Tote captures the name, image, price, and link automatically.</span></li>
-        <li><span><strong>Organize by occasion or recipient.</strong> Create separate collections for each holiday, birthday, or event. Use slots to group by recipient if you&apos;re buying for multiple people.</span></li>
-        <li><span><strong>Share your list.</strong> Send a link to family or friends. They can see your curated picks without needing a Tote account.</span></li>
+        <li><span><strong>Come back later to compare.</strong> Keep the shortlist in one place, refresh prices if needed, and mark the gifts that matter most.</span></li>
+        <li><span><strong>Share the decision, not the chaos.</strong> Send one link to family or friends so they can browse the same list without needing a Tote account.</span></li>
       </ol>
 
       <div className={styles.tip}>
         <p>
           <span className={styles.tipLabel}>Tip:</span>
-          Set a budget on your gift collection to keep holiday spending in check. Tote totals up your selected items so you can see at a glance if you&apos;re over budget.
+          Building a holiday list? Set a budget before you start saving. When the shortlist gets longer, you&apos;ll still know what is realistic to buy or ask for.
         </p>
       </div>
 

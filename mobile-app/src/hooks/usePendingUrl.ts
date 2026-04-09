@@ -13,7 +13,23 @@ const { AppGroupModule } = NativeModules;
 
 async function fetchPendingUrls(): Promise<string[]> {
   try {
-    return await AppGroupModule.getPendingUrls();
+    const urls = await AppGroupModule.getPendingUrls();
+    return Array.from(
+      new Set(
+        (Array.isArray(urls) ? urls : [])
+          .map((url) => (typeof url === "string" ? url.trim() : ""))
+          .filter(Boolean),
+      ),
+    );
+  } catch {
+    return [];
+  }
+}
+
+async function fetchPendingUrlDebugEvents(): Promise<string[]> {
+  try {
+    const events = await AppGroupModule.getPendingUrlDebugEvents?.();
+    return Array.isArray(events) ? events.filter((event) => typeof event === "string") : [];
   } catch {
     return [];
   }
@@ -26,10 +42,17 @@ export function usePendingUrl() {
 
   async function check() {
     const urls = await fetchPendingUrls();
+    const debugEvents = await fetchPendingUrlDebugEvents();
+    if (__DEV__ && debugEvents.length > 0) {
+      console.log("[pending-url-debug]", debugEvents);
+      AppGroupModule.clearPendingUrlDebugEvents?.();
+    }
     if (urls.length === 0) return;
     // Clear from shared container immediately so they aren't re-read
     AppGroupModule.clearPendingUrls();
-    setQueue((prev) => [...prev, ...urls.filter((u) => !prev.includes(u))]);
+    setQueue((prev) =>
+      Array.from(new Set([...prev, ...urls.filter((u) => !prev.includes(u))])),
+    );
   }
 
   useEffect(() => {

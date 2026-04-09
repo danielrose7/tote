@@ -4,14 +4,14 @@ import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
 
 export const metadata: Metadata = {
-  title: "Wardrobe & Style Board",
+  title: "Wardrobe Planner and Style Board for Capsule Outfits",
   description:
-    "Save clothes from any store into one style board. Build capsule wardrobes, organize by category, and watch for price drops — all in one place.",
+    "Plan outfits and build a capsule wardrobe with a style board that works across every store. Save clothing in one place, organize by category, and track sale prices.",
   alternates: { canonical: "/use-cases/personal-style" },
   openGraph: {
-    title: "Wardrobe & Style Board — Tote",
+    title: "Wardrobe Planner and Style Board for Capsule Outfits — Tote",
     description:
-      "Curate seasonal wardrobes and capsule collections. Save clothes from any store and watch for sales.",
+      "Build a capsule wardrobe, save clothing from any store, and track sale prices in one style board.",
   },
 };
 
@@ -37,14 +37,13 @@ export default function PersonalStylePage() {
       </p>
 
       <AnswerBlock
-        question="How can you organize clothing and outfit ideas from different stores?"
-        answer="If you save clothing ideas from lots of different stores, it's easy to lose track of what you found where. Tote lets you save clothing items from any retailer and organize them into collections — like seasonal outfits, capsule wardrobes, or style inspiration boards. Everything lives in one place, so you can compare pieces and plan your wardrobe without digging through bookmarks."
+        question="How do you keep outfit ideas usable across different stores?"
+        answer="Save pieces from different stores, come back later to compare them, keep a shortlist of what still fits the plan, and refresh prices when you&apos;re ready to buy. Tote keeps your style board usable after the moment you save it."
         accent="var(--color-periwinkle)"
         steps={[
           "Save clothes and accessories from any store",
-          "Organize them into style boards or seasonal collections",
-          "Compare pieces and pick your favorites",
-          "Share a board with friends for feedback",
+          "Compare pieces and keep the shortlist focused",
+          "Refresh prices and buy when you&apos;re ready",
         ]}
       />
 
@@ -52,33 +51,38 @@ export default function PersonalStylePage() {
         You spot a jacket on Zara, save a pair of jeans on H&amp;M, bookmark shoes from a boutique, and screenshot a bag from Depop. Each store has its own wishlist — or no wishlist at all. By the time you&apos;re ready to buy, you can&apos;t remember what you saved, where you saved it, or whether it&apos;s still in stock.
       </p>
 
+      <h2>From saved pieces to a wearable shortlist</h2>
+
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Build seasonal collections</h3>
+        <h3 className={styles.cardTitle}>Save from every store</h3>
         <p className={styles.cardDescription}>
-          Create a collection for each season or style project — &ldquo;Spring {new Date().getFullYear()}&rdquo;, &ldquo;Capsule Wardrobe&rdquo;, &ldquo;Vacation Outfits&rdquo;. Save pieces from any store into one curated board.
+          Zara, H&amp;M, ASOS, Depop, boutiques. The pieces all land in one board instead of getting lost across bookmarks and store wishlists.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Organize by category</h3>
+        <h3 className={styles.cardTitle}>Keep the shortlist focused</h3>
         <p className={styles.cardDescription}>
-          Use slots to group by tops, bottoms, shoes, accessories, or any categories that match how you think about your wardrobe. See everything laid out, not buried in bookmarks.
+          Compare pieces by category, use selections when you want fewer options, and keep the board honest about what still belongs in the wardrobe.
         </p>
       </div>
 
       <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Pick your favorites</h3>
+        <h3 className={styles.cardTitle}>Buy when the timing is right</h3>
         <p className={styles.cardDescription}>
-          Use selections to mark the pieces you love most. Set a selection limit per slot — like &ldquo;pick 3 tops&rdquo; — to build a focused capsule instead of an endless wish list.
+          Refresh prices to catch sales or sold-out items before you buy. You do not need to revisit every store just to see what changed.
         </p>
       </div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Watch for sales</h3>
-        <p className={styles.cardDescription}>
-          Refresh prices to see what&apos;s dropped or sold out. Stop checking every store manually — Tote shows you current prices in one view.
-        </p>
-      </div>
+      <h2>Try this setup</h2>
+      <p>
+        A simple wardrobe board usually works best:
+      </p>
+      <ul>
+        <li>Create one collection such as &ldquo;Capsule Wardrobe&rdquo;, &ldquo;Spring Outfits&rdquo;, or &ldquo;Vacation Looks&rdquo;</li>
+        <li>Add slots only where they help the decision: &ldquo;Tops&rdquo;, &ldquo;Bottoms&rdquo;, &ldquo;Shoes&rdquo;, &ldquo;Outerwear&rdquo;</li>
+        <li>Use selection limits to cap each category and keep the shortlist wearable, not endless</li>
+      </ul>
 
       <h2>How it works</h2>
       <ol className={styles.stepList}>
@@ -90,7 +94,7 @@ export default function PersonalStylePage() {
       <div className={styles.tip}>
         <p>
           <span className={styles.tipLabel}>Tip:</span>
-          Building a capsule wardrobe? Set a selection limit on each slot (e.g., 5 tops, 3 bottoms, 2 shoes) to force yourself to curate instead of accumulate.
+          Building a capsule wardrobe? Selection limits do more than organize the board. They force the decision.
         </p>
       </div>
 

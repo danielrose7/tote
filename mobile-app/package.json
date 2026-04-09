@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
+    "ios:sync-overrides": "node ./scripts/sync-ios-overrides.mjs",
+    "ios:check-overrides": "node ./scripts/check-ios-overrides.mjs",
     "start": "expo start --dev-client --localhost",
     "start:clear": "expo start --dev-client --localhost --clear",
     "start:lan": "expo start --dev-client --lan",
     "android": "expo run:android",
-    "ios": "expo run:ios",
-    "ios:sim-clean": "LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild -workspace ios/Tote.xcworkspace -scheme Tote -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -derivedDataPath ios/build clean build",
+    "ios": "pnpm ios:sync-overrides && expo run:ios",
+    "ios:sim-clean": "pnpm ios:sync-overrides && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 xcodebuild -workspace ios/Tote.xcworkspace -scheme Tote -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16 Pro' -derivedDataPath ios/build clean build",
     "web": "expo start --web"
   },
   "dependencies": {
