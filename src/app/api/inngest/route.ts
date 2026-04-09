@@ -3,6 +3,8 @@ import { inngest } from "../../../inngest/client";
 import { acknowledgeCuration } from "../../../inngest/functions/acknowledge-curation";
 import { curateCollection } from "../../../inngest/functions/curate-collection";
 
+export const maxDuration = 800; // max of 13 minutes per step
+
 const handlers = serve({
 	client: inngest,
 	functions: [acknowledgeCuration, curateCollection],
