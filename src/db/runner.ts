@@ -11,7 +11,13 @@
 
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { sql } from '../lib/db';
+import { neon } from '@neondatabase/serverless';
+
+// Prefer the unpooled URL for migrations — pooled connections can swallow DDL errors
+const url =
+  process.env.NEON_DB_POSTGRES_URL_NON_POOLING ??
+  process.env.NEON_DB_POSTGRES_URL!;
+const sql = neon(url);
 
 async function run() {
   // Ensure the migrations tracking table exists
@@ -39,7 +45,9 @@ async function run() {
     const query = await readFile(join(migrationsDir, file), 'utf-8');
     console.log(`[db:migrate] applying ${file}`);
     await sql.unsafe(query);
+    // Only record as applied after the SQL succeeds
     await sql`INSERT INTO schema_migrations (filename) VALUES (${file})`;
+    console.log(`[db:migrate] applied ${file}`);
     ran++;
   }
 
