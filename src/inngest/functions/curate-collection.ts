@@ -100,7 +100,7 @@ function planTokenLimit(mode: CurationMode) {
 }
 
 function urlDiscoveryTokenLimit(mode: CurationMode) {
-  return mode === 'debug' ? 800 : 1500;
+  return mode === 'debug' ? 800 : 3000;
 }
 
 function curateTokenLimit(mode: CurationMode) {
@@ -356,6 +356,7 @@ export const curateCollection = inngest.createFunction(
                 sessionId,
                 section: section.title,
                 slug,
+                stopReason: response.summary.stopReason,
                 textPreview: text.slice(0, 500),
               });
               return { urls: [], usage: null };
