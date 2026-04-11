@@ -96,15 +96,15 @@ async function writeSessionState(
 }
 
 function planTokenLimit(mode: CurationMode) {
-  return mode === 'debug' ? 600 : 1000;
+  return mode === 'debug' ? 1000 : 4000;
 }
 
 function urlDiscoveryTokenLimit(mode: CurationMode) {
-  return mode === 'debug' ? 800 : 3000;
+  return mode === 'debug' ? 1500 : 8000;
 }
 
 function curateTokenLimit(mode: CurationMode) {
-  return mode === 'debug' ? 1800 : 4000;
+  return mode === 'debug' ? 3000 : 16000;
 }
 
 export const curateCollection = inngest.createFunction(
@@ -155,7 +155,7 @@ export const curateCollection = inngest.createFunction(
     const generatedQuestions = await step.run(
       'generate-questions',
       async () => {
-        const maxTokens = 2048 + attempt * 1024;
+        const maxTokens = 4096 + attempt * 2048;
         const response = await llm.generate({
           system:
             'You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.',
