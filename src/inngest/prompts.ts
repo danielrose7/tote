@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type {
   CurationMode,
   InterviewQuestion,
@@ -7,6 +8,32 @@ import type {
 import { CURATOR_PERSONA } from './workspace/CURATOR';
 
 export const CURATOR_SYSTEM_PROMPT = CURATOR_PERSONA;
+
+export const InterviewQuestionSchema = z.object({
+  id: z.string().describe('snake_case identifier'),
+  text: z.string().describe('The question text shown to the user'),
+  options: z
+    .array(
+      z.object({
+        value: z.string().describe('Short option label'),
+        description: z.string().describe('One-line explanation'),
+      }),
+    )
+    .min(2)
+    .max(6),
+  multi: z.boolean().describe('true if the user can select multiple options'),
+});
+
+export const InterviewQuestionsSchema = z
+  .array(InterviewQuestionSchema)
+  .min(3)
+  .max(5);
+
+const questionsJsonSchema = JSON.stringify(
+  z.toJSONSchema(InterviewQuestionsSchema),
+  null,
+  2,
+);
 
 export function buildQuestionsPrompt(topic: string): string {
   return `Generate 3-5 focused interview questions to help curate a product collection on this topic:
@@ -25,15 +52,8 @@ Rules:
 - Always include one constraints question with a "No constraints" option
 - The last question should always ask about constraints
 
-Return only valid JSON:
-[
-  {
-    "id": "snake_case_id",
-    "text": "Question text",
-    "options": [{ "value": "Option label", "description": "One-line explanation" }],
-    "multi": false
-  }
-]`;
+Return a JSON array matching this schema exactly — no markdown, no explanation:
+${questionsJsonSchema}`;
 }
 
 function formatAnswers(

@@ -16,12 +16,12 @@ import {
   buildPlanPrompt,
   buildUrlDiscoveryPrompt,
   buildCuratePrompt,
+  InterviewQuestionsSchema,
 } from '../prompts';
 import { MOCK_URL_SECTIONS } from '../fixtures/url-sections';
 import { createLLMClient } from '../llm';
 import type {
   CurationMode,
-  InterviewQuestion,
   CurationStartEvent,
   CurationAnswersEvent,
   CurationExtractionsEvent,
@@ -36,12 +36,17 @@ const llm = createLLMClient();
 type UrlDiscoveryPayload = { urls: string[] };
 
 function parseJson<T>(text: string): T | null {
+  // Strip markdown code fences if present
+  const stripped = text
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/, '')
+    .trim();
   // Try direct parse first
   try {
-    return JSON.parse(text) as T;
+    return JSON.parse(stripped) as T;
   } catch {
-    // Try to extract JSON block from mixed content
-    const match = text.match(/\{[\s\S]*\}/);
+    // Try to extract JSON array or object from mixed content
+    const match = stripped.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
     if (match) {
       try {
         return JSON.parse(match[0]) as T;
@@ -151,13 +156,14 @@ export const curateCollection = inngest.createFunction(
           prompt: buildQuestionsPrompt(topic),
           maxTokens: 1024,
         });
-        const parsed = parseJson<InterviewQuestion[]>(response.text);
-        if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
+        const raw = parseJson<unknown>(response.text);
+        const result = InterviewQuestionsSchema.safeParse(raw);
+        if (!result.success) {
           throw new Error(
             `Failed to parse questions: ${response.text.slice(0, 200)}`,
           );
         }
-        return { questions: parsed, usage: response.usage };
+        return { questions: result.data, usage: response.usage };
       },
     );
 
