@@ -1,5 +1,6 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { RetryAfterError } from 'inngest';
 import { inngest } from '../client';
 import { writeSession, patchSession } from '../../lib/curatorSession';
 import {
@@ -370,14 +371,25 @@ export const curateCollection = inngest.createFunction(
             });
             return { urls: parsed.urls, usage: response.usage };
           } catch (error) {
+            const status = (error as { status?: number })?.status;
+            const retryAfter = (error as { headers?: Record<string, string> })
+              ?.headers?.['retry-after'];
             console.error('[curate-collection] find-urls:error', {
               at: nowIso(),
               sessionId,
               section: section.title,
               slug,
+              status,
+              retryAfter,
               error: error instanceof Error ? error.message : String(error),
             });
-            // Re-throw so Inngest can retry (e.g. rate limit errors)
+            if (status === 429) {
+              const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
+              throw new RetryAfterError(
+                `Rate limited on find-urls for "${section.title}"`,
+                new Date(Date.now() + waitMs),
+              );
+            }
             throw error;
           }
         });
