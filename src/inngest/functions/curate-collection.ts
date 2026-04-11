@@ -102,7 +102,7 @@ function curateTokenLimit(mode: CurationMode) {
 export const curateCollection = inngest.createFunction(
   {
     id: 'curate-collection',
-    retries: 0,
+    retries: 3,
     timeouts: { finish: '30m' },
     triggers: [{ event: 'curation/start' as CurationStartEvent['name'] }],
     // Utah: singleton per session — no race conditions if triggered twice
