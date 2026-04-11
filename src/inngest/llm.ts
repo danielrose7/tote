@@ -79,7 +79,11 @@ function fromAnthropicResponse(response: Anthropic.Message): LLMResponse {
 }
 
 function createAnthropicClient(): LLMClient {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const client = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: 5 * 60 * 1000, // 5 min — Inngest handles retries at a higher level
+    maxRetries: 0,
+  });
   const model = 'claude-sonnet-4-6';
 
   return {
