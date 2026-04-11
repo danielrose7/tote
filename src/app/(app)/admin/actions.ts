@@ -28,7 +28,5 @@ export async function grantCreditsAction(
   const cents = Math.round(amountDollars * 100);
   const newBalance = await grantCredits(target.id, cents);
 
-  revalidatePath('/admin');
-
   return { ok: true, granted: cents, newBalance, email };
 }

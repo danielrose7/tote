@@ -1,17 +1,13 @@
 import { realtime } from 'inngest';
 import { z } from 'zod';
+import { InterviewQuestionsSchema } from './prompts';
 
 export const curationChannel = realtime.channel({
   name: ({ sessionId }: { sessionId: string }) => `curation:${sessionId}`,
   topics: {
     interview: {
       schema: z.object({
-        questions: z.array(
-          z.object({
-            id: z.string(),
-            text: z.string(),
-          }),
-        ),
+        questions: InterviewQuestionsSchema,
       }),
     },
     progress: {

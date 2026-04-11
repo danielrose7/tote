@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './admin.module.css';
 import { grantCreditsAction } from './actions';
 
-interface Balance {
+export interface Balance {
   clerk_user_id: string;
   email: string;
   curator: boolean;
@@ -14,7 +15,7 @@ interface Balance {
   total_granted_cents: number | null;
 }
 
-interface Grant {
+export interface Grant {
   clerk_user_id: string;
   amount_cents: number;
   created_at: string;
@@ -30,6 +31,7 @@ function formatDollars(cents: number) {
 }
 
 export function AdminClient({ balances, recentGrants }: AdminClientProps) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(
@@ -71,6 +73,7 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
         });
         setEmail('');
         setAmount('');
+        router.refresh();
       } else {
         setStatus({ ok: false, message: result.error });
       }

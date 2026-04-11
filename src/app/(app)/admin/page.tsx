@@ -1,11 +1,12 @@
 import { currentUser, clerkClient } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { sql } from '../../../lib/db';
-import { AdminClient } from './AdminClient';
+import { AdminClient, type Balance, type Grant } from './AdminClient';
 
 export default async function AdminPage() {
   const user = await currentUser();
-  if (user?.publicMetadata?.admin !== true) redirect('/');
+  if (!user) redirect('/sign-in');
+  if (user.publicMetadata?.admin !== true) redirect('/');
 
   const balances = await sql`
     SELECT
@@ -50,6 +51,9 @@ export default async function AdminPage() {
   `;
 
   return (
-    <AdminClient balances={enrichedBalances} recentGrants={recentGrants} />
+    <AdminClient
+      balances={enrichedBalances as Balance[]}
+      recentGrants={recentGrants as Grant[]}
+    />
   );
 }
