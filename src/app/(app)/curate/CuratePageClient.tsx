@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useEffectEvent, useMemo, useRef } from 'react';
 import { useRealtime } from 'inngest/react';
 import { useAccount } from 'jazz-tools/react';
 import { curationChannel } from '../../../inngest/channels';
@@ -485,6 +485,17 @@ export function CuratePageClient({
       extractionStartedRef.current = false;
     });
   }, [sessionId, phase]);
+
+  // Reconnect on window focus when a session is active and not yet complete
+  const onFocus = useEffectEvent(() => {
+    if (phase === 'complete' || phase === 'error') return;
+    handleReconnect();
+  });
+  useEffect(() => {
+    if (!sessionId) return;
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [sessionId]);
 
   // Auto-scroll progress log
   useEffect(() => {
