@@ -22,8 +22,13 @@ export const InterviewQuestionSchema = z.object({
     .min(2)
     .max(6),
   multi: z
-    .union([z.boolean(), z.enum(['true', 'false'])])
-    .transform((v) => v === true || v === 'true')
+    .preprocess(
+      (v) =>
+        typeof v !== 'boolean'
+          ? [true, 1, 'true', 't', '1'].includes(v as never)
+          : v,
+      z.boolean(),
+    )
     .describe('true if the user can select multiple options'),
 });
 
