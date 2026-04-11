@@ -12,6 +12,7 @@ import { curationChannel } from '../channels';
 import {
   CURATOR_SYSTEM_PROMPT,
   URL_DISCOVERY_SYSTEM_PROMPT,
+  buildQuestionsPrompt,
   buildPlanPrompt,
   buildUrlDiscoveryPrompt,
   buildCuratePrompt,
@@ -20,11 +21,13 @@ import { MOCK_URL_SECTIONS } from '../fixtures/url-sections';
 import { createLLMClient } from '../llm';
 import type {
   CurationMode,
+  InterviewQuestion,
   CurationStartEvent,
   CurationAnswersEvent,
   CurationExtractionsEvent,
   CollectionOutput,
   SectionPlan,
+  ExtractedSection,
   UrlSection,
 } from '../types';
 
@@ -138,22 +141,30 @@ export const curateCollection = inngest.createFunction(
       topic,
     });
 
-    // Step 1: Send interview questions to the UI
+    // Step 1: Generate context-specific interview questions for this topic
+    const generatedQuestions = await step.run(
+      'generate-questions',
+      async () => {
+        const response = await llm.generate({
+          system:
+            'You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.',
+          prompt: buildQuestionsPrompt(topic),
+          maxTokens: 1024,
+        });
+        const parsed = parseJson<InterviewQuestion[]>(response.text);
+        if (!parsed || !Array.isArray(parsed) || parsed.length === 0) {
+          throw new Error(
+            `Failed to parse questions: ${response.text.slice(0, 200)}`,
+          );
+        }
+        return { questions: parsed, usage: response.usage };
+      },
+    );
+
+    const questions = generatedQuestions.questions;
+
     await step.realtime.publish('interview-questions', ch.interview, {
-      questions: [
-        {
-          id: 'audience',
-          text: 'Who is this collection for? Be specific — personal use, a gift for someone, or a public/demo collection?',
-        },
-        {
-          id: 'lens',
-          text: "What is the primary curatorial lens? e.g. 'buy it once, make it last', 'what enthusiasts actually use', 'looks good and holds up', 'best value for the money'",
-        },
-        {
-          id: 'constraints',
-          text: "Any hard constraints? e.g. budget ceiling, avoid Amazon, US availability only, or 'no constraints'",
-        },
-      ],
+      questions,
     });
     await step.realtime.publish('interview-sent', ch.progress, {
       step: 'interview-sent',
@@ -187,7 +198,10 @@ export const curateCollection = inngest.createFunction(
       return;
     }
 
-    const answers = answersEvent.data.answers;
+    const { answers, mode } = {
+      answers: answersEvent.data.answers,
+      mode: answersEvent.data.mode,
+    };
     console.log('[curate-collection] answers-received', {
       at: nowIso(),
       sessionId,
@@ -211,8 +225,8 @@ export const curateCollection = inngest.createFunction(
       });
       const response = await llm.generate({
         system: CURATOR_SYSTEM_PROMPT,
-        prompt: buildPlanPrompt(topic, answers),
-        maxTokens: planTokenLimit(answers.mode),
+        prompt: buildPlanPrompt(topic, questions, answers, mode),
+        maxTokens: planTokenLimit(mode),
       });
       console.log('[curate-collection] plan:response', {
         at: nowIso(),
@@ -255,8 +269,12 @@ export const curateCollection = inngest.createFunction(
     // Each section is its own named step so it's individually memoized/retryable
     const isMock = process.env.CURATOR_MOCK === 'true';
     const urlSections: UrlSection[] = [];
-    let totalInputTokens = planResult.usage?.inputTokens ?? 0;
-    let totalOutputTokens = planResult.usage?.outputTokens ?? 0;
+    let totalInputTokens =
+      (generatedQuestions.usage?.inputTokens ?? 0) +
+      (planResult.usage?.inputTokens ?? 0);
+    let totalOutputTokens =
+      (generatedQuestions.usage?.outputTokens ?? 0) +
+      (planResult.usage?.outputTokens ?? 0);
     let totalWebSearchRequests = 0;
 
     if (isMock) {
@@ -291,8 +309,14 @@ export const curateCollection = inngest.createFunction(
           try {
             const response = await llm.generateWithSearch({
               system: URL_DISCOVERY_SYSTEM_PROMPT,
-              prompt: buildUrlDiscoveryPrompt(section, topic, answers),
-              maxTokens: urlDiscoveryTokenLimit(answers.mode),
+              prompt: buildUrlDiscoveryPrompt(
+                section,
+                topic,
+                questions,
+                answers,
+                mode,
+              ),
+              maxTokens: urlDiscoveryTokenLimit(mode),
             });
             console.log('[curate-collection] find-urls:response', {
               at: nowIso(),
@@ -401,7 +425,7 @@ export const curateCollection = inngest.createFunction(
 
     const extractedSections = extractionsEvent.data.sections;
     const totalExtracted = extractedSections.reduce(
-      (n, s) => n + s.items.length,
+      (n: number, s: ExtractedSection) => n + s.items.length,
       0,
     );
     console.log('[curate-collection] extractions-received', {
@@ -439,9 +463,11 @@ export const curateCollection = inngest.createFunction(
           plan.title,
           plan.intro,
           extractedSections,
+          questions,
           answers,
+          mode,
         ),
-        maxTokens: curateTokenLimit(answers.mode),
+        maxTokens: curateTokenLimit(mode),
       });
       console.log('[curate-collection] curate:response', {
         at: nowIso(),
@@ -521,7 +547,7 @@ export const curateCollection = inngest.createFunction(
       Promise.all([
         writeSession(sessionId, { phase: 'complete', tokenUsage, ...result }),
         completeCuratorSession(sessionId, {
-          mode: answers.mode,
+          mode,
           model: 'claude-sonnet-4-6',
           phase: 'complete',
           sectionCount: result.sectionCount,

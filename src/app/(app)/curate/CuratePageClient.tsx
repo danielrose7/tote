@@ -23,7 +23,7 @@ import {
   validatePayload,
 } from '../../../lib/importPayload';
 import styles from './curate.module.css';
-import type { ExtractedItem } from '../../../inngest/types';
+import type { ExtractedItem, InterviewQuestion } from '../../../inngest/types';
 
 type CurationMode = 'normal' | 'debug';
 
@@ -50,12 +50,8 @@ interface Result {
   itemCount: number;
 }
 
-interface Answers {
-  audience: string;
-  lens: string;
-  constraints: string;
-  mode: CurationMode;
-}
+/** keyed by question.id */
+type Answers = Record<string, string>;
 
 interface CuratePageClientProps {
   initialSessionId?: string | null;
@@ -79,75 +75,10 @@ interface ExtractionProgress {
   entries: ExtractionEntry[];
 }
 
-const defaultQuestions = [
-  { id: 'audience', text: 'Who is this collection for?' },
-  { id: 'lens', text: 'What is the primary curatorial lens?' },
-  { id: 'constraints', text: 'Any hard constraints?' },
-] satisfies { id: string; text: string }[];
-
-const audienceOptions = [
-  { value: 'Me', description: 'Personal use, reference, or wishlist' },
-  {
-    value: 'A specific person',
-    description: 'Gift list or targeted shortlist for someone in mind',
-  },
-  {
-    value: 'Demo / template',
-    description: 'Public-facing or general audience collection',
-  },
-];
-
-const lensOptions = [
-  {
-    value: 'Buy it once, make it last',
-    description:
-      'Quality and durability over price — built to last, repairable',
-  },
-  {
-    value: 'Best value for the money',
-    description: 'Practical choices, no brand premium, outperforms its price',
-  },
-  {
-    value: 'What enthusiasts actually use',
-    description:
-      'Community knowledge — not mainstream roundups or affiliate picks',
-  },
-  {
-    value: 'Looks good and holds up',
-    description:
-      'Design and aesthetics alongside function — considered, well-made',
-  },
-];
-
-const constraintsOptions = [
-  {
-    value: 'Budget ceiling',
-    description:
-      'Items should stay under a specific price — add details in notes',
-  },
-  {
-    value: 'Avoid Amazon',
-    description:
-      'Prefer independent retailers, brand sites, or specialty stores',
-  },
-  { value: 'US availability', description: 'Products must ship within the US' },
-  { value: 'No constraints', description: 'No restrictions — curate freely' },
-];
-
-function buildAnswerString(selected: string | string[], notes: string): string {
-  const base = Array.isArray(selected) ? selected.join(' / ') : selected;
+function buildAnswerString(selected: string[], notes: string): string {
+  const base = selected.join(' / ');
   if (!notes.trim()) return base;
   return base ? `${base} — ${notes.trim()}` : notes.trim();
-}
-
-function buildConstraintsString(selected: string[], notes: string): string {
-  const isUnconstrained =
-    selected.includes('No constraints') && selected.length === 1;
-  if (isUnconstrained && !notes.trim()) return 'No constraints';
-  const meaningful = selected.filter((s) => s !== 'No constraints');
-  const base = meaningful.join(', ');
-  if (!notes.trim()) return base || 'No constraints';
-  return base ? `${base}; ${notes.trim()}` : notes.trim();
 }
 
 const milestoneLabels: Record<string, string> = {
@@ -197,22 +128,12 @@ export function CuratePageClient({
   );
   const [topic, setTopic] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
-  const [questions, setQuestions] = useState<{ id: string; text: string }[]>(
-    initialSessionId ? [...defaultQuestions] : [],
-  );
-  const [answers, setAnswers] = useState<Answers>({
-    audience: '',
-    lens: '',
-    constraints: '',
-    mode: 'debug',
-  });
-  // Structured interview form state (drives answers above)
-  const [selectedAudience, setSelectedAudience] = useState('');
-  const [audienceNotes, setAudienceNotes] = useState('');
-  const [selectedLenses, setSelectedLenses] = useState<string[]>([]);
-  const [lensNotes, setLensNotes] = useState('');
-  const [selectedConstraints, setSelectedConstraints] = useState<string[]>([]);
-  const [constraintNotes, setConstraintNotes] = useState('');
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
+  const [mode, setMode] = useState<CurationMode>('debug');
+  /** Selected option values per question id */
+  const [selections, setSelections] = useState<Record<string, string[]>>({});
+  /** Free-text notes per question id */
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState<ProgressEntry[]>([]);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -518,23 +439,6 @@ export function CuratePageClient({
     })();
   }, [phase, urlsData, sessionId]);
 
-  // Sync structured form selections → answers strings
-  useEffect(() => {
-    setAnswers((prev) => ({
-      ...prev,
-      audience: buildAnswerString(selectedAudience, audienceNotes),
-      lens: buildAnswerString(selectedLenses, lensNotes),
-      constraints: buildConstraintsString(selectedConstraints, constraintNotes),
-    }));
-  }, [
-    selectedAudience,
-    audienceNotes,
-    selectedLenses,
-    lensNotes,
-    selectedConstraints,
-    constraintNotes,
-  ]);
-
   // Keep a ref to the active Jazz session so we can update it on phase transitions
   const jazzSessionRef = useRef<typeof CuratorSession.prototype | null>(null);
 
@@ -590,14 +494,26 @@ export function CuratePageClient({
     progressEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [progress]);
 
+  const answersComplete = questions.every(
+    (q) => (selections[q.id]?.length ?? 0) > 0,
+  );
+
   async function handleAnswers(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedAudience || selectedLenses.length === 0) return;
+    if (!answersComplete) return;
+
+    // Build answer strings from selections + notes
+    const answers: Answers = Object.fromEntries(
+      questions.map((q) => [
+        q.id,
+        buildAnswerString(selections[q.id] ?? [], notes[q.id] ?? ''),
+      ]),
+    );
 
     const res = await fetch('/api/curate/answer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, answers }),
+      body: JSON.stringify({ sessionId, questions, answers, mode }),
     });
 
     if (!res.ok) {
@@ -611,13 +527,9 @@ export function CuratePageClient({
     setTopic('');
     setSessionId(null);
     setQuestions([]);
-    setAnswers({ audience: '', lens: '', constraints: '', mode: 'debug' });
-    setSelectedAudience('');
-    setAudienceNotes('');
-    setSelectedLenses([]);
-    setLensNotes('');
-    setSelectedConstraints([]);
-    setConstraintNotes('');
+    setSelections({});
+    setNotes({});
+    setMode('debug');
     setProgress([]);
     setResult(null);
     setError(null);
@@ -650,129 +562,72 @@ export function CuratePageClient({
               Answer these questions to set the curatorial lens.
             </p>
 
-            {/* Audience — single select */}
-            <div className={styles.inputGroup}>
-              <span className={styles.label}>Who is this collection for?</span>
-              <div className={styles.interviewOptions}>
-                {audienceOptions.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className={styles.interviewOption}
-                    data-selected={selectedAudience === opt.value}
-                  >
-                    <input
-                      type="radio"
-                      name="audience"
-                      value={opt.value}
-                      checked={selectedAudience === opt.value}
-                      onChange={() => setSelectedAudience(opt.value)}
-                    />
-                    <span>
-                      <strong>{opt.value}</strong>
-                      <span className={styles.optionDescription}>
-                        {opt.description}
-                      </span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <input
-                type="text"
-                className={styles.input}
-                value={audienceNotes}
-                onChange={(e) => setAudienceNotes(e.target.value)}
-                placeholder="Additional context (optional)"
-              />
-            </div>
+            {questions.map((q) => {
+              const selected = selections[q.id] ?? [];
+              return (
+                <div key={q.id} className={styles.inputGroup}>
+                  <span className={styles.label}>{q.text}</span>
+                  <div className={styles.interviewOptions}>
+                    {q.options.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className={styles.interviewOption}
+                        data-selected={selected.includes(opt.value)}
+                      >
+                        <input
+                          type={q.multi ? 'checkbox' : 'radio'}
+                          name={q.id}
+                          value={opt.value}
+                          checked={selected.includes(opt.value)}
+                          onChange={(e) => {
+                            setSelections((prev) => {
+                              const cur = prev[q.id] ?? [];
+                              if (q.multi) {
+                                // "No constraints" style exclusive option
+                                if (
+                                  opt.value === 'No constraints' &&
+                                  e.target.checked
+                                )
+                                  return {
+                                    ...prev,
+                                    [q.id]: ['No constraints'],
+                                  };
+                                const next = e.target.checked
+                                  ? [
+                                      ...cur.filter(
+                                        (v) => v !== 'No constraints',
+                                      ),
+                                      opt.value,
+                                    ]
+                                  : cur.filter((v) => v !== opt.value);
+                                return { ...prev, [q.id]: next };
+                              }
+                              return { ...prev, [q.id]: [opt.value] };
+                            });
+                          }}
+                        />
+                        <span>
+                          <strong>{opt.value}</strong>
+                          <span className={styles.optionDescription}>
+                            {opt.description}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={notes[q.id] ?? ''}
+                    onChange={(e) =>
+                      setNotes((prev) => ({ ...prev, [q.id]: e.target.value }))
+                    }
+                    placeholder="Additional notes (optional)"
+                  />
+                </div>
+              );
+            })}
 
-            {/* Lens — multi select */}
-            <div className={styles.inputGroup}>
-              <span className={styles.label}>
-                What is the primary curatorial lens?
-              </span>
-              <div className={styles.interviewOptions}>
-                {lensOptions.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className={styles.interviewOption}
-                    data-selected={selectedLenses.includes(opt.value)}
-                  >
-                    <input
-                      type="checkbox"
-                      value={opt.value}
-                      checked={selectedLenses.includes(opt.value)}
-                      onChange={(e) => {
-                        setSelectedLenses((prev) =>
-                          e.target.checked
-                            ? [...prev, opt.value]
-                            : prev.filter((v) => v !== opt.value),
-                        );
-                      }}
-                    />
-                    <span>
-                      <strong>{opt.value}</strong>
-                      <span className={styles.optionDescription}>
-                        {opt.description}
-                      </span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <input
-                type="text"
-                className={styles.input}
-                value={lensNotes}
-                onChange={(e) => setLensNotes(e.target.value)}
-                placeholder="Additional lens notes (optional)"
-              />
-            </div>
-
-            {/* Constraints — multi select */}
-            <div className={styles.inputGroup}>
-              <span className={styles.label}>Any hard constraints?</span>
-              <div className={styles.interviewOptions}>
-                {constraintsOptions.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className={styles.interviewOption}
-                    data-selected={selectedConstraints.includes(opt.value)}
-                  >
-                    <input
-                      type="checkbox"
-                      value={opt.value}
-                      checked={selectedConstraints.includes(opt.value)}
-                      onChange={(e) => {
-                        setSelectedConstraints((prev) => {
-                          if (e.target.checked) {
-                            // "No constraints" is exclusive
-                            if (opt.value === 'No constraints')
-                              return ['No constraints'];
-                            return [
-                              ...prev.filter((v) => v !== 'No constraints'),
-                              opt.value,
-                            ];
-                          }
-                          return prev.filter((v) => v !== opt.value);
-                        });
-                      }}
-                    />
-                    <span>
-                      <strong>{opt.value}</strong>
-                      <span className={styles.optionDescription}>
-                        {opt.description}
-                      </span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <input
-                type="text"
-                className={styles.input}
-                value={constraintNotes}
-                onChange={(e) => setConstraintNotes(e.target.value)}
-                placeholder="Additional constraints (optional, e.g. 'under $150')"
-              />
-            </div>
             <div className={styles.inputGroup}>
               <span className={styles.label}>Mode</span>
               <div className={styles.modeOptions}>
@@ -781,10 +636,8 @@ export function CuratePageClient({
                     type="radio"
                     name="mode"
                     value="debug"
-                    checked={answers.mode === 'debug'}
-                    onChange={() =>
-                      setAnswers((prev) => ({ ...prev, mode: 'debug' }))
-                    }
+                    checked={mode === 'debug'}
+                    onChange={() => setMode('debug')}
                   />
                   <span>
                     <strong>Debug</strong>
@@ -798,10 +651,8 @@ export function CuratePageClient({
                     type="radio"
                     name="mode"
                     value="normal"
-                    checked={answers.mode === 'normal'}
-                    onChange={() =>
-                      setAnswers((prev) => ({ ...prev, mode: 'normal' }))
-                    }
+                    checked={mode === 'normal'}
+                    onChange={() => setMode('normal')}
                   />
                   <span>
                     <strong>Normal</strong>
@@ -816,11 +667,7 @@ export function CuratePageClient({
               <button
                 type="submit"
                 className={styles.primaryButton}
-                disabled={
-                  !selectedAudience ||
-                  selectedLenses.length === 0 ||
-                  (selectedConstraints.length === 0 && !constraintNotes.trim())
-                }
+                disabled={!answersComplete}
               >
                 Submit answers
               </button>

@@ -7,22 +7,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { sessionId, answers } = await request.json();
+  const { sessionId, questions, answers, mode } = await request.json();
 
   if (
     !sessionId ||
-    !answers?.audience ||
-    !answers?.lens ||
-    !answers?.constraints ||
-    !answers?.mode ||
-    !['normal', 'debug'].includes(answers.mode)
+    !questions ||
+    !Array.isArray(questions) ||
+    !answers ||
+    typeof answers !== 'object' ||
+    !mode ||
+    !['normal', 'debug'].includes(mode)
   ) {
     return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
   }
 
   await inngest.send({
     name: 'curation/answers',
-    data: { sessionId, answers },
+    data: { sessionId, questions, answers, mode },
   });
 
   return NextResponse.json({ ok: true });

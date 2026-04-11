@@ -1,7 +1,49 @@
-import type { CurationMode, SectionPlan, ExtractedSection } from './types';
+import type {
+  CurationMode,
+  InterviewQuestion,
+  SectionPlan,
+  ExtractedSection,
+} from './types';
 import { CURATOR_PERSONA } from './workspace/CURATOR';
 
 export const CURATOR_SYSTEM_PROMPT = CURATOR_PERSONA;
+
+export function buildQuestionsPrompt(topic: string): string {
+  return `Generate 3-5 focused interview questions to help curate a product collection on this topic:
+
+"${topic}"
+
+Questions should uncover:
+- Who this is for and their specific context
+- Quality, style, or value priorities relevant to this category
+- Hard constraints (budget, availability, brand avoidances, etc.)
+
+Rules:
+- Make questions specific to the product category — not generic
+- Provide 3-5 options per question with short descriptions
+- Set multi: true when multiple selections make sense (e.g. priorities)
+- Always include one constraints question with a "No constraints" option
+- The last question should always ask about constraints
+
+Return only valid JSON:
+[
+  {
+    "id": "snake_case_id",
+    "text": "Question text",
+    "options": [{ "value": "Option label", "description": "One-line explanation" }],
+    "multi": false
+  }
+]`;
+}
+
+function formatAnswers(
+  questions: InterviewQuestion[],
+  answers: Record<string, string>,
+): string {
+  return questions
+    .map((q) => `${q.text}\n→ ${answers[q.id] ?? '(no answer)'}`)
+    .join('\n\n');
+}
 
 export const URL_DISCOVERY_SYSTEM_PROMPT = `You are a product URL finder for a curation tool. Your job is to use web search to find product page URLs at independent retailers.
 
@@ -15,19 +57,15 @@ Output format: { "urls": ["https://...", ...] }`;
 
 export function buildPlanPrompt(
   topic: string,
-  answers: {
-    audience: string;
-    lens: string;
-    constraints: string;
-    mode: CurationMode;
-  },
+  questions: InterviewQuestion[],
+  answers: Record<string, string>,
+  mode: CurationMode,
 ): string {
   return `Topic: ${topic}
 
-Audience: ${answers.audience}
-Lens: ${answers.lens}
-Constraints: ${answers.constraints}
-Mode: ${answers.mode}
+${formatAnswers(questions, answers)}
+
+Mode: ${mode}
 
 Plan a focused product collection. Determine:
 1. A specific, purposeful title (not "Best X" or "Top Y")
@@ -36,7 +74,7 @@ Plan a focused product collection. Determine:
 
 If mode is "debug":
 - Keep the plan intentionally small for a low-cost test run
-- Return exactly 2-3 sections
+- Return exactly 2 sections
 - Keep targetCount to 1-2 items per section
 
 Return only valid JSON:
@@ -50,19 +88,15 @@ Return only valid JSON:
 export function buildUrlDiscoveryPrompt(
   section: SectionPlan,
   topic: string,
-  answers: {
-    audience: string;
-    lens: string;
-    constraints: string;
-    mode: CurationMode;
-  },
+  questions: InterviewQuestion[],
+  answers: Record<string, string>,
+  mode: CurationMode,
 ): string {
   return `Find ${section.targetCount}-${section.targetCount + 2} product page URLs for the "${section.title}" section of a collection on: ${topic}
 
-Audience: ${answers.audience}
-Lens: ${answers.lens}
-Constraints: ${answers.constraints}
-Mode: ${answers.mode}
+${formatAnswers(questions, answers)}
+
+Mode: ${mode}
 
 Section rationale: ${section.rationale}
 
@@ -79,12 +113,9 @@ export function buildCuratePrompt(
   planTitle: string,
   planIntro: string,
   extractedSections: ExtractedSection[],
-  answers: {
-    audience: string;
-    lens: string;
-    constraints: string;
-    mode: CurationMode;
-  },
+  questions: InterviewQuestion[],
+  answers: Record<string, string>,
+  mode: CurationMode,
 ): string {
   const sectionsJson = JSON.stringify(
     extractedSections.map((s) => ({
@@ -97,10 +128,9 @@ export function buildCuratePrompt(
 
   return `You have extracted product page data for a collection titled "${planTitle}".
 
-Audience: ${answers.audience}
-Lens: ${answers.lens}
-Constraints: ${answers.constraints}
-Mode: ${answers.mode}
+${formatAnswers(questions, answers)}
+
+Mode: ${mode}
 
 Intro (use as-is or refine): ${planIntro}
 

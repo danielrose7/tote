@@ -1,5 +1,12 @@
 export type CurationMode = 'normal' | 'debug';
 
+export interface InterviewQuestion {
+  id: string;
+  text: string;
+  options: { value: string; description: string }[];
+  multi: boolean;
+}
+
 export interface CurationStartEvent {
   name: 'curation/start';
   data: {
@@ -13,12 +20,11 @@ export interface CurationAnswersEvent {
   name: 'curation/answers';
   data: {
     sessionId: string;
-    answers: {
-      audience: string;
-      lens: string;
-      constraints: string;
-      mode: CurationMode;
-    };
+    /** Echoed back so the planner knows the question text alongside each answer */
+    questions: InterviewQuestion[];
+    /** Keyed by question id, value is the selected option(s) + any notes */
+    answers: Record<string, string>;
+    mode: CurationMode;
   };
 }
 
