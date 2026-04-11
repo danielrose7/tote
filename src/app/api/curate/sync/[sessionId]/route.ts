@@ -15,6 +15,7 @@ export async function GET(
 
   return NextResponse.json({
     phase: session?.phase ?? null,
+    questions: session?.questions ?? null,
     result:
       session?.phase === 'complete'
         ? {

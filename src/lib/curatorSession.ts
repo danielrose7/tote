@@ -11,6 +11,7 @@
 import { createClient } from 'redis';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { InterviewQuestion } from '../inngest/types';
 
 export interface TokenUsage {
   inputTokens: number;
@@ -32,6 +33,7 @@ export interface CuratorSessionData {
   json?: string;
   urlSections?: { title: string; slug: string; urls: string[] }[];
   tokenUsage?: TokenUsage;
+  questions?: InterviewQuestion[];
 }
 
 export interface CuratorSessionResult extends CuratorSessionData {

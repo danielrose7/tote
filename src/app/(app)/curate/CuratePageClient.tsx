@@ -183,6 +183,7 @@ export function CuratePageClient({
       if (res.ok) {
         const snap = await res.json();
         if (snap.phase) setPhase(snap.phase);
+        if (snap.questions?.length > 0) setQuestions(snap.questions);
         if (snap.progress?.length > 0) setProgress(snap.progress);
         if (snap.result) {
           setResult(snap.result);
