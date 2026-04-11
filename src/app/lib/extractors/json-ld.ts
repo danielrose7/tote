@@ -1,11 +1,11 @@
-import type { ExtractedMetadata, ExtractionResult } from "./types";
+import type { ExtractedMetadata, ExtractionResult } from './types';
 
 interface JsonLdProduct {
-  "@type": string;
+  '@type': string;
   name?: string;
   description?: string;
   image?: string | string[] | { url: string }[];
-  brand?: { name?: string; "@type"?: string } | string;
+  brand?: { name?: string; '@type'?: string } | string;
   offers?:
     | {
         price?: string | number;
@@ -20,26 +20,26 @@ interface JsonLdProduct {
 }
 
 interface JsonLdGraph {
-  "@graph"?: JsonLdProduct[];
+  '@graph'?: JsonLdProduct[];
 }
 
 function findProductInData(data: unknown): JsonLdProduct | null {
-  if (!data || typeof data !== "object") return null;
+  if (!data || typeof data !== 'object') return null;
 
   // Direct product
-  if ("@type" in data) {
-    const typed = data as { "@type": string | string[] };
-    const types = Array.isArray(typed["@type"])
-      ? typed["@type"]
-      : [typed["@type"]];
-    if (types.some((t) => t === "Product" || t === "IndividualProduct")) {
+  if ('@type' in data) {
+    const typed = data as { '@type': string | string[] };
+    const types = Array.isArray(typed['@type'])
+      ? typed['@type']
+      : [typed['@type']];
+    if (types.some((t) => t === 'Product' || t === 'IndividualProduct')) {
       return data as JsonLdProduct;
     }
   }
 
   // @graph array
-  if ("@graph" in data) {
-    const graph = (data as JsonLdGraph)["@graph"];
+  if ('@graph' in data) {
+    const graph = (data as JsonLdGraph)['@graph'];
     if (Array.isArray(graph)) {
       for (const item of graph) {
         const product = findProductInData(item);
@@ -60,21 +60,23 @@ function findProductInData(data: unknown): JsonLdProduct | null {
 }
 
 function extractImage(
-  image: string | string[] | { url: string }[] | undefined
+  image: string | string[] | { url: string }[] | undefined,
 ): string | undefined {
   if (!image) return undefined;
-  if (typeof image === "string") return image;
+  if (typeof image === 'string') return image;
   if (Array.isArray(image)) {
     const first = image[0];
-    if (typeof first === "string") return first;
-    if (first && typeof first === "object" && "url" in first) return first.url;
+    if (typeof first === 'string') return first;
+    if (first && typeof first === 'object' && 'url' in first) return first.url;
   }
   return undefined;
 }
 
-function extractPrice(
-  offers: JsonLdProduct["offers"]
-): { price?: string; currency?: string; availability?: string } {
+function extractPrice(offers: JsonLdProduct['offers']): {
+  price?: string;
+  currency?: string;
+  availability?: string;
+} {
   if (!offers) return {};
 
   const offer = Array.isArray(offers) ? offers[0] : offers;
@@ -87,12 +89,10 @@ function extractPrice(
   };
 }
 
-function extractBrand(
-  brand: JsonLdProduct["brand"]
-): string | undefined {
+function extractBrand(brand: JsonLdProduct['brand']): string | undefined {
   if (!brand) return undefined;
-  if (typeof brand === "string") return brand;
-  if (typeof brand === "object" && "name" in brand) return brand.name;
+  if (typeof brand === 'string') return brand;
+  if (typeof brand === 'object' && 'name' in brand) return brand.name;
   return undefined;
 }
 
@@ -114,7 +114,7 @@ export function extractJsonLd(html: string): ExtractionResult | null {
         const brand = extractBrand(product.brand);
 
         const result: ExtractedMetadata = {
-          url: "",
+          url: '',
           title: product.name,
           description: product.description,
           imageUrl,
@@ -125,16 +125,16 @@ export function extractJsonLd(html: string): ExtractionResult | null {
         };
 
         // Track which fields were extracted
-        if (result.title) extractedFields.push("title");
-        if (result.description) extractedFields.push("description");
-        if (result.imageUrl) extractedFields.push("imageUrl");
-        if (result.price) extractedFields.push("price");
-        if (result.currency) extractedFields.push("currency");
-        if (result.brand) extractedFields.push("brand");
+        if (result.title) extractedFields.push('title');
+        if (result.description) extractedFields.push('description');
+        if (result.imageUrl) extractedFields.push('imageUrl');
+        if (result.price) extractedFields.push('price');
+        if (result.currency) extractedFields.push('currency');
+        if (result.brand) extractedFields.push('brand');
 
         return {
           ...result,
-          source: "json-ld",
+          source: 'json-ld',
           confidence: extractedFields.length / 6, // 6 possible fields
           extractedFields,
         };

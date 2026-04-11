@@ -1,7 +1,7 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import type { SharedCollectionRef } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import styles from "./LeaveCollectionDialog.module.css";
+import * as Dialog from '@radix-ui/react-dialog';
+import type { SharedCollectionRef } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import styles from './LeaveCollectionDialog.module.css';
 
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
 
@@ -28,10 +28,12 @@ export function LeaveCollectionDialog({
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />
         <Dialog.Content className={styles.content}>
-          <Dialog.Title className={styles.title}>Leave Collection?</Dialog.Title>
+          <Dialog.Title className={styles.title}>
+            Leave Collection?
+          </Dialog.Title>
           <Dialog.Description className={styles.description}>
-            Are you sure you want to leave{" "}
-            <strong>{sharedRef?.name || "this collection"}</strong>?
+            Are you sure you want to leave{' '}
+            <strong>{sharedRef?.name || 'this collection'}</strong>?
           </Dialog.Description>
           <p className={styles.info}>
             You will no longer see this collection in your list. You can rejoin

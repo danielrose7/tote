@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
-import { JazzReactProvider, useCoState } from "jazz-tools/react";
-import { Block } from "../../../../../schema";
-import { apiKey } from "../../../../../apiKey";
-import styles from "../../../view/[id]/page.module.css";
+import Link from 'next/link';
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
+import { JazzReactProvider, useCoState } from 'jazz-tools/react';
+import { Block } from '../../../../../schema';
+import { apiKey } from '../../../../../apiKey';
+import styles from '../../../view/[id]/page.module.css';
 
 /**
  * Shared client component for rendering a public collection in guest mode.
@@ -64,7 +64,7 @@ function PublicCollectionViewer({
     );
   }
 
-  if (collection.type !== "collection") {
+  if (collection.type !== 'collection') {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
@@ -77,7 +77,7 @@ function PublicCollectionViewer({
   }
 
   const isPublishedCollection = !!collection.collectionData?.sourceId;
-  const publicLayout = collection.collectionData?.publicLayout ?? "minimal";
+  const publicLayout = collection.collectionData?.publicLayout ?? 'minimal';
   if (!isPublishedCollection) {
     return (
       <div className={styles.container}>
@@ -95,27 +95,27 @@ function PublicCollectionViewer({
   // Build JSON-LD structured data for the collection and its products
   const products = collectProducts(collection);
   const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
     name: collection.name,
     ...(collection.collectionData?.description && {
       description: collection.collectionData.description,
     }),
     numberOfItems: products.length,
     itemListElement: products.map((product, index) => ({
-      "@type": "ListItem",
+      '@type': 'ListItem',
       position: index + 1,
       item: {
-        "@type": "Product",
+        '@type': 'Product',
         name: product.name,
         ...(product.url && { url: product.url }),
         ...(product.imageUrl && { image: product.imageUrl }),
         ...(product.description && { description: product.description }),
         ...(product.price && {
           offers: {
-            "@type": "Offer",
-            price: product.price.replace(/[^0-9.]/g, ""),
-            priceCurrency: "USD",
+            '@type': 'Offer',
+            price: product.price.replace(/[^0-9.]/g, ''),
+            priceCurrency: 'USD',
           },
         }),
       },
@@ -129,10 +129,10 @@ function PublicCollectionViewer({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <header
-        className={`${styles.header} ${publicLayout === "feature" ? styles.headerFeature : styles.headerMinimal}`}
+        className={`${styles.header} ${publicLayout === 'feature' ? styles.headerFeature : styles.headerMinimal}`}
       >
         <div
-          className={`${styles.headerContent} ${publicLayout === "feature" ? styles.headerContentFeature : ""}`}
+          className={`${styles.headerContent} ${publicLayout === 'feature' ? styles.headerContentFeature : ''}`}
         >
           <div className={styles.titleSection}>
             <div className={styles.titleBlock}>
@@ -146,7 +146,9 @@ function PublicCollectionViewer({
                 <h1 className={styles.pageTitle}>{collection.name}</h1>
               </div>
               {creatorUsername && (
-                <p className={styles.attribution}>Created by {creatorUsername}</p>
+                <p className={styles.attribution}>
+                  Created by {creatorUsername}
+                </p>
               )}
             </div>
             {collection.collectionData?.allowCloning && (
@@ -157,16 +159,24 @@ function PublicCollectionViewer({
           </div>
           {collection.collectionData?.description && (
             <p
-              className={`${styles.pageDescription} ${publicLayout === "feature" ? styles.pageDescriptionFeature : ""}`}
+              className={`${styles.pageDescription} ${publicLayout === 'feature' ? styles.pageDescriptionFeature : ''}`}
             >
               {collection.collectionData.description}
             </p>
           )}
           <div className={styles.pageMeta}>
-            <span>{products.length} {products.length === 1 ? "item" : "items"}</span>
+            <span>
+              {products.length} {products.length === 1 ? 'item' : 'items'}
+            </span>
             {collection.children?.$isLoaded && (
               <span>
-                {collection.children.filter((child) => child && child.$isLoaded && child.type === "slot").length} sections
+                {
+                  collection.children.filter(
+                    (child) =>
+                      child && child.$isLoaded && child.type === 'slot',
+                  ).length
+                }{' '}
+                sections
               </span>
             )}
           </div>
@@ -182,7 +192,7 @@ function PublicCollectionViewer({
 
       <footer className={styles.footer}>
         <p>
-          Powered by{" "}
+          Powered by{' '}
           <a href="/" className={styles.footerLink}>
             Tote
           </a>
@@ -255,7 +265,7 @@ function collectProducts(collection: any): Array<{
   for (const child of collection.children) {
     if (!child || !child.$isLoaded) continue;
 
-    if (child.type === "product") {
+    if (child.type === 'product') {
       products.push({
         name: child.name,
         url: child.productData?.url,
@@ -263,9 +273,9 @@ function collectProducts(collection: any): Array<{
         price: child.productData?.price,
         description: child.productData?.description,
       });
-    } else if (child.type === "slot" && child.children?.$isLoaded) {
+    } else if (child.type === 'slot' && child.children?.$isLoaded) {
       for (const slotChild of child.children) {
-        if (slotChild && slotChild.$isLoaded && slotChild.type === "product") {
+        if (slotChild && slotChild.$isLoaded && slotChild.type === 'product') {
           products.push({
             name: slotChild.name,
             url: slotChild.productData?.url,
@@ -308,8 +318,8 @@ function ChildBlocksLoader({
   }
 
   if (hasChildrenList) {
-    const slots = childrenFromList.filter((b) => b.type === "slot");
-    const products = childrenFromList.filter((b) => b.type === "product");
+    const slots = childrenFromList.filter((b) => b.type === 'slot');
+    const products = childrenFromList.filter((b) => b.type === 'product');
 
     return (
       <>
@@ -340,7 +350,7 @@ function SlotRenderer({ slot }: { slot: any }) {
   const products: any[] = [];
   if (slot.children?.$isLoaded) {
     for (const child of slot.children) {
-      if (child && child.$isLoaded && child.type === "product") {
+      if (child && child.$isLoaded && child.type === 'product') {
         products.push(child);
       }
     }
@@ -350,7 +360,7 @@ function SlotRenderer({ slot }: { slot: any }) {
 
   return (
     <div className={styles.slotSection}>
-      <h3 className={styles.slotTitle}>{slot.name || "Unnamed slot"}</h3>
+      <h3 className={styles.slotTitle}>{slot.name || 'Unnamed slot'}</h3>
       <div className={styles.productGrid}>
         {products.map((block: any) => (
           <ProductRenderer key={block.$jazz.id} block={block} />
@@ -398,7 +408,7 @@ function ChildBlockRenderer({ blockId }: { blockId: string }) {
     return <div className={styles.productCard}>Loading...</div>;
   }
 
-  if (block.type !== "product") return null;
+  if (block.type !== 'product') return null;
 
   return <ProductRenderer block={block} />;
 }

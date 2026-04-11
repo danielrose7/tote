@@ -1,14 +1,9 @@
-"use client";
+'use client';
 
-import { Suspense } from "react";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-} from "@clerk/nextjs";
-import Link from "next/link";
-import styles from "../AuthButton.module.css";
+import { Suspense } from 'react';
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs';
+import Link from 'next/link';
+import styles from '../AuthButton.module.css';
 
 interface LandingAuthButtonsProps {
   showSignIn?: boolean;
@@ -20,17 +15,21 @@ interface LandingAuthButtonsProps {
 function AuthButtonsFallback() {
   return (
     <div className={styles.buttons}>
-      <button className={styles.button} disabled>Log in</button>
-      <button className={`${styles.button} ${styles.buttonPrimary}`} disabled>Sign up</button>
+      <button className={styles.button} disabled>
+        Log in
+      </button>
+      <button className={`${styles.button} ${styles.buttonPrimary}`} disabled>
+        Sign up
+      </button>
     </div>
   );
 }
 
 function LandingAuthButtonsInner({
   showSignIn = true,
-  signInLabel = "Log in",
-  signUpLabel = "Sign up",
-  signedInLabel = "Open Tote",
+  signInLabel = 'Log in',
+  signUpLabel = 'Sign up',
+  signedInLabel = 'Open Tote',
 }: LandingAuthButtonsProps) {
   return (
     <>
@@ -49,7 +48,10 @@ function LandingAuthButtonsInner({
         </div>
       </SignedOut>
       <SignedIn>
-        <Link href="/collections" className={`${styles.button} ${styles.buttonPrimary}`}>
+        <Link
+          href="/collections"
+          className={`${styles.button} ${styles.buttonPrimary}`}
+        >
           {signedInLabel}
         </Link>
       </SignedIn>

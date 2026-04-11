@@ -1,17 +1,17 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import type { JazzAccount, Block } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import { Group } from "jazz-tools";
-import { fetchMetadata, isValidUrl } from "../../app/utils/metadata";
-import { Block as BlockSchema, BlockList } from "../../schema";
-import { useToast } from "../ToastNotification";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import { useAllCollections } from "../../hooks/useAllCollections";
-import { SlotSelector } from "../SlotSelector/SlotSelector";
-import styles from "./AddLinkDialog.module.css";
+import * as Dialog from '@radix-ui/react-dialog';
+import { useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import type { JazzAccount, Block } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import { Group } from 'jazz-tools';
+import { fetchMetadata, isValidUrl } from '../../app/utils/metadata';
+import { Block as BlockSchema, BlockList } from '../../schema';
+import { useToast } from '../ToastNotification';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { useAllCollections } from '../../hooks/useAllCollections';
+import { SlotSelector } from '../SlotSelector/SlotSelector';
+import styles from './AddLinkDialog.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -25,8 +25,12 @@ interface AddLinkDialogProps {
 
 const validationSchema = Yup.object({
   url: Yup.string()
-    .required("URL is required")
-    .test("is-url", "Please enter a valid URL (must start with http:// or https://)", isValidUrl),
+    .required('URL is required')
+    .test(
+      'is-url',
+      'Please enter a valid URL (must start with http:// or https://)',
+      isValidUrl,
+    ),
 });
 
 export function AddLinkDialog({
@@ -48,12 +52,14 @@ export function AddLinkDialog({
   });
 
   // Default to the provided collection ID, or the account's default block
-  const defaultCollectionId = collectionId || (account.root?.$isLoaded ? account.root.defaultBlockId || null : null);
+  const defaultCollectionId =
+    collectionId ||
+    (account.root?.$isLoaded ? account.root.defaultBlockId || null : null);
 
   const formik = useFormik({
     initialValues: {
-      url: "",
-      collectionId: defaultCollectionId || "",
+      url: '',
+      collectionId: defaultCollectionId || '',
       slotId: null as string | null,
     },
     validationSchema,
@@ -63,7 +69,7 @@ export function AddLinkDialog({
 
       if (!isOnline) {
         formik.setFieldError(
-          "url",
+          'url',
           "You're offline. Connect to the internet to add links.",
         );
         return;
@@ -78,7 +84,7 @@ export function AddLinkDialog({
         const collectionBlock = findCollection(values.collectionId);
 
         if (!collectionBlock) {
-          throw new Error("Collection not found");
+          throw new Error('Collection not found');
         }
 
         // Get the collection's sharing group for proper ownership
@@ -91,8 +97,8 @@ export function AddLinkDialog({
         // Create the product block owned by the group
         const newProductBlock = BlockSchema.create(
           {
-            type: "product",
-            name: metadata.title || "Untitled",
+            type: 'product',
+            name: metadata.title || 'Untitled',
             productData: {
               url: metadata.url,
               imageUrl: metadata.imageUrl,
@@ -108,7 +114,7 @@ export function AddLinkDialog({
         if (values.slotId) {
           // Find the slot and add to its children
           const slotBlock = collectionBlock.children?.find(
-            (b) => b && b.$isLoaded && b.$jazz.id === values.slotId
+            (b) => b && b.$isLoaded && b.$jazz.id === values.slotId,
           );
           if (slotBlock?.children?.$isLoaded) {
             slotBlock.children.$jazz.push(newProductBlock);
@@ -121,17 +127,17 @@ export function AddLinkDialog({
         }
 
         showToast({
-          title: "Link added",
-          description: `"${metadata.title || "Link"}" has been added to ${collectionBlock.name}`,
-          variant: "success",
+          title: 'Link added',
+          description: `"${metadata.title || 'Link'}" has been added to ${collectionBlock.name}`,
+          variant: 'success',
         });
 
         handleClose();
       } catch (error) {
-        console.error("Error adding link:", error);
+        console.error('Error adding link:', error);
         formik.setFieldError(
-          "url",
-          "Failed to fetch link details. Please try again.",
+          'url',
+          'Failed to fetch link details. Please try again.',
         );
       } finally {
         setIsLoading(false);
@@ -142,8 +148,8 @@ export function AddLinkDialog({
   const handleClose = () => {
     formik.resetForm({
       values: {
-        url: "",
-        collectionId: defaultCollectionId || "",
+        url: '',
+        collectionId: defaultCollectionId || '',
         slotId: null,
       },
     });
@@ -160,15 +166,15 @@ export function AddLinkDialog({
     const existingSlots: LoadedBlock[] = [];
     if (collectionBlock?.children?.$isLoaded) {
       for (const child of collectionBlock.children) {
-        if (child && child.$isLoaded && child.type === "slot") {
+        if (child && child.$isLoaded && child.type === 'slot') {
           existingSlots.push(child);
         }
       }
     }
 
     // Merge in any newly created slots that might not be in the children list yet
-    const existingIds = new Set(existingSlots.map(s => s.$jazz.id));
-    const newSlots = createdSlots.filter(s => !existingIds.has(s.$jazz.id));
+    const existingIds = new Set(existingSlots.map((s) => s.$jazz.id));
+    const newSlots = createdSlots.filter((s) => !existingIds.has(s.$jazz.id));
     return [...existingSlots, ...newSlots];
   };
 
@@ -178,7 +184,7 @@ export function AddLinkDialog({
     const collectionBlock = findCollection(formik.values.collectionId);
 
     if (!collectionBlock?.children?.$isLoaded) {
-      throw new Error("Collection children not loaded");
+      throw new Error('Collection children not loaded');
     }
 
     // Get the collection's sharing group for proper ownership
@@ -191,12 +197,12 @@ export function AddLinkDialog({
     // Create empty children list for the slot
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : account.$jazz
+      ownerGroup ? { owner: ownerGroup } : account.$jazz,
     );
 
     const newSlot = BlockSchema.create(
       {
-        type: "slot",
+        type: 'slot',
         name,
         slotData: {
           maxSelections: 1,
@@ -210,7 +216,7 @@ export function AddLinkDialog({
     // Add slot to collection's children
     collectionBlock.children.$jazz.push(newSlot);
     // Track the new slot locally to ensure it's immediately available
-    setCreatedSlots(prev => [...prev, newSlot as LoadedBlock]);
+    setCreatedSlots((prev) => [...prev, newSlot as LoadedBlock]);
     return newSlot.$jazz.id;
   };
 
@@ -259,7 +265,7 @@ export function AddLinkDialog({
                   onChange={(e) => {
                     formik.handleChange(e);
                     // Clear slot when collection changes
-                    formik.setFieldValue("slotId", null);
+                    formik.setFieldValue('slotId', null);
                   }}
                   onBlur={formik.handleBlur}
                   className={styles.select}
@@ -282,7 +288,7 @@ export function AddLinkDialog({
                 </label>
                 <SlotSelector
                   value={formik.values.slotId}
-                  onChange={(slotId) => formik.setFieldValue("slotId", slotId)}
+                  onChange={(slotId) => formik.setFieldValue('slotId', slotId)}
                   slots={getSlotsForSelectedCollection()}
                   onCreateSlot={handleCreateSlot}
                   placeholder="Add to slot (optional)"
@@ -293,16 +299,22 @@ export function AddLinkDialog({
 
             <div className={styles.actions}>
               <Dialog.Close asChild>
-                <button type="button" className={styles.cancelButton} disabled={isLoading}>
+                <button
+                  type="button"
+                  className={styles.cancelButton}
+                  disabled={isLoading}
+                >
                   Cancel
                 </button>
               </Dialog.Close>
               <button
                 type="submit"
                 className={styles.saveButton}
-                disabled={isLoading || !formik.values.url || !formik.values.collectionId}
+                disabled={
+                  isLoading || !formik.values.url || !formik.values.collectionId
+                }
               >
-                {isLoading ? "Adding..." : "Add Link"}
+                {isLoading ? 'Adding...' : 'Add Link'}
               </button>
             </div>
           </form>

@@ -1,14 +1,14 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import type { Block, JazzAccount } from "../../schema.ts";
-import { Block as BlockSchema, BlockList } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import { Group } from "jazz-tools";
-import { SlotSelector } from "../SlotSelector/SlotSelector";
-import { getSlotsForCollection } from "../../lib/slotHelpers";
-import styles from "./EditLinkDialog.module.css";
+import * as Dialog from '@radix-ui/react-dialog';
+import { useEffect, useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import type { Block, JazzAccount } from '../../schema.ts';
+import { Block as BlockSchema, BlockList } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import { Group } from 'jazz-tools';
+import { SlotSelector } from '../SlotSelector/SlotSelector';
+import { getSlotsForCollection } from '../../lib/slotHelpers';
+import styles from './EditLinkDialog.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -59,16 +59,16 @@ export function EditLinkDialog({
     if (block.parentId) {
       const parent = allBlocks.find((b) => b.$jazz.id === block.parentId);
       if (parent) {
-        if (parent.type === "collection") {
+        if (parent.type === 'collection') {
           return parent.$jazz.id;
-        } else if (parent.type === "slot" && parent.parentId) {
+        } else if (parent.type === 'slot' && parent.parentId) {
           return parent.parentId;
         }
       }
     }
 
     // Search through children lists (new pattern)
-    for (const col of allBlocks.filter((b) => b.type === "collection")) {
+    for (const col of allBlocks.filter((b) => b.type === 'collection')) {
       // Check if product is directly in collection's children
       if (col.children?.$isLoaded) {
         for (const child of col.children) {
@@ -76,9 +76,18 @@ export function EditLinkDialog({
             return col.$jazz.id;
           }
           // Check if product is in a slot's children
-          if (child && child.$isLoaded && child.type === "slot" && child.children?.$isLoaded) {
+          if (
+            child &&
+            child.$isLoaded &&
+            child.type === 'slot' &&
+            child.children?.$isLoaded
+          ) {
             for (const slotChild of child.children) {
-              if (slotChild && slotChild.$isLoaded && slotChild.$jazz.id === blockId) {
+              if (
+                slotChild &&
+                slotChild.$isLoaded &&
+                slotChild.$jazz.id === blockId
+              ) {
                 return col.$jazz.id;
               }
             }
@@ -100,19 +109,28 @@ export function EditLinkDialog({
     // Try legacy parentId approach first
     if (block.parentId) {
       const parent = allBlocks.find((b) => b.$jazz.id === block.parentId);
-      if (parent?.type === "slot") {
+      if (parent?.type === 'slot') {
         return parent.$jazz.id;
       }
     }
 
     // Search through children lists (new pattern)
-    for (const col of allBlocks.filter((b) => b.type === "collection")) {
+    for (const col of allBlocks.filter((b) => b.type === 'collection')) {
       if (col.children?.$isLoaded) {
         for (const child of col.children) {
           // Check if product is in a slot's children
-          if (child && child.$isLoaded && child.type === "slot" && child.children?.$isLoaded) {
+          if (
+            child &&
+            child.$isLoaded &&
+            child.type === 'slot' &&
+            child.children?.$isLoaded
+          ) {
             for (const slotChild of child.children) {
-              if (slotChild && slotChild.$isLoaded && slotChild.$jazz.id === blockId) {
+              if (
+                slotChild &&
+                slotChild.$isLoaded &&
+                slotChild.$jazz.id === blockId
+              ) {
                 return child.$jazz.id;
               }
             }
@@ -128,10 +146,10 @@ export function EditLinkDialog({
 
   const formik = useFormik({
     initialValues: {
-      title: "",
-      description: "",
-      notes: "",
-      price: "",
+      title: '',
+      description: '',
+      notes: '',
+      price: '',
       slotId: null as string | null,
     },
     validationSchema,
@@ -139,7 +157,7 @@ export function EditLinkDialog({
       if (!block || !block.productData) return;
 
       // Update block name
-      block.$jazz.set("name", values.title || block.name);
+      block.$jazz.set('name', values.title || block.name);
 
       // Update productData
       const updatedProductData = {
@@ -148,7 +166,7 @@ export function EditLinkDialog({
         notes: values.notes || undefined,
         price: values.price || undefined,
       };
-      block.$jazz.set("productData", updatedProductData);
+      block.$jazz.set('productData', updatedProductData);
 
       // Handle slot/collection change
       const currentSlotId = getCurrentSlotId();
@@ -161,11 +179,11 @@ export function EditLinkDialog({
           if (currentSlotId) {
             // Remove from current slot's children
             const currentSlot = collection.children.find(
-              (c) => c && c.$isLoaded && c.$jazz.id === currentSlotId
+              (c) => c && c.$isLoaded && c.$jazz.id === currentSlotId,
             );
             if (currentSlot?.children?.$isLoaded) {
               const idx = currentSlot.children.findIndex(
-                (c) => c && c.$isLoaded && c.$jazz.id === block.$jazz.id
+                (c) => c && c.$isLoaded && c.$jazz.id === block.$jazz.id,
               );
               if (idx !== -1) {
                 currentSlot.children.$jazz.splice(idx, 1);
@@ -174,7 +192,7 @@ export function EditLinkDialog({
           } else {
             // Remove from collection's children
             const idx = collection.children.findIndex(
-              (c) => c && c.$isLoaded && c.$jazz.id === block.$jazz.id
+              (c) => c && c.$isLoaded && c.$jazz.id === block.$jazz.id,
             );
             if (idx !== -1) {
               collection.children.$jazz.splice(idx, 1);
@@ -185,7 +203,7 @@ export function EditLinkDialog({
           if (values.slotId) {
             // Add to new slot's children
             const newSlot = collection.children.find(
-              (c) => c && c.$isLoaded && c.$jazz.id === values.slotId
+              (c) => c && c.$isLoaded && c.$jazz.id === values.slotId,
             );
             if (newSlot?.children?.$isLoaded) {
               newSlot.children.$jazz.push(block);
@@ -199,7 +217,7 @@ export function EditLinkDialog({
         // Also update parentId for legacy compatibility
         const newParentId = values.slotId || collectionId;
         if (newParentId) {
-          block.$jazz.set("parentId", newParentId);
+          block.$jazz.set('parentId', newParentId);
         }
       }
 
@@ -211,10 +229,10 @@ export function EditLinkDialog({
   useEffect(() => {
     if (block && productData) {
       formik.setValues({
-        title: block.name || "",
-        description: productData.description || "",
-        notes: productData.notes || "",
-        price: productData.price || "",
+        title: block.name || '',
+        description: productData.description || '',
+        notes: productData.notes || '',
+        price: productData.price || '',
         slotId: getCurrentSlotId(),
       });
     }
@@ -231,36 +249,37 @@ export function EditLinkDialog({
     const slotsFromChildren: LoadedBlock[] = [];
     if (collection?.children?.$isLoaded) {
       for (const child of collection.children) {
-        if (child && child.$isLoaded && child.type === "slot") {
+        if (child && child.$isLoaded && child.type === 'slot') {
           slotsFromChildren.push(child);
         }
       }
     }
 
     // Fall back to parentId-based lookup if no children
-    const existingSlots = slotsFromChildren.length > 0
-      ? slotsFromChildren
-      : getSlotsForCollection(allBlocks, collectionId);
+    const existingSlots =
+      slotsFromChildren.length > 0
+        ? slotsFromChildren
+        : getSlotsForCollection(allBlocks, collectionId);
 
     // Merge in any newly created slots that might not be in the lists yet
-    const existingIds = new Set(existingSlots.map(s => s.$jazz.id));
-    const newSlots = createdSlots.filter(s => !existingIds.has(s.$jazz.id));
+    const existingIds = new Set(existingSlots.map((s) => s.$jazz.id));
+    const newSlots = createdSlots.filter((s) => !existingIds.has(s.$jazz.id));
     return [...existingSlots, ...newSlots];
   };
 
   // Create a new slot in the collection
   const handleCreateSlot = async (name: string): Promise<string> => {
     if (!account?.root?.blocks?.$isLoaded || !collectionId) {
-      throw new Error("Cannot create slot");
+      throw new Error('Cannot create slot');
     }
 
     // Find the collection to get its sharing group
     const collectionBlock = account.root.blocks.find(
-      (b) => b && b.$isLoaded && b.$jazz.id === collectionId
+      (b) => b && b.$isLoaded && b.$jazz.id === collectionId,
     );
 
     if (!collectionBlock?.children?.$isLoaded) {
-      throw new Error("Collection children not loaded");
+      throw new Error('Collection children not loaded');
     }
 
     // Get the collection's sharing group for proper ownership
@@ -273,12 +292,12 @@ export function EditLinkDialog({
     // Create empty children list for the slot
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : account.$jazz
+      ownerGroup ? { owner: ownerGroup } : account.$jazz,
     );
 
     const newSlot = BlockSchema.create(
       {
-        type: "slot",
+        type: 'slot',
         name,
         slotData: {
           maxSelections: 1,
@@ -292,7 +311,7 @@ export function EditLinkDialog({
     // Add slot to collection's children list
     collectionBlock.children.$jazz.push(newSlot);
     // Track the new slot locally to ensure it's immediately available
-    setCreatedSlots(prev => [...prev, newSlot as LoadedBlock]);
+    setCreatedSlots((prev) => [...prev, newSlot as LoadedBlock]);
     return newSlot.$jazz.id;
   };
 
@@ -306,7 +325,9 @@ export function EditLinkDialog({
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />
         <Dialog.Content className={styles.content}>
-          <Dialog.Title className={styles.title}>Edit Product Link</Dialog.Title>
+          <Dialog.Title className={styles.title}>
+            Edit Product Link
+          </Dialog.Title>
           <Dialog.Description className={styles.description}>
             Update the details for your product
           </Dialog.Description>
@@ -377,7 +398,7 @@ export function EditLinkDialog({
                 </label>
                 <SlotSelector
                   value={formik.values.slotId}
-                  onChange={(slotId) => formik.setFieldValue("slotId", slotId)}
+                  onChange={(slotId) => formik.setFieldValue('slotId', slotId)}
                   slots={getSlots()}
                   onCreateSlot={handleCreateSlot}
                   placeholder="Move to slot (optional)"

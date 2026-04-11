@@ -6,10 +6,10 @@
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9\-_\.~\s]/g, "") // remove unsafe chars (keep spaces for now)
-    .replace(/[\s]+/g, "-") // spaces to hyphens
-    .replace(/-{2,}/g, "-") // collapse consecutive hyphens
-    .replace(/^-+|-+$/g, ""); // trim hyphens from ends
+    .replace(/[^a-z0-9\-_\.~\s]/g, '') // remove unsafe chars (keep spaces for now)
+    .replace(/[\s]+/g, '-') // spaces to hyphens
+    .replace(/-{2,}/g, '-') // collapse consecutive hyphens
+    .replace(/^-+|-+$/g, ''); // trim hyphens from ends
 }
 
 /**
@@ -17,7 +17,7 @@ export function slugify(text: string): string {
  */
 export function getUniqueSlug(
   desired: string,
-  existingSlugs: string[]
+  existingSlugs: string[],
 ): string {
   const base = slugify(desired);
   if (!existingSlugs.includes(base)) return base;

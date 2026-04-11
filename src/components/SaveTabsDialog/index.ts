@@ -1,1 +1,1 @@
-export { SaveTabsDialog } from "./SaveTabsDialog.tsx";
+export { SaveTabsDialog } from './SaveTabsDialog.tsx';

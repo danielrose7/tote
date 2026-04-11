@@ -1,7 +1,7 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import type { LoadedBlock } from "../../lib/blocks";
-import styles from "./SlotSection.module.css";
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import type { LoadedBlock } from '../../lib/blocks';
+import styles from './SlotSection.module.css';
 
 interface SortableProductItemProps {
   product: LoadedBlock;
@@ -22,7 +22,7 @@ export function SortableProductItem({ product }: SortableProductItemProps) {
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 1 : 0,
-    position: "relative" as const,
+    position: 'relative' as const,
   };
 
   const productData = product.productData;
@@ -32,7 +32,7 @@ export function SortableProductItem({ product }: SortableProductItemProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`${styles.productItem} ${isDragging ? styles.productItemDragging : ""}`}
+      className={`${styles.productItem} ${isDragging ? styles.productItemDragging : ''}`}
     >
       <button
         type="button"

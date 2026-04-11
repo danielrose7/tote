@@ -1,6 +1,6 @@
-import styles from "./ViewModeToggle.module.css";
+import styles from './ViewModeToggle.module.css';
 
-export type ViewMode = "grid" | "table";
+export type ViewMode = 'grid' | 'table';
 
 interface ViewModeToggleProps {
   mode: ViewMode;
@@ -12,9 +12,9 @@ export function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
     <div className={styles.toggle} role="group" aria-label="View mode">
       <button
         type="button"
-        className={`${styles.button} ${mode === "grid" ? styles.active : ""}`}
-        onClick={() => onChange("grid")}
-        aria-pressed={mode === "grid"}
+        className={`${styles.button} ${mode === 'grid' ? styles.active : ''}`}
+        onClick={() => onChange('grid')}
+        aria-pressed={mode === 'grid'}
         title="Grid view"
       >
         <svg
@@ -35,9 +35,9 @@ export function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
       </button>
       <button
         type="button"
-        className={`${styles.button} ${mode === "table" ? styles.active : ""}`}
-        onClick={() => onChange("table")}
-        aria-pressed={mode === "table"}
+        className={`${styles.button} ${mode === 'table' ? styles.active : ''}`}
+        onClick={() => onChange('table')}
+        aria-pressed={mode === 'table'}
         title="Table view"
       >
         <svg

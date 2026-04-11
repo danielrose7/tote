@@ -1,9 +1,12 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import type { LoadedBlock } from "../../lib/blocks";
-import { SlotSection, type SlotSectionProps } from "./SlotSection";
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import type { LoadedBlock } from '../../lib/blocks';
+import { SlotSection, type SlotSectionProps } from './SlotSection';
 
-interface SortableSlotSectionProps extends Omit<SlotSectionProps, "dragHandleProps" | "isDragging" | "forceCollapsed"> {
+interface SortableSlotSectionProps extends Omit<
+  SlotSectionProps,
+  'dragHandleProps' | 'isDragging' | 'forceCollapsed'
+> {
   slotBlock: LoadedBlock;
 }
 
@@ -22,7 +25,7 @@ export function SortableSlotSection(props: SortableSlotSectionProps) {
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 1 : 0,
-    position: "relative" as const,
+    position: 'relative' as const,
   };
 
   return (

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { SignIn, useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
-import styles from "./extension-auth.module.css";
+import { SignIn, useAuth } from '@clerk/nextjs';
+import { useEffect, useState } from 'react';
+import styles from './extension-auth.module.css';
 
 /**
  * Extension auth page
@@ -34,11 +34,7 @@ function ExtensionAuthContent() {
       <div className={styles.page}>
         <div className={styles.card}>
           <div className={styles.iconCircleSuccess}>
-            <svg
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -47,9 +43,7 @@ function ExtensionAuthContent() {
               />
             </svg>
           </div>
-          <h1 className={styles.heading}>
-            Signed in successfully!
-          </h1>
+          <h1 className={styles.heading}>Signed in successfully!</h1>
           <p className={styles.text}>
             You can now use the Tote extension to save products.
           </p>
@@ -66,11 +60,7 @@ function ExtensionAuthContent() {
       <div className={styles.content}>
         <div className={styles.header}>
           <div className={styles.iconCircleBrand}>
-            <svg
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -79,9 +69,7 @@ function ExtensionAuthContent() {
               />
             </svg>
           </div>
-          <h1 className={styles.heading}>
-            Sign in to Tote
-          </h1>
+          <h1 className={styles.heading}>Sign in to Tote</h1>
           <p className={styles.text}>
             Sign in to save products from the Chrome extension
           </p>
@@ -93,7 +81,7 @@ function ExtensionAuthContent() {
           appearance={{
             elements: {
               rootBox: styles.clerkBox,
-              card: { boxShadow: "none" },
+              card: { boxShadow: 'none' },
             },
           }}
         />

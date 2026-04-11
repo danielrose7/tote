@@ -1,13 +1,13 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import type { JazzAccount } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import { Group } from "jazz-tools";
-import { Block, BlockList } from "../../schema.ts";
-import { useToast } from "../ToastNotification";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import styles from "./CreateCollectionDialog.module.css";
+import * as Dialog from '@radix-ui/react-dialog';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import type { JazzAccount } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import { Group } from 'jazz-tools';
+import { Block, BlockList } from '../../schema.ts';
+import { useToast } from '../ToastNotification';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import styles from './CreateCollectionDialog.module.css';
 
 interface CreateCollectionDialogProps {
   open: boolean;
@@ -16,24 +16,27 @@ interface CreateCollectionDialogProps {
 }
 
 const PRESET_COLORS = [
-  "#6366f1", // Indigo
-  "#8b5cf6", // Purple
-  "#ec4899", // Pink
-  "#f43f5e", // Rose
-  "#f97316", // Orange
-  "#eab308", // Yellow
-  "#22c55e", // Green
-  "#14b8a6", // Teal
-  "#3b82f6", // Blue
-  "#06b6d4", // Cyan
+  '#6366f1', // Indigo
+  '#8b5cf6', // Purple
+  '#ec4899', // Pink
+  '#f43f5e', // Rose
+  '#f97316', // Orange
+  '#eab308', // Yellow
+  '#22c55e', // Green
+  '#14b8a6', // Teal
+  '#3b82f6', // Blue
+  '#06b6d4', // Cyan
 ];
 
 const validationSchema = Yup.object({
   name: Yup.string()
-    .required("Collection name is required")
-    .max(50, "Collection name must be 50 characters or less"),
-  description: Yup.string().max(200, "Description must be 200 characters or less"),
-  color: Yup.string().required("Color is required"),
+    .required('Collection name is required')
+    .max(50, 'Collection name must be 50 characters or less'),
+  description: Yup.string().max(
+    200,
+    'Description must be 200 characters or less',
+  ),
+  color: Yup.string().required('Color is required'),
 });
 
 export function CreateCollectionDialog({
@@ -46,21 +49,21 @@ export function CreateCollectionDialog({
 
   const formik = useFormik({
     initialValues: {
-      name: "",
-      description: "",
+      name: '',
+      description: '',
       color: PRESET_COLORS[0],
     },
     validationSchema,
     onSubmit: async (values) => {
       if (!account.root || !account.root.$isLoaded) {
-        formik.setFieldError("name", "Account not ready");
+        formik.setFieldError('name', 'Account not ready');
         return;
       }
 
       try {
         // Create a Group for this collection to enable sharing
         const ownerGroup = Group.create({ owner: account });
-        ownerGroup.addMember(account, "admin");
+        ownerGroup.addMember(account, 'admin');
 
         // Create empty children list owned by the group
         const childrenList = BlockList.create([], { owner: ownerGroup });
@@ -68,13 +71,13 @@ export function CreateCollectionDialog({
         // Create the collection block owned by the group (enables sharing)
         const newCollectionBlock = Block.create(
           {
-            type: "collection",
+            type: 'collection',
             name: values.name.trim(),
             collectionData: {
               description: values.description.trim() || undefined,
               color: values.color,
-              viewMode: "grid",
-              publicLayout: "minimal",
+              viewMode: 'grid',
+              publicLayout: 'minimal',
               allowCloning: true,
               sharingGroupId: ownerGroup.$jazz.id, // Store the group ID for invites
             },
@@ -87,22 +90,22 @@ export function CreateCollectionDialog({
         // Ensure blocks exists and add the new collection
         if (!account.root.blocks) {
           const blocksList = BlockList.create([newCollectionBlock], account);
-          account.root.$jazz.set("blocks", blocksList);
+          account.root.$jazz.set('blocks', blocksList);
         } else if (account.root.blocks.$isLoaded) {
           account.root.blocks.$jazz.push(newCollectionBlock);
         }
 
         showToast({
-          title: "Collection created",
-          description: `"${values.name}" has been created${!isOnline ? " (will sync when online)" : ""}`,
-          variant: "success",
+          title: 'Collection created',
+          description: `"${values.name}" has been created${!isOnline ? ' (will sync when online)' : ''}`,
+          variant: 'success',
         });
 
         handleClose();
       } catch (err) {
         formik.setFieldError(
-          "name",
-          err instanceof Error ? err.message : "Failed to create collection",
+          'name',
+          err instanceof Error ? err.message : 'Failed to create collection',
         );
       }
     },
@@ -118,7 +121,9 @@ export function CreateCollectionDialog({
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />
         <Dialog.Content className={styles.content}>
-          <Dialog.Title className={styles.title}>Create Collection</Dialog.Title>
+          <Dialog.Title className={styles.title}>
+            Create Collection
+          </Dialog.Title>
           <Dialog.Description className={styles.description}>
             Organize your product links into collections
           </Dialog.Description>
@@ -172,9 +177,9 @@ export function CreateCollectionDialog({
                   <button
                     key={color}
                     type="button"
-                    className={`${styles.colorOption} ${formik.values.color === color ? styles.colorOptionSelected : ""}`}
+                    className={`${styles.colorOption} ${formik.values.color === color ? styles.colorOptionSelected : ''}`}
                     style={{ backgroundColor: color }}
-                    onClick={() => formik.setFieldValue("color", color)}
+                    onClick={() => formik.setFieldValue('color', color)}
                     aria-label={`Select color ${color}`}
                   >
                     {formik.values.color === color && (

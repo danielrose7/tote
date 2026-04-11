@@ -10,9 +10,9 @@ export function GET() {
     applinks: {
       details: [
         {
-          appIDs: ["XXXXXXXXXX.tools.tote.app"],
+          appIDs: ['XXXXXXXXXX.tools.tote.app'],
           components: [
-            { "/": "/invite/*", comment: "Accept collection invites" },
+            { '/': '/invite/*', comment: 'Accept collection invites' },
           ],
         },
       ],
@@ -21,8 +21,8 @@ export function GET() {
 
   return new Response(JSON.stringify(aasa), {
     headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "public, max-age=3600",
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=3600',
     },
   });
 }

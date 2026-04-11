@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import type { LoadedBlock } from "../../lib/blocks";
-import styles from "./SlotSelector.module.css";
+import { useState, useRef, useEffect, useCallback } from 'react';
+import type { LoadedBlock } from '../../lib/blocks';
+import styles from './SlotSelector.module.css';
 
 interface SlotSelectorProps {
   value: string | null;
@@ -16,11 +16,11 @@ export function SlotSelector({
   onChange,
   slots,
   onCreateSlot,
-  placeholder = "Add to slot (optional)",
+  placeholder = 'Add to slot (optional)',
   disabled = false,
 }: SlotSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [isCreating, setIsCreating] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,13 +32,13 @@ export function SlotSelector({
   // Filter slots based on input
   const filteredSlots = inputValue
     ? slots.filter((slot) =>
-        slot.name.toLowerCase().includes(inputValue.toLowerCase())
+        slot.name.toLowerCase().includes(inputValue.toLowerCase()),
       )
     : slots;
 
   // Check if we should show "Create" option
   const exactMatch = slots.some(
-    (slot) => slot.name.toLowerCase() === inputValue.toLowerCase()
+    (slot) => slot.name.toLowerCase() === inputValue.toLowerCase(),
   );
   const showCreateOption = inputValue.trim() && !exactMatch;
 
@@ -54,18 +54,18 @@ export function SlotSelector({
   useEffect(() => {
     if (highlightedIndex >= 0 && listRef.current) {
       const item = listRef.current.children[highlightedIndex] as HTMLElement;
-      item?.scrollIntoView({ block: "nearest" });
+      item?.scrollIntoView({ block: 'nearest' });
     }
   }, [highlightedIndex]);
 
   const handleSelect = useCallback(
     (slotId: string) => {
       onChange(slotId);
-      setInputValue("");
+      setInputValue('');
       setIsOpen(false);
       setHighlightedIndex(-1);
     },
-    [onChange]
+    [onChange],
   );
 
   const handleCreate = useCallback(async () => {
@@ -74,7 +74,7 @@ export function SlotSelector({
     try {
       const newSlotId = await onCreateSlot(inputValue.trim());
       onChange(newSlotId);
-      setInputValue("");
+      setInputValue('');
       setIsOpen(false);
     } finally {
       setIsCreating(false);
@@ -83,28 +83,28 @@ export function SlotSelector({
 
   const handleClear = useCallback(() => {
     onChange(null);
-    setInputValue("");
+    setInputValue('');
   }, [onChange]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (disabled) return;
 
     switch (e.key) {
-      case "ArrowDown":
+      case 'ArrowDown':
         e.preventDefault();
         if (!isOpen) {
           setIsOpen(true);
         } else {
           setHighlightedIndex((prev) =>
-            prev < totalItems - 1 ? prev + 1 : prev
+            prev < totalItems - 1 ? prev + 1 : prev,
           );
         }
         break;
-      case "ArrowUp":
+      case 'ArrowUp':
         e.preventDefault();
         setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : prev));
         break;
-      case "Enter":
+      case 'Enter':
         e.preventDefault();
         if (highlightedIndex >= 0) {
           if (highlightedIndex < filteredSlots.length) {
@@ -116,7 +116,7 @@ export function SlotSelector({
           handleCreate();
         }
         break;
-      case "Escape":
+      case 'Escape':
         setIsOpen(false);
         setHighlightedIndex(-1);
         break;
@@ -136,7 +136,14 @@ export function SlotSelector({
                 onClick={handleClear}
                 aria-label="Clear selection"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -169,17 +176,13 @@ export function SlotSelector({
       </div>
 
       {isOpen && !disabled && (
-        <ul
-          ref={listRef}
-          className={styles.dropdown}
-          role="listbox"
-        >
+        <ul ref={listRef} className={styles.dropdown} role="listbox">
           {filteredSlots.map((slot, index) => (
             <li
               key={slot.$jazz.id}
               className={`${styles.option} ${
-                highlightedIndex === index ? styles.highlighted : ""
-              } ${value === slot.$jazz.id ? styles.selected : ""}`}
+                highlightedIndex === index ? styles.highlighted : ''
+              } ${value === slot.$jazz.id ? styles.selected : ''}`}
               onClick={() => handleSelect(slot.$jazz.id)}
               role="option"
               aria-selected={value === slot.$jazz.id}
@@ -190,16 +193,25 @@ export function SlotSelector({
           {showCreateOption && (
             <li
               className={`${styles.option} ${styles.createOption} ${
-                highlightedIndex === filteredSlots.length ? styles.highlighted : ""
+                highlightedIndex === filteredSlots.length
+                  ? styles.highlighted
+                  : ''
               }`}
               onClick={handleCreate}
               role="option"
             >
               {isCreating ? (
-                "Creating..."
+                'Creating...'
               ) : (
                 <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
@@ -211,8 +223,8 @@ export function SlotSelector({
           {filteredSlots.length === 0 && !showCreateOption && (
             <li className={styles.empty}>
               {slots.length === 0
-                ? "No slots yet. Type to create one."
-                : "No matching slots"}
+                ? 'No slots yet. Type to create one.'
+                : 'No matching slots'}
             </li>
           )}
         </ul>

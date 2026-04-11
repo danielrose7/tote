@@ -1,8 +1,9 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { AuthButton } from "../../AuthButton";
-import styles from "./Header.module.css";
+import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
+import { AuthButton } from '../../AuthButton';
+import styles from './Header.module.css';
 
 interface Breadcrumb {
   label: string;
@@ -30,6 +31,9 @@ export function Header({
   showImport = false,
   breadcrumbs,
 }: HeaderProps) {
+  const { user } = useUser();
+  const isCurator = user?.publicMetadata?.curator === true;
+
   return (
     <header className={styles.header}>
       <div className={styles.container}>
@@ -47,7 +51,9 @@ export function Header({
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className={styles.breadcrumbCurrent}>{crumb.label}</span>
+                    <span className={styles.breadcrumbCurrent}>
+                      {crumb.label}
+                    </span>
                   )}
                 </span>
               ))}
@@ -56,6 +62,11 @@ export function Header({
         </div>
 
         <div className={styles.actions}>
+          {isCurator && (
+            <Link href="/curate" className={styles.curatorLink}>
+              Curator
+            </Link>
+          )}
           {showAddLink && onAddLinkClick && (
             <button
               type="button"

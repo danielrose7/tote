@@ -5,10 +5,10 @@
  * This enables server-side lookups: Clerk ID → Jazz account ID
  */
 
-import { useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
-import { useAccount } from "jazz-tools/react";
-import { JazzAccount } from "../schema";
+import { useEffect } from 'react';
+import { useAuth } from '@clerk/nextjs';
+import { useAccount } from 'jazz-tools/react';
+import { JazzAccount } from '../schema';
 
 export function useSyncClerkUser() {
   const { userId } = useAuth();
@@ -21,14 +21,17 @@ export function useSyncClerkUser() {
     if (userId && me?.root && me.root.$isLoaded) {
       // Set clerkUserId in Jazz if not already set
       if (!me.root.clerkUserId) {
-        console.log("[Sync] Setting clerkUserId in Jazz:", userId);
+        console.log('[Sync] Setting clerkUserId in Jazz:', userId);
         me.root.clerkUserId = userId;
       }
 
       // Always sync the Jazz account ID to Clerk metadata
       // This ensures the mapping is up-to-date for server-side lookups
       const jazzAccountId = me.$jazz.id;
-      console.log("[Sync] Syncing Jazz account ID to Clerk metadata:", jazzAccountId);
+      console.log(
+        '[Sync] Syncing Jazz account ID to Clerk metadata:',
+        jazzAccountId,
+      );
       syncJazzAccountIdToClerk(jazzAccountId);
     }
   }, [userId, me?.root, me?.$jazz?.id]);
@@ -36,22 +39,22 @@ export function useSyncClerkUser() {
 
 async function syncJazzAccountIdToClerk(jazzAccountId: string) {
   try {
-    console.log("[Sync] Syncing Jazz account ID to Clerk metadata");
+    console.log('[Sync] Syncing Jazz account ID to Clerk metadata');
 
-    const response = await fetch("/api/user/sync-jazz-account", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/user/sync-jazz-account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jazzAccountId }),
     });
 
     const result = await response.json();
 
     if (response.ok) {
-      console.log("[Sync] Jazz account synced to Clerk", result);
+      console.log('[Sync] Jazz account synced to Clerk', result);
     } else {
-      console.error("[Sync] Failed to sync Jazz account:", result);
+      console.error('[Sync] Failed to sync Jazz account:', result);
     }
   } catch (error) {
-    console.error("[Sync] Error syncing Jazz account:", error);
+    console.error('[Sync] Error syncing Jazz account:', error);
   }
 }

@@ -1,5 +1,5 @@
-import { NewCurationClient } from "./NewCurationClient";
+import { NewCurationClient } from './NewCurationClient';
 
 export default function NewCurationPage() {
-	return <NewCurationClient />;
+  return <NewCurationClient />;
 }

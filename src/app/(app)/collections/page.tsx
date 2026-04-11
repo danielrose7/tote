@@ -1,17 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useAccount } from "jazz-tools/react";
-import { useUser } from "@clerk/nextjs";
-import { useRouter, useSearchParams } from "next/navigation";
-import { JazzAccount, type Block, type SharedCollectionRef } from "../../../schema";
-import type { co } from "jazz-tools";
-import { Header } from "../../../components/Header";
-import { CollectionList } from "../../../components/CollectionList/CollectionList";
-import { CreateCollectionDialog } from "../../../components/CreateCollectionDialog/CreateCollectionDialog";
-import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
-import { LeaveCollectionDialog } from "../../../components/LeaveCollectionDialog";
-import { SaveTabsDialog } from "../../../components/SaveTabsDialog";
+import { useState, useEffect } from 'react';
+import { useAccount } from 'jazz-tools/react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter, useSearchParams } from 'next/navigation';
+import {
+  JazzAccount,
+  type Block,
+  type SharedCollectionRef,
+} from '../../../schema';
+import type { co } from 'jazz-tools';
+import { Header } from '../../../components/Header';
+import { CollectionList } from '../../../components/CollectionList/CollectionList';
+import { CreateCollectionDialog } from '../../../components/CreateCollectionDialog/CreateCollectionDialog';
+import { EditCollectionDialog } from '../../../components/EditCollectionDialog';
+import { LeaveCollectionDialog } from '../../../components/LeaveCollectionDialog';
+import { SaveTabsDialog } from '../../../components/SaveTabsDialog';
 
 type LoadedBlock = co.loaded<typeof Block>;
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
@@ -35,23 +39,26 @@ export default function CollectionsPage() {
           },
         },
         sharedWithMe: { $each: {} },
-      }
+      },
     },
   });
 
-  const [isCreateCollectionDialogOpen, setIsCreateCollectionDialogOpen] = useState(false);
-  const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] = useState(false);
+  const [isCreateCollectionDialogOpen, setIsCreateCollectionDialogOpen] =
+    useState(false);
+  const [isEditCollectionDialogOpen, setIsEditCollectionDialogOpen] =
+    useState(false);
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [isSaveTabsDialogOpen, setIsSaveTabsDialogOpen] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<LoadedBlock | null>(null);
-  const [selectedSharedRef, setSelectedSharedRef] = useState<LoadedSharedRef | null>(null);
+  const [selectedSharedRef, setSelectedSharedRef] =
+    useState<LoadedSharedRef | null>(null);
 
   // Auto-open Save Tabs dialog when navigated with ?saveTabs=1
   useEffect(() => {
-    if (enableSaveTabs && searchParams.get("saveTabs") === "1") {
+    if (enableSaveTabs && searchParams.get('saveTabs') === '1') {
       setIsSaveTabsDialogOpen(true);
       // Clean up the URL
-      router.replace("/collections", { scroll: false });
+      router.replace('/collections', { scroll: false });
     }
   }, [searchParams, router]);
 
@@ -70,7 +77,8 @@ export default function CollectionsPage() {
 
     // Find the index of this shared ref
     const idx = me.root.sharedWithMe.findIndex(
-      (r) => r && r.$isLoaded && r.collectionId === selectedSharedRef.collectionId
+      (r) =>
+        r && r.$isLoaded && r.collectionId === selectedSharedRef.collectionId,
     );
 
     if (idx !== -1) {
@@ -84,11 +92,11 @@ export default function CollectionsPage() {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          color: "var(--color-text-secondary)",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          color: 'var(--color-text-secondary)',
         }}
       >
         Loading...

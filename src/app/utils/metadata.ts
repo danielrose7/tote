@@ -6,7 +6,7 @@ export interface LinkMetadata {
   price?: string;
   currency?: string;
   brand?: string;
-  source?: "custom" | "microlink" | "fallback";
+  source?: 'custom' | 'microlink' | 'fallback';
 }
 
 interface CustomExtractionResult {
@@ -42,9 +42,9 @@ export interface MicrolinkResponse {
 
 async function fetchFromCustomApi(url: string): Promise<LinkMetadata | null> {
   try {
-    const response = await fetch("/api/extract", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     });
 
@@ -67,20 +67,20 @@ async function fetchFromCustomApi(url: string): Promise<LinkMetadata | null> {
       price: data.price,
       currency: data.currency,
       brand: data.brand,
-      source: "custom",
+      source: 'custom',
     };
   } catch (error) {
-    console.error("Custom extraction failed:", error);
+    console.error('Custom extraction failed:', error);
     return null;
   }
 }
 
 async function fetchFromMicrolink(url: string): Promise<LinkMetadata> {
-  const microlinkUrl = new URL("https://api.microlink.io/");
-  microlinkUrl.searchParams.set("url", url);
-  microlinkUrl.searchParams.set("meta", "true");
-  microlinkUrl.searchParams.set("screenshot", "false");
-  microlinkUrl.searchParams.set("video", "false");
+  const microlinkUrl = new URL('https://api.microlink.io/');
+  microlinkUrl.searchParams.set('url', url);
+  microlinkUrl.searchParams.set('meta', 'true');
+  microlinkUrl.searchParams.set('screenshot', 'false');
+  microlinkUrl.searchParams.set('video', 'false');
 
   const response = await fetch(microlinkUrl.toString());
 
@@ -90,8 +90,8 @@ async function fetchFromMicrolink(url: string): Promise<LinkMetadata> {
 
   const data: MicrolinkResponse = await response.json();
 
-  if (data.status !== "success") {
-    throw new Error("Failed to extract metadata from URL");
+  if (data.status !== 'success') {
+    throw new Error('Failed to extract metadata from URL');
   }
 
   // Fall back to logo if no image is available
@@ -103,18 +103,18 @@ async function fetchFromMicrolink(url: string): Promise<LinkMetadata> {
     title,
     description: data.data.description,
     imageUrl,
-    source: "microlink",
+    source: 'microlink',
   };
 }
 
 function mergeResults(
   custom: LinkMetadata | null,
-  microlink: LinkMetadata | null
+  microlink: LinkMetadata | null,
 ): LinkMetadata {
   if (!custom && !microlink) {
     return {
-      url: "",
-      source: "fallback",
+      url: '',
+      source: 'fallback',
     };
   }
 
@@ -130,7 +130,7 @@ function mergeResults(
     price: custom.price || microlink.price,
     currency: custom.currency || microlink.currency,
     brand: custom.brand || microlink.brand,
-    source: custom.price ? "custom" : microlink.source,
+    source: custom.price ? 'custom' : microlink.source,
   };
 }
 
@@ -143,9 +143,9 @@ export async function fetchMetadata(url: string): Promise<LinkMetadata> {
     ]);
 
     const custom =
-      customResult.status === "fulfilled" ? customResult.value : null;
+      customResult.status === 'fulfilled' ? customResult.value : null;
     const microlink =
-      microlinkResult.status === "fulfilled" ? microlinkResult.value : null;
+      microlinkResult.status === 'fulfilled' ? microlinkResult.value : null;
 
     const merged = mergeResults(custom, microlink);
 
@@ -157,12 +157,12 @@ export async function fetchMetadata(url: string): Promise<LinkMetadata> {
     merged.url = url;
     return merged;
   } catch (error) {
-    console.error("Error fetching metadata:", error);
+    console.error('Error fetching metadata:', error);
 
     return {
       url,
       title: generateTitleFromUrl(url),
-      source: "fallback",
+      source: 'fallback',
     };
   }
 }
@@ -170,17 +170,17 @@ export async function fetchMetadata(url: string): Promise<LinkMetadata> {
 function generateTitleFromUrl(url: string): string {
   try {
     const urlObj = new URL(url);
-    const hostname = urlObj.hostname.replace(/^www\./, "");
+    const hostname = urlObj.hostname.replace(/^www\./, '');
     return hostname.charAt(0).toUpperCase() + hostname.slice(1);
   } catch {
-    return "Untitled Link";
+    return 'Untitled Link';
   }
 }
 
 export function isValidUrl(urlString: string): boolean {
   try {
     const url = new URL(urlString);
-    return url.protocol === "http:" || url.protocol === "https:";
+    return url.protocol === 'http:' || url.protocol === 'https:';
   } catch {
     return false;
   }

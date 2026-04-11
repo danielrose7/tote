@@ -1,7 +1,7 @@
-import * as AlertDialog from "@radix-ui/react-alert-dialog";
-import type { Block } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import styles from "./DeleteConfirmDialog.module.css";
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import type { Block } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import styles from './DeleteConfirmDialog.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -32,8 +32,8 @@ export function DeleteConfirmDialog({
             Delete Product Link?
           </AlertDialog.Title>
           <AlertDialog.Description className={styles.description}>
-            Are you sure you want to delete{" "}
-            <strong>{block?.name || "this link"}</strong>? This action cannot be
+            Are you sure you want to delete{' '}
+            <strong>{block?.name || 'this link'}</strong>? This action cannot be
             undone.
           </AlertDialog.Description>
 

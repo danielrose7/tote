@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
-import type { co } from "jazz-tools";
-import { Group } from "jazz-tools";
-import { useUser } from "@clerk/nextjs";
-import type { Block, JazzAccount } from "../../schema";
+import { useState, useCallback, useEffect } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import type { co } from 'jazz-tools';
+import { Group } from 'jazz-tools';
+import { useUser } from '@clerk/nextjs';
+import type { Block, JazzAccount } from '../../schema';
 import {
   isPublished,
   isPublishedClone,
@@ -15,12 +15,12 @@ import {
   generateCollectionInviteLink,
   type LoadedBlock,
   type SharingRole,
-} from "../../lib/blocks";
-import { slugify } from "../../lib/slugify";
-import { useToast } from "../ToastNotification";
-import styles from "./ShareCollectionDialog.module.css";
+} from '../../lib/blocks';
+import { slugify } from '../../lib/slugify';
+import { useToast } from '../ToastNotification';
+import styles from './ShareCollectionDialog.module.css';
 
-type ShareSection = "invite" | "public" | "reuse";
+type ShareSection = 'invite' | 'public' | 'reuse';
 
 interface ShareCollectionDialogProps {
   open: boolean;
@@ -42,7 +42,7 @@ export function ShareCollectionDialog({
   const username = clerkUser?.username;
 
   // Invite state
-  const [selectedRole, setSelectedRole] = useState<SharingRole>("reader");
+  const [selectedRole, setSelectedRole] = useState<SharingRole>('reader');
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
@@ -51,12 +51,12 @@ export function ShareCollectionDialog({
   const [isPublishing, setIsPublishing] = useState(false);
   const [isRepublishing, setIsRepublishing] = useState(false);
   const [publishCopied, setPublishCopied] = useState(false);
-  const [activeSection, setActiveSection] = useState<ShareSection>("invite");
-  const [publicIntro, setPublicIntro] = useState("");
+  const [activeSection, setActiveSection] = useState<ShareSection>('invite');
+  const [publicIntro, setPublicIntro] = useState('');
 
   // Slug editing state
   const [editingSlug, setEditingSlug] = useState(false);
-  const [slugInput, setSlugInput] = useState("");
+  const [slugInput, setSlugInput] = useState('');
   const [isSavingSlug, setIsSavingSlug] = useState(false);
 
   const published = isPublished(collection);
@@ -74,7 +74,7 @@ export function ShareCollectionDialog({
   }, [currentSlug, collection.name]);
 
   useEffect(() => {
-    setPublicIntro(collection.collectionData?.description || "");
+    setPublicIntro(collection.collectionData?.description || '');
   }, [collection.collectionData?.description]);
 
   // Don't show share dialog for published clones
@@ -84,13 +84,13 @@ export function ShareCollectionDialog({
 
   const getFriendlyLink = () => {
     if (!published || !currentSlug || !username) return null;
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     return `${baseUrl}/s/${username}/${currentSlug}`;
   };
 
   const getFallbackLink = () => {
     if (!publishedId) return null;
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
     return `${baseUrl}/view/${publishedId}`;
   };
 
@@ -103,8 +103,13 @@ export function ShareCollectionDialog({
     setInviteLink(null);
 
     try {
-      const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-      const link = generateCollectionInviteLink(collection, selectedRole, baseUrl);
+      const baseUrl =
+        typeof window !== 'undefined' ? window.location.origin : '';
+      const link = generateCollectionInviteLink(
+        collection,
+        selectedRole,
+        baseUrl,
+      );
 
       const sharingGroupId = collection.collectionData?.sharingGroupId;
       if (sharingGroupId) {
@@ -119,16 +124,16 @@ export function ShareCollectionDialog({
       setInviteLink(link);
 
       showToast({
-        title: "Invite link created",
-        description: `Anyone with this link can ${selectedRole === "reader" ? "view" : selectedRole === "writer" ? "edit" : "manage"} this collection`,
-        variant: "success",
+        title: 'Invite link created',
+        description: `Anyone with this link can ${selectedRole === 'reader' ? 'view' : selectedRole === 'writer' ? 'edit' : 'manage'} this collection`,
+        variant: 'success',
       });
     } catch (error) {
-      console.error("Failed to generate invite:", error);
+      console.error('Failed to generate invite:', error);
       showToast({
-        title: "Failed to create invite",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "error",
+        title: 'Failed to create invite',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'error',
       });
     } finally {
       setIsGeneratingInvite(false);
@@ -167,16 +172,16 @@ export function ShareCollectionDialog({
       }
 
       showToast({
-        title: "Collection published",
-        description: "Anyone with the link can now view this collection",
-        variant: "success",
+        title: 'Collection published',
+        description: 'Anyone with the link can now view this collection',
+        variant: 'success',
       });
     } catch (error) {
-      console.error("Failed to publish:", error);
+      console.error('Failed to publish:', error);
       showToast({
-        title: "Failed to publish",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "error",
+        title: 'Failed to publish',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'error',
       });
     } finally {
       setIsPublishing(false);
@@ -186,9 +191,9 @@ export function ShareCollectionDialog({
   const handleUnpublish = useCallback(() => {
     unpublishCollection(collection);
     showToast({
-      title: "Collection unpublished",
-      description: "The public link will no longer work",
-      variant: "success",
+      title: 'Collection unpublished',
+      description: 'The public link will no longer work',
+      variant: 'success',
     });
   }, [collection, showToast]);
 
@@ -208,7 +213,7 @@ export function ShareCollectionDialog({
         collection,
         freshBlocks,
         account,
-        account.root.blocks
+        account.root.blocks,
       );
 
       await collection.$jazz.waitForSync({ timeout: 5000 });
@@ -228,16 +233,16 @@ export function ShareCollectionDialog({
       }
 
       showToast({
-        title: "Collection updated",
-        description: "The public version has been updated with your changes",
-        variant: "success",
+        title: 'Collection updated',
+        description: 'The public version has been updated with your changes',
+        variant: 'success',
       });
     } catch (error) {
-      console.error("Failed to republish:", error);
+      console.error('Failed to republish:', error);
       showToast({
-        title: "Failed to update",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "error",
+        title: 'Failed to update',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'error',
       });
     } finally {
       setIsRepublishing(false);
@@ -263,7 +268,7 @@ export function ShareCollectionDialog({
   const handleOpenPublicNewTab = useCallback(() => {
     const link = getPublicLink();
     if (link) {
-      window.open(link, "_blank", "noopener,noreferrer");
+      window.open(link, '_blank', 'noopener,noreferrer');
     }
   }, [publishedId, currentSlug, username]);
 
@@ -271,26 +276,32 @@ export function ShareCollectionDialog({
     const currentValue = collection.collectionData?.allowCloning ?? true;
     const nextValue = !currentValue;
 
-    collection.$jazz.set("collectionData", {
+    collection.$jazz.set('collectionData', {
       ...collection.collectionData,
       allowCloning: nextValue,
     });
   }, [collection]);
 
-  const handlePublicIntroChange = useCallback((value: string) => {
-    setPublicIntro(value);
-    collection.$jazz.set("collectionData", {
-      ...collection.collectionData,
-      description: value.trim() || undefined,
-    });
-  }, [collection]);
+  const handlePublicIntroChange = useCallback(
+    (value: string) => {
+      setPublicIntro(value);
+      collection.$jazz.set('collectionData', {
+        ...collection.collectionData,
+        description: value.trim() || undefined,
+      });
+    },
+    [collection],
+  );
 
-  const handlePublicLayoutChange = useCallback((layout: "minimal" | "feature") => {
-    collection.$jazz.set("collectionData", {
-      ...collection.collectionData,
-      publicLayout: layout,
-    });
-  }, [collection]);
+  const handlePublicLayoutChange = useCallback(
+    (layout: 'minimal' | 'feature') => {
+      collection.$jazz.set('collectionData', {
+        ...collection.collectionData,
+        publicLayout: layout,
+      });
+    },
+    [collection],
+  );
 
   const handleSaveSlug = useCallback(async () => {
     const newSlug = slugify(slugInput);
@@ -304,7 +315,7 @@ export function ShareCollectionDialog({
       const oldSlug = currentSlug;
 
       // Update slug on the collection
-      collection.$jazz.set("collectionData", {
+      collection.$jazz.set('collectionData', {
         ...collection.collectionData,
         slug: newSlug,
       });
@@ -326,16 +337,16 @@ export function ShareCollectionDialog({
       setEditingSlug(false);
 
       showToast({
-        title: "URL updated",
-        description: "Your share link has been updated",
-        variant: "success",
+        title: 'URL updated',
+        description: 'Your share link has been updated',
+        variant: 'success',
       });
     } catch (error) {
-      console.error("Failed to update slug:", error);
+      console.error('Failed to update slug:', error);
       showToast({
-        title: "Failed to update URL",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "error",
+        title: 'Failed to update URL',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'error',
       });
     } finally {
       setIsSavingSlug(false);
@@ -356,36 +367,56 @@ export function ShareCollectionDialog({
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />
         <Dialog.Content className={styles.content}>
-          <Dialog.Title className={styles.title}>
-            Share Collection
-          </Dialog.Title>
+          <Dialog.Title className={styles.title}>Share Collection</Dialog.Title>
           <Dialog.Description className={styles.description}>
             Share <strong>{collection.name}</strong> with others
           </Dialog.Description>
 
           <div className={styles.layout}>
             <aside className={styles.sidebar}>
-              <button type="button" onClick={() => setActiveSection("invite")} className={`${styles.navButton} ${activeSection === "invite" ? styles.navButtonActive : ""}`}>
+              <button
+                type="button"
+                onClick={() => setActiveSection('invite')}
+                className={`${styles.navButton} ${activeSection === 'invite' ? styles.navButtonActive : ''}`}
+              >
                 <span className={styles.navLabel}>Invite</span>
-                <span className={styles.navHint}>Collaborators and private links</span>
+                <span className={styles.navHint}>
+                  Collaborators and private links
+                </span>
               </button>
-              <button type="button" onClick={() => setActiveSection("public")} className={`${styles.navButton} ${activeSection === "public" ? styles.navButtonActive : ""}`}>
+              <button
+                type="button"
+                onClick={() => setActiveSection('public')}
+                className={`${styles.navButton} ${activeSection === 'public' ? styles.navButtonActive : ''}`}
+              >
                 <span className={styles.navLabel}>Public Page</span>
-                <span className={styles.navHint}>Intro, layout, and public URL</span>
+                <span className={styles.navHint}>
+                  Intro, layout, and public URL
+                </span>
               </button>
-              <button type="button" onClick={() => setActiveSection("reuse")} className={`${styles.navButton} ${activeSection === "reuse" ? styles.navButtonActive : ""}`}>
+              <button
+                type="button"
+                onClick={() => setActiveSection('reuse')}
+                className={`${styles.navButton} ${activeSection === 'reuse' ? styles.navButtonActive : ''}`}
+              >
                 <span className={styles.navLabel}>Reuse</span>
-                <span className={styles.navHint}>Copy behavior and templates</span>
+                <span className={styles.navHint}>
+                  Copy behavior and templates
+                </span>
               </button>
             </aside>
 
             <div className={styles.panel}>
-              <section className={`${styles.panelSection} ${activeSection === "invite" ? styles.panelSectionActive : ""}`} aria-hidden={activeSection !== "invite"}>
+              <section
+                className={`${styles.panelSection} ${activeSection === 'invite' ? styles.panelSectionActive : ''}`}
+                aria-hidden={activeSection !== 'invite'}
+              >
                 <div className={styles.panelSectionInner}>
                   <div className={styles.section}>
                     <h3 className={styles.sectionTitle}>Invite People</h3>
                     <p className={styles.hint}>
-                      Invite collaborators to view or edit this collection. They'll need to sign in.
+                      Invite collaborators to view or edit this collection.
+                      They'll need to sign in.
                     </p>
                     <div className={styles.roleSelector}>
                       <label htmlFor="role-select" className={styles.roleLabel}>
@@ -394,7 +425,9 @@ export function ShareCollectionDialog({
                       <select
                         id="role-select"
                         value={selectedRole}
-                        onChange={(e) => handleRoleChange(e.target.value as SharingRole)}
+                        onChange={(e) =>
+                          handleRoleChange(e.target.value as SharingRole)
+                        }
                         className={styles.roleSelect}
                       >
                         <option value="reader">Can view</option>
@@ -404,21 +437,40 @@ export function ShareCollectionDialog({
                     </div>
                     {inviteLink ? (
                       <div className={styles.linkBox}>
-                        <input type="text" value={inviteLink} readOnly className={styles.linkInput} />
-                        <button type="button" onClick={handleCopyInvite} className={styles.copyButton}>
-                          {inviteCopied ? "Copied!" : "Copy"}
+                        <input
+                          type="text"
+                          value={inviteLink}
+                          readOnly
+                          className={styles.linkInput}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCopyInvite}
+                          className={styles.copyButton}
+                        >
+                          {inviteCopied ? 'Copied!' : 'Copy'}
                         </button>
                       </div>
                     ) : (
-                      <button type="button" onClick={handleGenerateInvite} disabled={isGeneratingInvite} className={styles.generateButton}>
-                        {isGeneratingInvite ? "Creating..." : "Create Invite Link"}
+                      <button
+                        type="button"
+                        onClick={handleGenerateInvite}
+                        disabled={isGeneratingInvite}
+                        className={styles.generateButton}
+                      >
+                        {isGeneratingInvite
+                          ? 'Creating...'
+                          : 'Create Invite Link'}
                       </button>
                     )}
                   </div>
                 </div>
               </section>
 
-              <section className={`${styles.panelSection} ${activeSection === "public" ? styles.panelSectionActive : ""}`} aria-hidden={activeSection !== "public"}>
+              <section
+                className={`${styles.panelSection} ${activeSection === 'public' ? styles.panelSectionActive : ''}`}
+                aria-hidden={activeSection !== 'public'}
+              >
                 <div className={styles.panelSectionInner}>
                   <div className={styles.section}>
                     <h3 className={styles.sectionTitle}>Public Page</h3>
@@ -429,36 +481,53 @@ export function ShareCollectionDialog({
                     {published && (
                       <>
                         <div className={styles.fieldGroup}>
-                          <label htmlFor="public-intro" className={styles.fieldLabel}>Public Intro</label>
+                          <label
+                            htmlFor="public-intro"
+                            className={styles.fieldLabel}
+                          >
+                            Public Intro
+                          </label>
                           <textarea
                             id="public-intro"
                             value={publicIntro}
-                            onChange={(e) => handlePublicIntroChange(e.target.value)}
+                            onChange={(e) =>
+                              handlePublicIntroChange(e.target.value)
+                            }
                             className={styles.textarea}
                             rows={4}
                             maxLength={200}
                             placeholder="A lightweight setup for everyday training and travel."
                           />
                           <p className={styles.fieldHint}>
-                            This becomes the intro text at the top of the public page.
+                            This becomes the intro text at the top of the public
+                            page.
                           </p>
                         </div>
 
                         <div className={styles.fieldGroup}>
-                          <label htmlFor="public-layout" className={styles.fieldLabel}>Layout</label>
+                          <label
+                            htmlFor="public-layout"
+                            className={styles.fieldLabel}
+                          >
+                            Layout
+                          </label>
                           <div className={styles.layoutOptions}>
-                            {(["minimal", "feature"] as const).map((layout) => (
+                            {(['minimal', 'feature'] as const).map((layout) => (
                               <button
                                 key={layout}
                                 type="button"
                                 onClick={() => handlePublicLayoutChange(layout)}
-                                className={`${styles.layoutOption} ${(collection.collectionData?.publicLayout ?? "minimal") === layout ? styles.layoutOptionActive : ""}`}
+                                className={`${styles.layoutOption} ${(collection.collectionData?.publicLayout ?? 'minimal') === layout ? styles.layoutOptionActive : ''}`}
                               >
-                                <span className={styles.layoutOptionTitle}>{layout === "minimal" ? "Minimal" : "Feature"}</span>
-                                <span className={styles.layoutOptionDescription}>
-                                  {layout === "minimal"
-                                    ? "A restrained, document-like header."
-                                    : "A stronger intro with a more featured hero."}
+                                <span className={styles.layoutOptionTitle}>
+                                  {layout === 'minimal' ? 'Minimal' : 'Feature'}
+                                </span>
+                                <span
+                                  className={styles.layoutOptionDescription}
+                                >
+                                  {layout === 'minimal'
+                                    ? 'A restrained, document-like header.'
+                                    : 'A stronger intro with a more featured hero.'}
                                 </span>
                               </button>
                             ))}
@@ -470,28 +539,50 @@ export function ShareCollectionDialog({
                     <div className={published ? styles.subSection : undefined}>
                       <h4 className={styles.subSectionTitle}>Public Link</h4>
                       <p className={styles.hint}>
-                        Control whether anyone with the link can view this collection without signing in.
+                        Control whether anyone with the link can view this
+                        collection without signing in.
                       </p>
                       {published ? (
                         <>
                           <div className={styles.accessStatus}>
                             <span className={styles.accessIcon}>🌐</span>
                             <div className={styles.accessInfo}>
-                              <span className={styles.accessLabel}>Anyone with the link</span>
-                              <span className={styles.accessDescription}>can view</span>
+                              <span className={styles.accessLabel}>
+                                Anyone with the link
+                              </span>
+                              <span className={styles.accessDescription}>
+                                can view
+                              </span>
                             </div>
                           </div>
                           {publicLink && (
                             <div className={styles.linkBox}>
-                              <input type="text" value={publicLink} readOnly className={styles.linkInput} />
-                              <button type="button" onClick={handleOpenPublicSameTab} className={styles.secondaryButton}>
+                              <input
+                                type="text"
+                                value={publicLink}
+                                readOnly
+                                className={styles.linkInput}
+                              />
+                              <button
+                                type="button"
+                                onClick={handleOpenPublicSameTab}
+                                className={styles.secondaryButton}
+                              >
                                 Open
                               </button>
-                              <button type="button" onClick={handleOpenPublicNewTab} className={styles.secondaryButton}>
+                              <button
+                                type="button"
+                                onClick={handleOpenPublicNewTab}
+                                className={styles.secondaryButton}
+                              >
                                 New Tab
                               </button>
-                              <button type="button" onClick={handleCopyPublic} className={styles.copyButton}>
-                                {publishCopied ? "Copied!" : "Copy"}
+                              <button
+                                type="button"
+                                onClick={handleCopyPublic}
+                                className={styles.copyButton}
+                              >
+                                {publishCopied ? 'Copied!' : 'Copy'}
                               </button>
                             </div>
                           )}
@@ -499,27 +590,43 @@ export function ShareCollectionDialog({
                             <div className={styles.slugSection}>
                               {editingSlug ? (
                                 <div className={styles.slugEditor}>
-                                  <span className={styles.slugPrefix}>/s/{username}/</span>
+                                  <span className={styles.slugPrefix}>
+                                    /s/{username}/
+                                  </span>
                                   <input
                                     type="text"
                                     value={slugInput}
-                                    onChange={(e) => setSlugInput(e.target.value)}
+                                    onChange={(e) =>
+                                      setSlugInput(e.target.value)
+                                    }
                                     className={styles.slugInput}
                                     autoFocus
                                     onKeyDown={(e) => {
-                                      if (e.key === "Enter") handleSaveSlug();
-                                      if (e.key === "Escape") {
+                                      if (e.key === 'Enter') handleSaveSlug();
+                                      if (e.key === 'Escape') {
                                         setEditingSlug(false);
-                                        setSlugInput(currentSlug || slugify(collection.name));
+                                        setSlugInput(
+                                          currentSlug ||
+                                            slugify(collection.name),
+                                        );
                                       }
                                     }}
                                   />
-                                  <button type="button" onClick={handleSaveSlug} disabled={isSavingSlug} className={styles.slugSaveButton}>
-                                    {isSavingSlug ? "Saving..." : "Save"}
+                                  <button
+                                    type="button"
+                                    onClick={handleSaveSlug}
+                                    disabled={isSavingSlug}
+                                    className={styles.slugSaveButton}
+                                  >
+                                    {isSavingSlug ? 'Saving...' : 'Save'}
                                   </button>
                                 </div>
                               ) : (
-                                <button type="button" onClick={() => setEditingSlug(true)} className={styles.slugEditButton}>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingSlug(true)}
+                                  className={styles.slugEditButton}
+                                >
                                   Edit URL slug
                                 </button>
                               )}
@@ -527,24 +634,38 @@ export function ShareCollectionDialog({
                           )}
                           {!username && published && (
                             <p className={styles.slugHint}>
-                              Set a username in Settings to get a friendly share link.
+                              Set a username in Settings to get a friendly share
+                              link.
                             </p>
                           )}
                           {publishedAt && (
                             <p className={styles.publishedAt}>
-                              Published {new Date(publishedAt).toLocaleDateString()}
+                              Published{' '}
+                              {new Date(publishedAt).toLocaleDateString()}
                             </p>
                           )}
                           <div className={styles.publishActions}>
-                            <button type="button" onClick={handleRepublish} disabled={isRepublishing} className={styles.updateButton}>
-                              {isRepublishing ? "Updating..." : "Update Public Version"}
+                            <button
+                              type="button"
+                              onClick={handleRepublish}
+                              disabled={isRepublishing}
+                              className={styles.updateButton}
+                            >
+                              {isRepublishing
+                                ? 'Updating...'
+                                : 'Update Public Version'}
                             </button>
-                            <button type="button" onClick={handleUnpublish} className={styles.unpublishButton}>
+                            <button
+                              type="button"
+                              onClick={handleUnpublish}
+                              className={styles.unpublishButton}
+                            >
                               Make Private
                             </button>
                           </div>
                           <p className={styles.publishHint}>
-                            Update pushes your latest changes to the public version.
+                            Update pushes your latest changes to the public
+                            version.
                           </p>
                         </>
                       ) : (
@@ -552,44 +673,62 @@ export function ShareCollectionDialog({
                           <div className={styles.accessStatus}>
                             <span className={styles.accessIcon}>🔒</span>
                             <div className={styles.accessInfo}>
-                              <span className={styles.accessLabel}>Restricted</span>
-                              <span className={styles.accessDescription}>Only people with access can open</span>
+                              <span className={styles.accessLabel}>
+                                Restricted
+                              </span>
+                              <span className={styles.accessDescription}>
+                                Only people with access can open
+                              </span>
                             </div>
                           </div>
-                        <button type="button" onClick={handlePublish} disabled={isPublishing} className={styles.publishButton}>
-                          {isPublishing ? "Publishing..." : "Make Public"}
-                        </button>
-                        <p className={styles.publishHint}>
-                          Creates a public copy anyone can view without signing in.
-                        </p>
-                        <p className={styles.fieldHint}>
-                          Once published, you can customize the intro, layout, and share URL here.
-                        </p>
-                      </>
-                    )}
+                          <button
+                            type="button"
+                            onClick={handlePublish}
+                            disabled={isPublishing}
+                            className={styles.publishButton}
+                          >
+                            {isPublishing ? 'Publishing...' : 'Make Public'}
+                          </button>
+                          <p className={styles.publishHint}>
+                            Creates a public copy anyone can view without
+                            signing in.
+                          </p>
+                          <p className={styles.fieldHint}>
+                            Once published, you can customize the intro, layout,
+                            and share URL here.
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               </section>
 
-              <section className={`${styles.panelSection} ${activeSection === "reuse" ? styles.panelSectionActive : ""}`} aria-hidden={activeSection !== "reuse"}>
+              <section
+                className={`${styles.panelSection} ${activeSection === 'reuse' ? styles.panelSectionActive : ''}`}
+                aria-hidden={activeSection !== 'reuse'}
+              >
                 <div className={styles.panelSectionInner}>
                   <div className={styles.section}>
                     <h3 className={styles.sectionTitle}>Reuse</h3>
                     <p className={styles.hint}>
-                      Decide whether people with access can copy this collection into their own Tote.
+                      Decide whether people with access can copy this collection
+                      into their own Tote.
                     </p>
                     <div className={styles.toggleCard}>
                       <div className={styles.toggleCopy}>
                         <span className={styles.toggleTitle}>Allow copies</span>
                         <span className={styles.toggleDescription}>
-                          Show the “Make a copy” action on public pages and shared collections.
+                          Show the “Make a copy” action on public pages and
+                          shared collections.
                         </span>
                       </div>
                       <label className={styles.switch}>
                         <input
                           type="checkbox"
-                          checked={collection.collectionData?.allowCloning ?? true}
+                          checked={
+                            collection.collectionData?.allowCloning ?? true
+                          }
                           onChange={handleToggleCloning}
                         />
                         <span className={styles.slider} />

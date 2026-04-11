@@ -1,4 +1,4 @@
-import styles from "../docs/docs.module.css";
+import styles from '../docs/docs.module.css';
 
 interface AnswerBlockProps {
   question: string;
@@ -7,9 +7,17 @@ interface AnswerBlockProps {
   steps?: string[];
 }
 
-export function AnswerBlock({ question, answer, accent, steps }: AnswerBlockProps) {
+export function AnswerBlock({
+  question,
+  answer,
+  accent,
+  steps,
+}: AnswerBlockProps) {
   return (
-    <section className={styles.answerBlock} style={{ "--answer-accent": accent } as React.CSSProperties}>
+    <section
+      className={styles.answerBlock}
+      style={{ '--answer-accent': accent } as React.CSSProperties}
+    >
       <h2 className={styles.answerQuestion}>{question}</h2>
       <p className={styles.answerText}>{answer}</p>
       {steps && steps.length > 0 && (

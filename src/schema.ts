@@ -3,7 +3,7 @@
  * https://jazz.tools/docs/react/schemas/covalues
  */
 
-import { Group, co, z } from "jazz-tools";
+import { Group, co, z } from 'jazz-tools';
 
 // =============================================================================
 // Block-Based Schema (New)
@@ -22,8 +22,8 @@ const ProductData = z.object({
 const CollectionData = z.object({
   color: z.string().optional(),
   description: z.string().optional(),
-  viewMode: z.enum(["grid", "table"]).optional(),
-  publicLayout: z.enum(["minimal", "feature"]).optional(),
+  viewMode: z.enum(['grid', 'table']).optional(),
+  publicLayout: z.enum(['minimal', 'feature']).optional(),
   budget: z.number().optional(),
   allowCloning: z.boolean().optional(),
   // Sharing fields for collaborator access
@@ -50,7 +50,7 @@ const ProjectData = z.object({
 
 /** Universal block primitive - everything is a Block */
 export const Block = co.map({
-  type: z.enum(["project", "collection", "slot", "product"]),
+  type: z.enum(['project', 'collection', 'slot', 'product']),
   name: z.string(),
   // Type-specific data - use the appropriate schema based on block type
   productData: ProductData.optional(),
@@ -78,7 +78,7 @@ export const BlockList = co.list(Block);
 /** Reference to a collection shared with the current user */
 export const SharedCollectionRef = co.map({
   collectionId: z.string(),
-  role: z.enum(["reader", "writer", "admin"]),
+  role: z.enum(['reader', 'writer', 'admin']),
   sharedBy: z.string(), // Account ID of the person who shared
   sharedAt: z.date(),
   name: z.string().optional(), // Cached name for display
@@ -132,10 +132,10 @@ export const JazzAccount = co
     /** The account migration is run on account creation and on every log-in.
      *  You can use it to set up the account root and any other initial CoValues you need.
      */
-    if (!account.$jazz.has("root")) {
+    if (!account.$jazz.has('root')) {
       // Create a Group for the default collection to enable sharing
       const ownerGroup = Group.create({ owner: account });
-      ownerGroup.addMember(account, "admin");
+      ownerGroup.addMember(account, 'admin');
 
       // Create empty children list owned by the group
       const childrenList = BlockList.create([], { owner: ownerGroup });
@@ -143,13 +143,13 @@ export const JazzAccount = co
       // Create default "My Links" collection block owned by the group
       const defaultCollection = Block.create(
         {
-          type: "collection",
-          name: "My Links",
+          type: 'collection',
+          name: 'My Links',
           collectionData: {
-            color: "#6366f1",
-            description: "Your personal collection of product links",
-            viewMode: "grid",
-            publicLayout: "minimal",
+            color: '#6366f1',
+            description: 'Your personal collection of product links',
+            viewMode: 'grid',
+            publicLayout: 'minimal',
             allowCloning: true,
             sharingGroupId: ownerGroup.$jazz.id,
           },
@@ -162,7 +162,7 @@ export const JazzAccount = co
       // Create the blocks list with the default collection
       const blocksList = BlockList.create([defaultCollection], account);
 
-      account.$jazz.set("root", {
+      account.$jazz.set('root', {
         blocks: blocksList,
         defaultBlockId: defaultCollection.$jazz.id,
       });
@@ -170,11 +170,12 @@ export const JazzAccount = co
       // Ensure blocks exists for existing accounts
       const root = account.root;
       if (root && root.$isLoaded) {
-        const hasBlocks = root.blocks && root.blocks.$isLoaded && root.blocks.length > 0;
+        const hasBlocks =
+          root.blocks && root.blocks.$isLoaded && root.blocks.length > 0;
         if (!hasBlocks) {
           // Create a Group for the default collection to enable sharing
           const ownerGroup = Group.create({ owner: account });
-          ownerGroup.addMember(account, "admin");
+          ownerGroup.addMember(account, 'admin');
 
           // Create empty children list owned by the group
           const childrenList = BlockList.create([], { owner: ownerGroup });
@@ -182,13 +183,13 @@ export const JazzAccount = co
           // Create default collection block if none exists, owned by the group
           const defaultCollection = Block.create(
             {
-              type: "collection",
-              name: "My Links",
+              type: 'collection',
+              name: 'My Links',
               collectionData: {
-                color: "#6366f1",
-                description: "Your personal collection of product links",
-                viewMode: "grid",
-                publicLayout: "minimal",
+                color: '#6366f1',
+                description: 'Your personal collection of product links',
+                viewMode: 'grid',
+                publicLayout: 'minimal',
                 allowCloning: true,
                 sharingGroupId: ownerGroup.$jazz.id,
               },
@@ -199,22 +200,22 @@ export const JazzAccount = co
           );
 
           const blocksList = BlockList.create([defaultCollection], account);
-          root.$jazz.set("blocks", blocksList);
-          root.$jazz.set("defaultBlockId", defaultCollection.$jazz.id);
+          root.$jazz.set('blocks', blocksList);
+          root.$jazz.set('defaultBlockId', defaultCollection.$jazz.id);
         }
       }
     }
 
-    if (!account.$jazz.has("profile")) {
+    if (!account.$jazz.has('profile')) {
       const group = Group.create();
-      group.addMember("everyone", "reader"); // The profile info is visible to everyone
+      group.addMember('everyone', 'reader'); // The profile info is visible to everyone
 
       account.$jazz.set(
-        "profile",
+        'profile',
         JazzProfile.create(
           {
-            name: "Anonymous user",
-            firstName: "",
+            name: 'Anonymous user',
+            firstName: '',
           },
           group,
         ),

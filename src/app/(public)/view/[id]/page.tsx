@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useParams } from "next/navigation";
-import { PublicCollectionClient } from "../../s/[username]/[slug]/PublicCollectionClient";
+import { useParams } from 'next/navigation';
+import { PublicCollectionClient } from '../../s/[username]/[slug]/PublicCollectionClient';
 
 /**
  * Public view page — renders a published collection by Jazz ID.

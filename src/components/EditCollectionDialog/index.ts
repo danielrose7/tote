@@ -1,1 +1,1 @@
-export { EditCollectionDialog } from "./EditCollectionDialog";
+export { EditCollectionDialog } from './EditCollectionDialog';

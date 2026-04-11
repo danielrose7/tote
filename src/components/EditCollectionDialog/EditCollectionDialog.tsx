@@ -1,13 +1,13 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import type { Block, JazzAccount } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import { useToast } from "../ToastNotification";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import { deleteCollectionRecursively } from "../../lib/blocks";
-import styles from "./EditCollectionDialog.module.css";
+import * as Dialog from '@radix-ui/react-dialog';
+import { useEffect, useState } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import type { Block, JazzAccount } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import { useToast } from '../ToastNotification';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { deleteCollectionRecursively } from '../../lib/blocks';
+import styles from './EditCollectionDialog.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -20,23 +20,23 @@ interface EditCollectionDialogProps {
 }
 
 const PRESET_COLORS = [
-  "#6366f1", // Indigo
-  "#8b5cf6", // Purple
-  "#ec4899", // Pink
-  "#f43f5e", // Rose
-  "#f97316", // Orange
-  "#eab308", // Yellow
-  "#22c55e", // Green
-  "#14b8a6", // Teal
-  "#3b82f6", // Blue
-  "#06b6d4", // Cyan
+  '#6366f1', // Indigo
+  '#8b5cf6', // Purple
+  '#ec4899', // Pink
+  '#f43f5e', // Rose
+  '#f97316', // Orange
+  '#eab308', // Yellow
+  '#22c55e', // Green
+  '#14b8a6', // Teal
+  '#3b82f6', // Blue
+  '#06b6d4', // Cyan
 ];
 
 const validationSchema = Yup.object({
   name: Yup.string()
-    .required("Collection name is required")
-    .max(50, "Collection name must be 50 characters or less"),
-  color: Yup.string().required("Color is required"),
+    .required('Collection name is required')
+    .max(50, 'Collection name must be 50 characters or less'),
+  color: Yup.string().required('Color is required'),
 });
 
 export function EditCollectionDialog({
@@ -48,10 +48,10 @@ export function EditCollectionDialog({
 }: EditCollectionDialogProps) {
   const { showToast } = useToast();
   const isOnline = useOnlineStatus();
-  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
   const collectionData = block?.collectionData;
-  const confirmPhrase = "delete this collection";
+  const confirmPhrase = 'delete this collection';
 
   const isDefault = account.root?.$isLoaded
     ? account.root.defaultBlockId === block?.$jazz.id
@@ -59,7 +59,7 @@ export function EditCollectionDialog({
 
   const formik = useFormik({
     initialValues: {
-      name: "",
+      name: '',
       color: PRESET_COLORS[0],
     },
     validationSchema,
@@ -67,18 +67,18 @@ export function EditCollectionDialog({
       if (!block) return;
 
       // Update block name
-      block.$jazz.set("name", values.name.trim());
+      block.$jazz.set('name', values.name.trim());
 
       // Update collectionData
-      block.$jazz.set("collectionData", {
+      block.$jazz.set('collectionData', {
         ...block.collectionData,
         color: values.color,
       });
 
       showToast({
-        title: "Collection updated",
-        description: `"${values.name}" has been updated${!isOnline ? " (will sync when online)" : ""}`,
-        variant: "success",
+        title: 'Collection updated',
+        description: `"${values.name}" has been updated${!isOnline ? ' (will sync when online)' : ''}`,
+        variant: 'success',
       });
 
       onOpenChange(false);
@@ -89,7 +89,7 @@ export function EditCollectionDialog({
   useEffect(() => {
     if (block) {
       formik.setValues({
-        name: block.name || "",
+        name: block.name || '',
         color: collectionData?.color || PRESET_COLORS[0],
       });
     }
@@ -98,17 +98,17 @@ export function EditCollectionDialog({
   const handleSetAsDefault = () => {
     if (!block || !account.root || !account.root.$isLoaded) return;
 
-    account.root.$jazz.set("defaultBlockId", block.$jazz.id);
+    account.root.$jazz.set('defaultBlockId', block.$jazz.id);
 
     showToast({
-      title: "Default collection set",
-      description: `"${block.name}" is now your default collection${!isOnline ? " (will sync when online)" : ""}`,
-      variant: "success",
+      title: 'Default collection set',
+      description: `"${block.name}" is now your default collection${!isOnline ? ' (will sync when online)' : ''}`,
+      variant: 'success',
     });
   };
 
   const handleClose = () => {
-    setDeleteConfirmation("");
+    setDeleteConfirmation('');
     onOpenChange(false);
   };
 
@@ -130,12 +130,12 @@ export function EditCollectionDialog({
     deleteCollectionRecursively(block, allBlocks, account.root.blocks);
 
     showToast({
-      title: "Collection deleted",
+      title: 'Collection deleted',
       description: `"${blockName}" and all its contents have been deleted`,
-      variant: "success",
+      variant: 'success',
     });
 
-    setDeleteConfirmation("");
+    setDeleteConfirmation('');
     onOpenChange(false);
     onDeleteCollection?.(deletedBlock);
   };
@@ -179,9 +179,9 @@ export function EditCollectionDialog({
                   <button
                     key={color}
                     type="button"
-                    className={`${styles.colorOption} ${formik.values.color === color ? styles.colorOptionSelected : ""}`}
+                    className={`${styles.colorOption} ${formik.values.color === color ? styles.colorOptionSelected : ''}`}
                     style={{ backgroundColor: color }}
-                    onClick={() => formik.setFieldValue("color", color)}
+                    onClick={() => formik.setFieldValue('color', color)}
                     aria-label={`Select color ${color}`}
                   >
                     {formik.values.color === color && (
@@ -210,8 +210,8 @@ export function EditCollectionDialog({
                 <span className={styles.defaultLabel}>Default Collection</span>
                 <span className={styles.defaultDescription}>
                   {isDefault
-                    ? "This is your default collection"
-                    : "Set as the default collection for new links"}
+                    ? 'This is your default collection'
+                    : 'Set as the default collection for new links'}
                 </span>
               </div>
               <button
@@ -220,7 +220,7 @@ export function EditCollectionDialog({
                 disabled={isDefault}
                 className={styles.defaultButton}
               >
-                {isDefault ? "✓ Default" : "Set as Default"}
+                {isDefault ? '✓ Default' : 'Set as Default'}
               </button>
             </div>
 
@@ -229,7 +229,8 @@ export function EditCollectionDialog({
               <div className={styles.dangerHeader}>
                 <span className={styles.dangerTitle}>Delete Collection</span>
                 <span className={styles.dangerDescription}>
-                  This will permanently delete this collection, all its products, slots, and any published copies.
+                  This will permanently delete this collection, all its
+                  products, slots, and any published copies.
                 </span>
               </div>
               <div className={styles.dangerConfirm}>

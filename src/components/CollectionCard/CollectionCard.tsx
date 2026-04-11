@@ -1,7 +1,7 @@
-import { useState } from "react";
-import type { Block } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import styles from "./CollectionCard.module.css";
+import { useState } from 'react';
+import type { Block } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import styles from './CollectionCard.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -30,16 +30,20 @@ export function CollectionCard({
     for (const child of block.children) {
       if (!child || !child.$isLoaded) continue;
 
-      if (child.type === "product") {
+      if (child.type === 'product') {
         // Direct product child
         linkCount++;
         if (previewImages.length < 4 && child.productData?.imageUrl) {
           previewImages.push(child.productData.imageUrl);
         }
-      } else if (child.type === "slot" && child.children?.$isLoaded) {
+      } else if (child.type === 'slot' && child.children?.$isLoaded) {
         // Slot with nested products
         for (const slotChild of child.children) {
-          if (slotChild && slotChild.$isLoaded && slotChild.type === "product") {
+          if (
+            slotChild &&
+            slotChild.$isLoaded &&
+            slotChild.type === 'product'
+          ) {
             linkCount++;
             if (previewImages.length < 4 && slotChild.productData?.imageUrl) {
               previewImages.push(slotChild.productData.imageUrl);
@@ -58,14 +62,16 @@ export function CollectionCard({
       onClick={() => onClick?.(block)}
       style={
         {
-          "--collection-color": collectionData?.color || "var(--color-accent)",
+          '--collection-color': collectionData?.color || 'var(--color-accent)',
         } as React.CSSProperties
       }
     >
       {/* Preview Grid */}
       <div className={styles.previewContainer}>
         {previewImages.length > 0 ? (
-          <div className={`${styles.previewGrid} ${styles[`grid-${Math.min(previewImages.length, 4)}`]}`}>
+          <div
+            className={`${styles.previewGrid} ${styles[`grid-${Math.min(previewImages.length, 4)}`]}`}
+          >
             {previewImages.map((imageUrl: string, idx: number) => (
               <div key={idx} className={styles.previewImage}>
                 <img src={imageUrl} alt="" />
@@ -92,7 +98,9 @@ export function CollectionCard({
 
         {/* Link Count Badge */}
         <div className={styles.countBadge}>
-          <span>{linkCount} {linkCount === 1 ? 'item' : 'items'}</span>
+          <span>
+            {linkCount} {linkCount === 1 ? 'item' : 'items'}
+          </span>
         </div>
       </div>
 
@@ -109,7 +117,13 @@ export function CollectionCard({
               className={styles.actionButton}
               aria-label="Edit collection"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -129,7 +143,13 @@ export function CollectionCard({
               className={`${styles.actionButton} ${styles.actionButtonDanger}`}
               aria-label="Delete collection"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -145,7 +165,9 @@ export function CollectionCard({
       {/* Content Section */}
       <div className={styles.content}>
         <div className={styles.header}>
-          <h3 className={styles.title}>{block.name || "Untitled Collection"}</h3>
+          <h3 className={styles.title}>
+            {block.name || 'Untitled Collection'}
+          </h3>
         </div>
 
         {collectionData?.description && (

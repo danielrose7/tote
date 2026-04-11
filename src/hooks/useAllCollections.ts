@@ -6,9 +6,9 @@
  * The caller is responsible for loading shared collections via useCoState.
  */
 
-import { useMemo } from "react";
-import type { co } from "jazz-tools";
-import type { JazzAccount, Block } from "../schema";
+import { useMemo } from 'react';
+import type { co } from 'jazz-tools';
+import type { JazzAccount, Block } from '../schema';
 
 type LoadedAccount = co.loaded<typeof JazzAccount>;
 type LoadedBlock = co.loaded<typeof Block>;
@@ -49,7 +49,7 @@ interface UseAllCollectionsResult {
  */
 export function useAllCollections(
   account: LoadedAccount,
-  options: UseAllCollectionsOptions = {}
+  options: UseAllCollectionsOptions = {},
 ): UseAllCollectionsResult {
   const { sharedCollections: passedSharedCollections = [] } = options;
 
@@ -62,7 +62,7 @@ export function useAllCollections(
       if (
         block &&
         block.$isLoaded &&
-        block.type === "collection" &&
+        block.type === 'collection' &&
         !block.parentId &&
         !block.collectionData?.sourceId // Exclude published clones
       ) {
@@ -94,7 +94,7 @@ export function useAllCollections(
   // Note: If a collection is in ownedCollections, it's already included there
   const sharedCollections = useMemo(() => {
     return passedSharedCollections.filter((block): block is LoadedBlock => {
-      if (!block || !block.$isLoaded || block.type !== "collection") {
+      if (!block || !block.$isLoaded || block.type !== 'collection') {
         return false;
       }
       // Skip if this is an owned collection (already included in ownedCollections)
@@ -103,7 +103,7 @@ export function useAllCollections(
       }
       // Check if user has write access (writer or admin role)
       const role = sharedRolesMap.get(block.$jazz.id);
-      return role === "writer" || role === "admin";
+      return role === 'writer' || role === 'admin';
     });
   }, [passedSharedCollections, sharedRolesMap, ownedIds]);
 

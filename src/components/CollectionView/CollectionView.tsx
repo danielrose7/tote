@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import type { Block } from "../../schema.ts";
-import type { co } from "jazz-tools";
+import { useState, useEffect } from 'react';
+import type { Block } from '../../schema.ts';
+import type { co } from 'jazz-tools';
 import {
   DndContext,
   closestCenter,
@@ -9,42 +9,44 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { ProductCard } from "../ProductCard/ProductCard";
-import { SlotSection } from "../SlotSection/SlotSection";
-import { SortableSlotSection } from "../SlotSection/SortableSlotSection";
-import { SortableProductItem } from "../SlotSection/SortableProductItem";
-import { ViewModeToggle, type ViewMode } from "./ViewModeToggle";
-import { TableView } from "./TableView";
+} from '@dnd-kit/sortable';
+import { ProductCard } from '../ProductCard/ProductCard';
+import { SlotSection } from '../SlotSection/SlotSection';
+import { SortableSlotSection } from '../SlotSection/SortableSlotSection';
+import { SortableProductItem } from '../SlotSection/SortableProductItem';
+import { ViewModeToggle, type ViewMode } from './ViewModeToggle';
+import { TableView } from './TableView';
 import {
   getSlotsForCollection,
   getProductsForSlot,
   getUngroupedProducts,
   removeFromSelection,
-} from "../../lib/slotHelpers";
-import { reorderBlockList } from "../../lib/blocks";
+} from '../../lib/slotHelpers';
+import { reorderBlockList } from '../../lib/blocks';
 import {
   checkExtensionAvailable,
   refreshViaExtension,
   type ExtractedMetadata,
-} from "../../lib/extension";
-import styles from "./CollectionView.module.css";
+} from '../../lib/extension';
+import styles from './CollectionView.module.css';
 
-const VIEW_MODE_STORAGE_KEY = "tote:viewMode";
+const VIEW_MODE_STORAGE_KEY = 'tote:viewMode';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
 // Fallback: server-side extraction
-async function refreshViaServer(url: string): Promise<ExtractedMetadata | null> {
+async function refreshViaServer(
+  url: string,
+): Promise<ExtractedMetadata | null> {
   try {
-    const response = await fetch("/api/extract", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     });
 
@@ -57,7 +59,7 @@ async function refreshViaServer(url: string): Promise<ExtractedMetadata | null> 
 
 async function refreshBlockMetadata(
   block: LoadedBlock,
-  useExtension: boolean
+  useExtension: boolean,
 ): Promise<boolean> {
   const productData = block.productData;
   if (!productData) return false;
@@ -79,7 +81,7 @@ async function refreshBlockMetadata(
     // Update the block with new metadata
     const updatedProductData = { ...productData };
     if (metadata.title) {
-      block.$jazz.set("name", metadata.title);
+      block.$jazz.set('name', metadata.title);
     }
     if (metadata.description) {
       updatedProductData.description = metadata.description;
@@ -90,18 +92,18 @@ async function refreshBlockMetadata(
     if (metadata.price) {
       updatedProductData.price = metadata.price;
     }
-    block.$jazz.set("productData", updatedProductData);
+    block.$jazz.set('productData', updatedProductData);
 
     return true;
   } catch (error) {
-    console.error("[Tote] Failed to refresh block:", error);
+    console.error('[Tote] Failed to refresh block:', error);
     return false;
   }
 }
 
 interface CollectionViewProps {
   collectionBlock: LoadedBlock;
-  allBlocks: LoadedBlock[];  // All blocks to find children by parentId
+  allBlocks: LoadedBlock[]; // All blocks to find children by parentId
   onEditBlock?: (block: LoadedBlock) => void;
   onDeleteBlock?: (block: LoadedBlock) => void;
   onEditCollection?: (block: LoadedBlock) => void;
@@ -118,14 +120,16 @@ export function CollectionView({
   onShareCollection,
   onUseCollection,
 }: CollectionViewProps) {
-  const [refreshingBlockId, setRefreshingBlockId] = useState<string | null>(null);
+  const [refreshingBlockId, setRefreshingBlockId] = useState<string | null>(
+    null,
+  );
   const [enqueuedBlockIds, setEnqueuedBlockIds] = useState<string[]>([]);
   const [refreshAllProgress, setRefreshAllProgress] = useState<{
     current: number;
     total: number;
   } | null>(null);
   const [extensionAvailable, setExtensionAvailable] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [isUngroupedReorderMode, setIsUngroupedReorderMode] = useState(false);
 
@@ -138,13 +142,13 @@ export function CollectionView({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   // Load view mode preference from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
-    if (stored === "grid" || stored === "table") {
+    if (stored === 'grid' || stored === 'table') {
       setViewMode(stored);
     }
   }, []);
@@ -166,7 +170,9 @@ export function CollectionView({
   };
 
   const handleRefreshAll = async (blocks: LoadedBlock[]) => {
-    const validBlocks = blocks.filter((b) => b && b.$isLoaded && b.type === "product");
+    const validBlocks = blocks.filter(
+      (b) => b && b.$isLoaded && b.type === 'product',
+    );
 
     // Set all blocks as enqueued first
     const allIds = validBlocks.map((b) => b.$jazz.id);
@@ -205,14 +211,16 @@ export function CollectionView({
   }
 
   // Get slots - from children list or fallback to parentId
-  const slots = childrenFromList.length > 0
-    ? childrenFromList.filter((b) => b.type === "slot")
-    : getSlotsForCollection(allBlocks, collectionId);
+  const slots =
+    childrenFromList.length > 0
+      ? childrenFromList.filter((b) => b.type === 'slot')
+      : getSlotsForCollection(allBlocks, collectionId);
 
   // Get ungrouped products - from children list or fallback to parentId
-  const ungroupedProducts = childrenFromList.length > 0
-    ? childrenFromList.filter((b) => b.type === "product")
-    : getUngroupedProducts(allBlocks, collectionId);
+  const ungroupedProducts =
+    childrenFromList.length > 0
+      ? childrenFromList.filter((b) => b.type === 'product')
+      : getUngroupedProducts(allBlocks, collectionId);
 
   // Get all products (for total count and refresh all)
   const allProducts: LoadedBlock[] = [...ungroupedProducts];
@@ -221,7 +229,7 @@ export function CollectionView({
     const slotProducts: LoadedBlock[] = [];
     if (slot.children?.$isLoaded) {
       for (const child of slot.children) {
-        if (child && child.$isLoaded && child.type === "product") {
+        if (child && child.$isLoaded && child.type === 'product') {
           slotProducts.push(child);
         }
       }
@@ -240,7 +248,7 @@ export function CollectionView({
       // Collect products first, then move them
       const products: LoadedBlock[] = [];
       for (const child of slot.children) {
-        if (child && child.$isLoaded && child.type === "product") {
+        if (child && child.$isLoaded && child.type === 'product') {
           removeFromSelection(child.$jazz.id, slot);
           products.push(child);
         }
@@ -258,7 +266,7 @@ export function CollectionView({
     // Remove the slot from the collection's children list
     if (children?.$isLoaded) {
       const idx = children.findIndex(
-        (c) => c && c.$isLoaded && c.$jazz.id === slot.$jazz.id
+        (c) => c && c.$isLoaded && c.$jazz.id === slot.$jazz.id,
       );
       if (idx !== -1) {
         children.$jazz.splice(idx, 1);
@@ -405,13 +413,15 @@ export function CollectionView({
           <div className={styles.meta}>
             <span className={styles.count}>
               {allProducts.length} {allProducts.length === 1 ? 'item' : 'items'}
-              {slots.length > 0 && ` in ${slots.length} ${slots.length === 1 ? 'slot' : 'slots'}`}
+              {slots.length > 0 &&
+                ` in ${slots.length} ${slots.length === 1 ? 'slot' : 'slots'}`}
             </span>
             <span className={styles.date}>
-              Created {collectionBlock.createdAt.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
+              Created{' '}
+              {collectionBlock.createdAt.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
               })}
             </span>
           </div>
@@ -425,28 +435,54 @@ export function CollectionView({
               >
                 {refreshAllProgress ? (
                   <>
-                    <svg className={styles.spinningIcon} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <svg
+                      className={styles.spinningIcon}
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
                     </svg>
-                    Refreshing {refreshAllProgress.current}/{refreshAllProgress.total}
+                    Refreshing {refreshAllProgress.current}/
+                    {refreshAllProgress.total}
                   </>
                 ) : (
                   <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
                     </svg>
                     Refresh All
                   </>
                 )}
               </button>
               <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
-              {slots.length > 1 && viewMode === "grid" && (
+              {slots.length > 1 && viewMode === 'grid' && (
                 <button
                   type="button"
                   onClick={() => setIsReorderMode(!isReorderMode)}
-                  className={isReorderMode ? styles.doneButton : styles.reorderButton}
+                  className={
+                    isReorderMode ? styles.doneButton : styles.reorderButton
+                  }
                 >
-                  {isReorderMode ? "Done" : "Reorder Slots"}
+                  {isReorderMode ? 'Done' : 'Reorder Slots'}
                 </button>
               )}
             </div>
@@ -475,7 +511,7 @@ export function CollectionView({
             Add items to this collection to get started
           </p>
         </div>
-      ) : viewMode === "table" ? (
+      ) : viewMode === 'table' ? (
         <TableView
           blocks={allProducts}
           allBlocks={allBlocks}
@@ -502,12 +538,18 @@ export function CollectionView({
                   const slotProducts: LoadedBlock[] = [];
                   if (slot.children?.$isLoaded) {
                     for (const child of slot.children) {
-                      if (child && child.$isLoaded && child.type === "product") {
+                      if (
+                        child &&
+                        child.$isLoaded &&
+                        child.type === 'product'
+                      ) {
                         slotProducts.push(child);
                       }
                     }
                   } else {
-                    slotProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
+                    slotProducts.push(
+                      ...getProductsForSlot(allBlocks, slot.$jazz.id),
+                    );
                   }
                   return (
                     <SortableSlotSection
@@ -530,12 +572,14 @@ export function CollectionView({
               const slotProducts: LoadedBlock[] = [];
               if (slot.children?.$isLoaded) {
                 for (const child of slot.children) {
-                  if (child && child.$isLoaded && child.type === "product") {
+                  if (child && child.$isLoaded && child.type === 'product') {
                     slotProducts.push(child);
                   }
                 }
               } else {
-                slotProducts.push(...getProductsForSlot(allBlocks, slot.$jazz.id));
+                slotProducts.push(
+                  ...getProductsForSlot(allBlocks, slot.$jazz.id),
+                );
               }
               return (
                 <SlotSection
@@ -563,10 +607,16 @@ export function CollectionView({
                 {ungroupedProducts.length > 1 && !isReorderMode && (
                   <button
                     type="button"
-                    onClick={() => setIsUngroupedReorderMode(!isUngroupedReorderMode)}
-                    className={isUngroupedReorderMode ? styles.doneButton : styles.reorderButton}
+                    onClick={() =>
+                      setIsUngroupedReorderMode(!isUngroupedReorderMode)
+                    }
+                    className={
+                      isUngroupedReorderMode
+                        ? styles.doneButton
+                        : styles.reorderButton
+                    }
                   >
-                    {isUngroupedReorderMode ? "Done" : "Reorder"}
+                    {isUngroupedReorderMode ? 'Done' : 'Reorder'}
                   </button>
                 )}
               </div>
@@ -582,7 +632,10 @@ export function CollectionView({
                   >
                     <div className={styles.productList}>
                       {ungroupedProducts.map((block) => (
-                        <SortableProductItem key={block.$jazz.id} product={block} />
+                        <SortableProductItem
+                          key={block.$jazz.id}
+                          product={block}
+                        />
                       ))}
                     </div>
                   </SortableContext>

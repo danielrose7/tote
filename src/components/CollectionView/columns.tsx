@@ -1,7 +1,7 @@
-import { createColumnHelper } from "@tanstack/react-table";
-import type { co } from "jazz-tools";
-import type { Block } from "../../schema";
-import styles from "./TableView.module.css";
+import { createColumnHelper } from '@tanstack/react-table';
+import type { co } from 'jazz-tools';
+import type { Block } from '../../schema';
+import styles from './TableView.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -18,8 +18,8 @@ function formatRelativeDate(date: Date): string {
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays} days ago`;
   if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
   if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
@@ -36,22 +36,29 @@ interface ColumnOptions {
 }
 
 export function getColumns(options: ColumnOptions) {
-  const { onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds, allBlocks } = options;
+  const {
+    onEdit,
+    onDelete,
+    onRefresh,
+    refreshingBlockId,
+    enqueuedBlockIds,
+    allBlocks,
+  } = options;
 
   // Helper to get slot name for a product
   const getSlotName = (block: LoadedBlock): string | null => {
     if (!block.parentId || !allBlocks) return null;
     const parent = allBlocks.find((b) => b.$jazz.id === block.parentId);
-    if (parent?.type === "slot") {
-      return parent.name || "Unnamed slot";
+    if (parent?.type === 'slot') {
+      return parent.name || 'Unnamed slot';
     }
     return null;
   };
 
   return [
     columnHelper.display({
-      id: "image",
-      header: "",
+      id: 'image',
+      header: '',
       size: 60,
       cell: (info) => {
         const block = info.row.original;
@@ -86,12 +93,12 @@ export function getColumns(options: ColumnOptions) {
       },
     }),
 
-    columnHelper.accessor("name", {
-      header: "Title",
+    columnHelper.accessor('name', {
+      header: 'Title',
       size: 300,
       cell: (info) => {
         const block = info.row.original;
-        const title = info.getValue() || "Untitled";
+        const title = info.getValue() || 'Untitled';
         const url = block.productData?.url;
         return url ? (
           <a
@@ -110,8 +117,8 @@ export function getColumns(options: ColumnOptions) {
     }),
 
     columnHelper.display({
-      id: "price",
-      header: "Price",
+      id: 'price',
+      header: 'Price',
       size: 100,
       cell: (info) => {
         const block = info.row.original;
@@ -125,8 +132,8 @@ export function getColumns(options: ColumnOptions) {
     }),
 
     columnHelper.display({
-      id: "slot",
-      header: "Slot",
+      id: 'slot',
+      header: 'Slot',
       size: 140,
       cell: (info) => {
         const block = info.row.original;
@@ -139,8 +146,8 @@ export function getColumns(options: ColumnOptions) {
       },
     }),
 
-    columnHelper.accessor("createdAt", {
-      header: "Added",
+    columnHelper.accessor('createdAt', {
+      header: 'Added',
       size: 120,
       cell: (info) => {
         const date = info.getValue();
@@ -153,8 +160,8 @@ export function getColumns(options: ColumnOptions) {
     }),
 
     columnHelper.display({
-      id: "actions",
-      header: "",
+      id: 'actions',
+      header: '',
       size: 100,
       cell: (info) => {
         const block = info.row.original;
@@ -168,9 +175,15 @@ export function getColumns(options: ColumnOptions) {
             {onRefresh && (
               <button
                 type="button"
-                className={`${styles.actionButton} ${isRefreshing ? styles.actionButtonSpinning : ""}`}
+                className={`${styles.actionButton} ${isRefreshing ? styles.actionButtonSpinning : ''}`}
                 onClick={() => onRefresh(block)}
-                title={isRefreshing ? "Refreshing..." : isEnqueued ? "Queued" : "Refresh metadata"}
+                title={
+                  isRefreshing
+                    ? 'Refreshing...'
+                    : isEnqueued
+                      ? 'Queued'
+                      : 'Refresh metadata'
+                }
                 disabled={isDisabled}
               >
                 <svg

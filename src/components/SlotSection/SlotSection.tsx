@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -7,24 +7,24 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import type { LoadedBlock } from "../../lib/blocks";
-import { reorderBlockList } from "../../lib/blocks";
+} from '@dnd-kit/sortable';
+import type { LoadedBlock } from '../../lib/blocks';
+import { reorderBlockList } from '../../lib/blocks';
 import {
   getSelectionCount,
   isProductSelected,
   toggleProductSelection,
   formatBudget,
   getSelectedTotal,
-} from "../../lib/slotHelpers";
-import { ProductCard } from "../ProductCard/ProductCard";
-import { SortableProductItem } from "./SortableProductItem";
-import styles from "./SlotSection.module.css";
+} from '../../lib/slotHelpers';
+import { ProductCard } from '../ProductCard/ProductCard';
+import { SortableProductItem } from './SortableProductItem';
+import styles from './SlotSection.module.css';
 
 export interface SlotSectionProps {
   slotBlock: LoadedBlock;
@@ -59,10 +59,12 @@ export function SlotSection({
   const [editName, setEditName] = useState(slotBlock.name);
   // Empty string = no target, number string = target
   const [editMaxSelections, setEditMaxSelections] = useState(
-    slotBlock.slotData?.maxSelections?.toString() ?? ""
+    slotBlock.slotData?.maxSelections?.toString() ?? '',
   );
   const [editBudget, setEditBudget] = useState(
-    slotBlock.slotData?.budget ? (slotBlock.slotData.budget / 100).toString() : ""
+    slotBlock.slotData?.budget
+      ? (slotBlock.slotData.budget / 100).toString()
+      : '',
   );
 
   // DnD sensors for product reordering
@@ -74,7 +76,7 @@ export function SlotSection({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const { current: selectedCount, max: maxSelections } =
@@ -92,11 +94,15 @@ export function SlotSection({
 
   const handleSaveEdit = () => {
     // Update the slot block - convert dollars to cents for storage
-    const budgetCents = editBudget ? Math.round(Number(editBudget) * 100) : undefined;
+    const budgetCents = editBudget
+      ? Math.round(Number(editBudget) * 100)
+      : undefined;
     // Empty string = no target (undefined), otherwise parse as number
-    const maxSelectionsValue = editMaxSelections ? Number(editMaxSelections) : undefined;
-    slotBlock.$jazz.set("name", editName);
-    slotBlock.$jazz.set("slotData", {
+    const maxSelectionsValue = editMaxSelections
+      ? Number(editMaxSelections)
+      : undefined;
+    slotBlock.$jazz.set('name', editName);
+    slotBlock.$jazz.set('slotData', {
       ...slotBlock.slotData,
       maxSelections: maxSelectionsValue,
       budget: budgetCents,
@@ -106,15 +112,19 @@ export function SlotSection({
 
   const handleCancelEdit = () => {
     setEditName(slotBlock.name);
-    setEditMaxSelections(slotBlock.slotData?.maxSelections?.toString() ?? "");
-    setEditBudget(slotBlock.slotData?.budget ? (slotBlock.slotData.budget / 100).toString() : "");
+    setEditMaxSelections(slotBlock.slotData?.maxSelections?.toString() ?? '');
+    setEditBudget(
+      slotBlock.slotData?.budget
+        ? (slotBlock.slotData.budget / 100).toString()
+        : '',
+    );
     setIsEditing(false);
   };
 
   const handleDelete = () => {
     if (
       window.confirm(
-        `Delete "${slotBlock.name}"? Products will be moved back to the collection.`
+        `Delete "${slotBlock.name}"? Products will be moved back to the collection.`,
       )
     ) {
       onDeleteSlot?.(slotBlock);
@@ -148,7 +158,9 @@ export function SlotSection({
   const effectiveCollapsed = forceCollapsed || isCollapsed;
 
   return (
-    <section className={`${styles.section} ${isDragging ? styles.dragging : ""} ${forceCollapsed ? styles.reorderMode : ""}`}>
+    <section
+      className={`${styles.section} ${isDragging ? styles.dragging : ''} ${forceCollapsed ? styles.reorderMode : ''}`}
+    >
       {/* Header */}
       <div className={styles.header}>
         {dragHandleProps && (
@@ -176,7 +188,7 @@ export function SlotSection({
             aria-expanded={!isCollapsed}
           >
             <svg
-              className={`${styles.chevron} ${isCollapsed ? styles.chevronCollapsed : ""}`}
+              className={`${styles.chevron} ${isCollapsed ? styles.chevronCollapsed : ''}`}
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -250,11 +262,14 @@ export function SlotSection({
                 <>
                   {maxSelections !== undefined && (
                     <span className={styles.selectionCount}>
-                      {selectedCount}/{maxSelections === 0 ? "∞" : maxSelections} selected
+                      {selectedCount}/
+                      {maxSelections === 0 ? '∞' : maxSelections} selected
                     </span>
                   )}
                   {budget !== undefined && (
-                    <span className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ""}`}>
+                    <span
+                      className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ''}`}
+                    >
                       {formatBudget(selectedTotal)} / {formatBudget(budget)}
                     </span>
                   )}
@@ -266,10 +281,16 @@ export function SlotSection({
                 {products.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => setIsProductReorderMode(!isProductReorderMode)}
-                    className={isProductReorderMode ? styles.doneButton : styles.reorderButton}
+                    onClick={() =>
+                      setIsProductReorderMode(!isProductReorderMode)
+                    }
+                    className={
+                      isProductReorderMode
+                        ? styles.doneButton
+                        : styles.reorderButton
+                    }
                   >
-                    {isProductReorderMode ? "Done" : "Reorder"}
+                    {isProductReorderMode ? 'Done' : 'Reorder'}
                   </button>
                 )}
                 {!isProductReorderMode && (
@@ -281,7 +302,14 @@ export function SlotSection({
                       aria-label="Edit slot"
                       data-tooltip="Edit"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
@@ -294,7 +322,14 @@ export function SlotSection({
                         aria-label="Delete slot"
                         data-tooltip="Delete"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
                           <polyline points="3 6 5 6 21 6" />
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
@@ -312,9 +347,7 @@ export function SlotSection({
       {!effectiveCollapsed && (
         <div className={styles.content}>
           {products.length === 0 ? (
-            <div className={styles.empty}>
-              No products in this slot yet
-            </div>
+            <div className={styles.empty}>No products in this slot yet</div>
           ) : isProductReorderMode ? (
             <DndContext
               sensors={sensors}
@@ -327,7 +360,10 @@ export function SlotSection({
               >
                 <div className={styles.productList}>
                   {products.map((product) => (
-                    <SortableProductItem key={product.$jazz.id} product={product} />
+                    <SortableProductItem
+                      key={product.$jazz.id}
+                      product={product}
+                    />
                   ))}
                 </div>
               </SortableContext>

@@ -1,14 +1,20 @@
-"use client";
+'use client';
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut, useUser } from "@clerk/nextjs";
-import Link from "next/link";
-import styles from "./AuthButton.module.css";
+import {
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  useUser,
+} from '@clerk/nextjs';
+import Link from 'next/link';
+import styles from './AuthButton.module.css';
 
 interface AuthButtonProps {
-  variant?: "landing" | "app";
+  variant?: 'landing' | 'app';
 }
 
-export function AuthButton({ variant = "app" }: AuthButtonProps) {
+export function AuthButton({ variant = 'app' }: AuthButtonProps) {
   const { user, isLoaded } = useUser();
 
   return (
@@ -19,13 +25,18 @@ export function AuthButton({ variant = "app" }: AuthButtonProps) {
             <button className={styles.button}>Log in</button>
           </SignInButton>
           <SignUpButton mode="modal" fallbackRedirectUrl="/collections">
-            <button className={`${styles.button} ${styles.buttonPrimary}`}>Sign up</button>
+            <button className={`${styles.button} ${styles.buttonPrimary}`}>
+              Sign up
+            </button>
           </SignUpButton>
         </div>
       </SignedOut>
       <SignedIn>
-        {variant === "landing" ? (
-          <Link href="/collections" className={`${styles.button} ${styles.buttonPrimary}`}>
+        {variant === 'landing' ? (
+          <Link
+            href="/collections"
+            className={`${styles.button} ${styles.buttonPrimary}`}
+          >
             Open Tote
           </Link>
         ) : (
@@ -33,12 +44,12 @@ export function AuthButton({ variant = "app" }: AuthButtonProps) {
             {isLoaded && user?.imageUrl ? (
               <img
                 src={user.imageUrl}
-                alt={user.firstName || "Account"}
+                alt={user.firstName || 'Account'}
                 className={styles.avatar}
               />
             ) : (
               <div className={styles.avatarPlaceholder}>
-                {user?.firstName?.[0] || "?"}
+                {user?.firstName?.[0] || '?'}
               </div>
             )}
           </Link>

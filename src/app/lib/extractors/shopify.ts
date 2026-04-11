@@ -1,4 +1,4 @@
-import type { ExtractionResult } from "./types";
+import type { ExtractionResult } from './types';
 
 interface ShopifyProduct {
   id: number;
@@ -29,12 +29,14 @@ interface ShopifyProduct {
 
 export function isShopifySite(html: string, url: string): boolean {
   // Check for Shopify CDN in URLs
-  if (url.includes("cdn.shopify.com") || url.includes(".myshopify.com")) {
+  if (url.includes('cdn.shopify.com') || url.includes('.myshopify.com')) {
     return true;
   }
 
   // Check for Shopify meta generator tag
-  if (/<meta[^>]*name=["']generator["'][^>]*content=["']Shopify["']/i.test(html)) {
+  if (
+    /<meta[^>]*name=["']generator["'][^>]*content=["']Shopify["']/i.test(html)
+  ) {
     return true;
   }
 
@@ -64,11 +66,11 @@ function formatPrice(cents: number): string {
 function optimizeShopifyImageUrl(imageUrl: string): string {
   // Remove size constraints to get full resolution
   // Shopify images often have _100x100 or similar suffixes
-  return imageUrl.replace(/_\d+x\d*|\d+x\d+_/g, "");
+  return imageUrl.replace(/_\d+x\d*|\d+x\d+_/g, '');
 }
 
 export async function extractShopifyProduct(
-  url: string
+  url: string,
 ): Promise<ExtractionResult | null> {
   const handle = extractHandleFromUrl(url);
   if (!handle) return null;
@@ -81,8 +83,8 @@ export async function extractShopifyProduct(
 
     const response = await fetch(productJsonUrl, {
       headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0 (compatible; ToteBot/1.0)",
+        Accept: 'application/json',
+        'User-Agent': 'Mozilla/5.0 (compatible; ToteBot/1.0)',
       },
     });
 
@@ -92,7 +94,7 @@ export async function extractShopifyProduct(
     const extractedFields: string[] = [];
 
     const title = product.title;
-    const description = product.description?.replace(/<[^>]+>/g, " ").trim();
+    const description = product.description?.replace(/<[^>]+>/g, ' ').trim();
     const imageUrl = product.featured_image
       ? optimizeShopifyImageUrl(product.featured_image)
       : product.images?.[0]
@@ -100,13 +102,13 @@ export async function extractShopifyProduct(
         : undefined;
     const price = formatPrice(product.price_min || product.price);
     const brand = product.vendor;
-    const availability = product.available ? "InStock" : "OutOfStock";
+    const availability = product.available ? 'InStock' : 'OutOfStock';
 
-    if (title) extractedFields.push("title");
-    if (description) extractedFields.push("description");
-    if (imageUrl) extractedFields.push("imageUrl");
-    if (price) extractedFields.push("price");
-    if (brand) extractedFields.push("brand");
+    if (title) extractedFields.push('title');
+    if (description) extractedFields.push('description');
+    if (imageUrl) extractedFields.push('imageUrl');
+    if (price) extractedFields.push('price');
+    if (brand) extractedFields.push('brand');
 
     return {
       url,
@@ -114,11 +116,11 @@ export async function extractShopifyProduct(
       description,
       imageUrl,
       price,
-      currency: "USD", // Shopify JS API doesn't include currency, would need store config
+      currency: 'USD', // Shopify JS API doesn't include currency, would need store config
       brand,
       availability,
-      platform: "shopify",
-      source: "shopify",
+      platform: 'shopify',
+      source: 'shopify',
       confidence: extractedFields.length / 5,
       extractedFields,
     };

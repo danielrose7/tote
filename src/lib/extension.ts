@@ -18,18 +18,22 @@ export interface TabInfo {
 }
 
 // Extension ID - set via env var or hardcode after publishing
-export const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID || "";
+export const EXTENSION_ID = process.env.NEXT_PUBLIC_EXTENSION_ID || '';
 
 /**
  * Send a message to the extension and return the response.
  */
 function sendExtensionMessage<T>(
   type: string,
-  payload?: Record<string, unknown>
+  payload?: Record<string, unknown>,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
-    if (!EXTENSION_ID || typeof chrome === "undefined" || !chrome.runtime?.sendMessage) {
-      reject(new Error("Extension not available"));
+    if (
+      !EXTENSION_ID ||
+      typeof chrome === 'undefined' ||
+      !chrome.runtime?.sendMessage
+    ) {
+      reject(new Error('Extension not available'));
       return;
     }
 
@@ -42,7 +46,7 @@ function sendExtensionMessage<T>(
         } else {
           resolve(response);
         }
-      }
+      },
     );
   });
 }
@@ -52,7 +56,7 @@ function sendExtensionMessage<T>(
  */
 export async function checkExtensionAvailable(): Promise<boolean> {
   try {
-    const response = await sendExtensionMessage<{ success: boolean }>("PING");
+    const response = await sendExtensionMessage<{ success: boolean }>('PING');
     return response?.success === true;
   } catch {
     return false;
@@ -62,21 +66,23 @@ export async function checkExtensionAvailable(): Promise<boolean> {
 /**
  * Refresh a link by opening it in a background tab and extracting metadata.
  */
-export async function refreshViaExtension(url: string): Promise<ExtractedMetadata | null> {
+export async function refreshViaExtension(
+  url: string,
+): Promise<ExtractedMetadata | null> {
   try {
     const response = await sendExtensionMessage<{
       success: boolean;
       metadata?: ExtractedMetadata;
       error?: string;
-    }>("REFRESH_LINK", { url });
+    }>('REFRESH_LINK', { url });
 
     if (response.success && response.metadata) {
       return response.metadata;
     }
-    console.warn("[Tote] Extension refresh failed:", response.error);
+    console.warn('[Tote] Extension refresh failed:', response.error);
     return null;
   } catch (error) {
-    console.error("[Tote] Extension communication error:", error);
+    console.error('[Tote] Extension communication error:', error);
     return null;
   }
 }
@@ -89,24 +95,26 @@ export async function getAllTabs(): Promise<TabInfo[]> {
     success: boolean;
     tabs?: TabInfo[];
     error?: string;
-  }>("GET_ALL_TABS");
+  }>('GET_ALL_TABS');
 
   if (response.success && response.tabs) {
     return response.tabs;
   }
-  throw new Error(response.error || "Failed to get tabs");
+  throw new Error(response.error || 'Failed to get tabs');
 }
 
 /**
  * Extract metadata from an already-open tab by its tab ID.
  */
-export async function extractTabMetadata(tabId: number): Promise<ExtractedMetadata | null> {
+export async function extractTabMetadata(
+  tabId: number,
+): Promise<ExtractedMetadata | null> {
   try {
     const response = await sendExtensionMessage<{
       success: boolean;
       metadata?: ExtractedMetadata;
       error?: string;
-    }>("EXTRACT_TAB_METADATA", { tabId });
+    }>('EXTRACT_TAB_METADATA', { tabId });
 
     if (response.success && response.metadata) {
       return response.metadata;

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import styles from "./OfflineBanner.module.css";
+import { useState, useEffect } from 'react';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import styles from './OfflineBanner.module.css';
 
 export function OfflineBanner() {
   const isOnline = useOnlineStatus();

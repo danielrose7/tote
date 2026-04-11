@@ -1,5 +1,5 @@
-import type { CurationMode, SectionPlan, ExtractedSection } from "./types";
-import { CURATOR_PERSONA } from "./workspace/CURATOR";
+import type { CurationMode, SectionPlan, ExtractedSection } from './types';
+import { CURATOR_PERSONA } from './workspace/CURATOR';
 
 export const CURATOR_SYSTEM_PROMPT = CURATOR_PERSONA;
 
@@ -14,15 +14,15 @@ Rules:
 Output format: { "urls": ["https://...", ...] }`;
 
 export function buildPlanPrompt(
-	topic: string,
-	answers: {
-		audience: string;
-		lens: string;
-		constraints: string;
-		mode: CurationMode;
-	},
+  topic: string,
+  answers: {
+    audience: string;
+    lens: string;
+    constraints: string;
+    mode: CurationMode;
+  },
 ): string {
-	return `Topic: ${topic}
+  return `Topic: ${topic}
 
 Audience: ${answers.audience}
 Lens: ${answers.lens}
@@ -48,16 +48,16 @@ Return only valid JSON:
 }
 
 export function buildUrlDiscoveryPrompt(
-	section: SectionPlan,
-	topic: string,
-	answers: {
-		audience: string;
-		lens: string;
-		constraints: string;
-		mode: CurationMode;
-	},
+  section: SectionPlan,
+  topic: string,
+  answers: {
+    audience: string;
+    lens: string;
+    constraints: string;
+    mode: CurationMode;
+  },
 ): string {
-	return `Find ${section.targetCount}-${section.targetCount + 2} product page URLs for the "${section.title}" section of a collection on: ${topic}
+  return `Find ${section.targetCount}-${section.targetCount + 2} product page URLs for the "${section.title}" section of a collection on: ${topic}
 
 Audience: ${answers.audience}
 Lens: ${answers.lens}
@@ -76,26 +76,26 @@ Return only valid JSON: { "urls": ["https://...", ...] }`;
 }
 
 export function buildCuratePrompt(
-	planTitle: string,
-	planIntro: string,
-	extractedSections: ExtractedSection[],
-	answers: {
-		audience: string;
-		lens: string;
-		constraints: string;
-		mode: CurationMode;
-	},
+  planTitle: string,
+  planIntro: string,
+  extractedSections: ExtractedSection[],
+  answers: {
+    audience: string;
+    lens: string;
+    constraints: string;
+    mode: CurationMode;
+  },
 ): string {
-	const sectionsJson = JSON.stringify(
-		extractedSections.map((s) => ({
-			title: s.title,
-			items: s.items,
-		})),
-		null,
-		2,
-	);
+  const sectionsJson = JSON.stringify(
+    extractedSections.map((s) => ({
+      title: s.title,
+      items: s.items,
+    })),
+    null,
+    2,
+  );
 
-	return `You have extracted product page data for a collection titled "${planTitle}".
+  return `You have extracted product page data for a collection titled "${planTitle}".
 
 Audience: ${answers.audience}
 Lens: ${answers.lens}

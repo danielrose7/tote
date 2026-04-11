@@ -708,3 +708,107 @@
 .errorBox p {
 	margin: 0;
 }
+
+/* Credits panel */
+
+.newCurationDisabled {
+	padding: 0.625rem 1.25rem;
+	background: var(--color-border);
+	color: var(--color-text-secondary);
+	border-radius: 8px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	cursor: not-allowed;
+	display: inline-block;
+}
+
+.creditsPanel {
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+}
+
+.creditsRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.creditsBalance {
+	font-size: 0.82rem;
+	color: var(--color-text-secondary);
+}
+
+.creditsBalanceLow {
+	color: #b45309;
+}
+
+.creditsToggle {
+	font-size: 0.8rem;
+	padding: 0.3rem 0.75rem;
+	border: 1px solid var(--color-border);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.creditsToggle:hover {
+	border-color: var(--color-accent);
+	color: var(--color-text-primary);
+}
+
+.creditsPacks {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.5rem;
+}
+
+.creditsPack {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	padding: 0.875rem 1rem;
+	border: 1px solid var(--color-border);
+	border-radius: 10px;
+	background: var(--color-surface);
+	cursor: pointer;
+	text-align: left;
+	transition: border-color 0.1s;
+}
+
+.creditsPack:hover:not(:disabled) {
+	border-color: var(--color-accent);
+}
+
+.creditsPack:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.creditsPackLabel {
+	font-size: 0.78rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--color-text-secondary);
+}
+
+.creditsPackAmount {
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: var(--color-text-primary);
+}
+
+.creditsPackDesc {
+	font-size: 0.75rem;
+	color: var(--color-text-secondary);
+}
+
+.creditsPackLoading {
+	font-size: 0.72rem;
+	color: var(--color-accent);
+	margin-top: 0.25rem;
+}

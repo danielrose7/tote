@@ -1,15 +1,15 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
   flexRender,
   type SortingState,
-} from "@tanstack/react-table";
-import type { co } from "jazz-tools";
-import type { Block } from "../../schema";
-import { getColumns } from "./columns";
-import styles from "./TableView.module.css";
+} from '@tanstack/react-table';
+import type { co } from 'jazz-tools';
+import type { Block } from '../../schema';
+import { getColumns } from './columns';
+import styles from './TableView.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -35,8 +35,23 @@ export function TableView({
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo(
-    () => getColumns({ onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds, allBlocks }),
-    [onEdit, onDelete, onRefresh, refreshingBlockId, enqueuedBlockIds, allBlocks]
+    () =>
+      getColumns({
+        onEdit,
+        onDelete,
+        onRefresh,
+        refreshingBlockId,
+        enqueuedBlockIds,
+        allBlocks,
+      }),
+    [
+      onEdit,
+      onDelete,
+      onRefresh,
+      refreshingBlockId,
+      enqueuedBlockIds,
+      allBlocks,
+    ],
   );
 
   const table = useReactTable({
@@ -70,14 +85,14 @@ export function TableView({
                     <div className={styles.headerContent}>
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {header.column.getCanSort() && (
                         <span className={styles.sortIndicator}>
                           {{
-                            asc: " ↑",
-                            desc: " ↓",
-                          }[header.column.getIsSorted() as string] ?? ""}
+                            asc: ' ↑',
+                            desc: ' ↓',
+                          }[header.column.getIsSorted() as string] ?? ''}
                         </span>
                       )}
                     </div>
@@ -98,7 +113,7 @@ export function TableView({
               isEnqueued && styles.trEnqueued,
             ]
               .filter(Boolean)
-              .join(" ");
+              .join(' ');
 
             return (
               <tr key={row.id} className={rowClassName}>

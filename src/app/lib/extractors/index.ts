@@ -1,23 +1,23 @@
-import type { ExtractedMetadata, ExtractionResult } from "./types";
-import { extractJsonLd } from "./json-ld";
-import { extractOpenGraph } from "./open-graph";
-import { extractPrice } from "./price";
-import { isShopifySite, extractShopifyProduct } from "./shopify";
+import type { ExtractedMetadata, ExtractionResult } from './types';
+import { extractJsonLd } from './json-ld';
+import { extractOpenGraph } from './open-graph';
+import { extractPrice } from './price';
+import { isShopifySite, extractShopifyProduct } from './shopify';
 
-export type { ExtractedMetadata, ExtractionResult } from "./types";
+export type { ExtractedMetadata, ExtractionResult } from './types';
 
 // Decode HTML entities like &#x27; &quot; &amp; etc.
 function decodeHtmlEntities(text: string): string {
   return text
     .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) =>
-      String.fromCharCode(parseInt(hex, 16))
+      String.fromCharCode(parseInt(hex, 16)),
     )
     .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&"); // Must be last to avoid double-decoding
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&'); // Must be last to avoid double-decoding
 }
 
 interface MergedResult extends ExtractedMetadata {
@@ -31,7 +31,7 @@ function mergeResults(results: (ExtractionResult | null)[]): MergedResult {
 
   if (validResults.length === 0) {
     return {
-      url: "",
+      url: '',
       sources: [],
       confidence: 0,
       extractedFields: [],
@@ -40,7 +40,7 @@ function mergeResults(results: (ExtractionResult | null)[]): MergedResult {
 
   // Priority order for merging (first non-empty value wins)
   // Shopify > JSON-LD > Open Graph > HTML fallback
-  const priorityOrder = ["shopify", "json-ld", "open-graph", "html-fallback"];
+  const priorityOrder = ['shopify', 'json-ld', 'open-graph', 'html-fallback'];
   validResults.sort((a, b) => {
     const aIdx = priorityOrder.indexOf(a.source);
     const bIdx = priorityOrder.indexOf(b.source);
@@ -48,21 +48,21 @@ function mergeResults(results: (ExtractionResult | null)[]): MergedResult {
   });
 
   const merged: MergedResult = {
-    url: "",
+    url: '',
     sources: validResults.map((r) => r.source),
     confidence: 0,
     extractedFields: [],
   };
 
   const fields: (keyof ExtractedMetadata)[] = [
-    "title",
-    "description",
-    "imageUrl",
-    "price",
-    "currency",
-    "brand",
-    "availability",
-    "platform",
+    'title',
+    'description',
+    'imageUrl',
+    'price',
+    'currency',
+    'brand',
+    'availability',
+    'platform',
   ];
 
   for (const field of fields) {
@@ -79,9 +79,9 @@ function mergeResults(results: (ExtractionResult | null)[]): MergedResult {
   }
 
   // Calculate confidence based on extracted fields
-  const criticalFields = ["title", "imageUrl", "price"];
+  const criticalFields = ['title', 'imageUrl', 'price'];
   const criticalExtracted = criticalFields.filter((f) =>
-    merged.extractedFields.includes(f)
+    merged.extractedFields.includes(f),
   ).length;
   merged.confidence = criticalExtracted / criticalFields.length;
 
@@ -102,13 +102,13 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
   try {
     const response = await fetch(url, {
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
       },
-      redirect: "follow",
+      redirect: 'follow',
     });
 
     if (!response.ok) {
@@ -153,9 +153,12 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
         url,
         price: priceResult.price,
         currency: priceResult.currency,
-        source: "html-fallback",
+        source: 'html-fallback',
         confidence: 0.3,
-        extractedFields: ["price", ...(priceResult.currency ? ["currency"] : [])],
+        extractedFields: [
+          'price',
+          ...(priceResult.currency ? ['currency'] : []),
+        ],
       });
     }
   }
@@ -167,13 +170,13 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
   // Detect platform if not already set
   if (!merged.platform) {
     if (isShopifySite(html, url)) {
-      merged.platform = "shopify";
+      merged.platform = 'shopify';
     } else if (/squarespace/i.test(html)) {
-      merged.platform = "squarespace";
+      merged.platform = 'squarespace';
     } else if (/woocommerce/i.test(html)) {
-      merged.platform = "woocommerce";
+      merged.platform = 'woocommerce';
     } else {
-      merged.platform = "unknown";
+      merged.platform = 'unknown';
     }
   }
 

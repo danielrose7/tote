@@ -1,9 +1,9 @@
-import { useCoState } from "jazz-tools/react";
-import type { Block, JazzAccount, SharedCollectionRef } from "../../schema.ts";
-import { Block as BlockSchema } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import { CollectionCard } from "../CollectionCard/CollectionCard";
-import styles from "./CollectionList.module.css";
+import { useCoState } from 'jazz-tools/react';
+import type { Block, JazzAccount, SharedCollectionRef } from '../../schema.ts';
+import { Block as BlockSchema } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import { CollectionCard } from '../CollectionCard/CollectionCard';
+import styles from './CollectionList.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
@@ -48,7 +48,7 @@ export function CollectionList({
     if (
       block &&
       block.$isLoaded &&
-      block.type === "collection" &&
+      block.type === 'collection' &&
       !block.parentId &&
       !block.collectionData?.sourceId // Exclude published clones
     ) {
@@ -140,18 +140,22 @@ function SharedCollectionCard({
   onClick?: (block: LoadedBlock) => void;
   onLeave?: (ref: LoadedSharedRef) => void;
 }) {
-  const collection = useCoState(BlockSchema, collectionId as `co_z${string}`, {});
+  const collection = useCoState(
+    BlockSchema,
+    collectionId as `co_z${string}`,
+    {},
+  );
 
   const handleLeave = (e: React.MouseEvent) => {
     e.stopPropagation();
     onLeave?.(sharedRef);
   };
 
-  if (!collection || collection.type !== "collection") {
+  if (!collection || collection.type !== 'collection') {
     return (
       <div className={styles.sharedCard}>
         <div className={styles.sharedCardLoading}>
-          {sharedRef.name || "Loading..."}
+          {sharedRef.name || 'Loading...'}
         </div>
       </div>
     );
@@ -166,7 +170,9 @@ function SharedCollectionCard({
       >
         <div
           className={styles.sharedCardColor}
-          style={{ backgroundColor: collection.collectionData?.color || "#6366f1" }}
+          style={{
+            backgroundColor: collection.collectionData?.color || '#6366f1',
+          }}
         />
         <div className={styles.sharedCardContent}>
           <h3 className={styles.sharedCardTitle}>{collection.name}</h3>

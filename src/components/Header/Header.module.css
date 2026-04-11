@@ -76,6 +76,17 @@
   gap: var(--spacing-md);
 }
 
+.curatorLink {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.curatorLink:hover {
+  color: var(--color-text-primary);
+}
+
 .addButton {
   background-color: var(--color-accent);
   color: white;

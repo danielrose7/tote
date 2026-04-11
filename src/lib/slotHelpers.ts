@@ -4,7 +4,7 @@
  * Provides utilities for working with slots and product selection within slots.
  */
 
-import type { LoadedBlock } from "./blocks";
+import type { LoadedBlock } from './blocks';
 
 // =============================================================================
 // Selection Helpers
@@ -18,7 +18,7 @@ export function getSelectionCount(slot: LoadedBlock): {
   current: number;
   max: number | undefined;
 } {
-  if (slot.type !== "slot") {
+  if (slot.type !== 'slot') {
     return { current: 0, max: undefined };
   }
   const selectedIds = slot.slotData?.selectedProductIds || [];
@@ -31,9 +31,9 @@ export function getSelectionCount(slot: LoadedBlock): {
  */
 export function isProductSelected(
   product: LoadedBlock,
-  slot: LoadedBlock
+  slot: LoadedBlock,
 ): boolean {
-  if (slot.type !== "slot" || product.type !== "product") {
+  if (slot.type !== 'slot' || product.type !== 'product') {
     return false;
   }
   const selectedIds = slot.slotData?.selectedProductIds || [];
@@ -46,10 +46,10 @@ export function isProductSelected(
  */
 export function toggleProductSelection(
   product: LoadedBlock,
-  slot: LoadedBlock
+  slot: LoadedBlock,
 ): { success: boolean; reason?: string } {
-  if (slot.type !== "slot" || product.type !== "product") {
-    return { success: false, reason: "Invalid block types" };
+  if (slot.type !== 'slot' || product.type !== 'product') {
+    return { success: false, reason: 'Invalid block types' };
   }
 
   const selectedIds = slot.slotData?.selectedProductIds || [];
@@ -59,7 +59,7 @@ export function toggleProductSelection(
   if (selectedIds.includes(productId)) {
     // Deselect
     const newIds = selectedIds.filter((id) => id !== productId);
-    slot.$jazz.set("slotData", {
+    slot.$jazz.set('slotData', {
       ...slot.slotData,
       selectedProductIds: newIds,
     });
@@ -69,10 +69,10 @@ export function toggleProductSelection(
     if (max !== undefined && max > 0 && selectedIds.length >= max) {
       return {
         success: false,
-        reason: `Maximum ${max} selection${max === 1 ? "" : "s"} allowed`,
+        reason: `Maximum ${max} selection${max === 1 ? '' : 's'} allowed`,
       };
     }
-    slot.$jazz.set("slotData", {
+    slot.$jazz.set('slotData', {
       ...slot.slotData,
       selectedProductIds: [...selectedIds, productId],
     });
@@ -85,14 +85,14 @@ export function toggleProductSelection(
  */
 export function removeFromSelection(
   productId: string,
-  slot: LoadedBlock
+  slot: LoadedBlock,
 ): void {
-  if (slot.type !== "slot") return;
+  if (slot.type !== 'slot') return;
 
   const selectedIds = slot.slotData?.selectedProductIds || [];
   if (selectedIds.includes(productId)) {
     const newIds = selectedIds.filter((id) => id !== productId);
-    slot.$jazz.set("slotData", {
+    slot.$jazz.set('slotData', {
       ...slot.slotData,
       selectedProductIds: newIds,
     });
@@ -108,9 +108,9 @@ export function removeFromSelection(
  */
 export function formatBudget(cents: number): string {
   const dollars = cents / 100;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
   }).format(dollars);
 }
 
@@ -118,12 +118,14 @@ export function formatBudget(cents: number): string {
  * Parse a price string to cents (e.g., "$29.99" -> 2999, "29.99" -> 2999)
  * Returns undefined if unable to parse
  */
-export function parsePriceToCents(priceString: string | undefined): number | undefined {
+export function parsePriceToCents(
+  priceString: string | undefined,
+): number | undefined {
   if (!priceString) return undefined;
   // Remove currency symbols and whitespace, extract numeric value
-  const cleaned = priceString.replace(/[^0-9.,]/g, "");
+  const cleaned = priceString.replace(/[^0-9.,]/g, '');
   // Handle comma as decimal separator (e.g., "29,99" -> "29.99")
-  const normalized = cleaned.replace(",", ".");
+  const normalized = cleaned.replace(',', '.');
   const value = parseFloat(normalized);
   if (isNaN(value)) return undefined;
   return Math.round(value * 100);
@@ -134,9 +136,9 @@ export function parsePriceToCents(priceString: string | undefined): number | und
  */
 export function getSelectedTotal(
   slot: LoadedBlock,
-  products: LoadedBlock[]
+  products: LoadedBlock[],
 ): number {
-  if (slot.type !== "slot") return 0;
+  if (slot.type !== 'slot') return 0;
   const selectedIds = slot.slotData?.selectedProductIds || [];
 
   return products.reduce((total, product) => {
@@ -155,14 +157,14 @@ export function getSelectedTotal(
  */
 export function getSlotsForCollection(
   allBlocks: LoadedBlock[],
-  collectionId: string
+  collectionId: string,
 ): LoadedBlock[] {
   return allBlocks.filter(
     (block) =>
       block &&
       block.$isLoaded &&
-      block.type === "slot" &&
-      block.parentId === collectionId
+      block.type === 'slot' &&
+      block.parentId === collectionId,
   );
 }
 
@@ -171,14 +173,14 @@ export function getSlotsForCollection(
  */
 export function getProductsForSlot(
   allBlocks: LoadedBlock[],
-  slotId: string
+  slotId: string,
 ): LoadedBlock[] {
   return allBlocks.filter(
     (block) =>
       block &&
       block.$isLoaded &&
-      block.type === "product" &&
-      block.parentId === slotId
+      block.type === 'product' &&
+      block.parentId === slotId,
   );
 }
 
@@ -187,13 +189,13 @@ export function getProductsForSlot(
  */
 export function getUngroupedProducts(
   allBlocks: LoadedBlock[],
-  collectionId: string
+  collectionId: string,
 ): LoadedBlock[] {
   return allBlocks.filter(
     (block) =>
       block &&
       block.$isLoaded &&
-      block.type === "product" &&
-      block.parentId === collectionId
+      block.type === 'product' &&
+      block.parentId === collectionId,
   );
 }

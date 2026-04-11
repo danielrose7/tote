@@ -1,22 +1,22 @@
-import * as Dialog from "@radix-ui/react-dialog";
-import { useState, useEffect, useCallback } from "react";
-import type { JazzAccount, Block } from "../../schema.ts";
-import type { co } from "jazz-tools";
-import { Group } from "jazz-tools";
-import { Block as BlockSchema } from "../../schema";
-import { fetchMetadata } from "../../app/utils/metadata";
-import { useToast } from "../ToastNotification";
-import { useAllCollections } from "../../hooks/useAllCollections";
-import { SlotSelector } from "../SlotSelector/SlotSelector";
-import { BlockList } from "../../schema";
+import * as Dialog from '@radix-ui/react-dialog';
+import { useState, useEffect, useCallback } from 'react';
+import type { JazzAccount, Block } from '../../schema.ts';
+import type { co } from 'jazz-tools';
+import { Group } from 'jazz-tools';
+import { Block as BlockSchema } from '../../schema';
+import { fetchMetadata } from '../../app/utils/metadata';
+import { useToast } from '../ToastNotification';
+import { useAllCollections } from '../../hooks/useAllCollections';
+import { SlotSelector } from '../SlotSelector/SlotSelector';
+import { BlockList } from '../../schema';
 import {
   checkExtensionAvailable,
   getAllTabs,
   extractTabMetadata,
   type TabInfo,
-} from "../../lib/extension";
-import { CHROME_WEB_STORE_URL } from "../../lib/constants";
-import styles from "./SaveTabsDialog.module.css";
+} from '../../lib/extension';
+import { CHROME_WEB_STORE_URL } from '../../lib/constants';
+import styles from './SaveTabsDialog.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -28,15 +28,15 @@ interface SaveTabsDialogProps {
 }
 
 type DialogState =
-  | { type: "loading" }
-  | { type: "no-extension" }
-  | { type: "tabs"; tabs: TabInfo[] }
-  | { type: "saving"; current: number; total: number }
-  | { type: "error"; message: string };
+  | { type: 'loading' }
+  | { type: 'no-extension' }
+  | { type: 'tabs'; tabs: TabInfo[] }
+  | { type: 'saving'; current: number; total: number }
+  | { type: 'error'; message: string };
 
 function getDomain(url: string): string {
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    return new URL(url).hostname.replace(/^www\./, '');
   } catch {
     return url;
   }
@@ -49,9 +49,9 @@ export function SaveTabsDialog({
   collectionId,
 }: SaveTabsDialogProps) {
   const { showToast } = useToast();
-  const [state, setState] = useState<DialogState>({ type: "loading" });
+  const [state, setState] = useState<DialogState>({ type: 'loading' });
   const [selectedTabIds, setSelectedTabIds] = useState<Set<number>>(new Set());
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string>("");
+  const [selectedCollectionId, setSelectedCollectionId] = useState<string>('');
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [createdSlots, setCreatedSlots] = useState<LoadedBlock[]>([]);
 
@@ -63,32 +63,32 @@ export function SaveTabsDialog({
 
   // Load tabs when dialog opens
   const loadTabs = useCallback(async () => {
-    setState({ type: "loading" });
+    setState({ type: 'loading' });
 
     const available = await checkExtensionAvailable();
     if (!available) {
-      setState({ type: "no-extension" });
+      setState({ type: 'no-extension' });
       return;
     }
 
     try {
       const tabs = await getAllTabs();
-      setState({ type: "tabs", tabs });
+      setState({ type: 'tabs', tabs });
       // Select all extractable tabs by default
       setSelectedTabIds(
-        new Set(tabs.filter((t) => t.extractable).map((t) => t.tabId))
+        new Set(tabs.filter((t) => t.extractable).map((t) => t.tabId)),
       );
     } catch (error) {
       setState({
-        type: "error",
-        message: error instanceof Error ? error.message : "Failed to get tabs",
+        type: 'error',
+        message: error instanceof Error ? error.message : 'Failed to get tabs',
       });
     }
   }, []);
 
   useEffect(() => {
     if (open) {
-      setSelectedCollectionId(defaultCollectionId || "");
+      setSelectedCollectionId(defaultCollectionId || '');
       setSelectedSlotId(null);
       setCreatedSlots([]);
       loadTabs();
@@ -112,9 +112,9 @@ export function SaveTabsDialog({
   };
 
   const selectAll = () => {
-    if (state.type !== "tabs") return;
+    if (state.type !== 'tabs') return;
     setSelectedTabIds(
-      new Set(state.tabs.filter((t) => t.extractable).map((t) => t.tabId))
+      new Set(state.tabs.filter((t) => t.extractable).map((t) => t.tabId)),
     );
   };
 
@@ -123,8 +123,10 @@ export function SaveTabsDialog({
   };
 
   const allExtractableSelected =
-    state.type === "tabs" &&
-    state.tabs.filter((t) => t.extractable).every((t) => selectedTabIds.has(t.tabId));
+    state.type === 'tabs' &&
+    state.tabs
+      .filter((t) => t.extractable)
+      .every((t) => selectedTabIds.has(t.tabId));
 
   // Get slots for the currently selected collection
   const getSlotsForSelectedCollection = (): LoadedBlock[] => {
@@ -133,7 +135,7 @@ export function SaveTabsDialog({
     const existingSlots: LoadedBlock[] = [];
     if (collectionBlock?.children?.$isLoaded) {
       for (const child of collectionBlock.children) {
-        if (child && child.$isLoaded && child.type === "slot") {
+        if (child && child.$isLoaded && child.type === 'slot') {
           existingSlots.push(child);
         }
       }
@@ -146,7 +148,7 @@ export function SaveTabsDialog({
   const handleCreateSlot = async (name: string): Promise<string> => {
     const collectionBlock = findCollection(selectedCollectionId);
     if (!collectionBlock?.children?.$isLoaded) {
-      throw new Error("Collection children not loaded");
+      throw new Error('Collection children not loaded');
     }
 
     let ownerGroup: Group | null = null;
@@ -157,18 +159,18 @@ export function SaveTabsDialog({
 
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : account.$jazz
+      ownerGroup ? { owner: ownerGroup } : account.$jazz,
     );
 
     const newSlot = BlockSchema.create(
       {
-        type: "slot",
+        type: 'slot',
         name,
         slotData: { maxSelections: 1 },
         children: slotChildren,
         createdAt: new Date(),
       },
-      ownerGroup ? { owner: ownerGroup } : account.$jazz
+      ownerGroup ? { owner: ownerGroup } : account.$jazz,
     );
 
     collectionBlock.children.$jazz.push(newSlot);
@@ -177,7 +179,7 @@ export function SaveTabsDialog({
   };
 
   const handleSave = async () => {
-    if (state.type !== "tabs" || selectedTabIds.size === 0) return;
+    if (state.type !== 'tabs' || selectedTabIds.size === 0) return;
     if (!selectedCollectionId) return;
     if (!account.root || !account.root.$isLoaded) return;
 
@@ -187,7 +189,7 @@ export function SaveTabsDialog({
     const selectedTabs = state.tabs.filter((t) => selectedTabIds.has(t.tabId));
     const total = selectedTabs.length;
 
-    setState({ type: "saving", current: 0, total });
+    setState({ type: 'saving', current: 0, total });
 
     // Get the collection's sharing group for proper ownership
     let ownerGroup: Group | null = null;
@@ -200,7 +202,7 @@ export function SaveTabsDialog({
     let parentBlock = collectionBlock;
     if (selectedSlotId) {
       const slotBlock = collectionBlock.children?.find(
-        (b) => b && b.$isLoaded && b.$jazz.id === selectedSlotId
+        (b) => b && b.$isLoaded && b.$jazz.id === selectedSlotId,
       );
       if (slotBlock?.children?.$isLoaded) {
         parentBlock = slotBlock;
@@ -211,7 +213,7 @@ export function SaveTabsDialog({
 
     for (let i = 0; i < selectedTabs.length; i++) {
       const tab = selectedTabs[i];
-      setState({ type: "saving", current: i, total });
+      setState({ type: 'saving', current: i, total });
 
       let metadata: {
         title?: string;
@@ -250,8 +252,8 @@ export function SaveTabsDialog({
 
       const newProductBlock = BlockSchema.create(
         {
-          type: "product",
-          name: metadata.title || tab.title || "Untitled",
+          type: 'product',
+          name: metadata.title || tab.title || 'Untitled',
           productData: {
             url: tab.url,
             imageUrl: metadata.imageUrl,
@@ -260,7 +262,7 @@ export function SaveTabsDialog({
           },
           createdAt: new Date(),
         },
-        ownerGroup ? { owner: ownerGroup } : account.$jazz
+        ownerGroup ? { owner: ownerGroup } : account.$jazz,
       );
 
       if (parentBlock.children?.$isLoaded) {
@@ -269,12 +271,12 @@ export function SaveTabsDialog({
       }
     }
 
-    setState({ type: "saving", current: total, total });
+    setState({ type: 'saving', current: total, total });
 
     showToast({
-      title: "Tabs saved",
-      description: `${savedCount} ${savedCount === 1 ? "tab" : "tabs"} saved to ${collectionBlock.name}`,
-      variant: "success",
+      title: 'Tabs saved',
+      description: `${savedCount} ${savedCount === 1 ? 'tab' : 'tabs'} saved to ${collectionBlock.name}`,
+      variant: 'success',
     });
 
     handleClose();
@@ -290,11 +292,11 @@ export function SaveTabsDialog({
             Select tabs to save as product links
           </Dialog.Description>
 
-          {state.type === "loading" && (
+          {state.type === 'loading' && (
             <div className={styles.loading}>Checking extension...</div>
           )}
 
-          {state.type === "no-extension" && (
+          {state.type === 'no-extension' && (
             <div className={styles.installPrompt}>
               <p className={styles.installPromptText}>
                 The Tote browser extension is required to access your open tabs.
@@ -310,11 +312,11 @@ export function SaveTabsDialog({
             </div>
           )}
 
-          {state.type === "error" && (
+          {state.type === 'error' && (
             <div className={styles.error}>{state.message}</div>
           )}
 
-          {state.type === "tabs" && (
+          {state.type === 'tabs' && (
             <>
               <div className={styles.selectControls}>
                 <button
@@ -322,10 +324,10 @@ export function SaveTabsDialog({
                   className={styles.selectToggle}
                   onClick={allExtractableSelected ? selectNone : selectAll}
                 >
-                  {allExtractableSelected ? "Select None" : "Select All"}
+                  {allExtractableSelected ? 'Select None' : 'Select All'}
                 </button>
                 <span className={styles.tabCount}>
-                  {selectedTabIds.size} of{" "}
+                  {selectedTabIds.size} of{' '}
                   {state.tabs.filter((t) => t.extractable).length} tabs selected
                 </span>
               </div>
@@ -334,7 +336,7 @@ export function SaveTabsDialog({
                 {state.tabs.map((tab) => (
                   <li
                     key={tab.tabId}
-                    className={`${styles.tabItem} ${!tab.extractable ? styles.tabItemDisabled : ""}`}
+                    className={`${styles.tabItem} ${!tab.extractable ? styles.tabItemDisabled : ''}`}
                     onClick={() => tab.extractable && toggleTab(tab.tabId)}
                   >
                     <input
@@ -367,7 +369,10 @@ export function SaveTabsDialog({
               {/* Collection Selector */}
               {collections.length > 0 && (
                 <div className={styles.inputGroup}>
-                  <label htmlFor="saveTabsCollectionId" className={styles.label}>
+                  <label
+                    htmlFor="saveTabsCollectionId"
+                    className={styles.label}
+                  >
                     Collection
                   </label>
                   <select
@@ -416,14 +421,14 @@ export function SaveTabsDialog({
                   disabled={selectedTabIds.size === 0 || !selectedCollectionId}
                   onClick={handleSave}
                 >
-                  Save {selectedTabIds.size}{" "}
-                  {selectedTabIds.size === 1 ? "Tab" : "Tabs"}
+                  Save {selectedTabIds.size}{' '}
+                  {selectedTabIds.size === 1 ? 'Tab' : 'Tabs'}
                 </button>
               </div>
             </>
           )}
 
-          {state.type === "saving" && (
+          {state.type === 'saving' && (
             <div className={styles.progress}>
               Saving {state.current}/{state.total} tabs...
             </div>
