@@ -137,7 +137,7 @@ export const curateCollection = inngest.createFunction(
       );
     },
   },
-  async ({ event, step }) => {
+  async ({ event, step, attempt }) => {
     const { sessionId, topic, requestedBy } = event.data;
     const ch = curationChannel({ sessionId });
     console.log('[curate-collection] run-start', {
@@ -150,15 +150,16 @@ export const curateCollection = inngest.createFunction(
     const generatedQuestions = await step.run(
       'generate-questions',
       async () => {
+        const maxTokens = 2048 + attempt * 1024;
         const response = await llm.generate({
           system:
             'You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.',
           prompt: buildQuestionsPrompt(topic),
-          maxTokens: 2048,
+          maxTokens,
         });
         if (response.summary.stopReason === 'max_tokens') {
           throw new Error(
-            `Question generation hit max_tokens limit (${2048}) — response truncated`,
+            `Question generation hit max_tokens limit (${maxTokens}) — response truncated`,
           );
         }
         const raw = parseJson<unknown>(response.text);
