@@ -154,7 +154,7 @@ export const curateCollection = inngest.createFunction(
           system:
             'You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.',
           prompt: buildQuestionsPrompt(topic),
-          maxTokens: 1024,
+          maxTokens: 2048,
         });
         const raw = parseJson<unknown>(response.text);
         const result = InterviewQuestionsSchema.safeParse(raw);
