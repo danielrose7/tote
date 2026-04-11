@@ -92,7 +92,9 @@ export function CurateHistoryClient() {
                   className={styles.sessionLink}
                 >
                   <span className={styles.sessionTopic}>
-                    {s.title ?? s.topic}
+                    {((s.title ?? s.topic) || '').length > 67
+                      ? `${(s.title ?? s.topic).slice(0, 67)}…`
+                      : (s.title ?? s.topic)}
                   </span>
                   <span
                     className={`${styles.sessionPhase} ${styles[`phase_${s.phase}`]}`}
