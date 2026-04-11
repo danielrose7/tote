@@ -160,7 +160,7 @@ export const curateCollection = inngest.createFunction(
         const result = InterviewQuestionsSchema.safeParse(raw);
         if (!result.success) {
           throw new Error(
-            `Failed to parse questions: ${response.text.slice(0, 200)}`,
+            `Failed to parse questions: ${JSON.stringify(result.error.issues)} | raw: ${response.text.slice(0, 300)}`,
           );
         }
         return { questions: result.data, usage: response.usage };
