@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "dev:inngest": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
-    "db:migrate": "tsx src/db/runner.ts",
-    "build": "tsx src/db/runner.ts && next build",
+    "db:migrate": "npx tsx src/db/runner.ts",
+    "build": "npx tsx src/db/runner.ts && next build",
     "start": "next start",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write"
