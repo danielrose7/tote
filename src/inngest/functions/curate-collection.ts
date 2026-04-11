@@ -146,6 +146,11 @@ export const curateCollection = inngest.createFunction(
       topic,
     });
 
+    await step.realtime.publish('acknowledged', ch.progress, {
+      step: 'acknowledged',
+      message: 'Workflow started — generating interview questions…',
+    });
+
     // Step 1: Generate context-specific interview questions for this topic
     const generatedQuestions = await step.run(
       'generate-questions',
