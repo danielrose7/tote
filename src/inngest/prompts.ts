@@ -81,6 +81,7 @@ Rules:
 - Use web search to find products. Read the search result titles and snippets to identify product page URLs.
 - Do NOT follow or fetch any URLs — collect them only from search result metadata.
 - Prefer brand-direct sites and independent specialty retailers. Avoid Amazon.
+- Return URLs for individual product pages only — avoid collection, category, or listing pages.
 - Return only valid JSON — no markdown, no explanation.
 
 Output format: { "urls": ["https://...", ...] }`;
@@ -136,6 +137,7 @@ If mode is "debug":
 
 Use web search to find products at independent retailers. Avoid Amazon.
 IMPORTANT: Do NOT read or fetch any URLs. Collect product page URLs from search result titles and snippets only.
+Return individual product page URLs only — not collection or category pages as they won't be extracted properly in future steps.
 Return only valid JSON: { "urls": ["https://...", ...] }`;
 }
 
@@ -226,6 +228,7 @@ ${mode === 'debug' ? '- Run 1 search only, collect 1-2 URLs' : ''}
 
 Use web search. Prioritise independent specialty retailers. Avoid Amazon.
 IMPORTANT: Do NOT read or fetch any URLs. Collect product page URLs from search result titles and snippets only.
+Return individual product page URLs only — avoid collection or category pages as we are after specific items.
 Return only valid JSON: { "urls": ["https://...", ...] }`;
 }
 
