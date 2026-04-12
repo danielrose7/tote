@@ -28,6 +28,7 @@ export interface CuratorSessionData {
     | 'refining'
     | 'complete'
     | 'error';
+  topic?: string;
   title?: string;
   sectionCount?: number;
   itemCount?: number;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useEffectEvent, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRealtime } from 'inngest/react';
 import { useAccount } from 'jazz-tools/react';
 import { curationChannel } from '../../../inngest/channels';
@@ -11,12 +11,7 @@ import {
 import { MOCK_EXTRACTED_ITEMS } from '../../../inngest/fixtures/extracted-items';
 import { fetchRealtimeToken } from './actions';
 import { useToast } from '../../../components/ToastNotification';
-import {
-  BlockList,
-  CuratorSession,
-  CuratorSessionList,
-  JazzAccount,
-} from '../../../schema';
+import { BlockList, CuratorSession, JazzAccount } from '../../../schema';
 import {
   type ImportPayload,
   createCollectionFromPayload,
@@ -24,6 +19,7 @@ import {
 } from '../../../lib/importPayload';
 import styles from './curate.module.css';
 import type { ExtractedItem, InterviewQuestion } from '../../../inngest/types';
+import { InterviewQuestionsSchema } from '../../../inngest/prompts';
 
 type CurationMode = 'normal' | 'debug';
 
@@ -63,11 +59,6 @@ type Answers = Record<string, string>;
 
 interface CuratePageClientProps {
   initialSessionId?: string | null;
-}
-
-interface UrlsData {
-  sections: { title: string; slug: string; urls: string[] }[];
-  mock?: boolean;
 }
 
 interface ExtractionEntry {
@@ -154,7 +145,6 @@ export function CuratePageClient({
     null,
   );
   const [importing, setImporting] = useState(false);
-  const [urlsData, setUrlsData] = useState<UrlsData | null>(null);
   const [extractionProgress, setExtractionProgress] =
     useState<ExtractionProgress | null>(null);
   const [tokenUsage, setTokenUsage] = useState<{
@@ -329,7 +319,11 @@ export function CuratePageClient({
       if (res.ok) {
         const snap = await res.json();
         if (snap.phase) setPhase(snap.phase);
-        if (snap.questions?.length > 0) setQuestions(snap.questions);
+        if (snap.questions?.length > 0) {
+          // Re-validate through schema to normalise `multi` from unknown → boolean
+          const parsed = InterviewQuestionsSchema.safeParse(snap.questions);
+          if (parsed.success) setQuestions(parsed.data);
+        }
         if (snap.progress?.length > 0) setProgress(snap.progress);
         if (snap.result) {
           setResult(snap.result);
@@ -348,12 +342,12 @@ export function CuratePageClient({
           }
         }
         if (snap.urlSections) {
-          setUrlsData({ sections: snap.urlSections, mock: false });
           // Re-queue any sections not yet extracted
           for (const section of snap.urlSections as SectionToExtract[]) {
             queueSectionForExtraction(section);
           }
         }
+        if (snap.topic && !topic) setTopic(snap.topic);
         if (snap.tokenUsage) setTokenUsage(snap.tokenUsage);
       }
     } catch {
@@ -428,7 +422,10 @@ export function CuratePageClient({
 
     const interview = messages.byTopic.interview;
     if (interview && (phase === 'started' || phase === 'interview')) {
-      setQuestions(interview.data.questions);
+      const parsed = InterviewQuestionsSchema.safeParse(
+        interview.data.questions,
+      );
+      if (parsed.success) setQuestions(parsed.data);
       setPhase('interview');
     }
 
@@ -472,11 +469,6 @@ export function CuratePageClient({
       if (phase !== 'refining') setPhase('complete');
     }
 
-    const urlsMsg = messages.byTopic.urls;
-    if (urlsMsg && (phase === 'planning' || phase === 'started')) {
-      setUrlsData(urlsMsg.data);
-    }
-
     const sectionUrlsMsg = messages.byTopic['section-urls'];
     if (sectionUrlsMsg) {
       const { slug, title, urls, mock } = sectionUrlsMsg.data;
@@ -486,14 +478,18 @@ export function CuratePageClient({
   }, [messages, phase, questions.length]);
 
   // Keep a ref to the active Jazz session so we can update it on phase transitions
-  const jazzSessionRef = useRef<typeof CuratorSession.prototype | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const jazzSessionRef = useRef<any>(null);
 
-  function getJazzSession(): typeof CuratorSession.prototype | null {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function getJazzSession(): any {
     if (jazzSessionRef.current) return jazzSessionRef.current;
     if (!me.$isLoaded || !me.root?.curatorSessions?.$isLoaded || !sessionId)
       return null;
     for (const s of me.root.curatorSessions) {
-      if (s?.sessionId === sessionId) {
+      // s may be NotLoaded — access sessionId only on loaded items
+      const loaded = s as { sessionId?: string } | null;
+      if (loaded?.sessionId === sessionId) {
         jazzSessionRef.current = s;
         return s;
       }
@@ -533,14 +529,17 @@ export function CuratePageClient({
   }, [sessionId, phase]);
 
   // Reconnect on window focus when a session is active and not yet complete
-  const onFocus = useEffectEvent(() => {
+  // Use a ref so the listener always sees current phase without re-registering
+  const onFocusRef = useRef<() => void>(() => {});
+  onFocusRef.current = () => {
     if (phase === 'complete' || phase === 'error') return;
     handleReconnect();
-  });
+  };
   useEffect(() => {
     if (!sessionId) return;
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    const handler = () => onFocusRef.current();
+    window.addEventListener('focus', handler);
+    return () => window.removeEventListener('focus', handler);
   }, [sessionId]);
 
   // Auto-scroll progress log
@@ -600,7 +599,6 @@ export function CuratePageClient({
     setProgress([]);
     setResult(null);
     setError(null);
-    setUrlsData(null);
     setExtractionProgress(null);
     extractionStartedRef.current = false;
     extractionQueueRef.current = [];

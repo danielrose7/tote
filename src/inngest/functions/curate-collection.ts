@@ -186,7 +186,7 @@ export const curateCollection = inngest.createFunction(
     const questions = generatedQuestions.questions;
 
     await step.run('persist-questions', () =>
-      patchSession(sessionId, { questions, phase: 'interview' }),
+      patchSession(sessionId, { topic, questions, phase: 'interview' }),
     );
 
     await step.realtime.publish('interview-questions', ch.interview, {
