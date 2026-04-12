@@ -89,7 +89,9 @@ export function CreateCollectionDialog({
 
         // Ensure blocks exists and add the new collection
         if (!account.root.blocks) {
-          const blocksList = BlockList.create([newCollectionBlock], account);
+          const blocksList = BlockList.create([newCollectionBlock], {
+            owner: ownerGroup,
+          });
           account.root.$jazz.set('blocks', blocksList);
         } else if (account.root.blocks.$isLoaded) {
           account.root.blocks.$jazz.push(newCollectionBlock);

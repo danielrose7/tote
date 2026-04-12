@@ -159,7 +159,7 @@ export function SaveTabsDialog({
 
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : account.$jazz,
+      ownerGroup ?? Group.create({ owner: account }),
     );
 
     const newSlot = BlockSchema.create(
@@ -170,7 +170,7 @@ export function SaveTabsDialog({
         children: slotChildren,
         createdAt: new Date(),
       },
-      ownerGroup ? { owner: ownerGroup } : account.$jazz,
+      ownerGroup ?? Group.create({ owner: account }),
     );
 
     collectionBlock.children.$jazz.push(newSlot);
@@ -262,7 +262,7 @@ export function SaveTabsDialog({
           },
           createdAt: new Date(),
         },
-        ownerGroup ? { owner: ownerGroup } : account.$jazz,
+        ownerGroup ?? Group.create({ owner: account }),
       );
 
       if (parentBlock.children?.$isLoaded) {

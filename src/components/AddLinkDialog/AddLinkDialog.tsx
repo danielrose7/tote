@@ -107,7 +107,7 @@ export function AddLinkDialog({
             },
             createdAt: new Date(),
           },
-          ownerGroup ? { owner: ownerGroup } : account.$jazz,
+          ownerGroup ?? Group.create({ owner: account }),
         );
 
         // Add to the appropriate parent's children list
@@ -197,7 +197,7 @@ export function AddLinkDialog({
     // Create empty children list for the slot
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : account.$jazz,
+      ownerGroup ?? Group.create({ owner: account }),
     );
 
     const newSlot = BlockSchema.create(
@@ -210,7 +210,7 @@ export function AddLinkDialog({
         children: slotChildren,
         createdAt: new Date(),
       },
-      ownerGroup ? { owner: ownerGroup } : account.$jazz,
+      ownerGroup ?? Group.create({ owner: account }),
     );
 
     // Add slot to collection's children

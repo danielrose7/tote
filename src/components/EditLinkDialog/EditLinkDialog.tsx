@@ -292,7 +292,7 @@ export function EditLinkDialog({
     // Create empty children list for the slot
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : account.$jazz,
+      ownerGroup ?? Group.create({ owner: account }),
     );
 
     const newSlot = BlockSchema.create(
@@ -305,7 +305,7 @@ export function EditLinkDialog({
         children: slotChildren,
         createdAt: new Date(),
       },
-      ownerGroup ? { owner: ownerGroup } : account.$jazz,
+      ownerGroup ?? Group.create({ owner: account }),
     );
 
     // Add slot to collection's children list

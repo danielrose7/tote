@@ -1,5 +1,6 @@
 'use client';
 
+import { Group } from 'jazz-tools';
 import { useAccount } from 'jazz-tools/react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
@@ -49,7 +50,8 @@ export function ImportPageClient() {
       const collectionBlock = createCollectionFromPayload(preview, me);
 
       if (!me.root.blocks) {
-        me.root.$jazz.set('blocks', BlockList.create([collectionBlock], me));
+        const group = Group.create({ owner: me });
+        me.root.$jazz.set('blocks', BlockList.create([collectionBlock], group));
       } else if (me.root.blocks.$isLoaded) {
         me.root.blocks.$jazz.push(collectionBlock);
       }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from 'react';
 import { useRealtime } from 'inngest/react';
+import { Group } from 'jazz-tools';
 import { useAccount } from 'jazz-tools/react';
 import { curationChannel } from '../../../inngest/channels';
 import { checkExtensionAvailable } from '../../../lib/extension';
@@ -262,7 +263,8 @@ export function CuratePageClient({
       const collectionBlock = createCollectionFromPayload(importPayload, me);
 
       if (!me.root.blocks) {
-        me.root.$jazz.set('blocks', BlockList.create([collectionBlock], me));
+        const group = Group.create({ owner: me });
+        me.root.$jazz.set('blocks', BlockList.create([collectionBlock], group));
       } else if (me.root.blocks.$isLoaded) {
         me.root.blocks.$jazz.push(collectionBlock);
       }

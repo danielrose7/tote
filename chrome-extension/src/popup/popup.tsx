@@ -1,14 +1,33 @@
-import { useEffect, useState, useRef, Component, ErrorInfo, ReactNode } from "react";
-import { createRoot } from "react-dom/client";
-import { SignedIn, SignedOut, useAuth, useClerk, useUser } from "@clerk/chrome-extension";
-import { useCoState } from "jazz-tools/react";
-import { Group } from "jazz-tools";
-import { Block, BlockList } from "@tote/schema";
-import type { co } from "jazz-tools";
-import { ExtensionProviders, JazzProvider } from "../providers/ExtensionProviders";
-import type { ExtractedMetadata, MessagePayload } from "../lib/extractors/types";
-import { useCollections } from "../hooks/useCollections";
-import { loadOwnerGroup } from "../lib/loadOwnerGroup";
+import {
+  useEffect,
+  useState,
+  useRef,
+  Component,
+  ErrorInfo,
+  ReactNode,
+} from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  SignedIn,
+  SignedOut,
+  useAuth,
+  useClerk,
+  useUser,
+} from '@clerk/chrome-extension';
+import { useCoState } from 'jazz-tools/react';
+import { Group } from 'jazz-tools';
+import { Block, BlockList } from '@tote/schema';
+import type { co } from 'jazz-tools';
+import {
+  ExtensionProviders,
+  JazzProvider,
+} from '../providers/ExtensionProviders';
+import type {
+  ExtractedMetadata,
+  MessagePayload,
+} from '../lib/extractors/types';
+import { useCollections } from '../hooks/useCollections';
+import { loadOwnerGroup } from '../lib/loadOwnerGroup';
 
 // Error boundary to catch rendering errors
 class ErrorBoundary extends Component<
@@ -25,7 +44,7 @@ class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("[Tote] Error boundary caught:", error, errorInfo);
+    console.error('[Tote] Error boundary caught:', error, errorInfo);
   }
 
   render() {
@@ -35,7 +54,7 @@ class ErrorBoundary extends Component<
           <div className="error">
             <strong>Error loading extension:</strong>
             <br />
-            {this.state.error?.message || "Unknown error"}
+            {this.state.error?.message || 'Unknown error'}
             <br />
             <small>Check console for details</small>
           </div>
@@ -46,23 +65,23 @@ class ErrorBoundary extends Component<
   }
 }
 
-type Status = "loading" | "ready" | "saving" | "success" | "error";
+type Status = 'loading' | 'ready' | 'saving' | 'success' | 'error';
 
 function formatPrice(price?: string, currency?: string): string {
-  if (!price) return "";
+  if (!price) return '';
   const num = parseFloat(price);
   if (isNaN(num)) return price;
 
-  const formatter = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency || "USD",
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'USD',
   });
   return formatter.format(num);
 }
 
 function getDomain(url: string): string {
   try {
-    return new URL(url).hostname.replace("www.", "");
+    return new URL(url).hostname.replace('www.', '');
   } catch {
     return url;
   }
@@ -82,14 +101,14 @@ function MetadataPreview({ metadata }: { metadata: ExtractedMetadata | null }) {
           alt=""
           className="preview-image"
           onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
+            (e.target as HTMLImageElement).style.display = 'none';
           }}
         />
       ) : (
         <div className="preview-image-placeholder">No image found</div>
       )}
       <div className="preview-content">
-        <div className="preview-title">{metadata.title || "Untitled"}</div>
+        <div className="preview-title">{metadata.title || 'Untitled'}</div>
         <div className="preview-url">{getDomain(metadata.url)}</div>
         {metadata.price && (
           <div className="preview-price">
@@ -107,7 +126,7 @@ function MetadataPreview({ metadata }: { metadata: ExtractedMetadata | null }) {
 function SignInPrompt() {
   const handleSignIn = () => {
     // Auth page is on main app, not Clerk domain
-    chrome.tabs.create({ url: "https://tote.tools/extension-auth" });
+    chrome.tabs.create({ url: 'https://tote.tools/extension-auth' });
   };
 
   return (
@@ -136,7 +155,7 @@ function SlotSelector({
   onCreateSlot: (name: string) => Promise<string>;
   disabled?: boolean;
 }) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
@@ -144,10 +163,12 @@ function SlotSelector({
 
   const selectedSlot = value ? slots.find((s) => s.id === value) : null;
   const filteredSlots = inputValue
-    ? slots.filter((s) => s.name.toLowerCase().includes(inputValue.toLowerCase()))
+    ? slots.filter((s) =>
+        s.name.toLowerCase().includes(inputValue.toLowerCase()),
+      )
     : slots;
   const exactMatch = slots.some(
-    (s) => s.name.toLowerCase() === inputValue.toLowerCase()
+    (s) => s.name.toLowerCase() === inputValue.toLowerCase(),
   );
   const showCreateOption = inputValue.trim() && !exactMatch;
 
@@ -159,7 +180,7 @@ function SlotSelector({
     // Flip upward if not enough space below
     if (spaceBelow < maxHeight && rect.top > maxHeight) {
       setDropdownStyle({
-        position: "fixed",
+        position: 'fixed',
         bottom: window.innerHeight - rect.top + 4,
         left: rect.left,
         width: rect.width,
@@ -167,7 +188,7 @@ function SlotSelector({
       });
     } else {
       setDropdownStyle({
-        position: "fixed",
+        position: 'fixed',
         top: rect.bottom + 4,
         left: rect.left,
         width: rect.width,
@@ -179,7 +200,7 @@ function SlotSelector({
 
   const handleSelect = (slotId: string) => {
     onChange(slotId);
-    setInputValue("");
+    setInputValue('');
     setIsOpen(false);
   };
 
@@ -189,7 +210,7 @@ function SlotSelector({
     try {
       const newSlotId = await onCreateSlot(inputValue.trim());
       onChange(newSlotId);
-      setInputValue("");
+      setInputValue('');
       setIsOpen(false);
     } finally {
       setIsCreating(false);
@@ -198,7 +219,7 @@ function SlotSelector({
 
   const handleClear = () => {
     onChange(null);
-    setInputValue("");
+    setInputValue('');
   };
 
   if (selectedSlot && !isOpen) {
@@ -235,19 +256,19 @@ function SlotSelector({
             <li
               key={slot.id}
               onClick={() => handleSelect(slot.id)}
-              className={value === slot.id ? "selected" : ""}
+              className={value === slot.id ? 'selected' : ''}
             >
               {slot.name}
             </li>
           ))}
           {showCreateOption && (
             <li onClick={handleCreate} className="create-option">
-              {isCreating ? "Creating..." : `+ Create "${inputValue.trim()}"`}
+              {isCreating ? 'Creating...' : `+ Create "${inputValue.trim()}"`}
             </li>
           )}
           {filteredSlots.length === 0 && !showCreateOption && (
             <li className="empty">
-              {slots.length === 0 ? "Type to create a slot" : "No matches"}
+              {slots.length === 0 ? 'Type to create a slot' : 'No matches'}
             </li>
           )}
         </ul>
@@ -279,7 +300,11 @@ function SharedCollectionLoader({
   });
 
   useEffect(() => {
-    if (collection && collection.$isLoaded && collection.type === "collection") {
+    if (
+      collection &&
+      collection.$isLoaded &&
+      collection.type === 'collection'
+    ) {
       onLoad(collection as LoadedBlock);
     }
   }, [collection, onLoad]);
@@ -302,7 +327,7 @@ function SaveUI({
   const [error, setError] = useState<string | null>(null);
   const [showNewCollection, setShowNewCollection] = useState(false);
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
-  const [newCollectionName, setNewCollectionName] = useState("");
+  const [newCollectionName, setNewCollectionName] = useState('');
 
   const {
     collections,
@@ -320,11 +345,11 @@ function SaveUI({
   // Create a new slot
   const handleCreateSlot = async (name: string): Promise<string> => {
     if (!selectedCollectionBlock) {
-      throw new Error("No collection selected");
+      throw new Error('No collection selected');
     }
 
     if (!selectedCollectionBlock?.children?.$isLoaded) {
-      throw new Error("Collection children not loaded");
+      throw new Error('Collection children not loaded');
     }
 
     const ownerGroup = await loadOwnerGroup(selectedCollectionBlock);
@@ -332,12 +357,14 @@ function SaveUI({
     // Create empty children list for the slot
     const slotChildren = BlockList.create(
       [],
-      ownerGroup ? { owner: ownerGroup } : { owner: selectedCollectionBlock.$jazz.owner }
+      ownerGroup
+        ? { owner: ownerGroup }
+        : { owner: selectedCollectionBlock.$jazz.owner },
     );
 
     const newSlot = Block.create(
       {
-        type: "slot",
+        type: 'slot',
         name,
         slotData: {
           maxSelections: 1,
@@ -345,7 +372,9 @@ function SaveUI({
         children: slotChildren,
         createdAt: new Date(),
       },
-      ownerGroup ? { owner: ownerGroup } : { owner: selectedCollectionBlock.$jazz.owner }
+      ownerGroup
+        ? { owner: ownerGroup }
+        : { owner: selectedCollectionBlock.$jazz.owner },
     );
 
     // Add slot to collection's children
@@ -361,39 +390,43 @@ function SaveUI({
     setIsCreatingCollection(true);
     try {
       const ownerGroup = Group.create({ owner: me });
-      ownerGroup.addMember(me, "admin");
+      ownerGroup.addMember(me, 'admin');
 
       const childrenList = BlockList.create([], { owner: ownerGroup });
 
       const newCollection = Block.create(
         {
-          type: "collection",
+          type: 'collection',
           name,
           collectionData: {
             sharingGroupId: ownerGroup.$jazz.id,
-            viewMode: "grid",
+            viewMode: 'grid',
           },
           children: childrenList,
           createdAt: new Date(),
         },
-        { owner: ownerGroup }
+        { owner: ownerGroup },
       );
 
       // Add to root blocks
       if (!root.blocks?.$isLoaded) {
-        const blocksList = BlockList.create([newCollection], me);
-        root.$jazz.set("blocks", blocksList);
+        const blocksList = BlockList.create([newCollection], {
+          owner: ownerGroup,
+        });
+        root.$jazz.set('blocks', blocksList);
       } else {
         root.blocks.$jazz.push(newCollection);
       }
 
       setSelectedCollection(newCollection.$jazz.id);
       setSelectedSlot(null);
-      setNewCollectionName("");
+      setNewCollectionName('');
       setShowNewCollection(false);
     } catch (err) {
-      console.error("[Tote] Create collection error:", err);
-      setError(err instanceof Error ? err.message : "Failed to create collection");
+      console.error('[Tote] Create collection error:', err);
+      setError(
+        err instanceof Error ? err.message : 'Failed to create collection',
+      );
     } finally {
       setIsCreatingCollection(false);
     }
@@ -401,7 +434,7 @@ function SaveUI({
 
   const handleSave = async () => {
     if (!me || !root || !root.blocks?.$isLoaded || !selectedCollection) {
-      setError("No collection selected");
+      setError('No collection selected');
       return;
     }
 
@@ -410,11 +443,11 @@ function SaveUI({
 
     try {
       const collection = collections.find(
-        (c) => c.$jazz.id === selectedCollection
+        (c) => c.$jazz.id === selectedCollection,
       );
 
       if (!collection) {
-        throw new Error("Collection not found");
+        throw new Error('Collection not found');
       }
 
       const ownerGroup = await loadOwnerGroup(collection);
@@ -422,8 +455,8 @@ function SaveUI({
       // Create the product block owned by the group
       const newProductBlock = Block.create(
         {
-          type: "product",
-          name: metadata.title || "Untitled",
+          type: 'product',
+          name: metadata.title || 'Untitled',
           productData: {
             url: metadata.url,
             imageUrl: metadata.imageUrl,
@@ -432,7 +465,7 @@ function SaveUI({
           },
           createdAt: new Date(),
         },
-        ownerGroup ? { owner: ownerGroup } : { owner: collection.$jazz.owner }
+        ownerGroup ? { owner: ownerGroup } : { owner: collection.$jazz.owner },
       );
 
       // Add to the appropriate parent's children list
@@ -461,8 +494,8 @@ function SaveUI({
 
       onSuccess(selectedCollection);
     } catch (err) {
-      console.error("[Tote] Save error:", err);
-      setError(err instanceof Error ? err.message : "Failed to save link");
+      console.error('[Tote] Save error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save link');
       setSaving(false);
     }
   };
@@ -519,7 +552,7 @@ function SaveUI({
             >
               {collections.map((col) => (
                 <option key={col.$jazz.id} value={col.$jazz.id}>
-                  {col.name || "Unnamed collection"}
+                  {col.name || 'Unnamed collection'}
                 </option>
               ))}
             </select>
@@ -528,12 +561,12 @@ function SaveUI({
               className="add-collection-button"
               onClick={() => {
                 setShowNewCollection(!showNewCollection);
-                setNewCollectionName("");
+                setNewCollectionName('');
               }}
               disabled={saving || isCreatingCollection}
               title="Add collection"
             >
-              {showNewCollection ? "\u00d7" : "+"}
+              {showNewCollection ? '\u00d7' : '+'}
             </button>
           </div>
         )}
@@ -544,10 +577,11 @@ function SaveUI({
               value={newCollectionName}
               onChange={(e) => setNewCollectionName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && newCollectionName.trim()) handleCreateCollection();
-                if (e.key === "Escape") {
+                if (e.key === 'Enter' && newCollectionName.trim())
+                  handleCreateCollection();
+                if (e.key === 'Escape') {
                   setShowNewCollection(false);
-                  setNewCollectionName("");
+                  setNewCollectionName('');
                 }
               }}
               placeholder="Collection name"
@@ -560,14 +594,16 @@ function SaveUI({
               onClick={handleCreateCollection}
               disabled={!newCollectionName.trim() || isCreatingCollection}
             >
-              {isCreatingCollection ? "..." : "Add"}
+              {isCreatingCollection ? '...' : 'Add'}
             </button>
           </div>
         )}
       </div>
 
       <div className="form-group">
-        <label>Slot <span className="optional">(optional)</span></label>
+        <label>
+          Slot <span className="optional">(optional)</span>
+        </label>
         <SlotSelector
           value={selectedSlot}
           onChange={setSelectedSlot}
@@ -577,8 +613,12 @@ function SaveUI({
         />
       </div>
 
-      <button className="save-button" onClick={handleSave} disabled={saving || !selectedCollection}>
-        {saving ? "Saving..." : "Save to Tote"}
+      <button
+        className="save-button"
+        onClick={handleSave}
+        disabled={saving || !selectedCollection}
+      >
+        {saving ? 'Saving...' : 'Save to Tote'}
       </button>
     </>
   );
@@ -599,7 +639,7 @@ function PopupHeader() {
   };
 
   const handleSaveAllTabs = () => {
-    chrome.tabs.create({ url: "https://tote.tools/collections?saveTabs=1" });
+    chrome.tabs.create({ url: 'https://tote.tools/collections?saveTabs=1' });
     window.close();
   };
 
@@ -614,26 +654,39 @@ function PopupHeader() {
           <button
             className="header-avatar"
             onClick={() => setMenuOpen(!menuOpen)}
-            title={user?.primaryEmailAddress?.emailAddress || "Account"}
+            title={user?.primaryEmailAddress?.emailAddress || 'Account'}
           >
             {user?.imageUrl ? (
               <img src={user.imageUrl} alt="" className="header-avatar-img" />
             ) : (
               <span className="header-avatar-fallback">
-                {(user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || "?").toUpperCase()}
+                {(
+                  user?.firstName?.[0] ||
+                  user?.primaryEmailAddress?.emailAddress?.[0] ||
+                  '?'
+                ).toUpperCase()}
               </span>
             )}
           </button>
           {menuOpen && (
             <>
-              <div className="header-menu-backdrop" onClick={() => setMenuOpen(false)} />
+              <div
+                className="header-menu-backdrop"
+                onClick={() => setMenuOpen(false)}
+              />
               <div className="header-dropdown">
                 {enableSaveTabs && (
-                  <button className="header-dropdown-item" onClick={handleSaveAllTabs}>
+                  <button
+                    className="header-dropdown-item"
+                    onClick={handleSaveAllTabs}
+                  >
                     Save All Tabs
                   </button>
                 )}
-                <button className="header-dropdown-item header-dropdown-item--danger" onClick={handleSignOut}>
+                <button
+                  className="header-dropdown-item header-dropdown-item--danger"
+                  onClick={handleSignOut}
+                >
                   Sign Out
                 </button>
               </div>
@@ -649,10 +702,12 @@ function PopupHeader() {
  * Main popup content
  */
 function PopupContent() {
-  const [status, setStatus] = useState<Status>("loading");
+  const [status, setStatus] = useState<Status>('loading');
   const [metadata, setMetadata] = useState<ExtractedMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [savedCollectionId, setSavedCollectionId] = useState<string | null>(null);
+  const [savedCollectionId, setSavedCollectionId] = useState<string | null>(
+    null,
+  );
   const { isLoaded } = useAuth();
 
   // Extract metadata from current tab
@@ -660,39 +715,39 @@ function PopupContent() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs[0];
       if (!tab?.id) {
-        setError("No active tab found");
-        setStatus("error");
+        setError('No active tab found');
+        setStatus('error');
         return;
       }
 
       chrome.tabs.sendMessage(
         tab.id,
-        { type: "EXTRACT_METADATA" } as MessagePayload,
+        { type: 'EXTRACT_METADATA' } as MessagePayload,
         (response: MessagePayload) => {
           if (chrome.runtime.lastError) {
-            setError("Could not extract metadata. Try refreshing the page.");
-            setStatus("error");
+            setError('Could not extract metadata. Try refreshing the page.');
+            setStatus('error');
             return;
           }
 
           if (response?.error) {
             setError(response.error);
-            setStatus("error");
+            setStatus('error');
             return;
           }
 
           if (response?.data) {
             setMetadata(response.data);
-            setStatus("ready");
+            setStatus('ready');
           }
-        }
+        },
       );
     });
   }, []);
 
   const handleSuccess = (collectionId: string) => {
     setSavedCollectionId(collectionId);
-    setStatus("success");
+    setStatus('success');
   };
 
   // Wait for Clerk to load
@@ -709,18 +764,18 @@ function PopupContent() {
     <div className="popup">
       <PopupHeader />
 
-      {status === "loading" && (
+      {status === 'loading' && (
         <div className="loading">
           <div className="spinner" />
           <span>Extracting product info...</span>
         </div>
       )}
 
-      {status === "error" && (
-        <div className="error">{error || "Something went wrong"}</div>
+      {status === 'error' && (
+        <div className="error">{error || 'Something went wrong'}</div>
       )}
 
-      {status === "success" && (
+      {status === 'success' && (
         <div className="success">
           <div className="success-icon">&#10003;</div>
           <h2>Saved to Tote!</h2>
@@ -740,7 +795,7 @@ function PopupContent() {
         </div>
       )}
 
-      {status === "ready" && metadata && (
+      {status === 'ready' && metadata && (
         <>
           <MetadataPreview metadata={metadata} />
 
@@ -772,7 +827,7 @@ function App() {
   );
 }
 
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root');
 if (rootElement) {
   const root = createRoot(rootElement);
   root.render(<App />);

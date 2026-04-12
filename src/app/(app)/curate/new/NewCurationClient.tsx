@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Group } from 'jazz-tools';
 import { useAccount } from 'jazz-tools/react';
 import {
   CuratorSession,
@@ -67,6 +68,7 @@ export function NewCurationClient() {
 
     // Create Jazz session immediately — before navigating
     if (me.$isLoaded && me.root) {
+      const group = Group.create({ owner: me });
       const jazzSession = CuratorSession.create(
         {
           sessionId,
@@ -74,12 +76,12 @@ export function NewCurationClient() {
           phase: 'started',
           createdAt: new Date(),
         },
-        me,
+        group,
       );
       if (!me.root.curatorSessions) {
         me.root.$jazz.set(
           'curatorSessions',
-          CuratorSessionList.create([jazzSession], me),
+          CuratorSessionList.create([jazzSession], group),
         );
       } else if (me.root.curatorSessions.$isLoaded) {
         me.root.curatorSessions.$jazz.push(jazzSession);

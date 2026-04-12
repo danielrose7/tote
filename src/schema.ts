@@ -160,7 +160,9 @@ export const JazzAccount = co
       );
 
       // Create the blocks list with the default collection
-      const blocksList = BlockList.create([defaultCollection], account);
+      const blocksList = BlockList.create([defaultCollection], {
+        owner: ownerGroup,
+      });
 
       account.$jazz.set('root', {
         blocks: blocksList,
@@ -199,7 +201,9 @@ export const JazzAccount = co
             { owner: ownerGroup },
           );
 
-          const blocksList = BlockList.create([defaultCollection], account);
+          const blocksList = BlockList.create([defaultCollection], {
+            owner: ownerGroup,
+          });
           root.$jazz.set('blocks', blocksList);
           root.$jazz.set('defaultBlockId', defaultCollection.$jazz.id);
         }

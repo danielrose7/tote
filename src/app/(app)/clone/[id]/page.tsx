@@ -11,6 +11,7 @@ import {
   useUser,
 } from '@clerk/nextjs';
 import { useAccount, useCoState } from 'jazz-tools/react';
+import { Group } from 'jazz-tools';
 import {
   Block as BlockSchema,
   BlockList,
@@ -74,7 +75,8 @@ export default function CloneCollectionPage() {
         );
 
         if (!me.root.blocks) {
-          const blocksList = BlockList.create([duplicatedCollection], me);
+          const group = Group.create({ owner: me });
+          const blocksList = BlockList.create([duplicatedCollection], group);
           me.root.$jazz.set('blocks', blocksList);
         } else if (me.root.blocks.$isLoaded) {
           me.root.blocks.$jazz.push(duplicatedCollection);
