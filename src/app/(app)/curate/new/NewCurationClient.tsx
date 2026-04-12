@@ -7,6 +7,7 @@ import {
   CuratorSessionList,
   JazzAccount,
 } from '../../../../schema';
+import { checkExtensionAvailable } from '../../../../lib/extension';
 import styles from '../curate.module.css';
 
 const QUICK_FILLS = [
@@ -36,6 +37,19 @@ export function NewCurationClient() {
     if (!topic.trim()) return;
     setLoading(true);
     setError(null);
+
+    // Fail fast: check extension before spending any tokens
+    const isMock = process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
+    if (!isMock) {
+      const available = await checkExtensionAvailable();
+      if (!available) {
+        setError(
+          'Tote extension not installed or not responding. Install the extension and try again.',
+        );
+        setLoading(false);
+        return;
+      }
+    }
 
     const res = await fetch('/api/curate/start', {
       method: 'POST',

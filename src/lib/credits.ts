@@ -87,6 +87,7 @@ export async function deductCredits(
   inputTokens: number,
   outputTokens: number,
   webSearchRequests: number,
+  stepLabel?: string,
 ): Promise<number> {
   const rows = await sql`
     UPDATE user_credits
@@ -98,9 +99,9 @@ export async function deductCredits(
 
   await sql`
     INSERT INTO credit_transactions
-      (clerk_user_id, amount_cents, type, curator_session_id, input_tokens, output_tokens, web_search_requests)
+      (clerk_user_id, amount_cents, type, curator_session_id, input_tokens, output_tokens, web_search_requests, step_label)
     VALUES
-      (${userId}, ${-cents}, 'deduction', ${curatorSessionId}, ${inputTokens}, ${outputTokens}, ${webSearchRequests})
+      (${userId}, ${-cents}, 'deduction', ${curatorSessionId}, ${inputTokens}, ${outputTokens}, ${webSearchRequests}, ${stepLabel ?? null})
   `;
 
   return (rows[0]?.balance_cents as number | undefined) ?? 0;

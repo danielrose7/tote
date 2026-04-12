@@ -17,6 +17,9 @@ import {
   buildPlanPrompt,
   buildUrlDiscoveryPrompt,
   buildCuratePrompt,
+  buildGapsPrompt,
+  buildRefinementUrlPrompt,
+  buildRefinementCuratePrompt,
   InterviewQuestionsSchema,
 } from '../prompts';
 import { MOCK_URL_SECTIONS } from '../fixtures/url-sections';
@@ -25,8 +28,9 @@ import type {
   CurationMode,
   CurationStartEvent,
   CurationAnswersEvent,
-  CurationExtractionsEvent,
+  CurationSectionExtractedEvent,
   CollectionOutput,
+  CurationGap,
   SectionPlan,
   ExtractedSection,
   UrlSection,
@@ -301,14 +305,24 @@ export const curateCollection = inngest.createFunction(
 
     if (isMock) {
       // In mock mode, skip URL discovery entirely and use fixture sections as-is.
-      // The plan step may generate different section names/slugs, so we can't
-      // match by slug — just publish the fixtures directly.
       for (const section of MOCK_URL_SECTIONS) {
         await step.realtime.publish(`found-urls-${section.slug}`, ch.progress, {
           step: 'found-urls',
           message: `Found ${section.urls.length} URLs for "${section.title}" (mock)`,
           detail: section.urls.map((u) => new URL(u).hostname).join(', '),
         });
+        await step.realtime.publish(
+          `section-urls-${section.slug}`,
+          ch['section-urls'],
+          {
+            slug: section.slug,
+            title: section.title,
+            urls: section.urls,
+            sectionIndex: urlSections.length,
+            totalSections: MOCK_URL_SECTIONS.length,
+            mock: true,
+          },
+        );
         urlSections.push(section);
       }
     } else {
@@ -398,6 +412,25 @@ export const curateCollection = inngest.createFunction(
         totalOutputTokens += found.usage?.outputTokens ?? 0;
         totalWebSearchRequests += found.usage?.webSearchRequests ?? 0;
 
+        // Deduct per-step credits
+        if (requestedBy !== 'unknown' && found.usage) {
+          await step.run(`deduct-credits-urls-${slug}`, () =>
+            deductCredits(
+              requestedBy,
+              runCostCents(
+                found.usage!.inputTokens,
+                found.usage!.outputTokens,
+                found.usage!.webSearchRequests,
+              ),
+              sessionId,
+              found.usage!.inputTokens,
+              found.usage!.outputTokens,
+              found.usage!.webSearchRequests,
+              `find-urls-${slug}`,
+            ),
+          );
+        }
+
         const domains = found.urls
           .map((u) => {
             try {
@@ -414,14 +447,24 @@ export const curateCollection = inngest.createFunction(
           detail: domains || undefined,
         });
 
+        // Publish section URLs immediately for proactive extraction
+        await step.realtime.publish(
+          `section-urls-${slug}`,
+          ch['section-urls'],
+          {
+            slug,
+            title: section.title,
+            urls: found.urls,
+            sectionIndex: urlSections.length,
+            totalSections: plan.sections.length,
+          },
+        );
+
         urlSections.push({ title: section.title, slug, urls: found.urls });
       }
-    } // end else (non-mock URL discovery)
+    } // end URL discovery
 
-    // Step 5: Send URLs to browser for extraction via Chrome extension
-    const totalUrlCount = urlSections.reduce((n, s) => n + s.urls.length, 0);
-
-    // Persist URL data so the browser can re-fetch if the realtime connection drops
+    // Step 5: Persist URL data for reconnect, then wait for per-section extractions
     await step.run('persist-session-urls', () =>
       Promise.all([
         writeSessionState(sessionId, { urlSections, mock: isMock }),
@@ -429,36 +472,65 @@ export const curateCollection = inngest.createFunction(
       ]),
     );
 
+    // Also publish legacy urls topic for reconnect/sync restore in the browser
     await step.realtime.publish('urls-ready', ch.urls, {
       sections: urlSections,
       mock: isMock,
     });
 
+    const totalUrlCount = urlSections.reduce((n, s) => n + s.urls.length, 0);
     await step.realtime.publish('extraction-queued', ch.progress, {
       step: 'extracting',
-      message: `${totalUrlCount} URLs ready — extracting with extension...`,
+      message: `${totalUrlCount} URLs queued — extracting with extension...`,
     });
 
-    // Wait for browser to extract and send back results
-    const extractionsEvent = await step.waitForEvent('wait-for-extractions', {
-      event: 'curation/extractions' as CurationExtractionsEvent['name'],
-      timeout: '10m',
-      if: `async.data.sessionId == "${sessionId}"`,
-    });
-
-    if (!extractionsEvent) {
-      await step.realtime.publish('timed-out', ch.progress, {
-        step: 'error',
-        message:
-          'Timed out waiting for extraction results. Start a new session to try again.',
-      });
-      await step.run('persist-extraction-timeout', () =>
-        patchSession(sessionId, { phase: 'error' }),
+    // Collect one section-extracted event per section
+    const extractedSections: ExtractedSection[] = [];
+    for (const section of urlSections) {
+      const sectionEvt = await step.waitForEvent(
+        `wait-for-section-${section.slug}`,
+        {
+          event:
+            'curation/section-extracted' as CurationSectionExtractedEvent['name'],
+          timeout: '10m',
+          if: `async.data.sessionId == "${sessionId}" && async.data.slug == "${section.slug}"`,
+        },
       );
-      return;
+
+      if (!sectionEvt) {
+        await step.realtime.publish(`timed-out-${section.slug}`, ch.progress, {
+          step: 'error',
+          message: `Timed out waiting for extraction of "${section.title}". Start a new session to try again.`,
+        });
+        await step.run(`persist-extraction-timeout-${section.slug}`, () =>
+          patchSession(sessionId, { phase: 'error' }),
+        );
+        return;
+      }
+
+      extractedSections.push({
+        slug: sectionEvt.data.slug,
+        title: sectionEvt.data.title,
+        items: sectionEvt.data.items,
+      });
+
+      // Track which sections are done for reconnect
+      await step.run(`persist-extracted-slug-${section.slug}`, () =>
+        patchSession(sessionId, {
+          extractedSlugs: [...extractedSections.map((s) => s.slug)],
+        }),
+      );
+
+      await step.realtime.publish(
+        `section-extracted-${section.slug}`,
+        ch.progress,
+        {
+          step: `section-extracted-${section.slug}`,
+          message: `Extracted ${sectionEvt.data.items.length} items for "${sectionEvt.data.title}"`,
+        },
+      );
     }
 
-    const extractedSections = extractionsEvent.data.sections;
     const totalExtracted = extractedSections.reduce(
       (n: number, s: ExtractedSection) => n + s.items.length,
       0,
@@ -470,15 +542,10 @@ export const curateCollection = inngest.createFunction(
       totalExtracted,
     });
 
-    await step.realtime.publish('extractions-received', ch.progress, {
-      step: 'curating',
-      message: `Extracted ${totalExtracted} items — curating final shortlist...`,
-    });
-
     // Step 6: Curate the final shortlist and write the file
     await step.realtime.publish('curating', ch.progress, {
       step: 'curating',
-      message: 'Curating final shortlist...',
+      message: `Extracted ${totalExtracted} items — curating final shortlist...`,
     });
 
     await step.run('persist-curating-phase', () =>
@@ -565,6 +632,273 @@ export const curateCollection = inngest.createFunction(
 
     totalInputTokens += result.usage?.inputTokens ?? 0;
     totalOutputTokens += result.usage?.outputTokens ?? 0;
+
+    // Deduct per-step credits for curation
+    if (requestedBy !== 'unknown' && result.usage) {
+      await step.run('deduct-credits-curate', () =>
+        deductCredits(
+          requestedBy,
+          runCostCents(
+            result.usage!.inputTokens,
+            result.usage!.outputTokens,
+            0,
+          ),
+          sessionId,
+          result.usage!.inputTokens,
+          result.usage!.outputTokens,
+          0,
+          'curate-and-write',
+        ),
+      );
+    }
+
+    let currentCollection = parseJson<CollectionOutput>(result.json)!;
+
+    // Step 7: Refinement passes (normal mode only, up to 2 passes)
+    const maxRefinementPasses = mode === 'debug' ? 0 : 2;
+
+    for (let pass = 1; pass <= maxRefinementPasses; pass++) {
+      if (
+        !currentCollection.warnings ||
+        currentCollection.warnings.length === 0
+      )
+        break;
+
+      await step.run(`persist-refine-phase-${pass}`, () =>
+        patchSession(sessionId, { phase: 'refining', refinementPass: pass }),
+      );
+
+      await step.realtime.publish(`refining-${pass}`, ch.progress, {
+        step: `refining-${pass}`,
+        message: `Refinement pass ${pass}: analysing ${currentCollection.warnings.length} warnings...`,
+      });
+
+      // 7a. Parse gaps from warnings
+      const gapsResult = await step.run(`parse-gaps-${pass}`, async () => {
+        const response = await llm.generate({
+          system: CURATOR_SYSTEM_PROMPT,
+          prompt: buildGapsPrompt(currentCollection),
+          maxTokens: 2000,
+        });
+        const gaps = parseJson<CurationGap[]>(response.text);
+        return { gaps: gaps ?? [], usage: response.usage };
+      });
+
+      totalInputTokens += gapsResult.usage?.inputTokens ?? 0;
+      totalOutputTokens += gapsResult.usage?.outputTokens ?? 0;
+
+      if (requestedBy !== 'unknown' && gapsResult.usage) {
+        await step.run(`deduct-credits-gaps-${pass}`, () =>
+          deductCredits(
+            requestedBy,
+            runCostCents(
+              gapsResult.usage!.inputTokens,
+              gapsResult.usage!.outputTokens,
+              0,
+            ),
+            sessionId,
+            gapsResult.usage!.inputTokens,
+            gapsResult.usage!.outputTokens,
+            0,
+            `parse-gaps-${pass}`,
+          ),
+        );
+      }
+
+      const actionableGaps = gapsResult.gaps.filter((g) => g.actionable);
+      if (actionableGaps.length === 0) break;
+
+      await step.run(`persist-gaps-${pass}`, () =>
+        patchSession(sessionId, { gaps: actionableGaps }),
+      );
+
+      // 7b. URL discovery per gap
+      const refinementUrlSections: UrlSection[] = [];
+      for (let gi = 0; gi < actionableGaps.length; gi++) {
+        const gap = actionableGaps[gi];
+        const gapSlug = `gap-${pass}-${gi}`;
+
+        await step.realtime.publish(`searching-${gapSlug}`, ch.progress, {
+          step: 'searching',
+          message: `Finding URLs for gap: "${gap.description}"`,
+        });
+
+        const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
+          try {
+            const response = await llm.generateWithSearch({
+              system: URL_DISCOVERY_SYSTEM_PROMPT,
+              prompt: buildRefinementUrlPrompt(
+                gap,
+                topic,
+                questions,
+                answers,
+                mode,
+              ),
+              maxTokens: urlDiscoveryTokenLimit(mode),
+            });
+            const parsed = parseJson<UrlDiscoveryPayload>(response.text);
+            if (!parsed) return { urls: [], usage: null };
+            return { urls: parsed.urls, usage: response.usage };
+          } catch (error) {
+            const status = (error as { status?: number })?.status;
+            const retryAfter = (error as { headers?: Record<string, string> })
+              ?.headers?.['retry-after'];
+            if (status === 429) {
+              const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
+              throw new RetryAfterError(
+                `Rate limited on find-urls for gap "${gap.description}"`,
+                new Date(Date.now() + waitMs),
+              );
+            }
+            throw error;
+          }
+        });
+
+        totalInputTokens += foundGap.usage?.inputTokens ?? 0;
+        totalOutputTokens += foundGap.usage?.outputTokens ?? 0;
+        totalWebSearchRequests += foundGap.usage?.webSearchRequests ?? 0;
+
+        if (requestedBy !== 'unknown' && foundGap.usage) {
+          await step.run(`deduct-credits-${gapSlug}`, () =>
+            deductCredits(
+              requestedBy,
+              runCostCents(
+                foundGap.usage!.inputTokens,
+                foundGap.usage!.outputTokens,
+                foundGap.usage!.webSearchRequests,
+              ),
+              sessionId,
+              foundGap.usage!.inputTokens,
+              foundGap.usage!.outputTokens,
+              foundGap.usage!.webSearchRequests,
+              `find-urls-${gapSlug}`,
+            ),
+          );
+        }
+
+        await step.realtime.publish(`found-urls-${gapSlug}`, ch.progress, {
+          step: 'found-urls',
+          message: `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
+        });
+
+        await step.realtime.publish(
+          `section-urls-${gapSlug}`,
+          ch['section-urls'],
+          {
+            slug: gapSlug,
+            title: gap.description,
+            urls: foundGap.urls,
+            sectionIndex: gi,
+            totalSections: actionableGaps.length,
+          },
+        );
+
+        refinementUrlSections.push({
+          title: gap.description,
+          slug: gapSlug,
+          urls: foundGap.urls,
+        });
+      }
+
+      // 7c. Collect per-gap extractions from browser
+      const refinedSections: ExtractedSection[] = [];
+      for (const section of refinementUrlSections) {
+        const gapEvt = await step.waitForEvent(
+          `wait-for-refined-${section.slug}`,
+          {
+            event:
+              'curation/section-extracted' as CurationSectionExtractedEvent['name'],
+            timeout: '10m',
+            if: `async.data.sessionId == "${sessionId}" && async.data.slug == "${section.slug}"`,
+          },
+        );
+        if (!gapEvt) break; // timeout on a gap — proceed with what we have
+        refinedSections.push({
+          slug: gapEvt.data.slug,
+          title: gapEvt.data.title,
+          items: gapEvt.data.items,
+        });
+      }
+
+      if (refinedSections.length === 0) break;
+
+      // 7d. Merge refinement pass
+      const refineResult = await step.run(
+        `refine-collection-${pass}`,
+        async () => {
+          const response = await llm.generate({
+            system: CURATOR_SYSTEM_PROMPT,
+            prompt: buildRefinementCuratePrompt(
+              currentCollection,
+              refinedSections,
+              actionableGaps,
+              questions,
+              answers,
+              mode,
+            ),
+            maxTokens: curateTokenLimit(mode),
+          });
+          const refined = parseJson<CollectionOutput>(response.text);
+          return { collection: refined, usage: response.usage };
+        },
+      );
+
+      totalInputTokens += refineResult.usage?.inputTokens ?? 0;
+      totalOutputTokens += refineResult.usage?.outputTokens ?? 0;
+
+      if (requestedBy !== 'unknown' && refineResult.usage) {
+        await step.run(`deduct-credits-refine-${pass}`, () =>
+          deductCredits(
+            requestedBy,
+            runCostCents(
+              refineResult.usage!.inputTokens,
+              refineResult.usage!.outputTokens,
+              0,
+            ),
+            sessionId,
+            refineResult.usage!.inputTokens,
+            refineResult.usage!.outputTokens,
+            0,
+            `refine-collection-${pass}`,
+          ),
+        );
+      }
+
+      if (refineResult.collection) {
+        currentCollection = refineResult.collection;
+        const refinedJson = JSON.stringify(currentCollection);
+        const refinedItemCount = currentCollection.sections.reduce(
+          (n, s) => n + s.items.length,
+          0,
+        );
+        // Update persisted result with refined collection (still in-progress)
+        await step.run(`persist-refine-result-${pass}`, () =>
+          patchSession(sessionId, {
+            phase: 'refining',
+            tokenUsage: {
+              inputTokens: totalInputTokens,
+              outputTokens: totalOutputTokens,
+              webSearchRequests: totalWebSearchRequests,
+            },
+            title: currentCollection.title,
+            sectionCount: currentCollection.sections.length,
+            itemCount: refinedItemCount,
+            json: refinedJson,
+          }),
+        );
+        await step.realtime.publish('result', ch.result, {
+          ...result,
+          json: refinedJson,
+          sectionCount: currentCollection.sections.length,
+          itemCount: refinedItemCount,
+        });
+        await step.realtime.publish(`refine-complete-${pass}`, ch.progress, {
+          step: `refine-complete-${pass}`,
+          message: `Refinement pass ${pass} complete — ${refinedItemCount} items across ${currentCollection.sections.length} sections`,
+        });
+      }
+    }
+
     const tokenUsage = {
       inputTokens: totalInputTokens,
       outputTokens: totalOutputTokens,
@@ -577,46 +911,39 @@ export const curateCollection = inngest.createFunction(
       ...tokenUsage,
     });
 
-    // Persist result so sync route can recover it if browser was closed at completion
+    const finalItemCount = currentCollection.sections.reduce(
+      (n, s) => n + s.items.length,
+      0,
+    );
+    const finalJson = JSON.stringify(currentCollection);
+
+    // Persist final result
     await step.run('persist-session-result', () =>
       Promise.all([
-        writeSession(sessionId, { phase: 'complete', tokenUsage, ...result }),
+        writeSession(sessionId, {
+          phase: 'complete',
+          tokenUsage,
+          title: currentCollection.title,
+          sectionCount: currentCollection.sections.length,
+          itemCount: finalItemCount,
+          json: finalJson,
+        }),
         completeCuratorSession(sessionId, {
           mode,
           model: 'claude-sonnet-4-6',
           phase: 'complete',
-          sectionCount: result.sectionCount,
-          itemCount: result.itemCount,
+          sectionCount: currentCollection.sections.length,
+          itemCount: finalItemCount,
         }),
       ]),
     );
 
-    // Deduct credits for this run from the curator's balance
-    if (requestedBy !== 'unknown') {
-      await step.run('deduct-credits', async () => {
-        const cents = runCostCents(
-          totalInputTokens,
-          totalOutputTokens,
-          totalWebSearchRequests,
-        );
-        const newBalance = await deductCredits(
-          requestedBy,
-          cents,
-          sessionId,
-          totalInputTokens,
-          totalOutputTokens,
-          totalWebSearchRequests,
-        );
-        console.log('[curate-collection] credits-deducted', {
-          sessionId,
-          requestedBy,
-          cents,
-          newBalance,
-        });
-      });
-    }
-
-    await step.realtime.publish('result', ch.result, result);
+    await step.realtime.publish('result', ch.result, {
+      ...result,
+      json: finalJson,
+      sectionCount: currentCollection.sections.length,
+      itemCount: finalItemCount,
+    });
 
     await step.realtime.publish('complete', ch.progress, {
       step: 'complete',

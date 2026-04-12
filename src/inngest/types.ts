@@ -41,13 +41,6 @@ export interface CollectionSection {
   items: CollectionItem[];
 }
 
-export interface CollectionOutput {
-  title: string;
-  intro: string;
-  sections: CollectionSection[];
-  warnings: string[];
-}
-
 export interface SectionPlan {
   title: string;
   slug: string;
@@ -84,4 +77,38 @@ export interface CurationExtractionsEvent {
     sessionId: string;
     sections: ExtractedSection[];
   };
+}
+
+export interface CurationSectionExtractedEvent {
+  name: 'curation/section-extracted';
+  data: {
+    sessionId: string;
+    slug: string;
+    title: string;
+    items: ExtractedItem[];
+  };
+}
+
+export type CurationGapKind =
+  | 'missing-section'
+  | 'constraint-violation'
+  | 'coverage-gap'
+  | 'quality-concern';
+
+export interface CurationGap {
+  kind: CurationGapKind;
+  sectionTitle: string;
+  description: string;
+  /** Concrete web search query to find products for this gap */
+  searchHint: string;
+  /** false = informational only, skip URL discovery */
+  actionable: boolean;
+}
+
+export interface CollectionOutput {
+  title: string;
+  intro: string;
+  sections: CollectionSection[];
+  warnings: string[];
+  gaps?: CurationGap[];
 }

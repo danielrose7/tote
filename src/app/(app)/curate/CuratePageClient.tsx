@@ -33,8 +33,16 @@ type Phase =
   | 'interview'
   | 'planning'
   | 'extracting'
+  | 'refining'
   | 'complete'
   | 'error';
+
+interface SectionToExtract {
+  slug: string;
+  title: string;
+  urls: string[];
+  mock?: boolean;
+}
 
 interface ProgressEntry {
   step: string;
@@ -106,6 +114,10 @@ function formatStepLabel(step: string): string {
   if (step.startsWith('found-urls-')) return 'URLs found';
   if (step.startsWith('researching-')) return 'Researching section';
   if (step.startsWith('researched-')) return 'Section researched';
+  if (step.startsWith('refining-'))
+    return `Refinement pass ${step.split('-')[1]}`;
+  if (step.startsWith('refine-complete-'))
+    return `Refinement pass ${step.split('-')[2]} done`;
 
   return (
     milestoneLabels[step] ??
@@ -151,13 +163,23 @@ export function CuratePageClient({
   } | null>(null);
   const progressEndRef = useRef<HTMLDivElement>(null);
   const extractionStartedRef = useRef(false);
+  const extractionQueueRef = useRef<SectionToExtract[]>([]);
+  const extractionRunningRef = useRef(false);
+  const extractedSlugsRef = useRef<Set<string>>(new Set());
+  const extensionCheckedRef = useRef(false);
 
   const { showToast } = useToast();
   const me = useAccount(JazzAccount, {
     resolve: { root: { blocks: true, curatorSessions: true } },
   });
 
-  const topics = ['interview', 'progress', 'result', 'urls'] as const;
+  const topics = [
+    'interview',
+    'progress',
+    'result',
+    'urls',
+    'section-urls',
+  ] as const;
   const channel = useMemo(
     () => (sessionId ? curationChannel({ sessionId }) : null),
     [sessionId],
@@ -177,6 +199,130 @@ export function CuratePageClient({
     enabled: !!sessionId && realtimeEnabled,
   });
 
+  async function extractAndSubmitSection(section: SectionToExtract) {
+    const isMock =
+      section.mock ?? process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
+    const items: ExtractedItem[] = [];
+
+    setExtractionProgress((prev) => {
+      const newEntries: ExtractionEntry[] = section.urls.map((url) => ({
+        url,
+        domain: (() => {
+          try {
+            return new URL(url).hostname;
+          } catch {
+            return url;
+          }
+        })(),
+        status: 'pending',
+      }));
+      if (!prev)
+        return { current: 0, total: section.urls.length, entries: newEntries };
+      return {
+        current: prev.current,
+        total: prev.total + section.urls.length,
+        entries: [...prev.entries, ...newEntries],
+      };
+    });
+
+    for (const url of section.urls) {
+      setExtractionProgress((prev) => {
+        if (!prev) return prev;
+        const idx = prev.entries.findIndex(
+          (e) => e.url === url && e.status === 'pending',
+        );
+        if (idx === -1) return prev;
+        const newEntries = [...prev.entries];
+        newEntries[idx] = { ...newEntries[idx], status: 'loading' };
+        return { ...prev, entries: newEntries };
+      });
+
+      let metadata: Awaited<ReturnType<typeof refreshViaExtension>> = null;
+      if (isMock) {
+        await sleep(350);
+        const fixture = MOCK_EXTRACTED_ITEMS[url];
+        metadata = fixture ? { ...fixture } : null;
+      } else {
+        metadata = await refreshViaExtension(url);
+      }
+
+      const item: ExtractedItem = { sourceUrl: url, ...metadata };
+      items.push(item);
+
+      setExtractionProgress((prev) => {
+        if (!prev) return prev;
+        const idx = prev.entries.findIndex(
+          (e) => e.url === url && e.status === 'loading',
+        );
+        if (idx === -1) return prev;
+        const newEntries = [...prev.entries];
+        newEntries[idx] = {
+          ...newEntries[idx],
+          status: metadata ? 'done' : 'skipped',
+          title: metadata?.title,
+        };
+        return { ...prev, current: prev.current + 1, entries: newEntries };
+      });
+    }
+
+    const res = await fetch('/api/curate/extractions/section', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId,
+        slug: section.slug,
+        title: section.title,
+        items,
+      }),
+    });
+
+    if (res.ok) {
+      extractedSlugsRef.current.add(section.slug);
+    } else {
+      setError('Failed to submit extraction results.');
+      setPhase('error');
+    }
+  }
+
+  async function drainExtractionQueue() {
+    if (extractionRunningRef.current) return;
+    extractionRunningRef.current = true;
+
+    try {
+      // Check extension availability once before first extraction
+      if (!extensionCheckedRef.current) {
+        const isMock = process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
+        if (!isMock) {
+          const available = await checkExtensionAvailable();
+          if (!available) {
+            setError(
+              'Tote extension not installed or not responding. Install the extension and try again.',
+            );
+            setPhase('error');
+            extractionQueueRef.current = [];
+            return;
+          }
+        }
+        extensionCheckedRef.current = true;
+      }
+
+      while (extractionQueueRef.current.length > 0) {
+        const section = extractionQueueRef.current.shift()!;
+        if (extractedSlugsRef.current.has(section.slug)) continue;
+        await extractAndSubmitSection(section);
+      }
+    } finally {
+      extractionRunningRef.current = false;
+    }
+  }
+
+  function queueSectionForExtraction(section: SectionToExtract) {
+    if (extractedSlugsRef.current.has(section.slug)) return;
+    if (extractionQueueRef.current.some((s) => s.slug === section.slug)) return;
+    extractionQueueRef.current.push(section);
+    drainExtractionQueue();
+  }
+
   async function syncFromInngest(sid: string) {
     try {
       const res = await fetch(`/api/curate/sync/${sid}`);
@@ -195,8 +341,19 @@ export function CuratePageClient({
             }
           }
         }
-        if (snap.urlSections)
+        // Restore extractedSlugs so drain loop skips already-done sections
+        if (snap.extractedSlugs) {
+          for (const slug of snap.extractedSlugs as string[]) {
+            extractedSlugsRef.current.add(slug);
+          }
+        }
+        if (snap.urlSections) {
           setUrlsData({ sections: snap.urlSections, mock: false });
+          // Re-queue any sections not yet extracted
+          for (const section of snap.urlSections as SectionToExtract[]) {
+            queueSectionForExtraction(section);
+          }
+        }
         if (snap.tokenUsage) setTokenUsage(snap.tokenUsage);
       }
     } catch {
@@ -232,23 +389,24 @@ export function CuratePageClient({
 
   async function handleReconnect() {
     if (sessionId) await syncFromInngest(sessionId);
-    // Reset extraction so it can re-run if urlSections were restored
-    extractionStartedRef.current = false;
     // Bounce the realtime subscription to force reconnect
     setRealtimeEnabled(false);
     setTimeout(() => setRealtimeEnabled(true), 100);
   }
   const latestProgress = progress[progress.length - 1] ?? null;
-  const completedMilestones = progress.filter((entry) =>
-    [
-      'acknowledged',
-      'interview-sent',
-      'answers-received',
-      'planned',
-      'extracting',
-      'curating',
-      'complete',
-    ].includes(entry.step),
+  const completedMilestones = progress.filter(
+    (entry) =>
+      [
+        'acknowledged',
+        'interview-sent',
+        'answers-received',
+        'planned',
+        'extracting',
+        'curating',
+        'complete',
+      ].includes(entry.step) ||
+      entry.step.startsWith('refining-') ||
+      entry.step.startsWith('refine-complete-'),
   );
   const searchEvents = progress.filter(
     (entry) =>
@@ -278,9 +436,9 @@ export function CuratePageClient({
     if (latestProgress) {
       const { step, message, detail } = latestProgress.data;
 
-      if (step === 'answers-received') {
-        setPhase('planning');
-      }
+      if (step === 'answers-received') setPhase('planning');
+      if (step === 'complete') setPhase('complete');
+      if (step.startsWith('refining-')) setPhase('refining');
 
       if (step === 'acknowledged' && phase === 'started') {
         // Questions are generated by the LLM — wait for the interview-questions event
@@ -303,138 +461,29 @@ export function CuratePageClient({
     const resultMsg = messages.byTopic.result;
     if (resultMsg) {
       setResult(resultMsg.data);
-      setPhase('complete');
       try {
         setImportPayload(validatePayload(JSON.parse(resultMsg.data.json)));
       } catch {
         // ignore — user can still copy JSON manually
       }
+      // Only transition to complete on the final result — refinement passes also publish result
+      // We check phase to avoid stomping 'refining' back to 'complete' prematurely,
+      // but the server sends 'complete' in the progress topic when fully done.
+      if (phase !== 'refining') setPhase('complete');
     }
 
     const urlsMsg = messages.byTopic.urls;
-    if (urlsMsg && phase === 'planning') {
+    if (urlsMsg && (phase === 'planning' || phase === 'started')) {
       setUrlsData(urlsMsg.data);
+    }
+
+    const sectionUrlsMsg = messages.byTopic['section-urls'];
+    if (sectionUrlsMsg) {
+      const { slug, title, urls, mock } = sectionUrlsMsg.data;
       setPhase('extracting');
+      queueSectionForExtraction({ slug, title, urls, mock });
     }
   }, [messages, phase, questions.length]);
-
-  // Run extraction when phase transitions to "extracting"
-  useEffect(() => {
-    if (
-      phase !== 'extracting' ||
-      !urlsData ||
-      !sessionId ||
-      extractionStartedRef.current
-    ) {
-      return;
-    }
-    extractionStartedRef.current = true;
-
-    (async () => {
-      const isMock =
-        urlsData.mock ?? process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
-
-      if (!isMock) {
-        const available = await checkExtensionAvailable();
-        if (!available) {
-          setError(
-            'Tote extension not installed or not responding. Install the extension and try again.',
-          );
-          setPhase('error');
-          return;
-        }
-      }
-
-      // Build flat queue: [{ sectionSlug, url }]
-      const queue: { sectionSlug: string; url: string }[] = [];
-      for (const section of urlsData.sections) {
-        for (const url of section.urls) {
-          queue.push({ sectionSlug: section.slug, url });
-        }
-      }
-
-      const total = queue.length;
-
-      // Initialize extraction results per section
-      const resultsBySectionSlug: Record<string, ExtractedItem[]> = {};
-      for (const section of urlsData.sections) {
-        resultsBySectionSlug[section.slug] = [];
-      }
-
-      // Initialize progress entries
-      const initialEntries: ExtractionEntry[] = queue.map(({ url }) => ({
-        url,
-        domain: (() => {
-          try {
-            return new URL(url).hostname;
-          } catch {
-            return url;
-          }
-        })(),
-        status: 'pending',
-      }));
-      setExtractionProgress({ current: 0, total, entries: initialEntries });
-
-      for (let i = 0; i < queue.length; i++) {
-        const { sectionSlug, url } = queue[i];
-
-        // Mark as loading
-        setExtractionProgress((prev) => {
-          if (!prev) return prev;
-          const newEntries = [...prev.entries];
-          newEntries[i] = { ...newEntries[i], status: 'loading' };
-          return { current: i, total, entries: newEntries };
-        });
-
-        let metadata: Awaited<ReturnType<typeof refreshViaExtension>> = null;
-
-        if (isMock) {
-          await sleep(350);
-          const fixture = MOCK_EXTRACTED_ITEMS[url];
-          metadata = fixture ? { ...fixture } : null;
-        } else {
-          metadata = await refreshViaExtension(url);
-        }
-
-        const item: ExtractedItem = { sourceUrl: url, ...metadata };
-        if (metadata) {
-          resultsBySectionSlug[sectionSlug].push(item);
-        }
-
-        setExtractionProgress((prev) => {
-          if (!prev) return prev;
-          const newEntries = [...prev.entries];
-          newEntries[i] = {
-            ...newEntries[i],
-            status: metadata ? 'done' : 'skipped',
-            title: metadata?.title,
-          };
-          return { current: i + 1, total, entries: newEntries };
-        });
-      }
-
-      // POST extractions back to Inngest
-      const sections = urlsData.sections.map((s) => ({
-        slug: s.slug,
-        title: s.title,
-        items: resultsBySectionSlug[s.slug],
-      }));
-
-      const res = await fetch('/api/curate/extractions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, sections }),
-      });
-
-      if (!res.ok) {
-        setError('Failed to submit extraction results.');
-        setPhase('error');
-        return;
-      }
-
-      setPhase('planning');
-    })();
-  }, [phase, urlsData, sessionId]);
 
   // Keep a ref to the active Jazz session so we can update it on phase transitions
   const jazzSessionRef = useRef<typeof CuratorSession.prototype | null>(null);
@@ -480,10 +529,7 @@ export function CuratePageClient({
     )
       return;
     hasSyncedRef.current = true;
-    syncFromInngest(sessionId).then(() => {
-      // Reset extraction ref so it can re-run if urlSections were restored
-      extractionStartedRef.current = false;
-    });
+    syncFromInngest(sessionId);
   }, [sessionId, phase]);
 
   // Reconnect on window focus when a session is active and not yet complete
@@ -509,6 +555,19 @@ export function CuratePageClient({
   async function handleAnswers(e: React.FormEvent) {
     e.preventDefault();
     if (!answersComplete) return;
+
+    // Fail fast: check extension before committing to a run
+    const isMock = process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
+    if (!isMock) {
+      const available = await checkExtensionAvailable();
+      if (!available) {
+        setError(
+          'Tote extension not installed or not responding. Install the extension and try again.',
+        );
+        setPhase('error');
+        return;
+      }
+    }
 
     // Build answer strings from selections + notes
     const answers: Answers = Object.fromEntries(
@@ -544,6 +603,10 @@ export function CuratePageClient({
     setUrlsData(null);
     setExtractionProgress(null);
     extractionStartedRef.current = false;
+    extractionQueueRef.current = [];
+    extractionRunningRef.current = false;
+    extractedSlugsRef.current = new Set();
+    extensionCheckedRef.current = false;
     jazzSessionRef.current = null;
     window.location.href = '/curate';
   }

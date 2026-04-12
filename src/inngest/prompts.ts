@@ -4,6 +4,8 @@ import type {
   InterviewQuestion,
   SectionPlan,
   ExtractedSection,
+  CollectionOutput,
+  CurationGap,
 } from './types';
 import { CURATOR_PERSONA } from './workspace/CURATOR';
 
@@ -180,4 +182,88 @@ If mode is "debug":
 - Preserve only the strongest candidates needed to validate the workflow
 
 Return only valid JSON matching the schema in your system prompt.`;
+}
+
+export function buildGapsPrompt(collection: CollectionOutput): string {
+  return `You are reviewing a curated product collection for actionable gaps.
+
+Collection: "${collection.title}"
+
+Warnings flagged by the curator:
+${collection.warnings.map((w, i) => `${i + 1}. ${w}`).join('\n')}
+
+For each warning, produce a structured gap object. Classify each as:
+- "missing-section": no products were found for an entire section
+- "constraint-violation": a product conflicts with a stated hard constraint
+- "coverage-gap": a specific sub-category or variant is missing from an otherwise populated section
+- "quality-concern": a pick is weak or uncertain but cannot be improved by URL discovery alone
+
+For each gap, write a concise searchHint — a web search query that would find products to fill it.
+Set actionable: false for gaps where new URL discovery cannot help (e.g. constraint-violation where you'd just remove the item, quality-concern without a clear replacement).
+
+Return only valid JSON array — no markdown, no explanation:
+[{ "kind": "...", "sectionTitle": "...", "description": "...", "searchHint": "...", "actionable": true }]`;
+}
+
+export function buildRefinementUrlPrompt(
+  gap: CurationGap,
+  topic: string,
+  questions: InterviewQuestion[],
+  answers: Record<string, string>,
+  mode: CurationMode,
+): string {
+  return `Find 2-4 product page URLs to address this gap in a collection on: ${topic}
+
+Gap type: ${gap.kind}
+Section: ${gap.sectionTitle}
+Gap description: ${gap.description}
+Search hint: ${gap.searchHint}
+
+${formatAnswers(questions, answers)}
+
+Mode: ${mode}
+${mode === 'debug' ? '- Run 1 search only, collect 1-2 URLs' : ''}
+
+Use web search. Prioritise independent specialty retailers. Avoid Amazon.
+IMPORTANT: Do NOT read or fetch any URLs. Collect product page URLs from search result titles and snippets only.
+Return only valid JSON: { "urls": ["https://...", ...] }`;
+}
+
+export function buildRefinementCuratePrompt(
+  existing: CollectionOutput,
+  newSections: ExtractedSection[],
+  gaps: CurationGap[],
+  questions: InterviewQuestion[],
+  answers: Record<string, string>,
+  mode: CurationMode,
+): string {
+  return `You are refining an existing curated product collection by addressing identified gaps.
+
+Existing collection:
+${JSON.stringify({ title: existing.title, intro: existing.intro, sections: existing.sections }, null, 2)}
+
+Gaps being addressed in this pass:
+${gaps.map((g) => `- [${g.kind}] ${g.sectionTitle}: ${g.description}`).join('\n')}
+
+New extracted product data for these gaps:
+${JSON.stringify(
+  newSections.map((s) => ({ title: s.title, items: s.items })),
+  null,
+  2,
+)}
+
+${formatAnswers(questions, answers)}
+
+Mode: ${mode}
+
+Instructions:
+- Merge new product data into the existing collection, supplementing or replacing sections that had gaps
+- Remove items that violate hard constraints listed in the gaps
+- Do not duplicate items already in the collection (match by sourceUrl)
+- Update warnings to reflect what was resolved and what remains unresolved
+- Preserve all sections and items not affected by the listed gaps
+- Apply the same curatorial lens and note style as the existing collection
+- Drop items with no usable data
+
+${mode === 'debug' ? '- Keep the shortlist intentionally small\n' : ''}Return only valid JSON matching the schema in your system prompt.`;
 }
