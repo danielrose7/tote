@@ -227,6 +227,18 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
         }
       }
 
+      // Restore last progress message so the status card shows something
+      // meaningful after a page refresh (progress log is otherwise realtime-only).
+      if (snap.lastProgressMessage && s.progress.length === 0) {
+        patch.progress = [
+          {
+            step: 'restored',
+            message: snap.lastProgressMessage as string,
+            ts: Date.now(),
+          },
+        ];
+      }
+
       return patch;
     }),
 

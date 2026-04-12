@@ -186,7 +186,13 @@ export const curateCollection = inngest.createFunction(
     const questions = generatedQuestions.questions;
 
     await step.run('persist-questions', () =>
-      patchSession(sessionId, { topic, questions, phase: 'interview' }),
+      patchSession(sessionId, {
+        topic,
+        questions,
+        phase: 'interview',
+        lastProgressMessage:
+          'Interview questions sent — waiting for your answers.',
+      }),
     );
 
     await step.realtime.publish('interview-questions', ch.interview, {
@@ -240,7 +246,10 @@ export const curateCollection = inngest.createFunction(
     });
 
     await step.run('persist-running-phase', () =>
-      patchSession(sessionId, { phase: 'planning' }),
+      patchSession(sessionId, {
+        phase: 'planning',
+        lastProgressMessage: 'Answers received. Planning collection...',
+      }),
     );
 
     // Step 3: Plan the collection structure
@@ -473,7 +482,11 @@ export const curateCollection = inngest.createFunction(
     await step.run('persist-session-urls', () =>
       Promise.all([
         writeSessionState(sessionId, { urlSections, mock: isMock }),
-        patchSession(sessionId, { phase: 'extracting', urlSections }),
+        patchSession(sessionId, {
+          phase: 'extracting',
+          urlSections,
+          lastProgressMessage: 'URL discovery complete — extracting pages...',
+        }),
       ]),
     );
 
@@ -554,7 +567,10 @@ export const curateCollection = inngest.createFunction(
     });
 
     await step.run('persist-curating-phase', () =>
-      patchSession(sessionId, { phase: 'curating' }),
+      patchSession(sessionId, {
+        phase: 'curating',
+        lastProgressMessage: `Extracted ${totalExtracted} items — curating final shortlist...`,
+      }),
     );
 
     const result = await step.run('curate-and-write', async () => {
@@ -670,7 +686,11 @@ export const curateCollection = inngest.createFunction(
         break;
 
       await step.run(`persist-refine-phase-${pass}`, () =>
-        patchSession(sessionId, { phase: 'refining', refinementPass: pass }),
+        patchSession(sessionId, {
+          phase: 'refining',
+          refinementPass: pass,
+          lastProgressMessage: `Refinement pass ${pass}: analysing warnings...`,
+        }),
       );
 
       await step.realtime.publish(`refining-${pass}`, ch.progress, {

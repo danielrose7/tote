@@ -39,6 +39,7 @@ export interface CuratorSessionData {
   extractedSlugs?: string[];
   refinementPass?: number;
   gaps?: CurationGap[];
+  lastProgressMessage?: string;
 }
 
 export interface CuratorSessionResult extends CuratorSessionData {

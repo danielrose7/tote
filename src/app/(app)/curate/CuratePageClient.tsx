@@ -67,6 +67,16 @@ function formatStepLabel(step: string): string {
   );
 }
 
+const phaseStatusLabel: Record<string, string> = {
+  started: 'Waiting for workflow acknowledgment',
+  interview: 'Waiting for answers',
+  planning: 'Planning collection structure...',
+  extracting: 'Extracting pages...',
+  refining: 'Refining collection...',
+  complete: 'Collection complete',
+  error: 'Something went wrong',
+};
+
 export function CuratePageClient({
   initialSessionId = null,
 }: CuratePageClientProps) {
@@ -434,9 +444,8 @@ export function CuratePageClient({
                     {phase === 'extracting' && extractionProgress
                       ? `Extracting pages (${extractionProgress.current} / ${extractionProgress.total})`
                       : (latestProgress?.message ??
-                        (phase === 'started'
-                          ? 'Waiting for workflow acknowledgment'
-                          : 'Run created'))}
+                        phaseStatusLabel[phase] ??
+                        'Run created')}
                   </h2>
                 </div>
                 <div className={styles.statusActions}>
