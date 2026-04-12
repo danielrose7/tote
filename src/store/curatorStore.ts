@@ -227,16 +227,70 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
         }
       }
 
-      // Restore last progress message so the status card shows something
-      // meaningful after a page refresh (progress log is otherwise realtime-only).
-      if (snap.lastProgressMessage && s.progress.length === 0) {
-        patch.progress = [
-          {
-            step: 'restored',
-            message: snap.lastProgressMessage as string,
-            ts: Date.now(),
-          },
+      // Synthesize milestone history from persisted phase so completedMilestones
+      // and the event log are populated after a page refresh.
+      if (s.progress.length === 0 && snap.phase) {
+        const phase = snap.phase as string;
+        const milestoneOrder = [
+          'interview',
+          'planning',
+          'extracting',
+          'curating',
+          'refining',
+          'complete',
         ];
+        const idx = milestoneOrder.indexOf(phase);
+        const synthesized: ProgressEntry[] = [];
+        let ts = 1;
+        if (idx >= 0)
+          synthesized.push({
+            step: 'interview-sent',
+            message: 'Interview questions sent — waiting for your answers.',
+            ts: ts++,
+          });
+        if (idx >= 1)
+          synthesized.push({
+            step: 'answers-received',
+            message: 'Answers received. Planning collection...',
+            ts: ts++,
+          });
+        if (idx >= 2)
+          synthesized.push({
+            step: 'extracting',
+            message: 'URL discovery complete — extracting pages...',
+            ts: ts++,
+          });
+        if (idx >= 3)
+          synthesized.push({
+            step: 'curating',
+            message: `Extracted items — curating final shortlist...`,
+            ts: ts++,
+          });
+        if (idx >= 4) {
+          const pass = (snap.refinementPass as number) ?? 1;
+          for (let p = 1; p <= pass; p++) {
+            synthesized.push({
+              step: `refining-${p}`,
+              message: `Refinement pass ${p}: analysing warnings...`,
+              ts: ts++,
+            });
+          }
+        }
+        if (phase === 'complete')
+          synthesized.push({
+            step: 'complete',
+            message: 'Collection written',
+            ts: ts++,
+          });
+        // Append the last persisted progress message as the most recent entry
+        // so the status card shows the specific action that was in progress.
+        if (snap.lastProgressMessage) {
+          const last = synthesized[synthesized.length - 1];
+          const msg = snap.lastProgressMessage as string;
+          if (!last || last.message !== msg)
+            synthesized.push({ step: 'restored', message: msg, ts: ts++ });
+        }
+        if (synthesized.length > 0) patch.progress = synthesized;
       }
 
       return patch;

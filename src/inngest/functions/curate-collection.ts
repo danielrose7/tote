@@ -335,111 +335,137 @@ export const curateCollection = inngest.createFunction(
         urlSections.push(section);
       }
     } else {
+      // Signal that all sections are being searched (publish upfront so ordering
+      // is deterministic for Inngest replay before the parallel step block).
       for (const section of plan.sections) {
         const slug = parameterize(section.title);
-
         await step.realtime.publish(`searching-${slug}`, ch.progress, {
           step: 'searching',
           message: `Searching for "${section.title}"...`,
         });
+      }
 
-        const found = await step.run(`find-urls-${slug}`, async () => {
-          const startedAt = Date.now();
-          console.log('[curate-collection] find-urls:start', {
-            at: nowIso(),
-            sessionId,
-            section: section.title,
-            slug,
-          });
-          try {
-            const response = await llm.generateWithSearch({
-              system: URL_DISCOVERY_SYSTEM_PROMPT,
-              prompt: buildUrlDiscoveryPrompt(
-                section,
-                topic,
-                questions,
-                answers,
-                mode,
-              ),
-              maxTokens: urlDiscoveryTokenLimit(mode),
-            });
-            console.log('[curate-collection] find-urls:response', {
+      // Discover URLs for all sections in parallel — each is a named step so
+      // Inngest memoizes them individually and retries are per-section.
+      const sectionDiscoveries = await Promise.all(
+        plan.sections.map(async (section) => {
+          const slug = parameterize(section.title);
+          const found = await step.run(`find-urls-${slug}`, async () => {
+            const startedAt = Date.now();
+            console.log('[curate-collection] find-urls:start', {
               at: nowIso(),
               sessionId,
               section: section.title,
               slug,
-              durationMs: Date.now() - startedAt,
-              ...response.summary,
             });
-
-            const text = response.text;
-            const parsed = parseJson<UrlDiscoveryPayload>(text);
-            if (!parsed) {
-              console.error('[curate-collection] find-urls:parse-failed', {
+            try {
+              const response = await llm.generateWithSearch({
+                system: URL_DISCOVERY_SYSTEM_PROMPT,
+                prompt: buildUrlDiscoveryPrompt(
+                  section,
+                  topic,
+                  questions,
+                  answers,
+                  mode,
+                ),
+                maxTokens: urlDiscoveryTokenLimit(mode),
+              });
+              console.log('[curate-collection] find-urls:response', {
                 at: nowIso(),
                 sessionId,
                 section: section.title,
                 slug,
-                stopReason: response.summary.stopReason,
-                textPreview: text.slice(0, 500),
+                durationMs: Date.now() - startedAt,
+                ...response.summary,
               });
-              return { urls: [], usage: null };
-            }
-            console.log('[curate-collection] find-urls:done', {
-              at: nowIso(),
-              sessionId,
-              section: section.title,
-              slug,
-              urlCount: parsed.urls.length,
-            });
-            return { urls: parsed.urls, usage: response.usage };
-          } catch (error) {
-            const status = (error as { status?: number })?.status;
-            const retryAfter = (error as { headers?: Record<string, string> })
-              ?.headers?.['retry-after'];
-            console.error('[curate-collection] find-urls:error', {
-              at: nowIso(),
-              sessionId,
-              section: section.title,
-              slug,
-              status,
-              retryAfter,
-              error: error instanceof Error ? error.message : String(error),
-            });
-            if (status === 429) {
-              const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
-              throw new RetryAfterError(
-                `Rate limited on find-urls for "${section.title}"`,
-                new Date(Date.now() + waitMs),
-              );
-            }
-            throw error;
-          }
-        });
 
+              const text = response.text;
+              const parsed = parseJson<UrlDiscoveryPayload>(text);
+              if (!parsed) {
+                console.error('[curate-collection] find-urls:parse-failed', {
+                  at: nowIso(),
+                  sessionId,
+                  section: section.title,
+                  slug,
+                  stopReason: response.summary.stopReason,
+                  textPreview: text.slice(0, 500),
+                });
+                return { urls: [], usage: null };
+              }
+              console.log('[curate-collection] find-urls:done', {
+                at: nowIso(),
+                sessionId,
+                section: section.title,
+                slug,
+                urlCount: parsed.urls.length,
+              });
+              return { urls: parsed.urls, usage: response.usage };
+            } catch (error) {
+              const status = (error as { status?: number })?.status;
+              const retryAfter = (error as { headers?: Record<string, string> })
+                ?.headers?.['retry-after'];
+              console.error('[curate-collection] find-urls:error', {
+                at: nowIso(),
+                sessionId,
+                section: section.title,
+                slug,
+                status,
+                retryAfter,
+                error: error instanceof Error ? error.message : String(error),
+              });
+              if (status === 429) {
+                const waitMs = retryAfter
+                  ? parseInt(retryAfter) * 1000
+                  : 60_000;
+                throw new RetryAfterError(
+                  `Rate limited on find-urls for "${section.title}"`,
+                  new Date(Date.now() + waitMs),
+                );
+              }
+              throw error;
+            }
+          });
+          return { section, slug, found };
+        }),
+      );
+
+      // Aggregate token counts across all parallel discoveries
+      for (const { found } of sectionDiscoveries) {
         totalInputTokens += found.usage?.inputTokens ?? 0;
         totalOutputTokens += found.usage?.outputTokens ?? 0;
         totalWebSearchRequests += found.usage?.webSearchRequests ?? 0;
+      }
 
-        // Deduct per-step credits
-        if (requestedBy !== 'unknown' && found.usage) {
-          await step.run(`deduct-credits-urls-${slug}`, () =>
-            deductCredits(
-              requestedBy,
-              runCostCents(
-                found.usage!.inputTokens,
-                found.usage!.outputTokens,
-                found.usage!.webSearchRequests,
+      // Deduct per-section credits in parallel
+      if (requestedBy !== 'unknown') {
+        await Promise.all(
+          sectionDiscoveries
+            .filter(({ found }) => found.usage != null)
+            .map(({ slug, found }) =>
+              step.run(`deduct-credits-urls-${slug}`, () =>
+                deductCredits(
+                  requestedBy,
+                  runCostCents(
+                    found.usage!.inputTokens,
+                    found.usage!.outputTokens,
+                    found.usage!.webSearchRequests,
+                  ),
+                  sessionId,
+                  found.usage!.inputTokens,
+                  found.usage!.outputTokens,
+                  found.usage!.webSearchRequests,
+                  `find-urls-${slug}`,
+                ),
               ),
-              sessionId,
-              found.usage!.inputTokens,
-              found.usage!.outputTokens,
-              found.usage!.webSearchRequests,
-              `find-urls-${slug}`,
             ),
-          );
-        }
+        );
+      }
 
+      // Publish results and build urlSections in deterministic order
+      for (const [
+        i,
+        { section, slug, found },
+      ] of sectionDiscoveries.entries()) {
         const domains = found.urls
           .map((u) => {
             try {
@@ -456,7 +482,6 @@ export const curateCollection = inngest.createFunction(
           detail: domains || undefined,
         });
 
-        // Publish section URLs immediately for proactive extraction
         await step.realtime.publish(
           `section-urls-${slug}`,
           ch['section-urls'],
@@ -464,17 +489,12 @@ export const curateCollection = inngest.createFunction(
             slug,
             title: section.title,
             urls: found.urls,
-            sectionIndex: urlSections.length,
+            sectionIndex: i,
             totalSections: plan.sections.length,
           },
         );
 
         urlSections.push({ title: section.title, slug, urls: found.urls });
-
-        // Brief pause between sections to avoid saturating Tier-1 output TPM (8k/min)
-        if (urlSections.length < plan.sections.length) {
-          await new Promise((r) => setTimeout(r, 3000));
-        }
       }
     } // end URL discovery
 
