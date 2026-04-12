@@ -115,7 +115,7 @@ function curateTokenLimit(mode: CurationMode) {
 export const curateCollection = inngest.createFunction(
   {
     id: 'curate-collection',
-    retries: 3,
+    retries: 14,
     timeouts: { finish: '30m' },
     triggers: [{ event: 'curation/start' as CurationStartEvent['name'] }],
     // Utah: singleton per session — no race conditions if triggered twice
@@ -461,6 +461,11 @@ export const curateCollection = inngest.createFunction(
         );
 
         urlSections.push({ title: section.title, slug, urls: found.urls });
+
+        // Brief pause between sections to avoid saturating Tier-1 output TPM (8k/min)
+        if (urlSections.length < plan.sections.length) {
+          await new Promise((r) => setTimeout(r, 3000));
+        }
       }
     } // end URL discovery
 
@@ -798,6 +803,11 @@ export const curateCollection = inngest.createFunction(
           slug: gapSlug,
           urls: foundGap.urls,
         });
+
+        // Pause between gap searches to avoid Tier-1 rate limits
+        if (gi < actionableGaps.length - 1) {
+          await new Promise((r) => setTimeout(r, 3000));
+        }
       }
 
       // 7c. Collect per-gap extractions from browser
