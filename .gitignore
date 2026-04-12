@@ -33,6 +33,7 @@ playwright-report
 tmp/
 
 # Environment files (keep out of version control)
+.env.local.vercel
 .env.production
 chrome-extension/.env.development
 chrome-extension/.env.production
