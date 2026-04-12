@@ -1005,9 +1005,30 @@ export function CuratePageClient({
         {phase === 'error' && (
           <div className={styles.errorBox}>
             <p>{error ?? 'Something went wrong.'}</p>
-            <a href="/curate/new" className={styles.primaryButton}>
-              Start new curation
-            </a>
+            <div className={styles.actions}>
+              {topic && (
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  onClick={async () => {
+                    const res = await fetch('/api/curate/start', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ topic }),
+                    });
+                    if (res.ok) {
+                      const { sessionId: newId } = await res.json();
+                      window.location.href = `/curate/${newId}`;
+                    }
+                  }}
+                >
+                  Try again
+                </button>
+              )}
+              <a href="/curate/new" className={styles.secondaryButton}>
+                New topic
+              </a>
+            </div>
           </div>
         )}
       </div>
