@@ -850,6 +850,11 @@ export const curateCollection = inngest.createFunction(
         }
       }
 
+      // Persist gap URL sections so reconnecting clients can re-queue them
+      await step.run(`persist-refinement-urls-${pass}`, () =>
+        patchSession(sessionId, { refinementUrlSections }),
+      );
+
       // 7c. Collect per-gap extractions from browser
       const refinedSections: ExtractedSection[] = [];
       for (const section of refinementUrlSections) {
@@ -868,6 +873,16 @@ export const curateCollection = inngest.createFunction(
           title: gapEvt.data.title,
           items: gapEvt.data.items,
         });
+
+        // Track extracted gap slugs for reconnect deduplication
+        await step.run(`persist-refined-slug-${section.slug}`, () =>
+          patchSession(sessionId, {
+            extractedSlugs: [
+              ...extractedSections.map((s) => s.slug),
+              ...refinedSections.map((s) => s.slug),
+            ],
+          }),
+        );
       }
 
       if (refinedSections.length === 0) break;

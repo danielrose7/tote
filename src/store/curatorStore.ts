@@ -358,7 +358,10 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
       }
 
       if (topicName === 'section-urls') {
-        patch.phase = 'extracting';
+        // Don't regress phase for gap sections arriving during refinement
+        if (prev.phase !== 'refining') {
+          patch.phase = 'extracting';
+        }
       }
 
       return patch;

@@ -101,9 +101,14 @@ export function useCuratorSession(sessionId: string | null) {
 
       hydrateFromKv(snap);
 
-      // Re-queue any sections not yet extracted
+      // Re-queue any sections not yet extracted (initial + refinement gap sections)
       if (snap.urlSections) {
         for (const section of snap.urlSections as SectionToExtract[]) {
+          queueSectionForExtraction(section);
+        }
+      }
+      if (snap.refinementUrlSections) {
+        for (const section of snap.refinementUrlSections as SectionToExtract[]) {
           queueSectionForExtraction(section);
         }
       }

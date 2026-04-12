@@ -39,6 +39,7 @@ export interface CuratorSessionData {
   extractedSlugs?: string[];
   refinementPass?: number;
   gaps?: CurationGap[];
+  refinementUrlSections?: { title: string; slug: string; urls: string[] }[];
   lastProgressMessage?: string;
 }
 
