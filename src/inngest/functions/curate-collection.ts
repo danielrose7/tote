@@ -116,7 +116,6 @@ export const curateCollection = inngest.createFunction(
   {
     id: 'curate-collection',
     retries: 14,
-    timeouts: { finish: '30m' },
     triggers: [{ event: 'curation/start' as CurationStartEvent['name'] }],
     // Utah: singleton per session — no race conditions if triggered twice
     concurrency: { key: 'event.data.sessionId', limit: 1 },
