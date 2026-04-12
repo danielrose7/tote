@@ -162,6 +162,12 @@ function tryParsePayload(json: string): ImportPayload | null {
   }
 }
 
+// Module-level version tracker — the data object reference from useRealtime is
+// stable per unique event (Inngest creates a new object only when new data
+// arrives). Tracking it here makes applyRealtimeMessage idempotent: re-renders
+// caused by store updates won't re-process the same message.
+const _lastSeen: Record<string, unknown> = {};
+
 export const useCuratorStore = create<CuratorState>((set, get) => ({
   ...initialState,
 
@@ -226,6 +232,8 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 
   applyRealtimeMessage: (topicName, data) => {
     if (!data) return;
+    if (_lastSeen[topicName] === data) return;
+    _lastSeen[topicName] = data;
     const s = get();
     set((prev) => {
       const patch: Partial<CuratorState> = {};

@@ -139,27 +139,29 @@ export function CuratePageClient({
     enabled: !!sessionId && realtimeEnabled,
   });
 
-  // Thin dispatcher — all phase transition logic lives in the store
+  // Thin dispatcher — all phase transition logic lives in the store.
+  // applyRealtimeMessage is idempotent (version-guards on data object reference)
+  // so re-renders caused by store updates won't reprocess the same message.
   useEffect(() => {
     if (!messages) return;
+    const { byTopic } = messages;
 
-    if (messages.byTopic.interview)
-      applyRealtimeMessage('interview', messages.byTopic.interview.data);
+    if (byTopic.interview)
+      applyRealtimeMessage('interview', byTopic.interview.data);
 
-    if (messages.byTopic.progress)
-      applyRealtimeMessage('progress', messages.byTopic.progress.data);
+    if (byTopic.progress)
+      applyRealtimeMessage('progress', byTopic.progress.data);
 
-    if (messages.byTopic.result)
-      applyRealtimeMessage('result', messages.byTopic.result.data);
+    if (byTopic.result) applyRealtimeMessage('result', byTopic.result.data);
 
-    const sectionUrlsMsg = messages.byTopic['section-urls'];
+    const sectionUrlsMsg = byTopic['section-urls'];
     if (sectionUrlsMsg) {
       applyRealtimeMessage('section-urls', sectionUrlsMsg.data);
       const { slug, title, urls, mock } =
         sectionUrlsMsg.data as SectionToExtract;
       queueSectionForExtraction({ slug, title, urls, mock });
     }
-  }, [messages]);
+  }, [messages, applyRealtimeMessage, queueSectionForExtraction]);
 
   // Keep a ref to the active Jazz session so handleImport can link the collection back
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
