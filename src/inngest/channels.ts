@@ -40,11 +40,13 @@ export const curationChannel = realtime.channel({
     },
     'section-urls': {
       schema: z.object({
-        slug: z.string(),
-        title: z.string(),
-        urls: z.array(z.string()),
-        sectionIndex: z.number(),
-        totalSections: z.number(),
+        sections: z.array(
+          z.object({
+            slug: z.string(),
+            title: z.string(),
+            urls: z.array(z.string()),
+          }),
+        ),
         mock: z.boolean().optional(),
       }),
     },

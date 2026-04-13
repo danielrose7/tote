@@ -149,12 +149,18 @@ export function CuratePageClient({
     enabled: !!sessionId && realtimeEnabled,
   });
 
+  // Track which realtime message IDs have been processed to avoid duplicates
+  const processedMsgIdsRef = useRef(new Set<string>());
+  useEffect(() => {
+    processedMsgIdsRef.current = new Set();
+  }, [sessionId]);
+
   // Thin dispatcher — all phase transition logic lives in the store.
   // applyRealtimeMessage is idempotent (version-guards on data object reference)
   // so re-renders caused by store updates won't reprocess the same message.
   useEffect(() => {
     if (!messages) return;
-    const { byTopic } = messages;
+    const { byTopic, all } = messages;
 
     if (byTopic.interview)
       applyRealtimeMessage('interview', byTopic.interview.data);
@@ -164,12 +170,16 @@ export function CuratePageClient({
 
     if (byTopic.result) applyRealtimeMessage('result', byTopic.result.data);
 
-    const sectionUrlsMsg = byTopic['section-urls'];
-    if (sectionUrlsMsg) {
-      applyRealtimeMessage('section-urls', sectionUrlsMsg.data);
-      const { slug, title, urls, mock } =
-        sectionUrlsMsg.data as SectionToExtract;
-      queueSectionForExtraction({ slug, title, urls, mock });
+    // Iterate all messages to avoid missing earlier section-urls messages
+    for (const msg of all) {
+      if (msg.topic !== 'section-urls') continue;
+      if (processedMsgIdsRef.current.has(msg.id)) continue;
+      processedMsgIdsRef.current.add(msg.id);
+      applyRealtimeMessage('section-urls', msg.data);
+      const data = msg.data as { sections: SectionToExtract[]; mock?: boolean };
+      for (const section of data.sections) {
+        queueSectionForExtraction({ ...section, mock: data.mock });
+      }
     }
   }, [messages, applyRealtimeMessage, queueSectionForExtraction]);
 

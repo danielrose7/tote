@@ -153,7 +153,10 @@ export function useCuratorSession(sessionId: string | null) {
   }, [sessionId]);
 
   // --- Extraction drain loop ---
-  async function extractAndSubmitSection(section: SectionToExtract) {
+  // Returns extracted items for a section without posting to the server.
+  async function extractSection(
+    section: SectionToExtract,
+  ): Promise<ExtractedItem[]> {
     const isMock =
       section.mock ?? process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
     const items: ExtractedItem[] = [];
@@ -213,23 +216,7 @@ export function useCuratorSession(sessionId: string | null) {
       });
     }
 
-    const res = await fetch('/api/curate/extractions/section', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId,
-        slug: section.slug,
-        title: section.title,
-        items,
-      }),
-    });
-
-    if (res.ok) {
-      extractedSlugsRef.current.add(section.slug);
-    } else {
-      setError('Failed to submit extraction results.');
-      setPhase('error');
-    }
+    return items;
   }
 
   async function drainExtractionQueue() {
@@ -253,10 +240,33 @@ export function useCuratorSession(sessionId: string | null) {
         extensionCheckedRef.current = true;
       }
 
+      // Extract all sections currently in the queue as one batch, then submit
+      // them in a single event so Inngest receives one curation/extractions event
+      // per batch (initial sections first, gap sections as a separate batch later).
+      const batchSections: {
+        slug: string;
+        title: string;
+        items: ExtractedItem[];
+      }[] = [];
       while (extractionQueueRef.current.length > 0) {
         const section = extractionQueueRef.current.shift()!;
         if (extractedSlugsRef.current.has(section.slug)) continue;
-        await extractAndSubmitSection(section);
+        const items = await extractSection(section);
+        extractedSlugsRef.current.add(section.slug);
+        batchSections.push({ slug: section.slug, title: section.title, items });
+      }
+
+      if (batchSections.length === 0) return;
+
+      const res = await fetch('/api/curate/extractions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, sections: batchSections }),
+      });
+
+      if (!res.ok) {
+        setError('Failed to submit extraction results.');
+        setPhase('error');
       }
     } finally {
       extractionRunningRef.current = false;

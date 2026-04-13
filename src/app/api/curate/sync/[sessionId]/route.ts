@@ -28,5 +28,6 @@ export async function GET(
     urlSections: session?.urlSections ?? null,
     extractedSlugs: session?.extractedSlugs ?? null,
     tokenUsage: session?.tokenUsage ?? null,
+    refinementUrlSections: session?.refinementUrlSections ?? null,
   });
 }

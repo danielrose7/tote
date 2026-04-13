@@ -8,6 +8,7 @@ import {
   completeCuratorSession,
   failCuratorSession,
 } from '../../lib/curatorSessionsDb';
+import { logStep } from '../../lib/curatorStepLog';
 import { deductCredits, runCostCents } from '../../lib/credits';
 import { curationChannel } from '../channels';
 import {
@@ -28,7 +29,7 @@ import type {
   CurationMode,
   CurationStartEvent,
   CurationAnswersEvent,
-  CurationSectionExtractedEvent,
+  CurationExtractionsEvent,
   CollectionOutput,
   CurationGap,
   SectionPlan,
@@ -289,6 +290,13 @@ export const curateCollection = inngest.createFunction(
         sectionCount: parsed.sections.length,
         sections: parsed.sections.map((section) => section.slug),
       });
+      await logStep(sessionId, 'plan-collection', 'completed', {
+        sectionCount: parsed.sections.length,
+        sections: parsed.sections.map((s) => ({
+          slug: s.slug,
+          title: s.title,
+        })),
+      });
       return { ...parsed, usage: response.usage };
     });
     const plan = planResult;
@@ -319,20 +327,12 @@ export const curateCollection = inngest.createFunction(
           message: `Found ${section.urls.length} URLs for "${section.title}" (mock)`,
           detail: section.urls.map((u) => new URL(u).hostname).join(', '),
         });
-        await step.realtime.publish(
-          `section-urls-${section.slug}`,
-          ch['section-urls'],
-          {
-            slug: section.slug,
-            title: section.title,
-            urls: section.urls,
-            sectionIndex: urlSections.length,
-            totalSections: MOCK_URL_SECTIONS.length,
-            mock: true,
-          },
-        );
         urlSections.push(section);
       }
+      await step.realtime.publish('section-urls', ch['section-urls'], {
+        sections: MOCK_URL_SECTIONS,
+        mock: true,
+      });
     } else {
       // Signal that all sections are being searched (publish upfront so ordering
       // is deterministic for Inngest replay before the parallel step block).
@@ -461,10 +461,7 @@ export const curateCollection = inngest.createFunction(
       }
 
       // Publish results and build urlSections in deterministic order
-      for (const [
-        i,
-        { section, slug, found },
-      ] of sectionDiscoveries.entries()) {
+      for (const { section, slug, found } of sectionDiscoveries) {
         const domains = found.urls
           .map((u) => {
             try {
@@ -481,20 +478,12 @@ export const curateCollection = inngest.createFunction(
           detail: domains || undefined,
         });
 
-        await step.realtime.publish(
-          `section-urls-${slug}`,
-          ch['section-urls'],
-          {
-            slug,
-            title: section.title,
-            urls: found.urls,
-            sectionIndex: i,
-            totalSections: plan.sections.length,
-          },
-        );
-
         urlSections.push({ title: section.title, slug, urls: found.urls });
       }
+      // Send all sections in one message so the browser knows the full URL count upfront
+      await step.realtime.publish('section-urls', ch['section-urls'], {
+        sections: urlSections,
+      });
     } // end URL discovery
 
     // Step 5: Persist URL data for reconnect, then wait for per-section extractions
@@ -521,52 +510,31 @@ export const curateCollection = inngest.createFunction(
       message: `${totalUrlCount} URLs queued — extracting with extension...`,
     });
 
-    // Collect one section-extracted event per section
-    const extractedSections: ExtractedSection[] = [];
-    for (const section of urlSections) {
-      const sectionEvt = await step.waitForEvent(
-        `wait-for-section-${section.slug}`,
-        {
-          event:
-            'curation/section-extracted' as CurationSectionExtractedEvent['name'],
-          timeout: '10m',
-          if: `async.data.sessionId == "${sessionId}" && async.data.slug == "${section.slug}"`,
-        },
-      );
+    // Wait for all sections to be extracted in one bulk event
+    const extractionsEvt = await step.waitForEvent('wait-for-extractions', {
+      event: 'curation/extractions' as CurationExtractionsEvent['name'],
+      timeout: '30m',
+      if: `async.data.sessionId == "${sessionId}"`,
+    });
 
-      if (!sectionEvt) {
-        await step.realtime.publish(`timed-out-${section.slug}`, ch.progress, {
-          step: 'error',
-          message: `Timed out waiting for extraction of "${section.title}". Start a new session to try again.`,
-        });
-        await step.run(`persist-extraction-timeout-${section.slug}`, () =>
-          patchSession(sessionId, { phase: 'error' }),
-        );
-        return;
-      }
-
-      extractedSections.push({
-        slug: sectionEvt.data.slug,
-        title: sectionEvt.data.title,
-        items: sectionEvt.data.items,
+    if (!extractionsEvt) {
+      await step.realtime.publish('timed-out-extractions', ch.progress, {
+        step: 'error',
+        message:
+          'Timed out waiting for extractions. Start a new session to try again.',
       });
-
-      // Track which sections are done for reconnect
-      await step.run(`persist-extracted-slug-${section.slug}`, () =>
-        patchSession(sessionId, {
-          extractedSlugs: [...extractedSections.map((s) => s.slug)],
-        }),
+      await step.run('persist-extraction-timeout', () =>
+        patchSession(sessionId, { phase: 'error' }),
       );
-
-      await step.realtime.publish(
-        `section-extracted-${section.slug}`,
-        ch.progress,
-        {
-          step: `section-extracted-${section.slug}`,
-          message: `Extracted ${sectionEvt.data.items.length} items for "${sectionEvt.data.title}"`,
-        },
-      );
+      return;
     }
+
+    const extractedSections: ExtractedSection[] = extractionsEvt.data.sections;
+    await step.run('persist-extracted-slugs', () =>
+      patchSession(sessionId, {
+        extractedSlugs: extractedSections.map((s) => s.slug),
+      }),
+    );
 
     const totalExtracted = extractedSections.reduce(
       (n: number, s: ExtractedSection) => n + s.items.length,
@@ -659,6 +627,12 @@ export const curateCollection = inngest.createFunction(
         itemCount,
         warningCount: collection.warnings.length,
       });
+      await logStep(sessionId, 'curate-and-write', 'completed', {
+        itemCount,
+        sectionCount: collection.sections.length,
+        warningCount: collection.warnings.length,
+        warnings: collection.warnings,
+      });
 
       return {
         filePath: `collections/${fileName}`,
@@ -724,8 +698,17 @@ export const curateCollection = inngest.createFunction(
           prompt: buildGapsPrompt(currentCollection),
           maxTokens: 2000,
         });
-        const gaps = parseJson<CurationGap[]>(response.text);
-        return { gaps: gaps ?? [], usage: response.usage };
+        const gaps = parseJson<CurationGap[]>(response.text) ?? [];
+        await logStep(sessionId, `parse-gaps-${pass}`, 'completed', {
+          gapCount: gaps.length,
+          actionableCount: gaps.filter((g) => g.actionable).length,
+          gaps: gaps.map((g) => ({
+            kind: g.kind,
+            description: g.description,
+            actionable: g.actionable,
+          })),
+        });
+        return { gaps, usage: response.usage };
       });
 
       totalInputTokens += gapsResult.usage?.inputTokens ?? 0;
@@ -825,18 +808,6 @@ export const curateCollection = inngest.createFunction(
           message: `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
         });
 
-        await step.realtime.publish(
-          `section-urls-${gapSlug}`,
-          ch['section-urls'],
-          {
-            slug: gapSlug,
-            title: gap.description,
-            urls: foundGap.urls,
-            sectionIndex: gi,
-            totalSections: actionableGaps.length,
-          },
-        );
-
         refinementUrlSections.push({
           title: gap.description,
           slug: gapSlug,
@@ -849,40 +820,40 @@ export const curateCollection = inngest.createFunction(
         }
       }
 
+      // Send all gap sections in one message
+      await step.realtime.publish(
+        `gap-section-urls-${pass}`,
+        ch['section-urls'],
+        {
+          sections: refinementUrlSections,
+        },
+      );
+
       // Persist gap URL sections so reconnecting clients can re-queue them
       await step.run(`persist-refinement-urls-${pass}`, () =>
         patchSession(sessionId, { refinementUrlSections }),
       );
 
-      // 7c. Collect per-gap extractions from browser
-      const refinedSections: ExtractedSection[] = [];
-      for (const section of refinementUrlSections) {
-        const gapEvt = await step.waitForEvent(
-          `wait-for-refined-${section.slug}`,
-          {
-            event:
-              'curation/section-extracted' as CurationSectionExtractedEvent['name'],
-            timeout: '10m',
-            if: `async.data.sessionId == "${sessionId}" && async.data.slug == "${section.slug}"`,
-          },
-        );
-        if (!gapEvt) break; // timeout on a gap — proceed with what we have
-        refinedSections.push({
-          slug: gapEvt.data.slug,
-          title: gapEvt.data.title,
-          items: gapEvt.data.items,
-        });
-
-        // Track extracted gap slugs for reconnect deduplication
-        await step.run(`persist-refined-slug-${section.slug}`, () =>
-          patchSession(sessionId, {
-            extractedSlugs: [
-              ...extractedSections.map((s) => s.slug),
-              ...refinedSections.map((s) => s.slug),
-            ],
-          }),
-        );
-      }
+      // 7c. Wait for all gap extractions in one bulk event
+      const gapExtractionsEvt = await step.waitForEvent(
+        `wait-for-gap-extractions-${pass}`,
+        {
+          event: 'curation/extractions' as CurationExtractionsEvent['name'],
+          timeout: '30m',
+          if: `async.data.sessionId == "${sessionId}"`,
+        },
+      );
+      if (!gapExtractionsEvt) break; // timeout — proceed with what we have
+      const refinedSections: ExtractedSection[] =
+        gapExtractionsEvt.data.sections;
+      await step.run(`persist-refined-slugs-${pass}`, () =>
+        patchSession(sessionId, {
+          extractedSlugs: [
+            ...extractedSections.map((s) => s.slug),
+            ...refinedSections.map((s) => s.slug),
+          ],
+        }),
+      );
 
       if (refinedSections.length === 0) break;
 
@@ -903,6 +874,17 @@ export const curateCollection = inngest.createFunction(
             maxTokens: curateTokenLimit(mode),
           });
           const refined = parseJson<CollectionOutput>(response.text);
+          if (refined) {
+            const refinedItemCount = refined.sections.reduce(
+              (n, s) => n + s.items.length,
+              0,
+            );
+            await logStep(sessionId, `refine-collection-${pass}`, 'completed', {
+              itemCount: refinedItemCount,
+              sectionCount: refined.sections.length,
+              warningCount: refined.warnings.length,
+            });
+          }
           return { collection: refined, usage: response.usage };
         },
       );
