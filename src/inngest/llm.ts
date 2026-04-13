@@ -87,40 +87,43 @@ function createAnthropicClient(): LLMClient {
   });
   const model = 'claude-sonnet-4-6';
 
+  async function call(
+    params: Parameters<typeof client.messages.create>[0],
+  ): Promise<LLMResponse> {
+    try {
+      return fromAnthropicResponse(await client.messages.create(params));
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+      if (status === 429) {
+        const retryAfter = (error as { headers?: Record<string, string> })
+          ?.headers?.['retry-after'];
+        const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
+        throw new RetryAfterError(
+          'Rate limited',
+          new Date(Date.now() + waitMs),
+        );
+      }
+      throw error;
+    }
+  }
+
   return {
-    async generate({ system, prompt, maxTokens }) {
-      const response = await client.messages.create({
+    generate({ system, prompt, maxTokens }) {
+      return call({
         model,
         max_tokens: maxTokens,
         system,
         messages: [{ role: 'user', content: prompt }],
       });
-      return fromAnthropicResponse(response);
     },
-
-    async generateWithSearch({ system, prompt, maxTokens }) {
-      try {
-        const response = await client.messages.create({
-          model,
-          max_tokens: maxTokens,
-          system,
-          tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
-          messages: [{ role: 'user', content: prompt }],
-        });
-        return fromAnthropicResponse(response);
-      } catch (error) {
-        const status = (error as { status?: number })?.status;
-        if (status === 429) {
-          const retryAfter = (error as { headers?: Record<string, string> })
-            ?.headers?.['retry-after'];
-          const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
-          throw new RetryAfterError(
-            'Rate limited',
-            new Date(Date.now() + waitMs),
-          );
-        }
-        throw error;
-      }
+    generateWithSearch({ system, prompt, maxTokens }) {
+      return call({
+        model,
+        max_tokens: maxTokens,
+        system,
+        tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
+        messages: [{ role: 'user', content: prompt }],
+      });
     },
   };
 }
