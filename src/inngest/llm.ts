@@ -91,7 +91,15 @@ function createAnthropicClient(): LLMClient {
     params: Parameters<typeof client.messages.create>[0],
   ): Promise<LLMResponse> {
     try {
-      return fromAnthropicResponse(await client.messages.create(params));
+      const response = fromAnthropicResponse(
+        await client.messages.create(params),
+      );
+      if (response.summary.stopReason === 'max_tokens') {
+        throw new Error(
+          `LLM response truncated at max_tokens limit (${params.max_tokens})`,
+        );
+      }
+      return response;
     } catch (error) {
       const status = (error as { status?: number })?.status;
       if (status === 429) {

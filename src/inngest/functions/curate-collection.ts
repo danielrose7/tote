@@ -137,11 +137,6 @@ export const curateCollection = inngest.createFunction(
           prompt: buildQuestionsPrompt(topic),
           maxTokens,
         });
-        if (response.summary.stopReason === 'max_tokens') {
-          throw new Error(
-            `Question generation hit max_tokens limit (${maxTokens}) — response truncated`,
-          );
-        }
         const raw = parseJson<unknown>(response.text);
         const result = InterviewQuestionsSchema.safeParse(raw);
         if (!result.success) {
