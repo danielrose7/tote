@@ -24,7 +24,6 @@ export interface ProgressEntry {
 }
 
 export interface Result {
-  filePath: string;
   title: string;
   sectionCount: number;
   itemCount: number;
@@ -345,7 +344,6 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
           title?: string;
           sectionCount?: number;
           itemCount?: number;
-          filePath?: string;
         };
         patch.result = d as Result;
         if (d.json) {

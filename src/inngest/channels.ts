@@ -19,7 +19,6 @@ export const curationChannel = realtime.channel({
     },
     result: {
       schema: z.object({
-        filePath: z.string(),
         title: z.string(),
         sectionCount: z.number(),
         itemCount: z.number(),

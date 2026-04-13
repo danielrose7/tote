@@ -1,5 +1,3 @@
-import { writeFile, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
 import { RetryAfterError } from 'inngest';
 import { inngest } from '../client';
 import { writeSession, patchSession } from '../../lib/curatorSession';
@@ -23,7 +21,6 @@ import {
   buildRefinementCuratePrompt,
   InterviewQuestionsSchema,
 } from '../prompts';
-import { MOCK_URL_SECTIONS } from '../fixtures/url-sections';
 import { createLLMClient } from '../llm';
 import type {
   CurationMode,
@@ -71,34 +68,8 @@ function parameterize(title: string): string {
     .replace(/^-|-$/g, '');
 }
 
-function formatTimestamp(date: Date): string {
-  const y = date.getFullYear();
-  const mo = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const h = String(date.getHours()).padStart(2, '0');
-  const mi = String(date.getMinutes()).padStart(2, '0');
-  return `${y}${mo}${d}-${h}${mi}`;
-}
-
 function nowIso(): string {
   return new Date().toISOString();
-}
-
-async function writeSessionState(
-  sessionId: string,
-  data: { urlSections: UrlSection[]; mock: boolean },
-) {
-  try {
-    const dir = join(process.cwd(), 'collections', '.sessions');
-    await mkdir(dir, { recursive: true });
-    await writeFile(
-      join(dir, `${sessionId}.json`),
-      JSON.stringify(data),
-      'utf-8',
-    );
-  } catch {
-    // Best-effort — fails silently in serverless environments
-  }
 }
 
 function planTokenLimit(mode: CurationMode) {
@@ -309,7 +280,6 @@ export const curateCollection = inngest.createFunction(
 
     // Step 4: Discover URLs per section via web search (no page reading)
     // Each section is its own named step so it's individually memoized/retryable
-    const isMock = process.env.CURATOR_MOCK === 'true';
     const urlSections: UrlSection[] = [];
     let totalInputTokens =
       (generatedQuestions.usage?.inputTokens ?? 0) +
@@ -319,21 +289,7 @@ export const curateCollection = inngest.createFunction(
       (planResult.usage?.outputTokens ?? 0);
     let totalWebSearchRequests = 0;
 
-    if (isMock) {
-      // In mock mode, skip URL discovery entirely and use fixture sections as-is.
-      for (const section of MOCK_URL_SECTIONS) {
-        await step.realtime.publish(`found-urls-${section.slug}`, ch.progress, {
-          step: 'found-urls',
-          message: `Found ${section.urls.length} URLs for "${section.title}" (mock)`,
-          detail: section.urls.map((u) => new URL(u).hostname).join(', '),
-        });
-        urlSections.push(section);
-      }
-      await step.realtime.publish('section-urls', ch['section-urls'], {
-        sections: MOCK_URL_SECTIONS,
-        mock: true,
-      });
-    } else {
+    {
       // Signal that all sections are being searched (publish upfront so ordering
       // is deterministic for Inngest replay before the parallel step block).
       for (const section of plan.sections) {
@@ -484,24 +440,20 @@ export const curateCollection = inngest.createFunction(
       await step.realtime.publish('section-urls', ch['section-urls'], {
         sections: urlSections,
       });
-    } // end URL discovery
+    }
 
-    // Step 5: Persist URL data for reconnect, then wait for per-section extractions
+    // Step 5: Persist URL data for reconnect, then wait for extractions
     await step.run('persist-session-urls', () =>
-      Promise.all([
-        writeSessionState(sessionId, { urlSections, mock: isMock }),
-        patchSession(sessionId, {
-          phase: 'extracting',
-          urlSections,
-          lastProgressMessage: 'URL discovery complete — extracting pages...',
-        }),
-      ]),
+      patchSession(sessionId, {
+        phase: 'extracting',
+        urlSections,
+        lastProgressMessage: 'URL discovery complete — extracting pages...',
+      }),
     );
 
-    // Also publish legacy urls topic for reconnect/sync restore in the browser
+    // Also publish urls topic for reconnect/sync restore in the browser
     await step.realtime.publish('urls-ready', ch.urls, {
       sections: urlSections,
-      mock: isMock,
     });
 
     const totalUrlCount = urlSections.reduce((n, s) => n + s.urls.length, 0);
@@ -598,22 +550,6 @@ export const curateCollection = inngest.createFunction(
       }
 
       const collectionJson = JSON.stringify(collection);
-      const slug = parameterize(collection.title);
-      const timestamp = formatTimestamp(new Date());
-      const fileName = `${slug}-${timestamp}.json`;
-
-      try {
-        const collectionsDir = join(process.cwd(), 'collections');
-        await mkdir(collectionsDir, { recursive: true });
-        await writeFile(
-          join(collectionsDir, fileName),
-          collectionJson,
-          'utf-8',
-        );
-      } catch {
-        // File write is best-effort — fails silently in serverless environments
-      }
-
       const itemCount = collection.sections.reduce(
         (n, s) => n + s.items.length,
         0,
@@ -622,7 +558,6 @@ export const curateCollection = inngest.createFunction(
         at: nowIso(),
         sessionId,
         durationMs: Date.now() - startedAt,
-        filePath: `collections/${fileName}`,
         sectionCount: collection.sections.length,
         itemCount,
         warningCount: collection.warnings.length,
@@ -635,7 +570,6 @@ export const curateCollection = inngest.createFunction(
       });
 
       return {
-        filePath: `collections/${fileName}`,
         title: collection.title,
         sectionCount: collection.sections.length,
         itemCount,
@@ -996,6 +930,6 @@ export const curateCollection = inngest.createFunction(
       message: 'Done.',
     });
 
-    return { filePath: result.filePath };
+    return {};
   },
 );
