@@ -929,7 +929,5 @@ export const curateCollection = inngest.createFunction(
       step: 'complete',
       message: 'Done.',
     });
-
-    return {};
   },
 );
