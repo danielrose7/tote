@@ -747,11 +747,6 @@ export const curateCollection = inngest.createFunction(
           slug: gapSlug,
           urls: foundGap.urls,
         });
-
-        // Pause between gap searches to avoid Tier-1 rate limits
-        if (gi < actionableGaps.length - 1) {
-          await new Promise((r) => setTimeout(r, 3000));
-        }
       }
 
       // Send all gap sections in one message
