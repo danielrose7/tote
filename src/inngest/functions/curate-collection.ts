@@ -1,4 +1,3 @@
-import { RetryAfterError } from 'inngest';
 import { inngest } from '../client';
 import { writeSession, patchSession } from '../../lib/curatorSession';
 import {
@@ -313,72 +312,47 @@ export const curateCollection = inngest.createFunction(
               section: section.title,
               slug,
             });
-            try {
-              const response = await llm.generateWithSearch({
-                system: URL_DISCOVERY_SYSTEM_PROMPT,
-                prompt: buildUrlDiscoveryPrompt(
-                  section,
-                  topic,
-                  questions,
-                  answers,
-                  mode,
-                ),
-                maxTokens: urlDiscoveryTokenLimit(mode),
-              });
-              console.log('[curate-collection] find-urls:response', {
-                at: nowIso(),
-                sessionId,
-                section: section.title,
-                slug,
-                durationMs: Date.now() - startedAt,
-                ...response.summary,
-              });
+            const response = await llm.generateWithSearch({
+              system: URL_DISCOVERY_SYSTEM_PROMPT,
+              prompt: buildUrlDiscoveryPrompt(
+                section,
+                topic,
+                questions,
+                answers,
+                mode,
+              ),
+              maxTokens: urlDiscoveryTokenLimit(mode),
+            });
+            console.log('[curate-collection] find-urls:response', {
+              at: nowIso(),
+              sessionId,
+              section: section.title,
+              slug,
+              durationMs: Date.now() - startedAt,
+              ...response.summary,
+            });
 
-              const text = response.text;
-              const parsed = parseJson<UrlDiscoveryPayload>(text);
-              if (!parsed) {
-                console.error('[curate-collection] find-urls:parse-failed', {
-                  at: nowIso(),
-                  sessionId,
-                  section: section.title,
-                  slug,
-                  stopReason: response.summary.stopReason,
-                  textPreview: text.slice(0, 500),
-                });
-                return { urls: [], usage: null };
-              }
-              console.log('[curate-collection] find-urls:done', {
+            const text = response.text;
+            const parsed = parseJson<UrlDiscoveryPayload>(text);
+            if (!parsed) {
+              console.error('[curate-collection] find-urls:parse-failed', {
                 at: nowIso(),
                 sessionId,
                 section: section.title,
                 slug,
-                urlCount: parsed.urls.length,
+                stopReason: response.summary.stopReason,
+                textPreview: text.slice(0, 500),
               });
-              return { urls: parsed.urls, usage: response.usage };
-            } catch (error) {
-              const status = (error as { status?: number })?.status;
-              const retryAfter = (error as { headers?: Record<string, string> })
-                ?.headers?.['retry-after'];
-              console.error('[curate-collection] find-urls:error', {
-                at: nowIso(),
-                sessionId,
-                section: section.title,
-                slug,
-                status,
-                retryAfter,
-                error: error instanceof Error ? error.message : String(error),
-              });
-              if (status === 429) {
-                const waitMs = retryAfter
-                  ? parseInt(retryAfter) * 1000
-                  : 60_000;
-                throw new RetryAfterError(
-                  `Rate limited on find-urls for "${section.title}"`,
-                  new Date(Date.now() + waitMs),
-                );
-              }
-              throw error;
+              return { urls: [], usage: null };
             }
+            console.log('[curate-collection] find-urls:done', {
+              at: nowIso(),
+              sessionId,
+              section: section.title,
+              slug,
+              urlCount: parsed.urls.length,
+            });
+            return { urls: parsed.urls, usage: response.usage };
           });
           return { section, slug, found };
         }),
@@ -685,34 +659,20 @@ export const curateCollection = inngest.createFunction(
         });
 
         const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
-          try {
-            const response = await llm.generateWithSearch({
-              system: URL_DISCOVERY_SYSTEM_PROMPT,
-              prompt: buildRefinementUrlPrompt(
-                gap,
-                topic,
-                questions,
-                answers,
-                mode,
-              ),
-              maxTokens: urlDiscoveryTokenLimit(mode),
-            });
-            const parsed = parseJson<UrlDiscoveryPayload>(response.text);
-            if (!parsed) return { urls: [], usage: null };
-            return { urls: parsed.urls, usage: response.usage };
-          } catch (error) {
-            const status = (error as { status?: number })?.status;
-            const retryAfter = (error as { headers?: Record<string, string> })
-              ?.headers?.['retry-after'];
-            if (status === 429) {
-              const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
-              throw new RetryAfterError(
-                `Rate limited on find-urls for gap "${gap.description}"`,
-                new Date(Date.now() + waitMs),
-              );
-            }
-            throw error;
-          }
+          const response = await llm.generateWithSearch({
+            system: URL_DISCOVERY_SYSTEM_PROMPT,
+            prompt: buildRefinementUrlPrompt(
+              gap,
+              topic,
+              questions,
+              answers,
+              mode,
+            ),
+            maxTokens: urlDiscoveryTokenLimit(mode),
+          });
+          const parsed = parseJson<UrlDiscoveryPayload>(response.text);
+          if (!parsed) return { urls: [], usage: null };
+          return { urls: parsed.urls, usage: response.usage };
         });
 
         totalInputTokens += foundGap.usage?.inputTokens ?? 0;

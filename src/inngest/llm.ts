@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { RetryAfterError } from 'inngest';
 
 export type LLMUsage = {
   inputTokens: number;
@@ -98,14 +99,28 @@ function createAnthropicClient(): LLMClient {
     },
 
     async generateWithSearch({ system, prompt, maxTokens }) {
-      const response = await client.messages.create({
-        model,
-        max_tokens: maxTokens,
-        system,
-        tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
-        messages: [{ role: 'user', content: prompt }],
-      });
-      return fromAnthropicResponse(response);
+      try {
+        const response = await client.messages.create({
+          model,
+          max_tokens: maxTokens,
+          system,
+          tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
+          messages: [{ role: 'user', content: prompt }],
+        });
+        return fromAnthropicResponse(response);
+      } catch (error) {
+        const status = (error as { status?: number })?.status;
+        if (status === 429) {
+          const retryAfter = (error as { headers?: Record<string, string> })
+            ?.headers?.['retry-after'];
+          const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
+          throw new RetryAfterError(
+            'Rate limited',
+            new Date(Date.now() + waitMs),
+          );
+        }
+        throw error;
+      }
     },
   };
 }
