@@ -147,7 +147,7 @@ function createAnthropicClient(): LLMClient {
       model: overrideModel,
     }) {
       const searchModel = overrideModel ?? 'claude-haiku-4-5-20251001';
-      const MAX_SEARCHES = 7;
+      const MAX_SEARCHES = 5;
       const MAX_TURNS = 12;
       let searchCount = 0;
       let turnCount = 0;

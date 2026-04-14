@@ -79,18 +79,20 @@ export function buildUrlDiscoverySystemPrompt(): string {
   const now = new Date();
   const month = now.toLocaleString('en-US', { month: 'long' });
   const year = now.getFullYear();
-  return `You are a product URL finder for a curation tool. Your job is to use web search to find product page URLs at independent retailers.
+  return `You are a product URL finder for a curation tool. The current month is ${month} ${year}.
 
-The current month is ${month} ${year}.
+Search strategy — follow this exactly:
+1. Run ONE search at a time. Evaluate results before deciding whether to search again.
+2. Stop searching as soon as you have reached the target URL count. Do not keep searching once you have enough.
+3. When you have enough URLs, immediately output the JSON — no summary, no explanation, no preamble.
 
-Rules:
-- Use web search to find products. Read the search result titles and snippets to identify product page URLs.
-- Do NOT follow or fetch any URLs — collect them only from search result metadata.
-- Prefer brand-direct sites and independent specialty retailers. Avoid Amazon.
-- Return URLs for individual product pages only — avoid collection, category, or listing pages.
-- Return only valid JSON — no markdown, no explanation.
+Search rules:
+- Collect URLs only from search result titles and snippets — do not attempt to fetch or visit pages.
+- Prefer brand-direct sites and independent specialty retailers. Avoid Amazon and generic marketplaces.
+- Only include individual product pages — not category, collection, or search result pages.
+- You have a limited search budget. Use only as many searches as needed.
 
-Output format: { "urls": ["https://...", ...] }`;
+Output: respond with ONLY this JSON, nothing else — { "urls": ["https://...", ...] }`;
 }
 
 export function buildPlanPrompt(
@@ -131,17 +133,15 @@ export function buildUrlDiscoveryPrompt(
   mode: CurationMode,
 ): string {
   const candidateTarget = section.targetCount * 2 + 2;
-  return `Find ${candidateTarget}-${candidateTarget + 4} candidate product page URLs for the "${section.title}" section of a collection on: ${topic}
+  return `Find ${candidateTarget} candidate product page URLs for the "${section.title}" section of a collection on: ${topic}
 
 ${formatAnswers(questions, answers)}
 
 Section rationale: ${section.rationale}
 
-Cast a wide net — these are candidates for extraction and curation, not a final shortlist. Aim for breadth across different brands and retailers.${mode === 'debug' ? '\n\nDebug mode: run 1-2 searches, return 3-5 URLs.' : ''}
+Search one query at a time. Stop as soon as you have ${candidateTarget} product page URLs across different brands and retailers.${mode === 'debug' ? '\n\nDebug mode: run 1-2 searches only, return 3-5 URLs.' : ''}
 
-Use web search to find products at independent retailers and brand-direct sites.
-Return individual product page URLs only — not collection, category, or search result pages.
-Return only valid JSON: { "urls": ["https://...", ...] }`;
+Output ONLY valid JSON when done: { "urls": ["https://...", ...] }`;
 }
 
 export function buildCuratePrompt(
