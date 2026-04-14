@@ -283,18 +283,14 @@ export const curateCollection = inngest.createFunction(
       (planResult.usage?.outputTokens ?? 0);
     let totalWebSearchRequests = 0;
 
-    // Signal all sections being searched upfront (needed for Inngest replay determinism)
+    // Discover URLs sequentially — publish searching event per section just before it starts
     for (const section of plan.sections) {
       const slug = parameterize(section.title);
+
       await step.realtime.publish(`searching-${slug}`, ch.progress, {
         step: 'searching',
         message: `Searching for "${section.title}"...`,
       });
-    }
-
-    // Discover URLs sequentially — avoids rate limit bursts and streams results per section
-    for (const section of plan.sections) {
-      const slug = parameterize(section.title);
 
       const found = await step.run(`find-urls-${slug}`, async () => {
         const startedAt = Date.now();
