@@ -124,6 +124,10 @@ function createAnthropicClient(): LLMClient {
           new Date(Date.now() + waitMs),
         );
       }
+      // 529 = Anthropic overloaded — back off and retry
+      if (status === 529) {
+        throw new RetryAfterError('Overloaded', new Date(Date.now() + 30_000));
+      }
       throw error;
     }
   }
