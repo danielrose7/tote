@@ -200,6 +200,12 @@ function createAnthropicClient(): LLMClient {
             max_tokens: maxTokens,
             system,
             tools: [webSearchTool],
+            // Once search limit is reached, force text-only output so the model
+            // stops requesting more searches and outputs the JSON immediately
+            tool_choice:
+              searchCount >= MAX_SEARCHES
+                ? { type: 'none' as const }
+                : { type: 'auto' as const },
             messages,
           });
         } catch (error) {
