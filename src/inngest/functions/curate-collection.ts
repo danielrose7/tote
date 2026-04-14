@@ -336,7 +336,7 @@ export const curateCollection = inngest.createFunction(
 				phase: research.followUpNeeded ? "interview-round-2" : "framing",
 				researchBriefJson: JSON.stringify(research),
 				lastProgressMessage: research.followUpNeeded
-					? "Category research complete — preparing a follow-up question."
+					? "Category research complete — preparing follow-up questions."
 					: "Category research complete — building curatorial brief.",
 			}),
 		);
@@ -344,7 +344,7 @@ export const curateCollection = inngest.createFunction(
 		await step.realtime.publish("category-research-complete", ch.progress, {
 			step: "category-research-complete",
 			message: research.followUpNeeded
-				? "Category research complete. One quick follow-up will sharpen the direction."
+				? "Category research complete. A few follow-up questions will sharpen the direction."
 				: "Category research complete. Building curatorial brief...",
 			detail: research.suggestedLenses.join(", ") || undefined,
 		});
@@ -669,6 +669,7 @@ export const curateCollection = inngest.createFunction(
 						urls: [] as string[],
 						usage: null,
 						summary: response.summary,
+						parseFailed: true,
 					};
 				}
 				console.log("[curate-collection] find-urls:done", {
@@ -682,6 +683,7 @@ export const curateCollection = inngest.createFunction(
 					urls: parsed.urls,
 					usage: response.usage,
 					summary: response.summary,
+					parseFailed: false,
 				};
 			});
 
@@ -724,9 +726,13 @@ export const curateCollection = inngest.createFunction(
 				.join(", ");
 
 			await step.realtime.publish(`found-urls-${slug}`, ch.progress, {
-				step: "found-urls",
-				message: `Found ${found.urls.length} URLs for "${section.title}"`,
-				detail: domains || undefined,
+				step: found.parseFailed ? "search-parse-failed" : "found-urls",
+				message: found.parseFailed
+					? `Search returned an unreadable response for "${section.title}"`
+					: `Found ${found.urls.length} URLs for "${section.title}"`,
+				detail: found.parseFailed
+					? "No URLs could be extracted from the model output. This is likely a parsing or formatting issue."
+					: domains || undefined,
 			});
 
 			urlSections.push({ title: section.title, slug, urls: found.urls });
@@ -1061,11 +1067,13 @@ export const curateCollection = inngest.createFunction(
 							urls: [] as string[],
 							usage: null,
 							summary: response.summary,
+							parseFailed: true,
 						};
 					return {
 						urls: parsed.urls,
 						usage: response.usage,
 						summary: response.summary,
+						parseFailed: false,
 					};
 				});
 
@@ -1098,8 +1106,13 @@ export const curateCollection = inngest.createFunction(
 				}
 
 				await step.realtime.publish(`found-urls-${gapSlug}`, ch.progress, {
-					step: "found-urls",
-					message: `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
+					step: foundGap.parseFailed ? "search-parse-failed" : "found-urls",
+					message: foundGap.parseFailed
+						? `Search returned an unreadable response for gap: "${gap.description}"`
+						: `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
+					detail: foundGap.parseFailed
+						? "No URLs could be extracted from the model output. This is likely a parsing or formatting issue."
+						: undefined,
 				});
 
 				refinementUrlSections.push({

@@ -1,1 +1,1 @@
-export { ShareCollectionDialog } from './ShareCollectionDialog';
+export { ShareCollectionDialog } from "./ShareCollectionDialog";

@@ -1,1 +1,33 @@
-{"urlSections":[{"title":"Farm-Direct Subscriptions","slug":"farm-direct-subscriptions","urls":["https://petalpickers.com/collections/farm-fresh-flowers-delivered-to-your-door","https://www.hhfshop.com/","https://www.thefloralsource.com/"]},{"title":"Specialty Florists Worth Ordering From","slug":"specialty-florists-worth-ordering-from","urls":["https://farmgirlflowers.com/shop","https://www.floom.com/us","https://www.bloomnation.com/","https://urbanstems.com/collections/flowers"]},{"title":"Grower-Focused Bouquet Services","slug":"grower-focused-bouquet-services","urls":["https://www.hhfshop.com/","https://petalpickers.com/collections/farm-fresh-flowers-delivered-to-your-door","https://www.whiteflowerfarm.com/all-cut-flower-bouquets"]}],"mock":false}
+{
+	"urlSections": [
+		{
+			"title": "Farm-Direct Subscriptions",
+			"slug": "farm-direct-subscriptions",
+			"urls": [
+				"https://petalpickers.com/collections/farm-fresh-flowers-delivered-to-your-door",
+				"https://www.hhfshop.com/",
+				"https://www.thefloralsource.com/"
+			]
+		},
+		{
+			"title": "Specialty Florists Worth Ordering From",
+			"slug": "specialty-florists-worth-ordering-from",
+			"urls": [
+				"https://farmgirlflowers.com/shop",
+				"https://www.floom.com/us",
+				"https://www.bloomnation.com/",
+				"https://urbanstems.com/collections/flowers"
+			]
+		},
+		{
+			"title": "Grower-Focused Bouquet Services",
+			"slug": "grower-focused-bouquet-services",
+			"urls": [
+				"https://www.hhfshop.com/",
+				"https://petalpickers.com/collections/farm-fresh-flowers-delivered-to-your-door",
+				"https://www.whiteflowerfarm.com/all-cut-flower-bouquets"
+			]
+		}
+	],
+	"mock": false
+}

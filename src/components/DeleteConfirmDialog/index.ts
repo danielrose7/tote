@@ -1,1 +1,1 @@
-export { DeleteConfirmDialog } from './DeleteConfirmDialog';
+export { DeleteConfirmDialog } from "./DeleteConfirmDialog";

@@ -1,1 +1,33 @@
-{"urlSections":[{"title":"Balls That Survive Real Fetch","slug":"balls-that-survive-real-fetch","urls":["https://www.westpaw.com/products/jive-dog-ball","https://www.thepetbeastro.com/west-paw-chew-jive-granny-smith-large-325.html","https://www.pawstreetmarket.com/chuckit-ultra-ball.html","https://www.gowacky.us/wunderball-best-fetch-toy/"]},{"title":"Harness for Running","slug":"harness-for-running","urls":["https://ruffwear.com/products/web-master-harness","https://www.rei.com/product/832660/ruffwear-web-master-dog-harness"]},{"title":"Collapsible Water Setup for the Trail","slug":"collapsible-water-setup-for-the-trail","urls":["https://ruffwear.com/products/trail-runner-bowl","https://ruffwear.com/products/bivy-portable-dog-bowl","https://www.wilderdog.com/products/0-7l-collapsible-water-bottle","https://www.rei.com/product/882739/ruffwear-quencher-collapsible-dog-bowl"]}],"mock":false}
+{
+	"urlSections": [
+		{
+			"title": "Balls That Survive Real Fetch",
+			"slug": "balls-that-survive-real-fetch",
+			"urls": [
+				"https://www.westpaw.com/products/jive-dog-ball",
+				"https://www.thepetbeastro.com/west-paw-chew-jive-granny-smith-large-325.html",
+				"https://www.pawstreetmarket.com/chuckit-ultra-ball.html",
+				"https://www.gowacky.us/wunderball-best-fetch-toy/"
+			]
+		},
+		{
+			"title": "Harness for Running",
+			"slug": "harness-for-running",
+			"urls": [
+				"https://ruffwear.com/products/web-master-harness",
+				"https://www.rei.com/product/832660/ruffwear-web-master-dog-harness"
+			]
+		},
+		{
+			"title": "Collapsible Water Setup for the Trail",
+			"slug": "collapsible-water-setup-for-the-trail",
+			"urls": [
+				"https://ruffwear.com/products/trail-runner-bowl",
+				"https://ruffwear.com/products/bivy-portable-dog-bowl",
+				"https://www.wilderdog.com/products/0-7l-collapsible-water-bottle",
+				"https://www.rei.com/product/882739/ruffwear-quencher-collapsible-dog-bowl"
+			]
+		}
+	],
+	"mock": false
+}

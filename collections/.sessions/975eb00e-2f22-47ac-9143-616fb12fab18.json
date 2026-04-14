@@ -1,1 +1,29 @@
-{"urlSections":[{"title":"Subscription-worthy farm-direct services","slug":"subscription-worthy-farm-direct-services","urls":["https://bouqs.com/subscriptions","https://www.bloomsybox.com/","https://www.hhfshop.com/"]},{"title":"Considered bouquets for a single order","slug":"considered-bouquets-for-a-single-order","urls":["https://urbanstems.com/collections/flowers","https://farmgirlflowers.com/shop","https://bouqs.com/flowers/all","https://www.rosehillflowers.com/flowers/designers-choice-custom/"]},{"title":"Specialty or grower-direct for unusual stems","slug":"specialty-or-grower-direct-for-unusual-stems","urls":["https://farmgirlflowers.com/shop","https://fleurfarm.com/"]}],"mock":false}
+{
+	"urlSections": [
+		{
+			"title": "Subscription-worthy farm-direct services",
+			"slug": "subscription-worthy-farm-direct-services",
+			"urls": [
+				"https://bouqs.com/subscriptions",
+				"https://www.bloomsybox.com/",
+				"https://www.hhfshop.com/"
+			]
+		},
+		{
+			"title": "Considered bouquets for a single order",
+			"slug": "considered-bouquets-for-a-single-order",
+			"urls": [
+				"https://urbanstems.com/collections/flowers",
+				"https://farmgirlflowers.com/shop",
+				"https://bouqs.com/flowers/all",
+				"https://www.rosehillflowers.com/flowers/designers-choice-custom/"
+			]
+		},
+		{
+			"title": "Specialty or grower-direct for unusual stems",
+			"slug": "specialty-or-grower-direct-for-unusual-stems",
+			"urls": ["https://farmgirlflowers.com/shop", "https://fleurfarm.com/"]
+		}
+	],
+	"mock": false
+}

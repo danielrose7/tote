@@ -1,8 +1,8 @@
 {
-  "build": {
-    "env": {
-      "APP_NAME": "jazz-react-tailwind-starter"
-    }
-  },
-  "ignoreCommand": "node ../../ignore-vercel-build.js"
+	"build": {
+		"env": {
+			"APP_NAME": "jazz-react-tailwind-starter"
+		}
+	},
+	"ignoreCommand": "node ../../ignore-vercel-build.js"
 }

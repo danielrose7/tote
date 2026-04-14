@@ -10,68 +10,68 @@
  */
 
 import React from "react";
-import { StyleSheet, View, Text, AppRegistry } from "react-native";
+import { AppRegistry, StyleSheet, Text, View } from "react-native";
 
 type Props = {
-  url?: string;
-  text?: string;
+	url?: string;
+	text?: string;
 };
 
 // Closing is handled by Swift (ShareExtensionViewController) after a delay.
 // JS only renders the confirmation UI.
 
 export default function ShareExtension(props: Props) {
-  const url = props.url || props.text;
+	const url = props.url || props.text;
 
-  if (!url) {
-    return (
-      <View style={styles.centered}>
-        <Text allowFontScaling={false} style={styles.title}>
-          No link found
-        </Text>
-      </View>
-    );
-  }
+	if (!url) {
+		return (
+			<View style={styles.centered}>
+				<Text allowFontScaling={false} style={styles.title}>
+					No link found
+				</Text>
+			</View>
+		);
+	}
 
-  return (
-    <View style={styles.centered}>
-      <Text allowFontScaling={false} style={styles.checkmark}>
-        ✓
-      </Text>
-      <Text allowFontScaling={false} style={styles.title}>
-        Added to Tote
-      </Text>
-      <Text allowFontScaling={false} style={styles.subtitle}>
-        Open Tote to add it to a collection
-      </Text>
-    </View>
-  );
+	return (
+		<View style={styles.centered}>
+			<Text allowFontScaling={false} style={styles.checkmark}>
+				✓
+			</Text>
+			<Text allowFontScaling={false} style={styles.title}>
+				Added to Tote
+			</Text>
+			<Text allowFontScaling={false} style={styles.subtitle}>
+				Open Tote to add it to a collection
+			</Text>
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  checkmark: {
-    fontSize: 48,
-    color: "#22c55e",
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#9ca3af",
-    marginTop: 6,
-    textAlign: "center",
-  },
+	centered: {
+		flex: 1,
+		backgroundColor: "#fff",
+		alignItems: "center",
+		justifyContent: "center",
+		padding: 24,
+	},
+	checkmark: {
+		fontSize: 48,
+		color: "#22c55e",
+		marginBottom: 8,
+	},
+	title: {
+		fontSize: 20,
+		fontWeight: "700",
+		color: "#111",
+	},
+	subtitle: {
+		fontSize: 14,
+		color: "#9ca3af",
+		marginTop: 6,
+		textAlign: "center",
+	},
 });
 
 AppRegistry.registerComponent("shareExtension", () => ShareExtension);

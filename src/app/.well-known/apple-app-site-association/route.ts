@@ -6,23 +6,23 @@
 // (10-char string from developer.apple.com → Membership).
 
 export function GET() {
-  const aasa = {
-    applinks: {
-      details: [
-        {
-          appIDs: ['XXXXXXXXXX.tools.tote.app'],
-          components: [
-            { '/': '/invite/*', comment: 'Accept collection invites' },
-          ],
-        },
-      ],
-    },
-  };
+	const aasa = {
+		applinks: {
+			details: [
+				{
+					appIDs: ["XXXXXXXXXX.tools.tote.app"],
+					components: [
+						{ "/": "/invite/*", comment: "Accept collection invites" },
+					],
+				},
+			],
+		},
+	};
 
-  return new Response(JSON.stringify(aasa), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=3600',
-    },
-  });
+	return new Response(JSON.stringify(aasa), {
+		headers: {
+			"Content-Type": "application/json",
+			"Cache-Control": "public, max-age=3600",
+		},
+	});
 }

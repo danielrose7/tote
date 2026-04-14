@@ -13,13 +13,11 @@ config.watchFolders = [monorepoRoot];
 // Only resolve from ios/node_modules — NOT root node_modules.
 // Root inclusion causes pnpm to resolve duplicate package instances
 // (different virtual store entries) which breaks React context.
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, "node_modules"),
-];
+config.resolver.nodeModulesPaths = [path.resolve(projectRoot, "node_modules")];
 
 // Alias @tote/schema to the shared schema file in the monorepo root
 config.resolver.extraNodeModules = {
-  "@tote/schema": path.resolve(monorepoRoot, "src", "schema.ts"),
+	"@tote/schema": path.resolve(monorepoRoot, "src", "schema.ts"),
 };
 
 module.exports = withShareExtension(config);

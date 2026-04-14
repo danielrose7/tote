@@ -1,11 +1,11 @@
-@import './styles/reset.css';
-@import './styles/variables.css';
+@import "./styles/reset.css";
+@import "./styles/variables.css";
 
 html {
-  scroll-behavior: smooth;
+	scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
+	background-color: var(--color-background);
+	color: var(--color-text-primary);
 }

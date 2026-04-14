@@ -9,27 +9,27 @@
  */
 
 import { ClerkProvider, useClerk } from "@clerk/chrome-extension";
-import { JazzReactProviderWithClerk } from "jazz-tools/react";
 import { JazzAccount } from "@tote/schema";
+import { JazzReactProviderWithClerk } from "jazz-tools/react";
 import { CLERK_PUBLISHABLE_KEY, JAZZ_API_KEY, SYNC_HOST } from "../config";
 
 /**
  * Jazz provider - only rendered when user is signed in
  */
 export function JazzProvider({ children }: { children: React.ReactNode }) {
-  const clerk = useClerk();
+	const clerk = useClerk();
 
-  return (
-    <JazzReactProviderWithClerk
-      clerk={clerk}
-      AccountSchema={JazzAccount}
-      sync={{
-        peer: `wss://cloud.jazz.tools/?key=${JAZZ_API_KEY}`,
-      }}
-    >
-      {children}
-    </JazzReactProviderWithClerk>
-  );
+	return (
+		<JazzReactProviderWithClerk
+			clerk={clerk}
+			AccountSchema={JazzAccount}
+			sync={{
+				peer: `wss://cloud.jazz.tools/?key=${JAZZ_API_KEY}`,
+			}}
+		>
+			{children}
+		</JazzReactProviderWithClerk>
+	);
 }
 
 /**
@@ -37,17 +37,17 @@ export function JazzProvider({ children }: { children: React.ReactNode }) {
  * Jazz is initialized separately only when signed in
  */
 export function ExtensionProviders({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  return (
-    <ClerkProvider
-      publishableKey={CLERK_PUBLISHABLE_KEY}
-      syncHost={SYNC_HOST}
-      afterSignOutUrl={chrome.runtime.getURL("src/popup/popup.html")}
-    >
-      {children}
-    </ClerkProvider>
-  );
+	return (
+		<ClerkProvider
+			publishableKey={CLERK_PUBLISHABLE_KEY}
+			syncHost={SYNC_HOST}
+			afterSignOutUrl={chrome.runtime.getURL("src/popup/popup.html")}
+		>
+			{children}
+		</ClerkProvider>
+	);
 }

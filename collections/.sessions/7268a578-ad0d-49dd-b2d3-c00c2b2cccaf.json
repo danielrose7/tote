@@ -1,1 +1,31 @@
-{"urlSections":[{"title":"What the citrus community reaches for","slug":"what-the-citrus-community-reaches-for","urls":["https://www.fourwindsgrowers.com/products/g-b-organics-citrus-fruit-tree-fertilizer","https://www.fast-growing-trees.com/products/espoma-citrus-tone-organic-fertilizer","https://www.fourwindsgrowers.com/collections/plant-care/fertilizer"]},{"title":"Slow-release granular for low-maintenance feeding","slug":"slow-release-granular-for-low-maintenance-feeding","urls":["https://www.viacitrus.com/products/fertilizer","https://www.groworganic.com/products/citrus-mix-fertilizer-25-lb-bag"]},{"title":"Liquid concentrate for active growing season","slug":"liquid-concentrate-for-active-growing-season","urls":["https://gardenera.com/products/3-1-2-fert-concentrate-lemon-tree","https://myperfectplants.com/products/liquid-lemon-tree-fertilizer","https://agrothrive.com/pages/citrus-fertilizers"]}],"mock":false}
+{
+	"urlSections": [
+		{
+			"title": "What the citrus community reaches for",
+			"slug": "what-the-citrus-community-reaches-for",
+			"urls": [
+				"https://www.fourwindsgrowers.com/products/g-b-organics-citrus-fruit-tree-fertilizer",
+				"https://www.fast-growing-trees.com/products/espoma-citrus-tone-organic-fertilizer",
+				"https://www.fourwindsgrowers.com/collections/plant-care/fertilizer"
+			]
+		},
+		{
+			"title": "Slow-release granular for low-maintenance feeding",
+			"slug": "slow-release-granular-for-low-maintenance-feeding",
+			"urls": [
+				"https://www.viacitrus.com/products/fertilizer",
+				"https://www.groworganic.com/products/citrus-mix-fertilizer-25-lb-bag"
+			]
+		},
+		{
+			"title": "Liquid concentrate for active growing season",
+			"slug": "liquid-concentrate-for-active-growing-season",
+			"urls": [
+				"https://gardenera.com/products/3-1-2-fert-concentrate-lemon-tree",
+				"https://myperfectplants.com/products/liquid-lemon-tree-fertilizer",
+				"https://agrothrive.com/pages/citrus-fertilizers"
+			]
+		}
+	],
+	"mock": false
+}

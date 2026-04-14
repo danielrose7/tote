@@ -1,9 +1,9 @@
 export interface LinkMetadata {
-  url: string;
-  title?: string;
-  description?: string;
-  imageUrl?: string;
-  price?: string;
+	url: string;
+	title?: string;
+	description?: string;
+	imageUrl?: string;
+	price?: string;
 }
 
 /**
@@ -99,22 +99,22 @@ const EXTRACTOR_SCRIPT = `
  * Generate a title from URL hostname
  */
 function generateTitleFromUrl(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname.replace(/^www\./, '');
-    return hostname.charAt(0).toUpperCase() + hostname.slice(1);
-  } catch {
-    return 'Untitled Link';
-  }
+	try {
+		const urlObj = new URL(url);
+		const hostname = urlObj.hostname.replace(/^www\./, "");
+		return hostname.charAt(0).toUpperCase() + hostname.slice(1);
+	} catch {
+		return "Untitled Link";
+	}
 }
 
 export function isValidUrl(urlString: string): boolean {
-  try {
-    const url = new URL(urlString);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
+	try {
+		const url = new URL(urlString);
+		return url.protocol === "http:" || url.protocol === "https:";
+	} catch {
+		return false;
+	}
 }
 
 export { EXTRACTOR_SCRIPT, generateTitleFromUrl };

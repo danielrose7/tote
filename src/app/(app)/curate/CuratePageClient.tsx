@@ -45,7 +45,7 @@ const phaseStatusLabel: Record<string, string> = {
 	started: "Waiting for workflow acknowledgment",
 	"interview-round-1": "Waiting for Round 1 answers",
 	researching: "Researching the category...",
-	"interview-round-2": "Waiting for follow-up answers",
+	"interview-round-2": "Waiting for follow-up questions",
 	framing: "Building curatorial brief...",
 	planning: "Planning collection structure...",
 	extracting: "Extracting pages...",
@@ -522,7 +522,7 @@ export function CuratePageClient({
 									<form onSubmit={handleAnswers} className={styles.form}>
 										<p className={styles.subheading}>
 											{questionRound === 2
-												? "A couple quick follow-ups to sharpen the direction."
+												? "A few follow-up questions to sharpen the direction."
 												: "A few quick questions to anchor the curatorial direction."}
 										</p>
 

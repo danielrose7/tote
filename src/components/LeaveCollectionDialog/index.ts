@@ -1,1 +1,1 @@
-export { LeaveCollectionDialog } from './LeaveCollectionDialog';
+export { LeaveCollectionDialog } from "./LeaveCollectionDialog";

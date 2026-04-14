@@ -1,112 +1,112 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import styles from './docs.module.css';
+import type { Metadata } from "next";
+import Link from "next/link";
+import styles from "./docs.module.css";
 
 export const metadata: Metadata = {
-  title: 'Help Center',
-  description:
-    'Learn how to use Tote to save, organize, and track products from anywhere on the web. Guides for collections, slots, sharing, and the Chrome extension.',
-  alternates: { canonical: '/docs' },
-  openGraph: {
-    title: 'Help Center — Tote',
-    description:
-      'Learn how to use Tote to save, organize, and track products from anywhere on the web.',
-  },
+	title: "Help Center",
+	description:
+		"Learn how to use Tote to save, organize, and track products from anywhere on the web. Guides for collections, slots, sharing, and the Chrome extension.",
+	alternates: { canonical: "/docs" },
+	openGraph: {
+		title: "Help Center — Tote",
+		description:
+			"Learn how to use Tote to save, organize, and track products from anywhere on the web.",
+	},
 };
 
 export default function DocsPage() {
-  return (
-    <article className={styles.article}>
-      <h1>Help Center</h1>
-      <p className={styles.lead}>
-        Tote is a free tool that saves products from any online store in one
-        place. Learn how to organize, track, and share your finds.
-      </p>
+	return (
+		<article className={styles.article}>
+			<h1>Help Center</h1>
+			<p className={styles.lead}>
+				Tote is a free tool that saves products from any online store in one
+				place. Learn how to organize, track, and share your finds.
+			</p>
 
-      <h2>Guides</h2>
-      <p>
-        Tote is a universal shopping cart that works across any online store.
-        Save products with one click, organize them into collections, and track
-        prices over time.
-      </p>
+			<h2>Guides</h2>
+			<p>
+				Tote is a universal shopping cart that works across any online store.
+				Save products with one click, organize them into collections, and track
+				prices over time.
+			</p>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Getting Started</h3>
-        <p className={styles.cardDescription}>
-          New to Tote? Sign up, install the extension, and save your first
-          product in minutes.
-        </p>
-        <Link href="/docs/getting-started">Get started &rarr;</Link>
-      </div>
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Getting Started</h3>
+				<p className={styles.cardDescription}>
+					New to Tote? Sign up, install the extension, and save your first
+					product in minutes.
+				</p>
+				<Link href="/docs/getting-started">Get started &rarr;</Link>
+			</div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Collections</h3>
-        <p className={styles.cardDescription}>
-          Top-level folders for organizing your saved products by project,
-          season, or any theme you choose.
-        </p>
-        <Link href="/docs/collections">Learn about collections &rarr;</Link>
-      </div>
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Collections</h3>
+				<p className={styles.cardDescription}>
+					Top-level folders for organizing your saved products by project,
+					season, or any theme you choose.
+				</p>
+				<Link href="/docs/collections">Learn about collections &rarr;</Link>
+			</div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Slots</h3>
-        <p className={styles.cardDescription}>
-          Optional groupings within a collection for more granular organization,
-          like budget tiers or room categories.
-        </p>
-        <Link href="/docs/slots">Learn about slots &rarr;</Link>
-      </div>
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Slots</h3>
+				<p className={styles.cardDescription}>
+					Optional groupings within a collection for more granular organization,
+					like budget tiers or room categories.
+				</p>
+				<Link href="/docs/slots">Learn about slots &rarr;</Link>
+			</div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Adding Links</h3>
-        <p className={styles.cardDescription}>
-          Save products using the browser extension or add links manually from
-          any device.
-        </p>
-        <Link href="/docs/adding-links">Learn about adding links &rarr;</Link>
-      </div>
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Adding Links</h3>
+				<p className={styles.cardDescription}>
+					Save products using the browser extension or add links manually from
+					any device.
+				</p>
+				<Link href="/docs/adding-links">Learn about adding links &rarr;</Link>
+			</div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Browser Extension</h3>
-        <p className={styles.cardDescription}>
-          Install and use the extension on Chrome, Edge, Brave, or Arc for
-          one-click saving, right-click context menu, and more.
-        </p>
-        <Link href="/docs/extension">Learn about the extension &rarr;</Link>
-      </div>
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Browser Extension</h3>
+				<p className={styles.cardDescription}>
+					Install and use the extension on Chrome, Edge, Brave, or Arc for
+					one-click saving, right-click context menu, and more.
+				</p>
+				<Link href="/docs/extension">Learn about the extension &rarr;</Link>
+			</div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Selections &amp; Budgets</h3>
-        <p className={styles.cardDescription}>
-          Mark favorite products, set selection limits, and track spending with
-          collection and slot budgets.
-        </p>
-        <Link href="/docs/selections-and-budgets">
-          Learn about selections &rarr;
-        </Link>
-      </div>
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Selections &amp; Budgets</h3>
+				<p className={styles.cardDescription}>
+					Mark favorite products, set selection limits, and track spending with
+					collection and slot budgets.
+				</p>
+				<Link href="/docs/selections-and-budgets">
+					Learn about selections &rarr;
+				</Link>
+			</div>
 
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Sharing</h3>
-        <p className={styles.cardDescription}>
-          Share collections with friends or family for collaborative wishlists
-          and gift planning.
-        </p>
-        <Link href="/docs/sharing">Learn about sharing &rarr;</Link>
-      </div>
-      <h2>Use Cases</h2>
-      <p>
-        See how people use Tote for specific shopping scenarios — from holiday
-        gift lists to professional interior design sourcing.
-      </p>
-      <div className={styles.card}>
-        <h3 className={styles.cardTitle}>Explore Use Cases</h3>
-        <p className={styles.cardDescription}>
-          Gift lists, home renovations, wardrobe planning, family shopping, and
-          professional projects.
-        </p>
-        <Link href="/use-cases">Browse use cases &rarr;</Link>
-      </div>
-    </article>
-  );
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Sharing</h3>
+				<p className={styles.cardDescription}>
+					Share collections with friends or family for collaborative wishlists
+					and gift planning.
+				</p>
+				<Link href="/docs/sharing">Learn about sharing &rarr;</Link>
+			</div>
+			<h2>Use Cases</h2>
+			<p>
+				See how people use Tote for specific shopping scenarios — from holiday
+				gift lists to professional interior design sourcing.
+			</p>
+			<div className={styles.card}>
+				<h3 className={styles.cardTitle}>Explore Use Cases</h3>
+				<p className={styles.cardDescription}>
+					Gift lists, home renovations, wardrobe planning, family shopping, and
+					professional projects.
+				</p>
+				<Link href="/use-cases">Browse use cases &rarr;</Link>
+			</div>
+		</article>
+	);
 }

@@ -1,1 +1,110 @@
-{"title":"The Considered Gardener's Kit","intro":"Built around what serious gardeners actually reach for — tools forged to outlast decades, workwear designed for the job, and footwear worth wearing into the dirt. Sourced from independent makers and specialty retailers, not the garden center aisle.","sections":[{"title":"Footwear","items":[{"title":"Plasticana French Recycled Hemp Garden Clogs in Sepia","sourceUrl":"https://gardenheir.com/products/french-recycled-hemp-clogs-in-sepia","merchant":"Gardenheir","price":"$75","note":"Made in France from recycled plastic and hemp — runs large so size down; the clog gardeners ask about when they see someone else wearing them."},{"title":"Gardenheir Italian Garden Clogs in British Green","sourceUrl":"https://gardenheir.com/products/italian-garden-clogs-in-british-green","merchant":"Gardenheir","price":"$78","note":"Durable EVA with a leather-look finish made in Italy — available in 11 colorways including tones that don't show mud."},{"title":"Birkenstock Super Birki 2.0","sourceUrl":"https://www.birkenstock.com/us/super-birki-2.0-polyurethane/superbirki20-professionals-polyurethane-0-pu-u_3866.html","merchant":"Birkenstock","price":"$82","note":"Designed for long hours on wet surfaces — waterproof polyurethane upper, cork-latex footbed, certified slip-resistant outsole; what people who garden professionally choose."}]},{"title":"Cutting & Pruning","items":[{"title":"Niwaki Garden Shears","sourceUrl":"https://gardenheir.com/products/niwaki-garden-shears-2","merchant":"Gardenheir","price":"$138","note":"SK steel blades on Japanese white oak handles — balanced for sustained pruning work, not the featherweight feel of hardware-store shears."},{"title":"Niwaki Daikiba Secateurs with Canvas Sheath","sourceUrl":"https://gardenheir.com/products/niwaki-daikiba-secateurs","merchant":"Gardenheir","price":"$64","note":"Drop-forged SLD semi-stainless steel — an accessible entry into Niwaki's cutting tools that includes a canvas sheath and holds an edge."},{"title":"Felco 2 Classic Bypass Pruner","sourceUrl":"https://america.felco.com/products/felco-2","merchant":"FELCO North America","price":"$86.35","note":"In continuous production since 1948 — fully repairable with replacement parts always available, lifetime warranty, the pruner that enthusiasts reach for when they stop experimenting."}]},{"title":"Workwear","items":[{"title":"Japanese Typewriter Cotton Gardening Chemise in Oxford Blue","sourceUrl":"https://gardenheir.com/products/japanese-typewriter-cotton-gardening-chemise-in-oxford-blue","merchant":"Gardenheir","price":"$118","note":"Tightly woven typewriter cotton made in Japan that naturally repels water — unisex sizing XXS–XXL, available in six colorways including Moss and Ink."},{"title":"Le Laboureur French Cotton Easy Short in Lagoon","sourceUrl":"https://gardenheir.com/products/le-laboureur-french-cotton-easy-short-in-lagoon","merchant":"Gardenheir","price":"$68","note":"100% cotton with an elasticated waist, made in France with a design unchanged since the 1970s — the non-precious garden short."}]},{"title":"Digging & Planting Tools","items":[{"title":"Sneeboer x Gardenheir Spade with Steps","sourceUrl":"https://gardenheir.com/products/sneeboer-x-gardenheir-spade-with-steps","merchant":"Gardenheir","price":"$258","note":"Dutch-forged steel with turned steps added in the Gardenheir collaboration — the spade serious growers buy once and keep for decades."},{"title":"DeWit Dutch Trowel","sourceUrl":"https://www.gardentoolcompany.com/products/dewit-dutch-trowel","merchant":"Garden Tool Company","price":"$35","note":"Swedish Boron steel blade on an FSC-certified European Ash handle, handcrafted in the Netherlands since 1898 — the trowel that comes up every time someone asks for a recommendation."},{"title":"Barebones Hori Hori Ultimate","sourceUrl":"https://barebonesliving.com/products/hori-hori","merchant":"Barebones Living","price":"$59.99","note":"The digging knife that replaces three other tools — handles transplanting, weeding, and division, and comes up consistently in gardening communities as the one to get."}]}],"warnings":["Le Laboureur French Moleskin Work Short in Ecru ($118) was featured in the source email but is currently sold out at Gardenheir — add when restocked to strengthen the workwear section.","Workwear section has only 2 items due to the sold-out Moleskin Short; consider adding a garden apron from Fog Linen Work or a similar Japanese linen workwear brand.","Niwaki GR Pro Secateurs ($118–$128) are also sold out at time of research — worth adding as the premium pruner option when back in stock.","The Gardenheir April email also featured vintage decorative items (antique dog painting, carved horse plaque, greeting cards) — excluded as they do not fit an enthusiast-use frame.","Nora garden clogs were found largely sold out across US retailers and excluded; re-check Terrain/Anthropologie if availability improves."]}
+{
+	"title": "The Considered Gardener's Kit",
+	"intro": "Built around what serious gardeners actually reach for — tools forged to outlast decades, workwear designed for the job, and footwear worth wearing into the dirt. Sourced from independent makers and specialty retailers, not the garden center aisle.",
+	"sections": [
+		{
+			"title": "Footwear",
+			"items": [
+				{
+					"title": "Plasticana French Recycled Hemp Garden Clogs in Sepia",
+					"sourceUrl": "https://gardenheir.com/products/french-recycled-hemp-clogs-in-sepia",
+					"merchant": "Gardenheir",
+					"price": "$75",
+					"note": "Made in France from recycled plastic and hemp — runs large so size down; the clog gardeners ask about when they see someone else wearing them."
+				},
+				{
+					"title": "Gardenheir Italian Garden Clogs in British Green",
+					"sourceUrl": "https://gardenheir.com/products/italian-garden-clogs-in-british-green",
+					"merchant": "Gardenheir",
+					"price": "$78",
+					"note": "Durable EVA with a leather-look finish made in Italy — available in 11 colorways including tones that don't show mud."
+				},
+				{
+					"title": "Birkenstock Super Birki 2.0",
+					"sourceUrl": "https://www.birkenstock.com/us/super-birki-2.0-polyurethane/superbirki20-professionals-polyurethane-0-pu-u_3866.html",
+					"merchant": "Birkenstock",
+					"price": "$82",
+					"note": "Designed for long hours on wet surfaces — waterproof polyurethane upper, cork-latex footbed, certified slip-resistant outsole; what people who garden professionally choose."
+				}
+			]
+		},
+		{
+			"title": "Cutting & Pruning",
+			"items": [
+				{
+					"title": "Niwaki Garden Shears",
+					"sourceUrl": "https://gardenheir.com/products/niwaki-garden-shears-2",
+					"merchant": "Gardenheir",
+					"price": "$138",
+					"note": "SK steel blades on Japanese white oak handles — balanced for sustained pruning work, not the featherweight feel of hardware-store shears."
+				},
+				{
+					"title": "Niwaki Daikiba Secateurs with Canvas Sheath",
+					"sourceUrl": "https://gardenheir.com/products/niwaki-daikiba-secateurs",
+					"merchant": "Gardenheir",
+					"price": "$64",
+					"note": "Drop-forged SLD semi-stainless steel — an accessible entry into Niwaki's cutting tools that includes a canvas sheath and holds an edge."
+				},
+				{
+					"title": "Felco 2 Classic Bypass Pruner",
+					"sourceUrl": "https://america.felco.com/products/felco-2",
+					"merchant": "FELCO North America",
+					"price": "$86.35",
+					"note": "In continuous production since 1948 — fully repairable with replacement parts always available, lifetime warranty, the pruner that enthusiasts reach for when they stop experimenting."
+				}
+			]
+		},
+		{
+			"title": "Workwear",
+			"items": [
+				{
+					"title": "Japanese Typewriter Cotton Gardening Chemise in Oxford Blue",
+					"sourceUrl": "https://gardenheir.com/products/japanese-typewriter-cotton-gardening-chemise-in-oxford-blue",
+					"merchant": "Gardenheir",
+					"price": "$118",
+					"note": "Tightly woven typewriter cotton made in Japan that naturally repels water — unisex sizing XXS–XXL, available in six colorways including Moss and Ink."
+				},
+				{
+					"title": "Le Laboureur French Cotton Easy Short in Lagoon",
+					"sourceUrl": "https://gardenheir.com/products/le-laboureur-french-cotton-easy-short-in-lagoon",
+					"merchant": "Gardenheir",
+					"price": "$68",
+					"note": "100% cotton with an elasticated waist, made in France with a design unchanged since the 1970s — the non-precious garden short."
+				}
+			]
+		},
+		{
+			"title": "Digging & Planting Tools",
+			"items": [
+				{
+					"title": "Sneeboer x Gardenheir Spade with Steps",
+					"sourceUrl": "https://gardenheir.com/products/sneeboer-x-gardenheir-spade-with-steps",
+					"merchant": "Gardenheir",
+					"price": "$258",
+					"note": "Dutch-forged steel with turned steps added in the Gardenheir collaboration — the spade serious growers buy once and keep for decades."
+				},
+				{
+					"title": "DeWit Dutch Trowel",
+					"sourceUrl": "https://www.gardentoolcompany.com/products/dewit-dutch-trowel",
+					"merchant": "Garden Tool Company",
+					"price": "$35",
+					"note": "Swedish Boron steel blade on an FSC-certified European Ash handle, handcrafted in the Netherlands since 1898 — the trowel that comes up every time someone asks for a recommendation."
+				},
+				{
+					"title": "Barebones Hori Hori Ultimate",
+					"sourceUrl": "https://barebonesliving.com/products/hori-hori",
+					"merchant": "Barebones Living",
+					"price": "$59.99",
+					"note": "The digging knife that replaces three other tools — handles transplanting, weeding, and division, and comes up consistently in gardening communities as the one to get."
+				}
+			]
+		}
+	],
+	"warnings": [
+		"Le Laboureur French Moleskin Work Short in Ecru ($118) was featured in the source email but is currently sold out at Gardenheir — add when restocked to strengthen the workwear section.",
+		"Workwear section has only 2 items due to the sold-out Moleskin Short; consider adding a garden apron from Fog Linen Work or a similar Japanese linen workwear brand.",
+		"Niwaki GR Pro Secateurs ($118–$128) are also sold out at time of research — worth adding as the premium pruner option when back in stock.",
+		"The Gardenheir April email also featured vintage decorative items (antique dog painting, carved horse plaque, greeting cards) — excluded as they do not fit an enthusiast-use frame.",
+		"Nora garden clogs were found largely sold out across US retailers and excluded; re-check Terrain/Anthropologie if availability improves."
+	]
+}

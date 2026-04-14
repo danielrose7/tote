@@ -1,1 +1,45 @@
-{"title":"Cut Flower Delivery for People Who Actually Care About Flowers","intro":"For when you want delivered flowers that don't look like a grocery store impulse buy — sourced from growers who prioritize stem quality, variety selection, and vase life over flashy packaging.","sections":[{"title":"Farm-Direct","items":[{"title":"Harmony Harvest Farm — Seasonal Cut Flower Bouquets","sourceUrl":"https://www.hhfshop.com/","merchant":"Harmony Harvest Farm","price":"$45","note":"A working farm shipping direct — the kind of operation flower enthusiasts recommend when they want variety and stem quality over brand recognition."},{"title":"PetalPickers — Farm Fresh Flowers","sourceUrl":"https://petalpickers.com/collections/farm-fresh-flowers-delivered-to-your-door","merchant":"PetalPickers","price":"$25","note":"Overnight-shipped farm cuts at a price point that makes the middleman markup obvious by comparison."}]},{"title":"Florist Network Worth Using","items":[{"title":"Floom — Local Independent Florist Delivery","sourceUrl":"https://www.floom.com/us","merchant":"Floom","price":"$74","note":"Routes orders to vetted independent florists rather than wire services — what people who care about who actually makes the arrangement reach for."}]}],"warnings":["PetalPickers note on the product page states flower shipping resumes February 2025 — seasonality or dormancy needs human verification before publishing.","The Floral Source appears to be a wholesale/trade supplier, not retail — dropped; needs verification of public ordering availability.","Harmony Harvest Farm sourceUrl is the homepage, not a specific product page — no deeper product URL was available in the extracted data.","White Flower Farm cut flowers dropped: $180 price point and product mix (roses, lilies, orchids) skews toward gift-sender convenience, not enthusiast-grade sourcing.","Farmgirl Flowers, BloomNation, and UrbanStems dropped: mainstream positioning and affiliate-circuit ubiquity make them weak fits for this lens.","Debug mode: shortlist kept minimal to validate section structure and lens application — expand with additional farm-direct or specialty grower picks before publishing."]}
+{
+	"title": "Cut Flower Delivery for People Who Actually Care About Flowers",
+	"intro": "For when you want delivered flowers that don't look like a grocery store impulse buy — sourced from growers who prioritize stem quality, variety selection, and vase life over flashy packaging.",
+	"sections": [
+		{
+			"title": "Farm-Direct",
+			"items": [
+				{
+					"title": "Harmony Harvest Farm — Seasonal Cut Flower Bouquets",
+					"sourceUrl": "https://www.hhfshop.com/",
+					"merchant": "Harmony Harvest Farm",
+					"price": "$45",
+					"note": "A working farm shipping direct — the kind of operation flower enthusiasts recommend when they want variety and stem quality over brand recognition."
+				},
+				{
+					"title": "PetalPickers — Farm Fresh Flowers",
+					"sourceUrl": "https://petalpickers.com/collections/farm-fresh-flowers-delivered-to-your-door",
+					"merchant": "PetalPickers",
+					"price": "$25",
+					"note": "Overnight-shipped farm cuts at a price point that makes the middleman markup obvious by comparison."
+				}
+			]
+		},
+		{
+			"title": "Florist Network Worth Using",
+			"items": [
+				{
+					"title": "Floom — Local Independent Florist Delivery",
+					"sourceUrl": "https://www.floom.com/us",
+					"merchant": "Floom",
+					"price": "$74",
+					"note": "Routes orders to vetted independent florists rather than wire services — what people who care about who actually makes the arrangement reach for."
+				}
+			]
+		}
+	],
+	"warnings": [
+		"PetalPickers note on the product page states flower shipping resumes February 2025 — seasonality or dormancy needs human verification before publishing.",
+		"The Floral Source appears to be a wholesale/trade supplier, not retail — dropped; needs verification of public ordering availability.",
+		"Harmony Harvest Farm sourceUrl is the homepage, not a specific product page — no deeper product URL was available in the extracted data.",
+		"White Flower Farm cut flowers dropped: $180 price point and product mix (roses, lilies, orchids) skews toward gift-sender convenience, not enthusiast-grade sourcing.",
+		"Farmgirl Flowers, BloomNation, and UrbanStems dropped: mainstream positioning and affiliate-circuit ubiquity make them weak fits for this lens.",
+		"Debug mode: shortlist kept minimal to validate section structure and lens application — expand with additional farm-direct or specialty grower picks before publishing."
+	]
+}

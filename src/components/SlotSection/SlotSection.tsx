@@ -1,396 +1,396 @@
-import { useState } from 'react';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
+	closestCenter,
+	DndContext,
+	type DragEndEvent,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
 import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import type { LoadedBlock } from '../../lib/blocks';
-import { reorderBlockList } from '../../lib/blocks';
+	SortableContext,
+	sortableKeyboardCoordinates,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useState } from "react";
+import type { LoadedBlock } from "../../lib/blocks";
+import { reorderBlockList } from "../../lib/blocks";
 import {
-  getSelectionCount,
-  isProductSelected,
-  toggleProductSelection,
-  formatBudget,
-  getSelectedTotal,
-} from '../../lib/slotHelpers';
-import { ProductCard } from '../ProductCard/ProductCard';
-import { SortableProductItem } from './SortableProductItem';
-import styles from './SlotSection.module.css';
+	formatBudget,
+	getSelectedTotal,
+	getSelectionCount,
+	isProductSelected,
+	toggleProductSelection,
+} from "../../lib/slotHelpers";
+import { ProductCard } from "../ProductCard/ProductCard";
+import styles from "./SlotSection.module.css";
+import { SortableProductItem } from "./SortableProductItem";
 
 export interface SlotSectionProps {
-  slotBlock: LoadedBlock;
-  products: LoadedBlock[];
-  onEditProduct?: (block: LoadedBlock) => void;
-  onDeleteProduct?: (block: LoadedBlock) => void;
-  onRefreshProduct?: (block: LoadedBlock) => void;
-  onDeleteSlot?: (block: LoadedBlock) => void;
-  refreshingBlockId?: string | null;
-  enqueuedBlockIds?: string[];
-  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
-  isDragging?: boolean;
-  forceCollapsed?: boolean;
+	slotBlock: LoadedBlock;
+	products: LoadedBlock[];
+	onEditProduct?: (block: LoadedBlock) => void;
+	onDeleteProduct?: (block: LoadedBlock) => void;
+	onRefreshProduct?: (block: LoadedBlock) => void;
+	onDeleteSlot?: (block: LoadedBlock) => void;
+	refreshingBlockId?: string | null;
+	enqueuedBlockIds?: string[];
+	dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
+	isDragging?: boolean;
+	forceCollapsed?: boolean;
 }
 
 export function SlotSection({
-  slotBlock,
-  products,
-  onEditProduct,
-  onDeleteProduct,
-  onRefreshProduct,
-  onDeleteSlot,
-  refreshingBlockId,
-  enqueuedBlockIds = [],
-  dragHandleProps,
-  isDragging,
-  forceCollapsed,
+	slotBlock,
+	products,
+	onEditProduct,
+	onDeleteProduct,
+	onRefreshProduct,
+	onDeleteSlot,
+	refreshingBlockId,
+	enqueuedBlockIds = [],
+	dragHandleProps,
+	isDragging,
+	forceCollapsed,
 }: SlotSectionProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isProductReorderMode, setIsProductReorderMode] = useState(false);
-  const [editName, setEditName] = useState(slotBlock.name);
-  // Empty string = no target, number string = target
-  const [editMaxSelections, setEditMaxSelections] = useState(
-    slotBlock.slotData?.maxSelections?.toString() ?? '',
-  );
-  const [editBudget, setEditBudget] = useState(
-    slotBlock.slotData?.budget
-      ? (slotBlock.slotData.budget / 100).toString()
-      : '',
-  );
+	const [isCollapsed, setIsCollapsed] = useState(false);
+	const [isEditing, setIsEditing] = useState(false);
+	const [isProductReorderMode, setIsProductReorderMode] = useState(false);
+	const [editName, setEditName] = useState(slotBlock.name);
+	// Empty string = no target, number string = target
+	const [editMaxSelections, setEditMaxSelections] = useState(
+		slotBlock.slotData?.maxSelections?.toString() ?? "",
+	);
+	const [editBudget, setEditBudget] = useState(
+		slotBlock.slotData?.budget
+			? (slotBlock.slotData.budget / 100).toString()
+			: "",
+	);
 
-  // DnD sensors for product reordering
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+	// DnD sensors for product reordering
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: {
+				distance: 8,
+			},
+		}),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		}),
+	);
 
-  const { current: selectedCount, max: maxSelections } =
-    getSelectionCount(slotBlock);
-  const budget = slotBlock.slotData?.budget;
-  const selectedTotal = getSelectedTotal(slotBlock, products);
+	const { current: selectedCount, max: maxSelections } =
+		getSelectionCount(slotBlock);
+	const budget = slotBlock.slotData?.budget;
+	const selectedTotal = getSelectedTotal(slotBlock, products);
 
-  const handleToggleSelection = (product: LoadedBlock) => {
-    const result = toggleProductSelection(product, slotBlock);
-    if (!result.success && result.reason) {
-      // Could show a toast here
-      console.warn(result.reason);
-    }
-  };
+	const handleToggleSelection = (product: LoadedBlock) => {
+		const result = toggleProductSelection(product, slotBlock);
+		if (!result.success && result.reason) {
+			// Could show a toast here
+			console.warn(result.reason);
+		}
+	};
 
-  const handleSaveEdit = () => {
-    // Update the slot block - convert dollars to cents for storage
-    const budgetCents = editBudget
-      ? Math.round(Number(editBudget) * 100)
-      : undefined;
-    // Empty string = no target (undefined), otherwise parse as number
-    const maxSelectionsValue = editMaxSelections
-      ? Number(editMaxSelections)
-      : undefined;
-    slotBlock.$jazz.set('name', editName);
-    slotBlock.$jazz.set('slotData', {
-      ...slotBlock.slotData,
-      maxSelections: maxSelectionsValue,
-      budget: budgetCents,
-    });
-    setIsEditing(false);
-  };
+	const handleSaveEdit = () => {
+		// Update the slot block - convert dollars to cents for storage
+		const budgetCents = editBudget
+			? Math.round(Number(editBudget) * 100)
+			: undefined;
+		// Empty string = no target (undefined), otherwise parse as number
+		const maxSelectionsValue = editMaxSelections
+			? Number(editMaxSelections)
+			: undefined;
+		slotBlock.$jazz.set("name", editName);
+		slotBlock.$jazz.set("slotData", {
+			...slotBlock.slotData,
+			maxSelections: maxSelectionsValue,
+			budget: budgetCents,
+		});
+		setIsEditing(false);
+	};
 
-  const handleCancelEdit = () => {
-    setEditName(slotBlock.name);
-    setEditMaxSelections(slotBlock.slotData?.maxSelections?.toString() ?? '');
-    setEditBudget(
-      slotBlock.slotData?.budget
-        ? (slotBlock.slotData.budget / 100).toString()
-        : '',
-    );
-    setIsEditing(false);
-  };
+	const handleCancelEdit = () => {
+		setEditName(slotBlock.name);
+		setEditMaxSelections(slotBlock.slotData?.maxSelections?.toString() ?? "");
+		setEditBudget(
+			slotBlock.slotData?.budget
+				? (slotBlock.slotData.budget / 100).toString()
+				: "",
+		);
+		setIsEditing(false);
+	};
 
-  const handleDelete = () => {
-    if (
-      window.confirm(
-        `Delete "${slotBlock.name}"? Products will be moved back to the collection.`,
-      )
-    ) {
-      onDeleteSlot?.(slotBlock);
-    }
-  };
+	const handleDelete = () => {
+		if (
+			window.confirm(
+				`Delete "${slotBlock.name}"? Products will be moved back to the collection.`,
+			)
+		) {
+			onDeleteSlot?.(slotBlock);
+		}
+	};
 
-  // Handle product reordering via drag and drop
-  const handleProductDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+	// Handle product reordering via drag and drop
+	const handleProductDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event;
 
-    if (!over || active.id === over.id) return;
-    if (!slotBlock.children?.$isLoaded) return;
+		if (!over || active.id === over.id) return;
+		if (!slotBlock.children?.$isLoaded) return;
 
-    const children = slotBlock.children;
-    let fromIndex = -1;
-    let toIndex = -1;
+		const children = slotBlock.children;
+		let fromIndex = -1;
+		let toIndex = -1;
 
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      if (child && child.$isLoaded) {
-        if (child.$jazz.id === active.id) fromIndex = i;
-        if (child.$jazz.id === over.id) toIndex = i;
-      }
-    }
+		for (let i = 0; i < children.length; i++) {
+			const child = children[i];
+			if (child && child.$isLoaded) {
+				if (child.$jazz.id === active.id) fromIndex = i;
+				if (child.$jazz.id === over.id) toIndex = i;
+			}
+		}
 
-    if (fromIndex !== -1 && toIndex !== -1) {
-      reorderBlockList(children, fromIndex, toIndex);
-    }
-  };
+		if (fromIndex !== -1 && toIndex !== -1) {
+			reorderBlockList(children, fromIndex, toIndex);
+		}
+	};
 
-  const effectiveCollapsed = forceCollapsed || isCollapsed;
+	const effectiveCollapsed = forceCollapsed || isCollapsed;
 
-  return (
-    <section
-      className={`${styles.section} ${isDragging ? styles.dragging : ''} ${forceCollapsed ? styles.reorderMode : ''}`}
-    >
-      {/* Header */}
-      <div className={styles.header}>
-        {dragHandleProps && (
-          <button
-            type="button"
-            className={styles.dragHandle}
-            {...dragHandleProps}
-            aria-label="Drag to reorder slot"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="9" cy="5" r="2" />
-              <circle cx="9" cy="12" r="2" />
-              <circle cx="9" cy="19" r="2" />
-              <circle cx="15" cy="5" r="2" />
-              <circle cx="15" cy="12" r="2" />
-              <circle cx="15" cy="19" r="2" />
-            </svg>
-          </button>
-        )}
-        {!forceCollapsed && (
-          <button
-            type="button"
-            className={styles.collapseButton}
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            aria-expanded={!isCollapsed}
-          >
-            <svg
-              className={`${styles.chevron} ${isCollapsed ? styles.chevronCollapsed : ''}`}
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-        )}
+	return (
+		<section
+			className={`${styles.section} ${isDragging ? styles.dragging : ""} ${forceCollapsed ? styles.reorderMode : ""}`}
+		>
+			{/* Header */}
+			<div className={styles.header}>
+				{dragHandleProps && (
+					<button
+						type="button"
+						className={styles.dragHandle}
+						{...dragHandleProps}
+						aria-label="Drag to reorder slot"
+					>
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+							<circle cx="9" cy="5" r="2" />
+							<circle cx="9" cy="12" r="2" />
+							<circle cx="9" cy="19" r="2" />
+							<circle cx="15" cy="5" r="2" />
+							<circle cx="15" cy="12" r="2" />
+							<circle cx="15" cy="19" r="2" />
+						</svg>
+					</button>
+				)}
+				{!forceCollapsed && (
+					<button
+						type="button"
+						className={styles.collapseButton}
+						onClick={() => setIsCollapsed(!isCollapsed)}
+						aria-expanded={!isCollapsed}
+					>
+						<svg
+							className={`${styles.chevron} ${isCollapsed ? styles.chevronCollapsed : ""}`}
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+						>
+							<polyline points="6 9 12 15 18 9" />
+						</svg>
+					</button>
+				)}
 
-        {isEditing ? (
-          <div className={styles.editForm}>
-            <input
-              type="text"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              className={styles.editInput}
-              placeholder="Slot name"
-              autoFocus
-            />
-            <div className={styles.editField}>
-              <label className={styles.editLabel}>Pick</label>
-              <input
-                type="number"
-                value={editMaxSelections}
-                onChange={(e) => setEditMaxSelections(e.target.value)}
-                className={styles.editInput}
-                placeholder="Any"
-                min="1"
-              />
-            </div>
-            <div className={styles.editField}>
-              <label className={styles.editLabel}>Budget</label>
-              <div className={styles.budgetInputWrapper}>
-                <span className={styles.currencyPrefix}>$</span>
-                <input
-                  type="number"
-                  value={editBudget}
-                  onChange={(e) => setEditBudget(e.target.value)}
-                  className={styles.editInput}
-                  placeholder="100"
-                  step="0.01"
-                  min="0"
-                />
-              </div>
-            </div>
-            <div className={styles.editActions}>
-              <button
-                type="button"
-                onClick={handleSaveEdit}
-                className={styles.saveButton}
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                className={styles.cancelButton}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className={styles.headerInfo}>
-              <h3 className={styles.title}>{slotBlock.name}</h3>
-              {!forceCollapsed && (
-                <>
-                  {maxSelections !== undefined && (
-                    <span className={styles.selectionCount}>
-                      {selectedCount}/
-                      {maxSelections === 0 ? '∞' : maxSelections} selected
-                    </span>
-                  )}
-                  {budget !== undefined && (
-                    <span
-                      className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ''}`}
-                    >
-                      {formatBudget(selectedTotal)} / {formatBudget(budget)}
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-            {!forceCollapsed && (
-              <div className={styles.headerActions}>
-                {products.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIsProductReorderMode(!isProductReorderMode)
-                    }
-                    className={
-                      isProductReorderMode
-                        ? styles.doneButton
-                        : styles.reorderButton
-                    }
-                  >
-                    {isProductReorderMode ? 'Done' : 'Reorder'}
-                  </button>
-                )}
-                {!isProductReorderMode && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditing(true)}
-                      className={styles.actionButton}
-                      aria-label="Edit slot"
-                      data-tooltip="Edit"
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                      </svg>
-                    </button>
-                    {onDeleteSlot && (
-                      <button
-                        type="button"
-                        onClick={handleDelete}
-                        className={`${styles.actionButton} ${styles.deleteButton}`}
-                        aria-label="Delete slot"
-                        data-tooltip="Delete"
-                      >
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+				{isEditing ? (
+					<div className={styles.editForm}>
+						<input
+							type="text"
+							value={editName}
+							onChange={(e) => setEditName(e.target.value)}
+							className={styles.editInput}
+							placeholder="Slot name"
+							autoFocus
+						/>
+						<div className={styles.editField}>
+							<label className={styles.editLabel}>Pick</label>
+							<input
+								type="number"
+								value={editMaxSelections}
+								onChange={(e) => setEditMaxSelections(e.target.value)}
+								className={styles.editInput}
+								placeholder="Any"
+								min="1"
+							/>
+						</div>
+						<div className={styles.editField}>
+							<label className={styles.editLabel}>Budget</label>
+							<div className={styles.budgetInputWrapper}>
+								<span className={styles.currencyPrefix}>$</span>
+								<input
+									type="number"
+									value={editBudget}
+									onChange={(e) => setEditBudget(e.target.value)}
+									className={styles.editInput}
+									placeholder="100"
+									step="0.01"
+									min="0"
+								/>
+							</div>
+						</div>
+						<div className={styles.editActions}>
+							<button
+								type="button"
+								onClick={handleSaveEdit}
+								className={styles.saveButton}
+							>
+								Save
+							</button>
+							<button
+								type="button"
+								onClick={handleCancelEdit}
+								className={styles.cancelButton}
+							>
+								Cancel
+							</button>
+						</div>
+					</div>
+				) : (
+					<>
+						<div className={styles.headerInfo}>
+							<h3 className={styles.title}>{slotBlock.name}</h3>
+							{!forceCollapsed && (
+								<>
+									{maxSelections !== undefined && (
+										<span className={styles.selectionCount}>
+											{selectedCount}/
+											{maxSelections === 0 ? "∞" : maxSelections} selected
+										</span>
+									)}
+									{budget !== undefined && (
+										<span
+											className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ""}`}
+										>
+											{formatBudget(selectedTotal)} / {formatBudget(budget)}
+										</span>
+									)}
+								</>
+							)}
+						</div>
+						{!forceCollapsed && (
+							<div className={styles.headerActions}>
+								{products.length > 1 && (
+									<button
+										type="button"
+										onClick={() =>
+											setIsProductReorderMode(!isProductReorderMode)
+										}
+										className={
+											isProductReorderMode
+												? styles.doneButton
+												: styles.reorderButton
+										}
+									>
+										{isProductReorderMode ? "Done" : "Reorder"}
+									</button>
+								)}
+								{!isProductReorderMode && (
+									<>
+										<button
+											type="button"
+											onClick={() => setIsEditing(true)}
+											className={styles.actionButton}
+											aria-label="Edit slot"
+											data-tooltip="Edit"
+										>
+											<svg
+												width="14"
+												height="14"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+											>
+												<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+												<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+											</svg>
+										</button>
+										{onDeleteSlot && (
+											<button
+												type="button"
+												onClick={handleDelete}
+												className={`${styles.actionButton} ${styles.deleteButton}`}
+												aria-label="Delete slot"
+												data-tooltip="Delete"
+											>
+												<svg
+													width="14"
+													height="14"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="2"
+												>
+													<polyline points="3 6 5 6 21 6" />
+													<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+												</svg>
+											</button>
+										)}
+									</>
+								)}
+							</div>
+						)}
+					</>
+				)}
+			</div>
 
-      {/* Products Grid */}
-      {!effectiveCollapsed && (
-        <div className={styles.content}>
-          {products.length === 0 ? (
-            <div className={styles.empty}>No products in this slot yet</div>
-          ) : isProductReorderMode ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleProductDragEnd}
-            >
-              <SortableContext
-                items={products.map((p) => p.$jazz.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className={styles.productList}>
-                  {products.map((product) => (
-                    <SortableProductItem
-                      key={product.$jazz.id}
-                      product={product}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          ) : (
-            <div className={styles.grid}>
-              {products.map((product) => {
-                const productId = product.$jazz.id;
-                const isSelected = isProductSelected(product, slotBlock);
-                return (
-                  <ProductCard
-                    key={productId}
-                    block={product}
-                    onEdit={onEditProduct}
-                    onDelete={onDeleteProduct}
-                    onRefresh={onRefreshProduct}
-                    isRefreshing={refreshingBlockId === productId}
-                    isEnqueued={enqueuedBlockIds.includes(productId)}
-                    isSelected={isSelected}
-                    onToggleSelection={() => handleToggleSelection(product)}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-    </section>
-  );
+			{/* Products Grid */}
+			{!effectiveCollapsed && (
+				<div className={styles.content}>
+					{products.length === 0 ? (
+						<div className={styles.empty}>No products in this slot yet</div>
+					) : isProductReorderMode ? (
+						<DndContext
+							sensors={sensors}
+							collisionDetection={closestCenter}
+							onDragEnd={handleProductDragEnd}
+						>
+							<SortableContext
+								items={products.map((p) => p.$jazz.id)}
+								strategy={verticalListSortingStrategy}
+							>
+								<div className={styles.productList}>
+									{products.map((product) => (
+										<SortableProductItem
+											key={product.$jazz.id}
+											product={product}
+										/>
+									))}
+								</div>
+							</SortableContext>
+						</DndContext>
+					) : (
+						<div className={styles.grid}>
+							{products.map((product) => {
+								const productId = product.$jazz.id;
+								const isSelected = isProductSelected(product, slotBlock);
+								return (
+									<ProductCard
+										key={productId}
+										block={product}
+										onEdit={onEditProduct}
+										onDelete={onDeleteProduct}
+										onRefresh={onRefreshProduct}
+										isRefreshing={refreshingBlockId === productId}
+										isEnqueued={enqueuedBlockIds.includes(productId)}
+										isSelected={isSelected}
+										onToggleSelection={() => handleToggleSelection(product)}
+									/>
+								);
+							})}
+						</div>
+					)}
+				</div>
+			)}
+		</section>
+	);
 }

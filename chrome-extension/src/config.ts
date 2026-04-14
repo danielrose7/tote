@@ -18,11 +18,11 @@ export const SYNC_HOST = import.meta.env.VITE_SYNC_HOST;
 
 // Validate required config at runtime
 if (!CLERK_PUBLISHABLE_KEY) {
-  console.error("[Tote] Missing VITE_CLERK_PUBLISHABLE_KEY");
+	console.error("[Tote] Missing VITE_CLERK_PUBLISHABLE_KEY");
 }
 if (!JAZZ_API_KEY) {
-  console.error("[Tote] Missing VITE_JAZZ_API_KEY");
+	console.error("[Tote] Missing VITE_JAZZ_API_KEY");
 }
 if (!SYNC_HOST) {
-  console.error("[Tote] Missing VITE_SYNC_HOST");
+	console.error("[Tote] Missing VITE_SYNC_HOST");
 }

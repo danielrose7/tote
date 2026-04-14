@@ -1,1 +1,56 @@
-{"title":"Organic Feed for Indoor Lemon Trees: What Enthusiasts Actually Use","intro":"Indoor citrus needs consistent, balanced feeding year-round — organic fertilizers that enthusiasts trust tend to be slow-release or liquid concentrates with a proven track record in citrus forums, not mass-market garden center impulse buys.","sections":[{"title":"Granular slow-release","items":[{"title":"Madison Citrus Nursery Specialized Citrus Tree Fertilizer 8-2-8","sourceUrl":"https://madisoncitrusnursery.com/products/specialized-citrus-tree-fertilizer-8-2-8","merchant":"Madison Citrus Nursery","price":"$6.50","note":"Semi slow-release 8-2-8 sourced and used by a working citrus nursery — the kind of pick that comes from growers who've tested it on their own trees, not from a garden center endcap."}]},{"title":"Liquid concentrate","items":[{"title":"AgroThrive Organic Liquid Fertilizer (Citrus Formulation)","sourceUrl":"https://agrothrive.com/pages/citrus-fertilizers","merchant":"AgroThrive","price":null,"note":"Fast-acting OMRI-listed organic concentrate that shows up consistently in citrus enthusiast forums as the liquid option people reach for when they want something genuinely organic with real nutrient density."}]},{"title":"Micronutrient supplement","items":[{"title":"Logee's Chelated Liquid Iron","sourceUrl":"https://www.logees.com/products/chelated-liquid-iron","merchant":"Logee's Plants","price":"$14.95","note":"Sold by one of the oldest greenhouse operations in the US, specifically dosed for potted citrus — the chelated formula means iron actually absorbs rather than locking up in alkaline container mix."},{"title":"Madison Citrus Nursery EDTA Chelated Micronutrients","sourceUrl":"https://madisoncitrusnursery.com/products/edta-chelated-micronutrients-for-citrus-trees","merchant":"Madison Citrus Nursery","price":"$12","note":"Full chelated micronutrient panel (Fe, Mn, Zn, Cu, Mo) in low-dust micro-granules that dissolve completely — the kind of granular detail in the spec sheet that serious growers look for."}]}],"warnings":["Via Citrus Slow Release Fertilizer dropped — duplicate of the same product appearing on both viacitrus.com and Etsy; no meaningful differentiator and brand has no community track record to verify.","Opulent Blends Liquid Citrus Essentials and Gardenera 3-1-2 Concentrate dropped in debug mode — plausible picks but no independent community signal found to validate under the enthusiast lens.","My Perfect Plants Liquid Lemon Tree Fertilizer dropped — price field extracted as '2995' (likely $29.95 but unconfirmed), and brand has no clear enthusiast provenance.","AgroThrive URL resolves to a category/marketing page, not a specific product page — needs a direct product URL before publishing.","Madison Citrus Nursery 8-2-8 is explicitly noted as NOT organic in its product description; flagged against the collection's organic framing and should be reconsidered or noted as synthetic."]}
+{
+	"title": "Organic Feed for Indoor Lemon Trees: What Enthusiasts Actually Use",
+	"intro": "Indoor citrus needs consistent, balanced feeding year-round — organic fertilizers that enthusiasts trust tend to be slow-release or liquid concentrates with a proven track record in citrus forums, not mass-market garden center impulse buys.",
+	"sections": [
+		{
+			"title": "Granular slow-release",
+			"items": [
+				{
+					"title": "Madison Citrus Nursery Specialized Citrus Tree Fertilizer 8-2-8",
+					"sourceUrl": "https://madisoncitrusnursery.com/products/specialized-citrus-tree-fertilizer-8-2-8",
+					"merchant": "Madison Citrus Nursery",
+					"price": "$6.50",
+					"note": "Semi slow-release 8-2-8 sourced and used by a working citrus nursery — the kind of pick that comes from growers who've tested it on their own trees, not from a garden center endcap."
+				}
+			]
+		},
+		{
+			"title": "Liquid concentrate",
+			"items": [
+				{
+					"title": "AgroThrive Organic Liquid Fertilizer (Citrus Formulation)",
+					"sourceUrl": "https://agrothrive.com/pages/citrus-fertilizers",
+					"merchant": "AgroThrive",
+					"price": null,
+					"note": "Fast-acting OMRI-listed organic concentrate that shows up consistently in citrus enthusiast forums as the liquid option people reach for when they want something genuinely organic with real nutrient density."
+				}
+			]
+		},
+		{
+			"title": "Micronutrient supplement",
+			"items": [
+				{
+					"title": "Logee's Chelated Liquid Iron",
+					"sourceUrl": "https://www.logees.com/products/chelated-liquid-iron",
+					"merchant": "Logee's Plants",
+					"price": "$14.95",
+					"note": "Sold by one of the oldest greenhouse operations in the US, specifically dosed for potted citrus — the chelated formula means iron actually absorbs rather than locking up in alkaline container mix."
+				},
+				{
+					"title": "Madison Citrus Nursery EDTA Chelated Micronutrients",
+					"sourceUrl": "https://madisoncitrusnursery.com/products/edta-chelated-micronutrients-for-citrus-trees",
+					"merchant": "Madison Citrus Nursery",
+					"price": "$12",
+					"note": "Full chelated micronutrient panel (Fe, Mn, Zn, Cu, Mo) in low-dust micro-granules that dissolve completely — the kind of granular detail in the spec sheet that serious growers look for."
+				}
+			]
+		}
+	],
+	"warnings": [
+		"Via Citrus Slow Release Fertilizer dropped — duplicate of the same product appearing on both viacitrus.com and Etsy; no meaningful differentiator and brand has no community track record to verify.",
+		"Opulent Blends Liquid Citrus Essentials and Gardenera 3-1-2 Concentrate dropped in debug mode — plausible picks but no independent community signal found to validate under the enthusiast lens.",
+		"My Perfect Plants Liquid Lemon Tree Fertilizer dropped — price field extracted as '2995' (likely $29.95 but unconfirmed), and brand has no clear enthusiast provenance.",
+		"AgroThrive URL resolves to a category/marketing page, not a specific product page — needs a direct product URL before publishing.",
+		"Madison Citrus Nursery 8-2-8 is explicitly noted as NOT organic in its product description; flagged against the collection's organic framing and should be reconsidered or noted as synthetic."
+	]
+}
