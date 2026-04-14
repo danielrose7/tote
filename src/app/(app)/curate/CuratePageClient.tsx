@@ -564,25 +564,27 @@ export function CuratePageClient({
                       className={styles.pipelineStage}
                       data-status={stage.status}
                     >
-                      <div className={styles.pipelineStageHeader}>
-                        <span className={styles.pipelineDot} />
+                      <span className={styles.pipelineDot}>
+                        {stage.status === 'completed' && '✓'}
+                      </span>
+                      <div className={styles.pipelineContent}>
                         <span className={styles.pipelineStageLabel}>
                           {stage.label}
                         </span>
+                        {stage.status !== 'pending' && (
+                          <ol className={styles.pipelineSubSteps}>
+                            {stage.steps.map((step) => (
+                              <li
+                                key={step.label}
+                                className={styles.pipelineSubStep}
+                                data-status={step.status}
+                              >
+                                {step.label}
+                              </li>
+                            ))}
+                          </ol>
+                        )}
                       </div>
-                      {stage.status !== 'pending' && (
-                        <ol className={styles.pipelineSubSteps}>
-                          {stage.steps.map((step) => (
-                            <li
-                              key={step.label}
-                              className={styles.pipelineSubStep}
-                              data-status={step.status}
-                            >
-                              {step.label}
-                            </li>
-                          ))}
-                        </ol>
-                      )}
                     </li>
                   ))}
                 </ol>

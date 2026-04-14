@@ -438,35 +438,51 @@
   padding: 1rem 1.25rem;
 }
 
+@media (max-width: 480px) {
+  .pipelineWrap {
+    padding: 0.875rem 1rem;
+  }
+}
+
 .pipeline {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: flex-start;
   gap: 0;
 }
 
 /* Stage */
 .pipelineStage {
-  flex: 1;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.875rem;
   position: relative;
+  padding-bottom: 1.25rem;
 }
 
-/* Connector line: center-to-center between stage dots */
+.pipelineStage:last-child {
+  padding-bottom: 0;
+}
+
+/* Vertical connector line */
 .pipelineStage:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 0.4rem; /* vertically aligned with dot center */
-  left: 50%;
-  right: -50%;
-  height: 1.5px;
-  background: var(--color-border);
+  left: calc(0.5rem - 1px); /* center of 1rem dot */
+  top: 1rem;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--color-border) 0,
+    var(--color-border) 4px,
+    transparent 4px,
+    transparent 8px
+  );
   z-index: 0;
 }
 
@@ -474,24 +490,22 @@
   background: var(--color-accent);
 }
 
-/* Stage header: dot + label stacked */
-.pipelineStageHeader {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  position: relative;
-  z-index: 1;
-}
-
 /* Stage dot */
 .pipelineDot {
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 1rem;
+  height: 1rem;
   border-radius: 999px;
   border: 2px solid var(--color-border);
   background: var(--color-surface);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  font-weight: 800;
+  color: white;
+  position: relative;
+  z-index: 1;
 }
 
 .pipelineStage[data-status='completed'] .pipelineDot {
@@ -516,14 +530,20 @@
   }
 }
 
+/* Content area */
+.pipelineContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.05rem;
+}
+
 /* Stage label */
 .pipelineStageLabel {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--color-text-secondary);
-  text-align: center;
+  line-height: 1;
 }
 
 .pipelineStage[data-status='completed'] .pipelineStageLabel {
@@ -541,7 +561,6 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 0.2rem;
 }
 
