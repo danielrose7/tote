@@ -226,8 +226,8 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
         }
       }
 
-      // Synthesize milestone history from persisted phase so completedMilestones
-      // and the event log are populated after a page refresh.
+      // Synthesize milestone history from persisted phase so the pipeline
+      // sidebar and event log are populated after a page refresh.
       if (s.progress.length === 0 && snap.phase) {
         const phase = snap.phase as string;
         const milestoneOrder = [
@@ -253,16 +253,27 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
             message: 'Answers received. Planning collection...',
             ts: ts++,
           });
-        if (idx >= 2)
+        if (idx >= 2) {
           synthesized.push({
-            step: 'extracting',
+            step: 'planned',
+            message: 'Plan drafted.',
+            ts: ts++,
+          });
+          synthesized.push({
+            step: 'urls-found',
             message: 'URL discovery complete — extracting pages...',
             ts: ts++,
           });
+          synthesized.push({
+            step: 'extracting',
+            message: 'Extraction queued.',
+            ts: ts++,
+          });
+        }
         if (idx >= 3)
           synthesized.push({
             step: 'curating',
-            message: `Extracted items — curating final shortlist...`,
+            message: 'Extracted items — curating final shortlist...',
             ts: ts++,
           });
         if (idx >= 4) {

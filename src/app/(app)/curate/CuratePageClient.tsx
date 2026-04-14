@@ -296,17 +296,50 @@ export function CuratePageClient({
 
     const isSearching = progress.some((e) => e.step.startsWith('searching-'));
 
+    // Phase-derived floor: if realtime events are missed, use the store phase
+    // (set from both KV hydration and key transitions) as a minimum status.
+    // Scope completed by planning phase; Scout active by extracting phase, etc.
+    const phaseFloor: Record<string, StepStatus> = {};
+    if (phase === 'planning') {
+      phaseFloor['Scope'] = 'active';
+    } else if (phase === 'extracting') {
+      phaseFloor['Scope'] = 'completed';
+      phaseFloor['Scout'] = 'active';
+    } else if (
+      phase === 'curating' ||
+      phase === 'refining' ||
+      phase === 'complete'
+    ) {
+      phaseFloor['Scope'] = 'completed';
+      phaseFloor['Scout'] = 'completed';
+      if (phase === 'refining') phaseFloor['Shape'] = 'active';
+      if (phase === 'complete') phaseFloor['Shape'] = 'completed';
+    }
+
+    const statusRank: Record<StepStatus, number> = {
+      pending: 0,
+      active: 1,
+      completed: 2,
+    };
+    function maxStatus(a: StepStatus, b: StepStatus): StepStatus {
+      return statusRank[a] >= statusRank[b] ? a : b;
+    }
+
     // Derive each stage's status from its steps
     return stages.map((stage) => {
       const allDone = stage.keys.every((k) => doneKeys.has(k));
       const anyDone = stage.keys.some((k) => doneKeys.has(k));
       // Scout is active while URL discovery is running even before urls-found fires
       const forceActive = stage.label === 'Scout' && isSearching;
-      const status: StepStatus = allDone
+      const derivedStatus: StepStatus = allDone
         ? 'completed'
         : anyDone || forceActive
           ? 'active'
           : 'pending';
+      const status = maxStatus(
+        derivedStatus,
+        phaseFloor[stage.label] ?? 'pending',
+      );
       return { label: stage.label, status, steps: stage.steps };
     });
   }, [progress, phase]);
