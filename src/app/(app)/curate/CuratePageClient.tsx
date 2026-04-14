@@ -395,422 +395,439 @@ export function CuratePageClient({
           </a>
         </div>
 
-        {phase === 'started' && (
-          <p className={styles.subheading}>
-            Connecting to workflow and waiting for the first curator events...
-          </p>
-        )}
-
-        {phase === 'interview' && questions.length > 0 && (
-          <form onSubmit={handleAnswers} className={styles.form}>
-            <p className={styles.subheading}>
-              Answer these questions to set the curatorial lens.
-            </p>
-
-            {questions.map((q) => {
-              const selected = selections[q.id] ?? [];
-              return (
-                <div key={q.id} className={styles.inputGroup}>
-                  <span className={styles.label}>{q.text}</span>
-                  <div className={styles.interviewOptions}>
-                    {q.options.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className={styles.interviewOption}
-                        data-selected={selected.includes(opt.value)}
-                      >
-                        <input
-                          type={q.multi ? 'checkbox' : 'radio'}
-                          name={q.id}
-                          value={opt.value}
-                          checked={selected.includes(opt.value)}
-                          onChange={(e) => {
-                            setSelections((prev) => {
-                              const cur = prev[q.id] ?? [];
-                              if (q.multi) {
-                                if (
-                                  opt.value === 'No constraints' &&
-                                  e.target.checked
-                                )
-                                  return {
-                                    ...prev,
-                                    [q.id]: ['No constraints'],
-                                  };
-                                const next = e.target.checked
-                                  ? [
-                                      ...cur.filter(
-                                        (v) => v !== 'No constraints',
-                                      ),
-                                      opt.value,
-                                    ]
-                                  : cur.filter((v) => v !== opt.value);
-                                return { ...prev, [q.id]: next };
-                              }
-                              return { ...prev, [q.id]: [opt.value] };
-                            });
-                          }}
-                        />
-                        <span>
-                          <strong>{opt.value}</strong>
-                          <span className={styles.optionDescription}>
-                            {opt.description}
-                          </span>
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                  <input
-                    type="text"
-                    className={styles.input}
-                    value={notes[q.id] ?? ''}
-                    onChange={(e) =>
-                      setNotes((prev) => ({ ...prev, [q.id]: e.target.value }))
-                    }
-                    placeholder="Additional notes (optional)"
-                  />
-                </div>
-              );
-            })}
-
-            <div className={styles.inputGroup}>
-              <span className={styles.label}>Mode</span>
-              <div className={styles.modeOptions}>
-                <label className={styles.modeOption}>
-                  <input
-                    type="radio"
-                    name="mode"
-                    value="debug"
-                    checked={mode === 'debug'}
-                    onChange={() => setMode('debug')}
-                  />
-                  <span>
-                    <strong>Debug</strong>
-                    <span className={styles.modeHelp}>
-                      Fewer sections, fewer candidates, lower token spend.
-                    </span>
-                  </span>
-                </label>
-                <label className={styles.modeOption}>
-                  <input
-                    type="radio"
-                    name="mode"
-                    value="normal"
-                    checked={mode === 'normal'}
-                    onChange={() => setMode('normal')}
-                  />
-                  <span>
-                    <strong>Normal</strong>
-                    <span className={styles.modeHelp}>
-                      Fuller planning and research for a production-style run.
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </div>
-            <div className={styles.actions}>
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={!answersComplete}
-              >
-                Submit answers
-              </button>
-            </div>
-          </form>
+        {!sessionId && phase === 'started' && (
+          <p className={styles.subheading}>Setting things up...</p>
         )}
 
         {sessionId && (
-          <div className={styles.progressSection}>
-            <div className={styles.statusCard}>
-              <div className={styles.statusHeader}>
-                <div>
-                  <p className={styles.eyebrow}>Live Run</p>
-                  <h2 className={styles.statusTitle}>
-                    {phase === 'extracting' && extractionProgress
-                      ? `Extracting pages (${extractionProgress.current} / ${extractionProgress.total})`
-                      : (latestProgress?.message ??
-                        phaseStatusLabel[phase] ??
-                        'Run created')}
-                  </h2>
-                </div>
-                <div className={styles.statusActions}>
-                  <span className={styles.phaseBadge}>{phase}</span>
-                  {phase !== 'complete' && phase !== 'error' && (
-                    <button
-                      type="button"
-                      className={styles.reconnectButton}
-                      onClick={handleReconnect}
-                      title="Reconnect to realtime stream"
-                    >
-                      ↺ Reconnect
-                    </button>
-                  )}
-                </div>
-              </div>
-              {phase !== 'extracting' && latestProgress?.detail && (
-                <p className={styles.statusDetail}>{latestProgress.detail}</p>
-              )}
-              <p className={styles.sessionMeta}>
-                Session <code>{sessionId}</code>
-              </p>
-            </div>
-
+          <div className={styles.runLayout}>
+            {/* ── Left sidebar: pipeline ── */}
             {wizardPipeline.length > 0 && (
-              <div className={styles.pipelineWrap}>
-                <ol className={styles.pipeline}>
-                  {wizardPipeline.map((stage) => (
-                    <li
-                      key={stage.label}
-                      className={styles.pipelineStage}
-                      data-status={stage.status}
-                    >
-                      <span className={styles.pipelineDot}>
-                        {stage.status === 'completed' && '✓'}
-                      </span>
-                      <div className={styles.pipelineContent}>
-                        <span className={styles.pipelineStageLabel}>
-                          {stage.label}
-                        </span>
-                        {stage.status !== 'pending' && (
-                          <ol className={styles.pipelineSubSteps}>
-                            {stage.steps.map((step) => (
-                              <li
-                                key={step.label}
-                                className={styles.pipelineSubStep}
-                                data-status={step.status}
-                              >
-                                {step.label}
-                              </li>
-                            ))}
-                          </ol>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            )}
-
-            {searchEvents.length > 0 && (
-              <div className={styles.progressCard}>
-                <h2 className={styles.sectionTitle}>URL Discovery</h2>
-                <ul className={styles.researchList}>
-                  {searchEvents.map((entry) => (
-                    <li key={entry.ts} className={styles.researchItem}>
-                      <span className={styles.researchStep}>
-                        {formatStepLabel(entry.step)}
-                      </span>
-                      <span className={styles.researchMessage}>
-                        {entry.message}
-                      </span>
-                      {entry.detail && (
-                        <span className={styles.progressDetail}>
-                          {entry.detail}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {phase === 'extracting' && extractionProgress && (
-              <div className={styles.progressCard}>
-                <h2 className={styles.sectionTitle}>
-                  Extracting pages ({extractionProgress.current} /{' '}
-                  {extractionProgress.total})
-                </h2>
-                <ul className={styles.extractionList}>
-                  {extractionProgress.entries
-                    .filter((e) => e.status !== 'pending')
-                    .slice(-8)
-                    .map((entry) => (
+              <aside className={styles.runSidebar}>
+                <div className={styles.pipelineWrap}>
+                  <ol className={styles.pipeline}>
+                    {wizardPipeline.map((stage) => (
                       <li
-                        key={entry.url}
-                        className={styles.extractionItem}
-                        data-status={entry.status}
+                        key={stage.label}
+                        className={styles.pipelineStage}
+                        data-status={stage.status}
                       >
-                        <span className={styles.extractionIcon}>
-                          {entry.status === 'loading'
-                            ? '▶'
-                            : entry.status === 'done'
-                              ? '✓'
-                              : '–'}
+                        <span className={styles.pipelineDot}>
+                          {stage.status === 'completed' && '✓'}
                         </span>
-                        <span className={styles.extractionContent}>
-                          <span className={styles.extractionDomain}>
-                            {entry.domain}
+                        <div className={styles.pipelineContent}>
+                          <span className={styles.pipelineStageLabel}>
+                            {stage.label}
                           </span>
-                          {entry.title && (
-                            <span className={styles.extractionTitle}>
-                              {entry.title}
-                            </span>
+                          {stage.status !== 'pending' && (
+                            <ol className={styles.pipelineSubSteps}>
+                              {stage.steps.map((step) => (
+                                <li
+                                  key={step.label}
+                                  className={styles.pipelineSubStep}
+                                  data-status={step.status}
+                                >
+                                  {step.label}
+                                </li>
+                              ))}
+                            </ol>
                           )}
-                          {entry.status === 'skipped' && (
-                            <span className={styles.extractionSkipped}>
-                              skipped
-                            </span>
-                          )}
-                        </span>
+                        </div>
                       </li>
                     ))}
-                </ul>
-              </div>
+                  </ol>
+                </div>
+              </aside>
             )}
 
-            {progress.length > 0 && (
-              <div className={styles.progressCard}>
-                <h2 className={styles.sectionTitle}>Event Log</h2>
-                <ul className={styles.progressLog}>
-                  {progress.map((entry) => (
-                    <li key={entry.ts} className={styles.progressEntry}>
-                      <span className={styles.progressStep}>{entry.step}</span>
-                      <span className={styles.progressMessage}>
-                        {entry.message}
-                      </span>
-                      {entry.detail && (
-                        <span className={styles.progressDetail}>
-                          {entry.detail}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                <div ref={progressEndRef} />
-              </div>
-            )}
-          </div>
-        )}
-
-        {phase === 'complete' && result && (
-          <div className={styles.result}>
-            <h2 className={styles.resultTitle}>{result.title}</h2>
-            <p className={styles.resultMeta}>
-              {result.sectionCount} sections · {result.itemCount} items
-              {tokenUsage && (
-                <>
-                  {' · '}
-                  <span
-                    title={`${tokenUsage.inputTokens.toLocaleString()} in / ${tokenUsage.outputTokens.toLocaleString()} out / ${tokenUsage.webSearchRequests ?? 0} searches`}
-                  >
-                    {formatCost(
-                      tokenUsage.inputTokens,
-                      tokenUsage.outputTokens,
-                      tokenUsage.webSearchRequests ?? 0,
-                    )}
-                  </span>
-                </>
+            {/* ── Right main ── */}
+            <div className={styles.runMain}>
+              {phase === 'started' && (
+                <p className={styles.subheading}>
+                  Connecting to workflow and waiting for the first curator
+                  events...
+                </p>
               )}
-            </p>
 
-            {importPayload && (
-              <div className={styles.importPreview}>
-                {importPayload.intro && (
-                  <p className={styles.importIntro}>{importPayload.intro}</p>
-                )}
-                {importPayload.warnings &&
-                  importPayload.warnings.length > 0 && (
-                    <div className={styles.warnings}>
-                      {importPayload.warnings.map((w) => (
-                        <p key={w} className={styles.warning}>
-                          {w}
-                        </p>
-                      ))}
+              {/* Interview form */}
+              {phase === 'interview' && questions.length > 0 && (
+                <form onSubmit={handleAnswers} className={styles.form}>
+                  <p className={styles.subheading}>
+                    Answer these questions to set the curatorial lens.
+                  </p>
+
+                  {questions.map((q) => {
+                    const selected = selections[q.id] ?? [];
+                    return (
+                      <div key={q.id} className={styles.inputGroup}>
+                        <span className={styles.label}>{q.text}</span>
+                        <div className={styles.interviewOptions}>
+                          {q.options.map((opt) => (
+                            <label
+                              key={opt.value}
+                              className={styles.interviewOption}
+                              data-selected={selected.includes(opt.value)}
+                            >
+                              <input
+                                type={q.multi ? 'checkbox' : 'radio'}
+                                name={q.id}
+                                value={opt.value}
+                                checked={selected.includes(opt.value)}
+                                onChange={(e) => {
+                                  setSelections((prev) => {
+                                    const cur = prev[q.id] ?? [];
+                                    if (q.multi) {
+                                      if (
+                                        opt.value === 'No constraints' &&
+                                        e.target.checked
+                                      )
+                                        return {
+                                          ...prev,
+                                          [q.id]: ['No constraints'],
+                                        };
+                                      const next = e.target.checked
+                                        ? [
+                                            ...cur.filter(
+                                              (v) => v !== 'No constraints',
+                                            ),
+                                            opt.value,
+                                          ]
+                                        : cur.filter((v) => v !== opt.value);
+                                      return { ...prev, [q.id]: next };
+                                    }
+                                    return { ...prev, [q.id]: [opt.value] };
+                                  });
+                                }}
+                              />
+                              <span>
+                                <strong>{opt.value}</strong>
+                                <span className={styles.optionDescription}>
+                                  {opt.description}
+                                </span>
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        <input
+                          type="text"
+                          className={styles.input}
+                          value={notes[q.id] ?? ''}
+                          onChange={(e) =>
+                            setNotes((prev) => ({
+                              ...prev,
+                              [q.id]: e.target.value,
+                            }))
+                          }
+                          placeholder="Additional notes (optional)"
+                        />
+                      </div>
+                    );
+                  })}
+
+                  <div className={styles.inputGroup}>
+                    <span className={styles.label}>Mode</span>
+                    <div className={styles.modeOptions}>
+                      <label className={styles.modeOption}>
+                        <input
+                          type="radio"
+                          name="mode"
+                          value="debug"
+                          checked={mode === 'debug'}
+                          onChange={() => setMode('debug')}
+                        />
+                        <span>
+                          <strong>Debug</strong>
+                          <span className={styles.modeHelp}>
+                            Fewer sections, fewer candidates, lower token spend.
+                          </span>
+                        </span>
+                      </label>
+                      <label className={styles.modeOption}>
+                        <input
+                          type="radio"
+                          name="mode"
+                          value="normal"
+                          checked={mode === 'normal'}
+                          onChange={() => setMode('normal')}
+                        />
+                        <span>
+                          <strong>Normal</strong>
+                          <span className={styles.modeHelp}>
+                            Fuller planning and research for a production-style
+                            run.
+                          </span>
+                        </span>
+                      </label>
                     </div>
-                  )}
-                <div className={styles.importSections}>
-                  {importPayload.sections.map((section) => (
-                    <div key={section.title} className={styles.importSection}>
-                      <h3 className={styles.importSectionTitle}>
-                        {section.title}
-                      </h3>
-                      <ul className={styles.importItemList}>
-                        {section.items.map((item) => (
-                          <li
-                            key={
-                              item.sourceRowId || item.sourceUrl || item.title
-                            }
-                            className={styles.importItem}
-                          >
-                            <span className={styles.importItemName}>
-                              {item.title || item.sourceUrl}
+                  </div>
+                  <div className={styles.actions}>
+                    <button
+                      type="submit"
+                      className={styles.primaryButton}
+                      disabled={!answersComplete}
+                    >
+                      Submit answers
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* ── Unified activity feed ── */}
+              <div className={styles.activityCard}>
+                <div className={styles.activityHeader}>
+                  <div>
+                    <h2 className={styles.statusTitle}>
+                      {phase === 'extracting' && extractionProgress
+                        ? `Extracting pages (${extractionProgress.current} / ${extractionProgress.total})`
+                        : (latestProgress?.message ??
+                          phaseStatusLabel[phase] ??
+                          'Run created')}
+                    </h2>
+                    {phase !== 'extracting' && latestProgress?.detail && (
+                      <p className={styles.statusDetail}>
+                        {latestProgress.detail}
+                      </p>
+                    )}
+                  </div>
+                  <div className={styles.statusActions}>
+                    <span className={styles.phaseBadge}>{phase}</span>
+                    {phase !== 'complete' && phase !== 'error' && (
+                      <button
+                        type="button"
+                        className={styles.reconnectButton}
+                        onClick={handleReconnect}
+                        title="Reconnect to realtime stream"
+                      >
+                        ↺ Reconnect
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <p className={styles.sessionMeta}>
+                  Session <code>{sessionId}</code>
+                </p>
+
+                {searchEvents.length > 0 && (
+                  <ul className={styles.researchList}>
+                    {searchEvents.map((entry) => (
+                      <li key={entry.ts} className={styles.researchItem}>
+                        <span className={styles.researchStep}>
+                          {formatStepLabel(entry.step)}
+                        </span>
+                        <span className={styles.researchMessage}>
+                          {entry.message}
+                        </span>
+                        {entry.detail && (
+                          <span className={styles.progressDetail}>
+                            {entry.detail}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {phase === 'extracting' && extractionProgress && (
+                  <ul className={styles.extractionList}>
+                    {extractionProgress.entries
+                      .filter((e) => e.status !== 'pending')
+                      .slice(-8)
+                      .map((entry) => (
+                        <li
+                          key={entry.url}
+                          className={styles.extractionItem}
+                          data-status={entry.status}
+                        >
+                          <span className={styles.extractionIcon}>
+                            {entry.status === 'loading'
+                              ? '▶'
+                              : entry.status === 'done'
+                                ? '✓'
+                                : '–'}
+                          </span>
+                          <span className={styles.extractionContent}>
+                            <span className={styles.extractionDomain}>
+                              {entry.domain}
                             </span>
-                            {item.price && (
-                              <span className={styles.importItemPrice}>
-                                {item.price}
+                            {entry.title && (
+                              <span className={styles.extractionTitle}>
+                                {entry.title}
                               </span>
                             )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
+                            {entry.status === 'skipped' && (
+                              <span className={styles.extractionSkipped}>
+                                skipped
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                  </ul>
+                )}
+
+                {progress.length > 0 && (
+                  <ul className={styles.progressLog}>
+                    {progress.map((entry) => (
+                      <li key={entry.ts} className={styles.progressEntry}>
+                        <span className={styles.progressStep}>
+                          {entry.step}
+                        </span>
+                        <span className={styles.progressMessage}>
+                          {entry.message}
+                        </span>
+                        {entry.detail && (
+                          <span className={styles.progressDetail}>
+                            {entry.detail}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div ref={progressEndRef} />
               </div>
-            )}
 
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={handleReset}
-              >
-                New collection
-              </button>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={async () => {
-                  if (!importPayload) return;
-                  await navigator.clipboard.writeText(
-                    JSON.stringify(importPayload, null, 2),
-                  );
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-              >
-                {copied ? 'Copied!' : 'Copy JSON'}
-              </button>
-              {importPayload && (
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={handleImport}
-                  disabled={importing || !me.$isLoaded || !me.root}
-                >
-                  {importing ? 'Importing...' : 'Add to Tote'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+              {/* ── Result ── */}
+              {phase === 'complete' && result && (
+                <div className={styles.result}>
+                  <h2 className={styles.resultTitle}>{result.title}</h2>
+                  <p className={styles.resultMeta}>
+                    {result.sectionCount} sections · {result.itemCount} items
+                    {tokenUsage && (
+                      <>
+                        {' · '}
+                        <span
+                          title={`${tokenUsage.inputTokens.toLocaleString()} in / ${tokenUsage.outputTokens.toLocaleString()} out / ${tokenUsage.webSearchRequests ?? 0} searches`}
+                        >
+                          {formatCost(
+                            tokenUsage.inputTokens,
+                            tokenUsage.outputTokens,
+                            tokenUsage.webSearchRequests ?? 0,
+                          )}
+                        </span>
+                      </>
+                    )}
+                  </p>
 
-        {phase === 'error' && (
-          <div className={styles.errorBox}>
-            <p>{error ?? 'Something went wrong.'}</p>
-            <div className={styles.actions}>
-              {topic && (
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={async () => {
-                    const res = await fetch('/api/curate/start', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ topic }),
-                    });
-                    if (res.ok) {
-                      const { sessionId: newId } = await res.json();
-                      window.location.href = `/curate/${newId}`;
-                    }
-                  }}
-                >
-                  Try again
-                </button>
+                  {importPayload && (
+                    <div className={styles.importPreview}>
+                      {importPayload.intro && (
+                        <p className={styles.importIntro}>
+                          {importPayload.intro}
+                        </p>
+                      )}
+                      {importPayload.warnings &&
+                        importPayload.warnings.length > 0 && (
+                          <div className={styles.warnings}>
+                            {importPayload.warnings.map((w) => (
+                              <p key={w} className={styles.warning}>
+                                {w}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      <div className={styles.importSections}>
+                        {importPayload.sections.map((section) => (
+                          <div
+                            key={section.title}
+                            className={styles.importSection}
+                          >
+                            <h3 className={styles.importSectionTitle}>
+                              {section.title}
+                            </h3>
+                            <ul className={styles.importItemList}>
+                              {section.items.map((item) => (
+                                <li
+                                  key={
+                                    item.sourceRowId ||
+                                    item.sourceUrl ||
+                                    item.title
+                                  }
+                                  className={styles.importItem}
+                                >
+                                  <span className={styles.importItemName}>
+                                    {item.title || item.sourceUrl}
+                                  </span>
+                                  {item.price && (
+                                    <span className={styles.importItemPrice}>
+                                      {item.price}
+                                    </span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={styles.actions}>
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={handleReset}
+                    >
+                      New collection
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      onClick={async () => {
+                        if (!importPayload) return;
+                        await navigator.clipboard.writeText(
+                          JSON.stringify(importPayload, null, 2),
+                        );
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                    >
+                      {copied ? 'Copied!' : 'Copy JSON'}
+                    </button>
+                    {importPayload && (
+                      <button
+                        type="button"
+                        className={styles.primaryButton}
+                        onClick={handleImport}
+                        disabled={importing || !me.$isLoaded || !me.root}
+                      >
+                        {importing ? 'Importing...' : 'Add to Tote'}
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
-              <a href="/curate/new" className={styles.secondaryButton}>
-                New topic
-              </a>
+
+              {/* ── Error ── */}
+              {phase === 'error' && (
+                <div className={styles.errorBox}>
+                  <p>{error ?? 'Something went wrong.'}</p>
+                  <div className={styles.actions}>
+                    {topic && (
+                      <button
+                        type="button"
+                        className={styles.primaryButton}
+                        onClick={async () => {
+                          const res = await fetch('/api/curate/start', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ topic }),
+                          });
+                          if (res.ok) {
+                            const { sessionId: newId } = await res.json();
+                            window.location.href = `/curate/${newId}`;
+                          }
+                        }}
+                      >
+                        Try again
+                      </button>
+                    )}
+                    <a href="/curate/new" className={styles.secondaryButton}>
+                      New topic
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

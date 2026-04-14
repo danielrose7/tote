@@ -4,11 +4,42 @@
 }
 
 .container {
-  max-width: 640px;
+  max-width: 960px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* ── Two-column run layout ─────────────────────────────── */
+
+.runLayout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.runSidebar {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.runMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .runLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .runSidebar {
+    position: static;
+  }
 }
 
 .heading {
@@ -331,28 +362,27 @@
   color: var(--color-text-primary);
 }
 
-.progressSection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.875rem;
-}
-
-.statusCard,
-.progressCard {
+.activityCard {
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  background: var(--color-surface);
-  padding: 1rem;
-}
-
-.statusCard {
   background:
     radial-gradient(
       circle at top right,
-      color-mix(in srgb, var(--color-accent) 12%, transparent),
-      transparent 32%
+      color-mix(in srgb, var(--color-accent) 10%, transparent),
+      transparent 40%
     ),
     var(--color-surface);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.activityHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
 }
 
 .statusHeader {
@@ -418,7 +448,7 @@
 }
 
 .sessionMeta {
-  margin: 0.75rem 0 0;
+  margin: 0;
   font-size: 0.78rem;
   color: var(--color-text-secondary);
 }
