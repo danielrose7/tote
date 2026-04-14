@@ -283,146 +283,128 @@ export const curateCollection = inngest.createFunction(
       (planResult.usage?.outputTokens ?? 0);
     let totalWebSearchRequests = 0;
 
-    {
-      // Signal that all sections are being searched (publish upfront so ordering
-      // is deterministic for Inngest replay before the parallel step block).
-      for (const section of plan.sections) {
-        const slug = parameterize(section.title);
-        await step.realtime.publish(`searching-${slug}`, ch.progress, {
-          step: 'searching',
-          message: `Searching for "${section.title}"...`,
+    // Signal all sections being searched upfront (needed for Inngest replay determinism)
+    for (const section of plan.sections) {
+      const slug = parameterize(section.title);
+      await step.realtime.publish(`searching-${slug}`, ch.progress, {
+        step: 'searching',
+        message: `Searching for "${section.title}"...`,
+      });
+    }
+
+    // Discover URLs sequentially — avoids rate limit bursts and streams results per section
+    for (const section of plan.sections) {
+      const slug = parameterize(section.title);
+
+      const found = await step.run(`find-urls-${slug}`, async () => {
+        const startedAt = Date.now();
+        console.log('[curate-collection] find-urls:start', {
+          at: nowIso(),
+          sessionId,
+          section: section.title,
+          slug,
         });
-      }
+        const response = await llm.generateWithSearch({
+          system: URL_DISCOVERY_SYSTEM_PROMPT,
+          prompt: buildUrlDiscoveryPrompt(
+            section,
+            topic,
+            questions,
+            answers,
+            mode,
+          ),
+          maxTokens: urlDiscoveryTokenLimit(mode),
+        });
+        console.log('[curate-collection] find-urls:response', {
+          at: nowIso(),
+          sessionId,
+          section: section.title,
+          slug,
+          durationMs: Date.now() - startedAt,
+          ...response.summary,
+        });
 
-      // Discover URLs for all sections in parallel — each is a named step so
-      // Inngest memoizes them individually and retries are per-section.
-      const sectionDiscoveries = await Promise.all(
-        plan.sections.map(async (section) => {
-          const slug = parameterize(section.title);
-          const found = await step.run(`find-urls-${slug}`, async () => {
-            const startedAt = Date.now();
-            console.log('[curate-collection] find-urls:start', {
-              at: nowIso(),
-              sessionId,
-              section: section.title,
-              slug,
-            });
-            const response = await llm.generateWithSearch({
-              system: URL_DISCOVERY_SYSTEM_PROMPT,
-              prompt: buildUrlDiscoveryPrompt(
-                section,
-                topic,
-                questions,
-                answers,
-                mode,
-              ),
-              maxTokens: urlDiscoveryTokenLimit(mode),
-            });
-            console.log('[curate-collection] find-urls:response', {
-              at: nowIso(),
-              sessionId,
-              section: section.title,
-              slug,
-              durationMs: Date.now() - startedAt,
-              ...response.summary,
-            });
-
-            const text = response.text;
-            const parsed = parseJson<UrlDiscoveryPayload>(text);
-            if (!parsed) {
-              console.error('[curate-collection] find-urls:parse-failed', {
-                at: nowIso(),
-                sessionId,
-                section: section.title,
-                slug,
-                stopReason: response.summary.stopReason,
-                textPreview: text.slice(0, 500),
-              });
-              return {
-                urls: [] as string[],
-                usage: null,
-                summary: response.summary,
-              };
-            }
-            console.log('[curate-collection] find-urls:done', {
-              at: nowIso(),
-              sessionId,
-              section: section.title,
-              slug,
-              urlCount: parsed.urls.length,
-            });
-            return {
-              urls: parsed.urls,
-              usage: response.usage,
-              summary: response.summary,
-            };
+        const text = response.text;
+        const parsed = parseJson<UrlDiscoveryPayload>(text);
+        if (!parsed) {
+          console.error('[curate-collection] find-urls:parse-failed', {
+            at: nowIso(),
+            sessionId,
+            section: section.title,
+            slug,
+            stopReason: response.summary.stopReason,
+            textPreview: text.slice(0, 500),
           });
-          return { section, slug, found };
-        }),
-      );
+          return {
+            urls: [] as string[],
+            usage: null,
+            summary: response.summary,
+          };
+        }
+        console.log('[curate-collection] find-urls:done', {
+          at: nowIso(),
+          sessionId,
+          section: section.title,
+          slug,
+          urlCount: parsed.urls.length,
+        });
+        return {
+          urls: parsed.urls,
+          usage: response.usage,
+          summary: response.summary,
+        };
+      });
 
-      // Aggregate token counts across all parallel discoveries
-      for (const { found } of sectionDiscoveries) {
-        totalInputTokens += found.usage?.inputTokens ?? 0;
-        totalOutputTokens += found.usage?.outputTokens ?? 0;
-        totalWebSearchRequests += found.usage?.webSearchRequests ?? 0;
-      }
+      totalInputTokens += found.usage?.inputTokens ?? 0;
+      totalOutputTokens += found.usage?.outputTokens ?? 0;
+      totalWebSearchRequests += found.usage?.webSearchRequests ?? 0;
 
-      // Deduct per-section credits in parallel
-      if (requestedBy !== 'unknown') {
-        await Promise.all(
-          sectionDiscoveries
-            .filter(({ found }) => found.usage != null)
-            .map(({ slug, found }) =>
-              step.run(`deduct-credits-urls-${slug}`, () =>
-                deductCredits(
-                  requestedBy,
-                  runCostCents(
-                    found.usage!.inputTokens,
-                    found.usage!.outputTokens,
-                    found.usage!.webSearchRequests,
-                  ),
-                  sessionId,
-                  found.usage!.inputTokens,
-                  found.usage!.outputTokens,
-                  found.usage!.webSearchRequests,
-                  `find-urls-${slug}`,
-                  {
-                    urlCount: found.urls.length,
-                    codeExecutionCount: found.summary?.codeExecutionCount,
-                    durationMs: found.summary?.durationMs,
-                  },
-                ),
-              ),
+      if (requestedBy !== 'unknown' && found.usage) {
+        await step.run(`deduct-credits-urls-${slug}`, () =>
+          deductCredits(
+            requestedBy,
+            runCostCents(
+              found.usage!.inputTokens,
+              found.usage!.outputTokens,
+              found.usage!.webSearchRequests,
             ),
+            sessionId,
+            found.usage!.inputTokens,
+            found.usage!.outputTokens,
+            found.usage!.webSearchRequests,
+            `find-urls-${slug}`,
+            {
+              urlCount: found.urls.length,
+              codeExecutionCount: found.summary?.codeExecutionCount,
+              durationMs: found.summary?.durationMs,
+            },
+          ),
         );
       }
 
-      // Publish results and build urlSections in deterministic order
-      for (const { section, slug, found } of sectionDiscoveries) {
-        const domains = found.urls
-          .map((u) => {
-            try {
-              return new URL(u).hostname;
-            } catch {
-              return u;
-            }
-          })
-          .join(', ');
+      const domains = found.urls
+        .map((u) => {
+          try {
+            return new URL(u).hostname;
+          } catch {
+            return u;
+          }
+        })
+        .join(', ');
 
-        await step.realtime.publish(`found-urls-${slug}`, ch.progress, {
-          step: 'found-urls',
-          message: `Found ${found.urls.length} URLs for "${section.title}"`,
-          detail: domains || undefined,
-        });
-
-        urlSections.push({ title: section.title, slug, urls: found.urls });
-      }
-      // Send all sections in one message so the browser knows the full URL count upfront
-      await step.realtime.publish('section-urls', ch['section-urls'], {
-        sections: urlSections,
+      await step.realtime.publish(`found-urls-${slug}`, ch.progress, {
+        step: 'found-urls',
+        message: `Found ${found.urls.length} URLs for "${section.title}"`,
+        detail: domains || undefined,
       });
+
+      urlSections.push({ title: section.title, slug, urls: found.urls });
     }
+
+    // Send all sections in one message so the browser knows the full URL count upfront
+    await step.realtime.publish('section-urls', ch['section-urls'], {
+      sections: urlSections,
+    });
 
     // Step 5: Persist URL data for reconnect, then wait for extractions
     await step.run('persist-session-urls', () =>
