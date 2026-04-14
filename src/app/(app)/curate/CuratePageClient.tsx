@@ -294,13 +294,17 @@ export function CuratePageClient({
       },
     ];
 
+    const isSearching = progress.some((e) => e.step.startsWith('searching-'));
+
     // Derive each stage's status from its steps
     return stages.map((stage) => {
       const allDone = stage.keys.every((k) => doneKeys.has(k));
       const anyDone = stage.keys.some((k) => doneKeys.has(k));
+      // Scout is active while URL discovery is running even before urls-found fires
+      const forceActive = stage.label === 'Scout' && isSearching;
       const status: StepStatus = allDone
         ? 'completed'
-        : anyDone
+        : anyDone || forceActive
           ? 'active'
           : 'pending';
       return { label: stage.label, status, steps: stage.steps };
@@ -607,84 +611,67 @@ export function CuratePageClient({
                   Session <code>{sessionId}</code>
                 </p>
 
-                {searchEvents.length > 0 && (
-                  <ul className={styles.researchList}>
-                    {searchEvents.map((entry) => (
-                      <li key={entry.ts} className={styles.researchItem}>
-                        <span className={styles.researchStep}>
-                          {formatStepLabel(entry.step)}
-                        </span>
-                        <span className={styles.researchMessage}>
-                          {entry.message}
-                        </span>
-                        {entry.detail && (
-                          <span className={styles.progressDetail}>
-                            {entry.detail}
+                {(progress.length > 0 ||
+                  (phase === 'extracting' && extractionProgress)) && (
+                  <div className={styles.eventLog}>
+                    {progress.map((entry, i) => (
+                      <div
+                        key={entry.ts}
+                        className={styles.eventEntry}
+                        data-latest={
+                          i === progress.length - 1 && phase !== 'extracting'
+                        }
+                      >
+                        <span className={styles.eventDot} />
+                        <div className={styles.eventContent}>
+                          <span className={styles.eventMessage}>
+                            {entry.message}
                           </span>
-                        )}
-                      </li>
+                          {entry.step === 'planned' && entry.detail && (
+                            <div className={styles.planSections}>
+                              {entry.detail.split(', ').map((title) => (
+                                <span
+                                  key={title}
+                                  className={styles.planSection}
+                                >
+                                  {title}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     ))}
-                  </ul>
-                )}
 
-                {phase === 'extracting' && extractionProgress && (
-                  <ul className={styles.extractionList}>
-                    {extractionProgress.entries
-                      .filter((e) => e.status !== 'pending')
-                      .slice(-8)
-                      .map((entry) => (
-                        <li
-                          key={entry.url}
-                          className={styles.extractionItem}
-                          data-status={entry.status}
-                        >
-                          <span className={styles.extractionIcon}>
-                            {entry.status === 'loading'
-                              ? '▶'
-                              : entry.status === 'done'
-                                ? '✓'
-                                : '–'}
-                          </span>
-                          <span className={styles.extractionContent}>
-                            <span className={styles.extractionDomain}>
-                              {entry.domain}
-                            </span>
-                            {entry.title && (
-                              <span className={styles.extractionTitle}>
-                                {entry.title}
+                    {phase === 'extracting' && extractionProgress && (
+                      <>
+                        {extractionProgress.entries
+                          .filter((e) => e.status !== 'pending')
+                          .slice(-6)
+                          .map((entry, i, arr) => (
+                            <div
+                              key={entry.url}
+                              className={styles.eventEntry}
+                              data-latest={i === arr.length - 1}
+                            >
+                              <span className={styles.eventDot} />
+                              <span className={styles.eventMessage}>
+                                {entry.status === 'loading'
+                                  ? 'Extracting'
+                                  : entry.status === 'done'
+                                    ? 'Extracted'
+                                    : 'Skipped'}{' '}
+                                <span className={styles.eventSub}>
+                                  {entry.title || entry.domain}
+                                </span>
                               </span>
-                            )}
-                            {entry.status === 'skipped' && (
-                              <span className={styles.extractionSkipped}>
-                                skipped
-                              </span>
-                            )}
-                          </span>
-                        </li>
-                      ))}
-                  </ul>
+                            </div>
+                          ))}
+                      </>
+                    )}
+                    <div ref={progressEndRef} />
+                  </div>
                 )}
-
-                {progress.length > 0 && (
-                  <ul className={styles.progressLog}>
-                    {progress.map((entry) => (
-                      <li key={entry.ts} className={styles.progressEntry}>
-                        <span className={styles.progressStep}>
-                          {entry.step}
-                        </span>
-                        <span className={styles.progressMessage}>
-                          {entry.message}
-                        </span>
-                        {entry.detail && (
-                          <span className={styles.progressDetail}>
-                            {entry.detail}
-                          </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <div ref={progressEndRef} />
               </div>
 
               {/* ── Result ── */}
