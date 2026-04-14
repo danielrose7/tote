@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { RetryAfterError } from 'inngest';
+import { braveSearch } from '../lib/braveSearch';
 
 export type LLMUsage = {
   inputTokens: number;
@@ -34,6 +35,7 @@ export type LLMClient = {
     system: string;
     prompt: string;
     maxTokens: number;
+    model?: string;
   }): Promise<LLMResponse>;
 };
 
@@ -141,20 +143,172 @@ function createAnthropicClient(): LLMClient {
         messages: [{ role: 'user', content: prompt }],
       });
     },
-    generateWithSearch({ system, prompt, maxTokens }) {
-      return call({
-        model,
-        max_tokens: maxTokens,
-        system,
-        tools: [
-          {
-            type: 'web_search_20260209' as const,
-            name: 'web_search',
-            max_uses: 7,
+    async generateWithSearch({
+      system,
+      prompt,
+      maxTokens,
+      model: overrideModel,
+    }) {
+      const searchModel = overrideModel ?? 'claude-haiku-4-5-20251001';
+      const MAX_SEARCHES = 7;
+      let searchCount = 0;
+
+      const webSearchTool: Anthropic.Tool = {
+        name: 'web_search',
+        description: 'Search the web for current information.',
+        input_schema: {
+          type: 'object' as const,
+          properties: {
+            query: { type: 'string', description: 'The search query' },
+            allowed_domains: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Only return results from these domains',
+            },
+            blocked_domains: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Never return results from these domains',
+            },
           },
-        ],
-        messages: [{ role: 'user', content: prompt }],
-      });
+          required: ['query'],
+        },
+      };
+
+      const messages: Anthropic.MessageParam[] = [
+        { role: 'user', content: prompt },
+      ];
+
+      let totalInputTokens = 0;
+      let totalOutputTokens = 0;
+      let totalWebSearchRequests = 0;
+      let totalDurationMs = 0;
+      const allTextParts: string[] = [];
+
+      while (true) {
+        const startedAt = Date.now();
+        let raw: Anthropic.Message;
+        try {
+          raw = await client.messages.create({
+            model: searchModel,
+            max_tokens: maxTokens,
+            system,
+            tools: [webSearchTool],
+            messages,
+          });
+        } catch (error) {
+          const status = (error as { status?: number })?.status;
+          if (status === 429) {
+            const retryAfter = (error as { headers?: Record<string, string> })
+              ?.headers?.['retry-after'];
+            const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
+            throw new RetryAfterError(
+              'Rate limited',
+              new Date(Date.now() + waitMs),
+            );
+          }
+          if (status === 529) {
+            throw new RetryAfterError(
+              'Overloaded',
+              new Date(Date.now() + 30_000),
+            );
+          }
+          throw error;
+        }
+        totalDurationMs += Date.now() - startedAt;
+
+        if (raw.usage) {
+          totalInputTokens += raw.usage.input_tokens;
+          totalOutputTokens += raw.usage.output_tokens;
+        }
+
+        if (raw.stop_reason === 'max_tokens') {
+          throw new Error(
+            `LLM response truncated at max_tokens limit (${maxTokens})`,
+          );
+        }
+
+        // Collect text blocks
+        for (const block of raw.content) {
+          if (block.type === 'text') allTextParts.push(block.text);
+        }
+
+        // If model is done, return
+        if (raw.stop_reason === 'end_turn' || raw.stop_reason !== 'tool_use') {
+          break;
+        }
+
+        // Find tool_use blocks
+        const toolUseBlocks = raw.content.filter(
+          (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+        );
+        if (toolUseBlocks.length === 0) break;
+
+        // Push assistant turn
+        messages.push({ role: 'assistant', content: raw.content });
+
+        // Execute each tool call and collect results
+        const toolResults: Anthropic.ToolResultBlockParam[] = [];
+        for (const toolUse of toolUseBlocks) {
+          if (toolUse.name !== 'web_search' || searchCount >= MAX_SEARCHES) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({ error: 'Search limit reached' }),
+            });
+            continue;
+          }
+
+          const input = toolUse.input as {
+            query: string;
+            allowed_domains?: string[];
+            blocked_domains?: string[];
+          };
+
+          searchCount += 1;
+          totalWebSearchRequests += 1;
+
+          let results;
+          try {
+            results = await braveSearch({
+              query: input.query,
+              allowed_domains: input.allowed_domains,
+              blocked_domains: input.blocked_domains,
+            });
+          } catch {
+            results = [];
+          }
+
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: toolUse.id,
+            content: JSON.stringify(results),
+          });
+        }
+
+        messages.push({ role: 'user', content: toolResults });
+
+        if (searchCount >= MAX_SEARCHES) break;
+      }
+
+      return {
+        text: allTextParts.join('\n').trim(),
+        usage: {
+          inputTokens: totalInputTokens,
+          outputTokens: totalOutputTokens,
+          webSearchRequests: totalWebSearchRequests,
+        },
+        summary: {
+          stopReason: 'end_turn',
+          contentBlockTypes: ['text'],
+          textBlockCount: allTextParts.length,
+          textChars: allTextParts.reduce((s, t) => s + t.length, 0),
+          toolUseCount: totalWebSearchRequests,
+          toolNames: Array(totalWebSearchRequests).fill('web_search'),
+          codeExecutionCount: 0,
+          durationMs: totalDurationMs,
+        },
+      };
     },
   };
 }

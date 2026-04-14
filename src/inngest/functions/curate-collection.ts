@@ -10,7 +10,7 @@ import { deductCredits, runCostCents } from '../../lib/credits';
 import { curationChannel } from '../channels';
 import {
   CURATOR_SYSTEM_PROMPT,
-  URL_DISCOVERY_SYSTEM_PROMPT,
+  buildUrlDiscoverySystemPrompt,
   buildQuestionsPrompt,
   buildPlanPrompt,
   buildUrlDiscoveryPrompt,
@@ -301,7 +301,7 @@ export const curateCollection = inngest.createFunction(
           slug,
         });
         const response = await llm.generateWithSearch({
-          system: URL_DISCOVERY_SYSTEM_PROMPT,
+          system: buildUrlDiscoverySystemPrompt(),
           prompt: buildUrlDiscoveryPrompt(
             section,
             topic,
@@ -312,12 +312,12 @@ export const curateCollection = inngest.createFunction(
           maxTokens: urlDiscoveryTokenLimit(mode),
         });
         console.log('[curate-collection] find-urls:response', {
+          ...response.summary,
           at: nowIso(),
           sessionId,
           section: section.title,
           slug,
           durationMs: Date.now() - startedAt,
-          ...response.summary,
         });
 
         const text = response.text;
@@ -661,7 +661,7 @@ export const curateCollection = inngest.createFunction(
 
         const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
           const response = await llm.generateWithSearch({
-            system: URL_DISCOVERY_SYSTEM_PROMPT,
+            system: buildUrlDiscoverySystemPrompt(),
             prompt: buildRefinementUrlPrompt(
               gap,
               topic,

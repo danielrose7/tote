@@ -75,7 +75,13 @@ function formatAnswers(
     .join('\n\n');
 }
 
-export const URL_DISCOVERY_SYSTEM_PROMPT = `You are a product URL finder for a curation tool. Your job is to use web search to find product page URLs at independent retailers.
+export function buildUrlDiscoverySystemPrompt(): string {
+  const now = new Date();
+  const month = now.toLocaleString('en-US', { month: 'long' });
+  const year = now.getFullYear();
+  return `You are a product URL finder for a curation tool. Your job is to use web search to find product page URLs at independent retailers.
+
+The current month is ${month} ${year}.
 
 Rules:
 - Use web search to find products. Read the search result titles and snippets to identify product page URLs.
@@ -85,6 +91,7 @@ Rules:
 - Return only valid JSON — no markdown, no explanation.
 
 Output format: { "urls": ["https://...", ...] }`;
+}
 
 export function buildPlanPrompt(
   topic: string,
