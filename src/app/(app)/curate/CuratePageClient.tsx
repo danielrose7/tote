@@ -52,8 +52,8 @@ function formatCost(
 }
 
 function formatStepLabel(step: string): string {
-  if (step.startsWith('searching-')) return 'Searching';
-  if (step.startsWith('found-urls-')) return 'URLs found';
+  if (step === 'searching') return 'Searching';
+  if (step === 'found-urls') return 'URLs found';
   if (step.startsWith('researching-')) return 'Researching section';
   if (step.startsWith('researched-')) return 'Section researched';
   if (step.startsWith('refining-'))
@@ -294,14 +294,18 @@ export function CuratePageClient({
       },
     ];
 
-    const isSearching = progress.some((e) => e.step.startsWith('searching-'));
+    // step.realtime.publish first arg is a message ID — the actual step field
+    // in progress data is 'searching' (not 'searching-${slug}')
+    const isSearching = progress.some((e) => e.step === 'searching');
 
     // Phase-derived floor: if realtime events are missed, use the store phase
     // (set from both KV hydration and key transitions) as a minimum status.
     // Scope completed by planning phase; Scout active by extracting phase, etc.
     const phaseFloor: Record<string, StepStatus> = {};
     if (phase === 'planning') {
-      phaseFloor['Scope'] = 'active';
+      // Searching can happen while phase is still 'planning'
+      phaseFloor['Scope'] = 'completed';
+      if (isSearching) phaseFloor['Scout'] = 'active';
     } else if (phase === 'extracting') {
       phaseFloor['Scope'] = 'completed';
       phaseFloor['Scout'] = 'active';
@@ -343,12 +347,6 @@ export function CuratePageClient({
       return { label: stage.label, status, steps: stage.steps };
     });
   }, [progress, phase]);
-
-  const searchEvents = progress.filter(
-    (entry) =>
-      entry.step.startsWith('searching-') ||
-      entry.step.startsWith('found-urls-'),
-  );
 
   const answersComplete = questions.every(
     (q) => (selections[q.id]?.length ?? 0) > 0,
