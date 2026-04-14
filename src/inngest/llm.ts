@@ -152,7 +152,6 @@ function createAnthropicClient(): LLMClient {
             name: 'web_search',
             max_uses: 7,
           },
-          { type: 'code_execution_20260120' as const, name: 'code_execution' },
         ],
         messages: [{ role: 'user', content: prompt }],
       });
