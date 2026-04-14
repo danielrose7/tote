@@ -171,6 +171,8 @@ Extracted product data per section (scraped from product pages via browser exten
 ${sectionsJson}
 
 You have more candidates than you need — be selective. Curate a tight shortlist from this extracted data:
+- ONLY use sourceUrl values present in the extracted data above — never invent, guess, or hallucinate URLs
+- If a section has no usable extracted items, flag it as a warning instead of making up products
 - Use sourceUrl as the product URL
 - Derive the merchant name from the domain (e.g. gardenheir.com → "Gardenheir", america.felco.com → "FELCO")
 - Write one specific, honest note per item using the extracted title, description, and product details
@@ -264,6 +266,8 @@ ${formatAnswers(questions, answers)}
 Mode: ${mode}
 
 Instructions:
+- ONLY use sourceUrl values present in the existing collection or the new extracted data above — never invent, guess, or hallucinate URLs
+- If a gap cannot be filled with the provided data, leave it flagged as an unresolved warning
 - Merge new product data into the existing collection, supplementing or replacing sections that had gaps
 - Remove items that violate hard constraints listed in the gaps
 - Do not duplicate items already in the collection (match by sourceUrl)
