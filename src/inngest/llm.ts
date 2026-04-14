@@ -64,7 +64,10 @@ function fromAnthropicResponse(
     text: textParts.join('\n').trim(),
     usage: response.usage
       ? {
-          inputTokens: response.usage.input_tokens,
+          inputTokens:
+            response.usage.input_tokens +
+            (response.usage.cache_creation_input_tokens ?? 0) +
+            (response.usage.cache_read_input_tokens ?? 0),
           outputTokens: response.usage.output_tokens,
           webSearchRequests:
             response.usage.server_tool_use?.web_search_requests ?? 0,
@@ -221,7 +224,10 @@ function createAnthropicClient(): LLMClient {
         totalDurationMs += turnDurationMs;
 
         if (raw.usage) {
-          totalInputTokens += raw.usage.input_tokens;
+          totalInputTokens +=
+            raw.usage.input_tokens +
+            (raw.usage.cache_creation_input_tokens ?? 0) +
+            (raw.usage.cache_read_input_tokens ?? 0);
           totalOutputTokens += raw.usage.output_tokens;
         }
 
