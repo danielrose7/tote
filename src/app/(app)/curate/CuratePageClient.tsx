@@ -263,6 +263,7 @@ export function CuratePageClient({
         status: stepStatus(`refine-complete-${p}`),
       });
     }
+    shapeSteps.push({ label: 'Publish', status: stepStatus('complete') });
 
     const stages: Array<{
       label: string;

@@ -294,7 +294,7 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
         if (phase === 'complete')
           synthesized.push({
             step: 'complete',
-            message: 'Collection written',
+            message: 'Published.',
             ts: ts++,
           });
         // Append the last persisted progress message as the most recent entry
