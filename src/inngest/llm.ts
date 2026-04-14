@@ -46,7 +46,6 @@ function fromAnthropicResponse(
   let textChars = 0;
   let textBlockCount = 0;
   let toolUseCount = 0;
-  let codeExecutionCount = 0;
   const toolNames: string[] = [];
   const textParts: string[] = [];
 
@@ -55,17 +54,9 @@ function fromAnthropicResponse(
       textBlockCount += 1;
       textChars += block.text.length;
       textParts.push(block.text);
-    } else if (
-      block.type === 'server_tool_use' ||
-      block.type === 'web_search_tool_result' ||
-      block.type === 'code_execution_tool_use' ||
-      block.type === 'code_execution_tool_result'
-    ) {
+    } else if (block.type === 'tool_use') {
       toolUseCount += 1;
-      if ('name' in block && typeof block.name === 'string') {
-        toolNames.push(block.name);
-        if (block.name === 'code_execution') codeExecutionCount += 1;
-      }
+      toolNames.push(block.name);
     }
   }
 
@@ -86,7 +77,7 @@ function fromAnthropicResponse(
       textChars,
       toolUseCount,
       toolNames,
-      codeExecutionCount,
+      codeExecutionCount: 0,
       durationMs,
     },
   };
