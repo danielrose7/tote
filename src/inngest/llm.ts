@@ -60,14 +60,17 @@ function fromAnthropicResponse(
     }
   }
 
+  const cacheWrite = response.usage?.cache_creation_input_tokens ?? 0;
+  const cacheRead = response.usage?.cache_read_input_tokens ?? 0;
+  if (cacheWrite > 0 || cacheRead > 0) {
+    console.warn('[llm] call:cache-tokens', { cacheWrite, cacheRead });
+  }
+
   return {
     text: textParts.join('\n').trim(),
     usage: response.usage
       ? {
-          inputTokens:
-            response.usage.input_tokens +
-            (response.usage.cache_creation_input_tokens ?? 0) +
-            (response.usage.cache_read_input_tokens ?? 0),
+          inputTokens: response.usage.input_tokens + cacheWrite + cacheRead,
           outputTokens: response.usage.output_tokens,
           webSearchRequests:
             response.usage.server_tool_use?.web_search_requests ?? 0,
@@ -224,11 +227,17 @@ function createAnthropicClient(): LLMClient {
         totalDurationMs += turnDurationMs;
 
         if (raw.usage) {
-          totalInputTokens +=
-            raw.usage.input_tokens +
-            (raw.usage.cache_creation_input_tokens ?? 0) +
-            (raw.usage.cache_read_input_tokens ?? 0);
+          const cacheWrite = raw.usage.cache_creation_input_tokens ?? 0;
+          const cacheRead = raw.usage.cache_read_input_tokens ?? 0;
+          totalInputTokens += raw.usage.input_tokens + cacheWrite + cacheRead;
           totalOutputTokens += raw.usage.output_tokens;
+          if (cacheWrite > 0 || cacheRead > 0) {
+            console.warn('[llm] generateWithSearch:cache-tokens', {
+              turn: turnCount,
+              cacheWrite,
+              cacheRead,
+            });
+          }
         }
 
         console.log('[llm] generateWithSearch:turn', {
