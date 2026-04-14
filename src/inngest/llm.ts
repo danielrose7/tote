@@ -151,7 +151,9 @@ function createAnthropicClient(): LLMClient {
     }) {
       const searchModel = overrideModel ?? 'claude-haiku-4-5-20251001';
       const MAX_SEARCHES = 7;
+      const MAX_TURNS = 12;
       let searchCount = 0;
+      let turnCount = 0;
 
       const webSearchTool: Anthropic.Tool = {
         name: 'web_search',
@@ -185,7 +187,7 @@ function createAnthropicClient(): LLMClient {
       let totalDurationMs = 0;
       const allTextParts: string[] = [];
 
-      while (true) {
+      while (turnCount++ < MAX_TURNS) {
         const startedAt = Date.now();
         let raw: Anthropic.Message;
         try {
@@ -287,8 +289,6 @@ function createAnthropicClient(): LLMClient {
         }
 
         messages.push({ role: 'user', content: toolResults });
-
-        if (searchCount >= MAX_SEARCHES) break;
       }
 
       return {
