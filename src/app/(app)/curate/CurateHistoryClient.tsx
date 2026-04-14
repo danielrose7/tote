@@ -1,134 +1,138 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useAccount } from 'jazz-tools/react';
-import { JazzAccount } from '../../../schema';
-import { useToast } from '../../../components/ToastNotification';
-import { CreditsPanel } from './CreditsPanel';
-import styles from './curate.module.css';
+import { useAccount } from "jazz-tools/react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useToast } from "../../../components/ToastNotification";
+import { JazzAccount } from "../../../schema";
+import { CreditsPanel } from "./CreditsPanel";
+import styles from "./curate.module.css";
 
 // claude-sonnet-4-6: $3/1M input, $15/1M output, $0.01/search
 function formatCost(
-  inputTokens: number,
-  outputTokens: number,
-  webSearchRequests = 0,
+	inputTokens: number,
+	outputTokens: number,
+	webSearchRequests = 0,
 ): string {
-  const cost =
-    (inputTokens / 1_000_000) * 3 +
-    (outputTokens / 1_000_000) * 15 +
-    webSearchRequests * 0.01;
-  return cost < 0.01 ? '<$0.01' : `~$${cost.toFixed(2)}`;
+	const cost =
+		(inputTokens / 1_000_000) * 3 +
+		(outputTokens / 1_000_000) * 15 +
+		webSearchRequests * 0.01;
+	return cost < 0.01 ? "<$0.01" : `~$${cost.toFixed(2)}`;
 }
 
 const phaseLabel: Record<string, string> = {
-  interview: 'Interview',
-  started: 'Starting',
-  planning: 'Planning',
-  extracting: 'Extracting',
-  curating: 'Curating',
-  complete: 'Complete',
-  error: 'Error',
+	started: "Starting",
+	"interview-round-1": "Interview",
+	researching: "Researching",
+	"interview-round-2": "Follow-up",
+	framing: "Framing",
+	planning: "Planning",
+	extracting: "Extracting",
+	curating: "Curating",
+	hospitality: "Hospitality",
+	complete: "Complete",
+	error: "Error",
 };
 
 export function CurateHistoryClient() {
-  const me = useAccount(JazzAccount, {
-    resolve: { root: { curatorSessions: true } },
-  });
-  const [balanceCents, setBalanceCents] = useState<number | null>(null);
-  const searchParams = useSearchParams();
-  const { showToast } = useToast();
-  const toastedRef = useRef(false);
+	const me = useAccount(JazzAccount, {
+		resolve: { root: { curatorSessions: true } },
+	});
+	const [balanceCents, setBalanceCents] = useState<number | null>(null);
+	const searchParams = useSearchParams();
+	const { showToast } = useToast();
+	const toastedRef = useRef(false);
 
-  // Show success toast and clear param after Stripe redirect
-  useEffect(() => {
-    if (searchParams.get('credits') === 'added' && !toastedRef.current) {
-      toastedRef.current = true;
-      showToast({
-        title: 'Credits added',
-        description: 'Your balance has been updated.',
-        variant: 'success',
-      });
-      window.history.replaceState({}, '', '/curate');
-    }
-  }, [searchParams, showToast]);
+	// Show success toast and clear param after Stripe redirect
+	useEffect(() => {
+		if (searchParams.get("credits") === "added" && !toastedRef.current) {
+			toastedRef.current = true;
+			showToast({
+				title: "Credits added",
+				description: "Your balance has been updated.",
+				variant: "success",
+			});
+			window.history.replaceState({}, "", "/curate");
+		}
+	}, [searchParams, showToast]);
 
-  const sessions = me.root?.curatorSessions?.$isLoaded
-    ? [...me.root.curatorSessions]
-        .filter((s): s is NonNullable<typeof s> => s != null && !!s.createdAt)
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    : [];
+	const sessions = me.root?.curatorSessions?.$isLoaded
+		? [...me.root.curatorSessions]
+				.filter((s): s is NonNullable<typeof s> => s != null && !!s.createdAt)
+				.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+		: [];
 
-  const canStartNew = balanceCents === null || balanceCents > 0;
+	const canStartNew = balanceCents === null || balanceCents > 0;
 
-  return (
-    <main className={styles.main}>
-      <div className={styles.container}>
-        <div className={styles.historyHeader}>
-          <h1 className={styles.heading}>Curations</h1>
-          {canStartNew ? (
-            <a href="/curate/new" className={styles.primaryButton}>
-              New curation
-            </a>
-          ) : (
-            <span
-              className={styles.newCurationDisabled}
-              title="Add credits to start a new curation"
-            >
-              New curation
-            </span>
-          )}
-        </div>
+	return (
+		<main className={styles.main}>
+			<div className={styles.container}>
+				<div className={styles.historyHeader}>
+					<h1 className={styles.heading}>Curations</h1>
+					{canStartNew ? (
+						<a href="/curate/new" className={styles.primaryButton}>
+							New curation
+						</a>
+					) : (
+						<span
+							className={styles.newCurationDisabled}
+							title="Add credits to start a new curation"
+						>
+							New curation
+						</span>
+					)}
+				</div>
 
-        <CreditsPanel onBalanceLoaded={setBalanceCents} />
+				<CreditsPanel onBalanceLoaded={setBalanceCents} />
 
-        {sessions.length === 0 ? (
-          <p className={styles.subheading}>
-            No sessions yet.{' '}
-            <a href="/curate/new" className={styles.inlineLink}>
-              Start your first curation
-            </a>
-            .
-          </p>
-        ) : (
-          <ul className={styles.sessionList}>
-            {sessions.map((s) => (
-              <li key={s.sessionId} className={styles.sessionItem}>
-                <a
-                  href={`/curate/${s.sessionId}`}
-                  className={styles.sessionLink}
-                >
-                  <span className={styles.sessionTopic}>
-                    {((s.title ?? s.topic) || '').length > 67
-                      ? `${(s.title ?? s.topic).slice(0, 67)}…`
-                      : (s.title ?? s.topic)}
-                  </span>
-                  <span
-                    className={`${styles.sessionPhase} ${styles[`phase_${s.phase}`]}`}
-                  >
-                    {phaseLabel[s.phase] ?? s.phase}
-                  </span>
-                </a>
-                <span className={styles.sessionDate}>
-                  {s.createdAt?.toLocaleDateString()}
-                  {s.inputTokens != null && s.outputTokens != null && (
-                    <span
-                      className={styles.sessionCost}
-                      title={`${s.inputTokens.toLocaleString()} in / ${s.outputTokens.toLocaleString()} out / ${s.webSearchRequests ?? 0} searches`}
-                    >
-                      {formatCost(
-                        s.inputTokens,
-                        s.outputTokens,
-                        s.webSearchRequests ?? 0,
-                      )}
-                    </span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </main>
-  );
+				{sessions.length === 0 ? (
+					<p className={styles.subheading}>
+						No sessions yet.{" "}
+						<a href="/curate/new" className={styles.inlineLink}>
+							Start your first curation
+						</a>
+						.
+					</p>
+				) : (
+					<ul className={styles.sessionList}>
+						{sessions.map((s) => (
+							<li key={s.sessionId} className={styles.sessionItem}>
+								<a
+									href={`/curate/${s.sessionId}`}
+									className={styles.sessionLink}
+								>
+									<span className={styles.sessionTopic}>
+										{((s.title ?? s.topic) || "").length > 67
+											? `${(s.title ?? s.topic).slice(0, 67)}…`
+											: (s.title ?? s.topic)}
+									</span>
+									<span
+										className={`${styles.sessionPhase} ${styles[`phase_${s.phase}`]}`}
+									>
+										{phaseLabel[s.phase] ?? s.phase}
+									</span>
+								</a>
+								<span className={styles.sessionDate}>
+									{s.createdAt?.toLocaleDateString()}
+									{s.inputTokens != null && s.outputTokens != null && (
+										<span
+											className={styles.sessionCost}
+											title={`${s.inputTokens.toLocaleString()} in / ${s.outputTokens.toLocaleString()} out / ${s.webSearchRequests ?? 0} searches`}
+										>
+											{formatCost(
+												s.inputTokens,
+												s.outputTokens,
+												s.webSearchRequests ?? 0,
+											)}
+										</span>
+									)}
+								</span>
+							</li>
+						))}
+					</ul>
+				)}
+			</div>
+		</main>
+	);
 }

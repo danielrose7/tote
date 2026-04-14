@@ -1,63 +1,104 @@
-import { z } from 'zod';
+import { z } from "zod";
 import type {
-  InterviewQuestion,
-  SectionPlan,
-  ExtractedSection,
-  CollectionOutput,
-  CurationGap,
-} from './types';
-import { CURATOR_PERSONA } from './workspace/CURATOR';
+	CategoryResearchBrief,
+	CollectionOutput,
+	CurationGap,
+	ExtractedSection,
+	FramingBrief,
+	InterviewQuestion,
+	SectionPlan,
+} from "./types";
+import { CURATOR_PERSONA } from "./workspace/CURATOR";
 
 export const CURATOR_SYSTEM_PROMPT = CURATOR_PERSONA;
 
 export const InterviewQuestionSchema = z.object({
-  id: z.string().describe('snake_case identifier'),
-  text: z.string().describe('The question text shown to the user'),
-  options: z
-    .array(
-      z.object({
-        value: z.string().describe('Short option label'),
-        description: z.string().describe('One-line explanation'),
-      }),
-    )
-    .min(2)
-    .max(6),
-  multi: z
-    .preprocess(
-      (v) =>
-        typeof v !== 'boolean'
-          ? [true, 1, 'true', 't', '1'].includes(v as never)
-          : v,
-      z.boolean(),
-    )
-    .describe('true if the user can select multiple options'),
+	id: z.string().describe("snake_case identifier"),
+	text: z.string().describe("The question text shown to the user"),
+	options: z
+		.array(
+			z.object({
+				value: z.string().describe("Short option label"),
+				description: z.string().describe("One-line explanation"),
+			}),
+		)
+		.min(2)
+		.max(6),
+	multi: z
+		.preprocess(
+			(v) =>
+				typeof v !== "boolean"
+					? [true, 1, "true", "t", "1"].includes(v as never)
+					: v,
+			z.boolean(),
+		)
+		.describe("true if the user can select multiple options"),
 });
 
 export const InterviewQuestionsSchema = z
-  .array(InterviewQuestionSchema)
-  .min(3)
-  .max(5);
+	.array(InterviewQuestionSchema)
+	.min(3)
+	.max(5);
 
 const questionsJsonSchema = JSON.stringify(
-  z.toJSONSchema(InterviewQuestionsSchema),
-  null,
-  2,
+	z.toJSONSchema(InterviewQuestionsSchema),
+	null,
+	2,
 );
 
-export function buildQuestionsPrompt(topic: string): string {
-  return `Generate 3-5 focused interview questions to help curate a product collection on this topic:
+export const CategoryResearchBriefSchema = z.object({
+	categorySummary: z.string(),
+	tradeoffs: z.array(z.string()).min(2).max(8),
+	pitfalls: z.array(z.string()).min(1).max(8),
+	giftingConsiderations: z.array(z.string()).max(6),
+	styleConsiderations: z.array(z.string()).max(6),
+	suggestedLenses: z.array(z.string()).min(1).max(4),
+	sectionHypotheses: z
+		.array(z.object({ title: z.string(), rationale: z.string() }))
+		.min(2)
+		.max(8),
+	followUpNeeded: z.boolean(),
+	followUpQuestionGoals: z.array(z.string()).max(3),
+});
+
+export const FramingBriefSchema = z.object({
+	recipientContext: z.string(),
+	goal: z.string(),
+	constraints: z.array(z.string()).max(8),
+	tasteDirection: z.string(),
+	tradeoffs: z.array(z.string()).min(1).max(6),
+	successDefinition: z.string(),
+	avoid: z.array(z.string()).max(6),
+	planningNotes: z.array(z.string()).max(6),
+});
+
+const categoryResearchJsonSchema = JSON.stringify(
+	z.toJSONSchema(CategoryResearchBriefSchema),
+	null,
+	2,
+);
+
+const framingBriefJsonSchema = JSON.stringify(
+	z.toJSONSchema(FramingBriefSchema),
+	null,
+	2,
+);
+
+export function buildRound1QuestionsPrompt(topic: string): string {
+	return `Generate exactly 3 focused Round 1 interview questions to help curate a product collection on this topic:
 
 "${topic}"
 
-Questions should uncover:
-- Who this is for and their specific context
-- Quality, style, or value priorities relevant to this category
-- Hard constraints (budget, availability, brand avoidances, etc.)
+Round 1 should stay lightweight. It should uncover:
+- Who this is for and the scenario
+- What outcome matters most
+- Hard constraints (budget, shipping, brand avoidances, etc.)
 
 Rules:
-- Make questions specific to the product category — not generic
+- Keep the questions broad and approachable — no jargon
+- Make the questions specific enough to anchor the brief, but not exhaustive
 - Provide 3-5 options per question with short descriptions
-- Set multi: true when multiple selections make sense (e.g. priorities)
+- Use multi: false unless multiple answers are genuinely helpful
 - Always include one constraints question with a "No constraints" option
 - The last question should always ask about constraints
 
@@ -65,20 +106,114 @@ Return a JSON array matching this schema exactly — no markdown, no explanation
 ${questionsJsonSchema}`;
 }
 
-function formatAnswers(
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
+export function buildCategoryResearchPrompt(
+	topic: string,
+	questions: InterviewQuestion[],
+	answers: Record<string, string>,
 ): string {
-  return questions
-    .map((q) => `${q.text}\n→ ${answers[q.id] ?? '(no answer)'}`)
-    .join('\n\n');
+	return `Research the category behind this curation request before planning the collection.
+
+Topic: ${topic}
+
+${formatAnswers(questions, answers)}
+
+Your job:
+- Identify the real subcategories and decision structure in this space
+- Surface the main tradeoffs and buyer pitfalls
+- Note gift-giving considerations if this appears gift-related
+- Note art direction / taste considerations if this appears style-sensitive
+- Decide whether a second round of questions is needed
+
+Rules:
+- Use web search to understand the category, not to collect product URLs yet
+- Focus on buyer decision-making, hospitality, and curation structure
+- Keep followUpQuestionGoals short and high-signal
+- Set followUpNeeded to true only if one or two clarifications would materially improve the plan
+
+Return only valid JSON matching this schema:
+${categoryResearchJsonSchema}`;
+}
+
+export function buildRound2QuestionsPrompt(
+	topic: string,
+	questions: InterviewQuestion[],
+	answers: Record<string, string>,
+	research: CategoryResearchBrief,
+): string {
+	return `Generate exactly 1-2 targeted Round 2 follow-up questions for this curation.
+
+Topic: ${topic}
+
+Round 1:
+${formatAnswers(questions, answers)}
+
+Category research:
+${JSON.stringify(research, null, 2)}
+
+Rules:
+- Ask only what is necessary to resolve the highest-value ambiguity
+- Keep the questions conversational and easy to answer
+- Prefer fork-in-the-road questions over broad surveys
+- If a constraints question is needed, include a "No constraints" option
+
+Return a JSON array matching this schema exactly — no markdown, no explanation:
+${questionsJsonSchema}`;
+}
+
+function formatFramingBrief(brief: FramingBrief): string {
+	return JSON.stringify(brief, null, 2);
+}
+
+export function buildFramingPrompt(
+	topic: string,
+	round1Questions: InterviewQuestion[],
+	round1Answers: Record<string, string>,
+	research: CategoryResearchBrief,
+	round2Questions: InterviewQuestion[] = [],
+	round2Answers: Record<string, string> = {},
+): string {
+	const round2Block =
+		round2Questions.length > 0
+			? `\n\nRound 2:\n${formatAnswers(round2Questions, round2Answers)}`
+			: "";
+
+	return `Build a concise curatorial brief that the planner and curator should follow.
+
+Topic: ${topic}
+
+Round 1:
+${formatAnswers(round1Questions, round1Answers)}${round2Block}
+
+Category research:
+${JSON.stringify(research, null, 2)}
+
+The brief should define:
+- who this is for
+- what the collection is trying to do
+- the taste or style direction if relevant
+- the main tradeoffs
+- what success looks like
+- what to avoid
+- practical planning notes
+
+Return only valid JSON matching this schema:
+${framingBriefJsonSchema}`;
+}
+
+function formatAnswers(
+	questions: InterviewQuestion[],
+	answers: Record<string, string>,
+): string {
+	return questions
+		.map((q) => `${q.text}\n→ ${answers[q.id] ?? "(no answer)"}`)
+		.join("\n\n");
 }
 
 export function buildUrlDiscoverySystemPrompt(): string {
-  const now = new Date();
-  const month = now.toLocaleString('en-US', { month: 'long' });
-  const year = now.getFullYear();
-  return `You are a product URL finder for a curation tool. The current month is ${month} ${year}.
+	const now = new Date();
+	const month = now.toLocaleString("en-US", { month: "long" });
+	const year = now.getFullYear();
+	return `You are a product URL finder for a curation tool. The current month is ${month} ${year}.
 
 Search strategy — follow this exactly:
 1. Run ONE search at a time. Evaluate results before deciding whether to search again.
@@ -94,19 +229,18 @@ Search rules:
 Output: respond with ONLY this JSON, nothing else — { "urls": ["https://...", ...] }`;
 }
 
-export function buildPlanPrompt(
-  topic: string,
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
-): string {
-  return `Topic: ${topic}
+export function buildPlanPrompt(topic: string, brief: FramingBrief): string {
+	return `Topic: ${topic}
 
-${formatAnswers(questions, answers)}
+Framing brief:
+${formatFramingBrief(brief)}
 
 Plan a focused product collection. Determine:
 1. A specific, purposeful title (not "Best X" or "Top Y")
 2. A 1-2 sentence intro naming the real scenario
 3. 3-6 named sections, each with a clear purpose and a targetCount (how many items to find)
+
+Use the framing brief to decide the structure. Section roles may include safe defaults, practical anchors, signature picks, elevated options, or delight moments where relevant.
 
 Return only valid JSON:
 {
@@ -117,15 +251,15 @@ Return only valid JSON:
 }
 
 export function buildUrlDiscoveryPrompt(
-  section: SectionPlan,
-  topic: string,
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
+	section: SectionPlan,
+	topic: string,
+	brief: FramingBrief,
 ): string {
-  const candidateTarget = section.targetCount * 2 + 2;
-  return `Find ${candidateTarget} candidate product page URLs for the "${section.title}" section of a collection on: ${topic}
+	const candidateTarget = section.targetCount * 2 + 2;
+	return `Find ${candidateTarget} candidate product page URLs for the "${section.title}" section of a collection on: ${topic}
 
-${formatAnswers(questions, answers)}
+Framing brief:
+${formatFramingBrief(brief)}
 
 Section rationale: ${section.rationale}
 
@@ -135,22 +269,22 @@ Output ONLY valid JSON when done: { "urls": ["https://...", ...] }`;
 }
 
 export function buildCuratePrompt(
-  planTitle: string,
-  planIntro: string,
-  extractedSections: ExtractedSection[],
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
+	planTitle: string,
+	planIntro: string,
+	extractedSections: ExtractedSection[],
+	brief: FramingBrief,
 ): string {
-  const sectionsJson = JSON.stringify(
-    extractedSections.map((s) => ({
-      title: s.title,
-      items: s.items,
-    })),
-  );
+	const sectionsJson = JSON.stringify(
+		extractedSections.map((s) => ({
+			title: s.title,
+			items: s.items,
+		})),
+	);
 
-  return `You have extracted product page data for a collection titled "${planTitle}".
+	return `You have extracted product page data for a collection titled "${planTitle}".
 
-${formatAnswers(questions, answers)}
+Framing brief:
+${formatFramingBrief(brief)}
 
 Intro (use as-is or refine): ${planIntro}
 
@@ -166,6 +300,8 @@ You have more candidates than you need — be selective. Curate a tight shortlis
 - Drop items with no usable data (missing title and description)
 - Drop duplicates, near-duplicates, and weaker alternatives — keep the best per niche
 - Apply the lens strictly and ruthlessly — if the note would be vague, drop the item instead
+- Prefer items that fit the recipient context, success definition, and tradeoffs in the framing brief
+- Where relevant, preserve room for one or two signature picks that feel unusually thoughtful rather than merely correct
 
 When flagging warnings, be specific and actionable. Each warning must name:
   1. The section affected
@@ -177,13 +313,39 @@ Only flag things that more URL discovery could actually fix. Skip informational 
 Return only valid JSON matching the schema in your system prompt.`;
 }
 
+export function buildHospitalityPassPrompt(
+	collection: CollectionOutput,
+	brief: FramingBrief,
+): string {
+	return `You are improving a curated collection using hospitality principles.
+
+Framing brief:
+${formatFramingBrief(brief)}
+
+Current collection:
+${JSON.stringify(collection, null, 2)}
+
+Your job:
+- Keep the collection practical and decision-useful
+- Make it feel more specifically tailored to the person or scenario
+- Strengthen one or two items or notes so the collection feels unusually thoughtful
+- Do not add fluff, extra sections, or generic luxury language
+
+Rules:
+- Preserve valid URLs and items unless there is a clear reason to remove or replace them
+- Keep note style concise and specific
+- Use warnings when the data is too weak to improve honestly
+
+Return only valid JSON matching the schema in your system prompt.`;
+}
+
 export function buildGapsPrompt(collection: CollectionOutput): string {
-  return `You are reviewing a curated product collection for actionable gaps.
+	return `You are reviewing a curated product collection for actionable gaps.
 
 Collection: "${collection.title}"
 
 Warnings flagged by the curator:
-${collection.warnings.map((w, i) => `${i + 1}. ${w}`).join('\n')}
+${collection.warnings.map((w, i) => `${i + 1}. ${w}`).join("\n")}
 
 For each warning, produce a structured gap object. Classify each as:
 - "missing-section": no products were found for an entire section
@@ -199,19 +361,19 @@ Return only valid JSON array — no markdown, no explanation:
 }
 
 export function buildRefinementUrlPrompt(
-  gap: CurationGap,
-  topic: string,
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
+	gap: CurationGap,
+	topic: string,
+	brief: FramingBrief,
 ): string {
-  return `Find 4-8 candidate product page URLs to address this gap in a collection on: ${topic}
+	return `Find 4-8 candidate product page URLs to address this gap in a collection on: ${topic}
 
 Gap type: ${gap.kind}
 Section: ${gap.sectionTitle}
 Gap description: ${gap.description}
 Search hint: ${gap.searchHint}
 
-${formatAnswers(questions, answers)}
+Framing brief:
+${formatFramingBrief(brief)}
 
 Search one query at a time. Stop as soon as you have 4-8 product page URLs.
 Use web search. Prioritise independent specialty retailers.
@@ -220,28 +382,28 @@ Output ONLY valid JSON when done: { "urls": ["https://...", ...] }`;
 }
 
 export function buildRefinementCuratePrompt(
-  existing: CollectionOutput,
-  newSections: ExtractedSection[],
-  gaps: CurationGap[],
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
+	existing: CollectionOutput,
+	newSections: ExtractedSection[],
+	gaps: CurationGap[],
+	brief: FramingBrief,
 ): string {
-  return `You are refining an existing curated product collection by addressing identified gaps.
+	return `You are refining an existing curated product collection by addressing identified gaps.
 
 Existing collection:
 ${JSON.stringify({ title: existing.title, intro: existing.intro, sections: existing.sections }, null, 2)}
 
 Gaps being addressed in this pass:
-${gaps.map((g) => `- [${g.kind}] ${g.sectionTitle}: ${g.description}`).join('\n')}
+${gaps.map((g) => `- [${g.kind}] ${g.sectionTitle}: ${g.description}`).join("\n")}
 
 New extracted product data for these gaps:
 ${JSON.stringify(
-  newSections.map((s) => ({ title: s.title, items: s.items })),
-  null,
-  2,
+	newSections.map((s) => ({ title: s.title, items: s.items })),
+	null,
+	2,
 )}
 
-${formatAnswers(questions, answers)}
+Framing brief:
+${formatFramingBrief(brief)}
 
 Instructions:
 - ONLY use sourceUrl values present in the existing collection or the new extracted data above — never invent, guess, or hallucinate URLs
