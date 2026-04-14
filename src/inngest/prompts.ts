@@ -152,8 +152,6 @@ export function buildCuratePrompt(
 
 ${formatAnswers(questions, answers)}
 
-Mode: ${mode}
-
 Intro (use as-is or refine): ${planIntro}
 
 Extracted product data per section (scraped from product pages via browser extension):
@@ -244,8 +242,6 @@ ${JSON.stringify(
 )}
 
 ${formatAnswers(questions, answers)}
-
-Mode: ${mode}
 
 Instructions:
 - ONLY use sourceUrl values present in the existing collection or the new extracted data above — never invent, guess, or hallucinate URLs

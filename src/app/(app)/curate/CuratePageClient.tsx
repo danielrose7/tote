@@ -248,7 +248,11 @@ export function CuratePageClient({
         if (!isNaN(n) && n > maxPass) maxPass = n;
       }
     }
-    if (phase === 'refining' && maxPass === 0) maxPass = 1;
+    if (phase === 'refining') {
+      if (maxPass === 0) maxPass = 1;
+      // If we've completed pass N but still refining, pass N+1 is in progress
+      else if (doneKeys.has(`refine-complete-${maxPass}`)) maxPass += 1;
+    }
 
     function stepStatus(key: string): StepStatus {
       return doneKeys.has(key) ? 'completed' : 'pending';
