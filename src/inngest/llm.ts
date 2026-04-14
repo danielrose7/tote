@@ -187,8 +187,15 @@ function createAnthropicClient(): LLMClient {
       let totalDurationMs = 0;
       const allTextParts: string[] = [];
 
+      console.log('[llm] generateWithSearch:start', {
+        model: searchModel,
+        maxTokens,
+        maxSearches: MAX_SEARCHES,
+        promptChars: prompt.length,
+      });
+
       while (turnCount++ < MAX_TURNS) {
-        const startedAt = Date.now();
+        const turnStartedAt = Date.now();
         let raw: Anthropic.Message;
         try {
           raw = await client.messages.create({
@@ -204,12 +211,14 @@ function createAnthropicClient(): LLMClient {
             const retryAfter = (error as { headers?: Record<string, string> })
               ?.headers?.['retry-after'];
             const waitMs = retryAfter ? parseInt(retryAfter) * 1000 : 60_000;
+            console.warn('[llm] generateWithSearch:rate-limited', { waitMs });
             throw new RetryAfterError(
               'Rate limited',
               new Date(Date.now() + waitMs),
             );
           }
           if (status === 529) {
+            console.warn('[llm] generateWithSearch:overloaded');
             throw new RetryAfterError(
               'Overloaded',
               new Date(Date.now() + 30_000),
@@ -217,12 +226,23 @@ function createAnthropicClient(): LLMClient {
           }
           throw error;
         }
-        totalDurationMs += Date.now() - startedAt;
+        const turnDurationMs = Date.now() - turnStartedAt;
+        totalDurationMs += turnDurationMs;
 
         if (raw.usage) {
           totalInputTokens += raw.usage.input_tokens;
           totalOutputTokens += raw.usage.output_tokens;
         }
+
+        console.log('[llm] generateWithSearch:turn', {
+          turn: turnCount,
+          stopReason: raw.stop_reason,
+          inputTokens: raw.usage?.input_tokens,
+          outputTokens: raw.usage?.output_tokens,
+          contentTypes: raw.content.map((b) => b.type),
+          searchCount,
+          turnDurationMs,
+        });
 
         if (raw.stop_reason === 'max_tokens') {
           throw new Error(
@@ -253,6 +273,10 @@ function createAnthropicClient(): LLMClient {
         const toolResults: Anthropic.ToolResultBlockParam[] = [];
         for (const toolUse of toolUseBlocks) {
           if (toolUse.name !== 'web_search' || searchCount >= MAX_SEARCHES) {
+            console.warn('[llm] generateWithSearch:search-limit-reached', {
+              toolName: toolUse.name,
+              searchCount,
+            });
             toolResults.push({
               type: 'tool_result',
               tool_use_id: toolUse.id,
@@ -270,14 +294,33 @@ function createAnthropicClient(): LLMClient {
           searchCount += 1;
           totalWebSearchRequests += 1;
 
+          console.log('[llm] generateWithSearch:brave-search', {
+            searchCount,
+            query: input.query,
+            allowedDomains: input.allowed_domains,
+            blockedDomains: input.blocked_domains,
+          });
+
           let results;
           try {
+            const braveStartedAt = Date.now();
             results = await braveSearch({
               query: input.query,
               allowed_domains: input.allowed_domains,
               blocked_domains: input.blocked_domains,
             });
-          } catch {
+            console.log('[llm] generateWithSearch:brave-results', {
+              searchCount,
+              query: input.query,
+              resultCount: results.length,
+              durationMs: Date.now() - braveStartedAt,
+            });
+          } catch (err) {
+            console.error('[llm] generateWithSearch:brave-error', {
+              searchCount,
+              query: input.query,
+              error: String(err),
+            });
             results = [];
           }
 
@@ -291,8 +334,19 @@ function createAnthropicClient(): LLMClient {
         messages.push({ role: 'user', content: toolResults });
       }
 
+      const finalText = allTextParts.join('\n').trim();
+      console.log('[llm] generateWithSearch:done', {
+        turns: turnCount,
+        totalSearches: totalWebSearchRequests,
+        totalInputTokens,
+        totalOutputTokens,
+        totalDurationMs,
+        textChars: finalText.length,
+        textPreview: finalText.slice(0, 200),
+      });
+
       return {
-        text: allTextParts.join('\n').trim(),
+        text: finalText,
         usage: {
           inputTokens: totalInputTokens,
           outputTokens: totalOutputTokens,
