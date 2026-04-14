@@ -284,6 +284,11 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
               message: `Refinement pass ${p}: analysing warnings...`,
               ts: ts++,
             });
+            synthesized.push({
+              step: `refine-complete-${p}`,
+              message: `Refinement pass ${p} complete.`,
+              ts: ts++,
+            });
           }
         }
         if (phase === 'complete')

@@ -239,8 +239,14 @@ export function CuratePageClient({
 
     let maxPass = 0;
     for (const e of progress) {
-      if (e.step.startsWith('refining-')) {
-        const n = parseInt(e.step.split('-')[1], 10);
+      // Count from both refining-N and refine-complete-N so a missed refining-N
+      // event doesn't prevent the pass from appearing in the sidebar
+      if (
+        e.step.startsWith('refining-') ||
+        e.step.startsWith('refine-complete-')
+      ) {
+        const parts = e.step.split('-');
+        const n = parseInt(parts[parts.length - 1], 10);
         if (!isNaN(n) && n > maxPass) maxPass = n;
       }
     }
@@ -344,7 +350,17 @@ export function CuratePageClient({
         derivedStatus,
         phaseFloor[stage.label] ?? 'pending',
       );
-      return { label: stage.label, status, steps: stage.steps };
+      // When the stage itself is completed, lift any pending sub-steps to completed
+      // so individual steps don't show pending when the overall stage is done
+      const steps =
+        status === 'completed'
+          ? stage.steps.map((s) =>
+              s.status === 'pending'
+                ? { ...s, status: 'completed' as StepStatus }
+                : s,
+            )
+          : stage.steps;
+      return { label: stage.label, status, steps };
     });
   }, [progress, phase]);
 
