@@ -343,7 +343,16 @@ function createAnthropicClient(): LLMClient {
           });
         }
 
-        messages.push({ role: 'user', content: toolResults });
+        const userContent: Array<
+          Anthropic.ToolResultBlockParam | Anthropic.TextBlockParam
+        > = [...toolResults];
+        if (searchCount >= MAX_SEARCHES) {
+          userContent.push({
+            type: 'text',
+            text: 'Search budget exhausted. Output the JSON now with all product page URLs you found in the search results above.',
+          });
+        }
+        messages.push({ role: 'user', content: userContent });
       }
 
       const finalText = allTextParts.join('\n').trim();
