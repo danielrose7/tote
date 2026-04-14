@@ -71,16 +71,16 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-function planTokenLimit(mode: CurationMode) {
-  return mode === 'debug' ? 1000 : 4000;
+function planTokenLimit() {
+  return 4000;
 }
 
-function urlDiscoveryTokenLimit(mode: CurationMode) {
-  return mode === 'debug' ? 1500 : 4000;
+function urlDiscoveryTokenLimit() {
+  return 4000;
 }
 
-function curateTokenLimit(mode: CurationMode) {
-  return mode === 'debug' ? 3000 : 16000;
+function curateTokenLimit() {
+  return 16000;
 }
 
 export const curateCollection = inngest.createFunction(
@@ -195,9 +195,8 @@ export const curateCollection = inngest.createFunction(
       return;
     }
 
-    const { answers, mode } = {
+    const { answers } = {
       answers: answersEvent.data.answers,
-      mode: answersEvent.data.mode,
     };
     console.log('[curate-collection] answers-received', {
       at: nowIso(),
@@ -225,8 +224,8 @@ export const curateCollection = inngest.createFunction(
       });
       const response = await llm.generate({
         system: CURATOR_SYSTEM_PROMPT,
-        prompt: buildPlanPrompt(topic, questions, answers, mode),
-        maxTokens: planTokenLimit(mode),
+        prompt: buildPlanPrompt(topic, questions, answers),
+        maxTokens: planTokenLimit(),
       });
       console.log('[curate-collection] plan:response', {
         at: nowIso(),
@@ -302,14 +301,8 @@ export const curateCollection = inngest.createFunction(
         });
         const response = await llm.generateWithSearch({
           system: buildUrlDiscoverySystemPrompt(),
-          prompt: buildUrlDiscoveryPrompt(
-            section,
-            topic,
-            questions,
-            answers,
-            mode,
-          ),
-          maxTokens: urlDiscoveryTokenLimit(mode),
+          prompt: buildUrlDiscoveryPrompt(section, topic, questions, answers),
+          maxTokens: urlDiscoveryTokenLimit(),
         });
         console.log('[curate-collection] find-urls:response', {
           ...response.summary,
@@ -491,9 +484,8 @@ export const curateCollection = inngest.createFunction(
           extractedSections,
           questions,
           answers,
-          mode,
         ),
-        maxTokens: curateTokenLimit(mode),
+        maxTokens: curateTokenLimit(),
       });
       console.log('[curate-collection] curate:response', {
         at: nowIso(),
@@ -577,8 +569,8 @@ export const curateCollection = inngest.createFunction(
 
     let currentCollection = parseJson<CollectionOutput>(result.json)!;
 
-    // Step 7: Refinement passes (normal mode only, up to 2 passes)
-    const maxRefinementPasses = mode === 'debug' ? 0 : 2;
+    // Step 7: Refinement passes (up to 2 passes)
+    const maxRefinementPasses = 2;
 
     for (let pass = 1; pass <= maxRefinementPasses; pass++) {
       if (
@@ -662,14 +654,8 @@ export const curateCollection = inngest.createFunction(
         const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
           const response = await llm.generateWithSearch({
             system: buildUrlDiscoverySystemPrompt(),
-            prompt: buildRefinementUrlPrompt(
-              gap,
-              topic,
-              questions,
-              answers,
-              mode,
-            ),
-            maxTokens: urlDiscoveryTokenLimit(mode),
+            prompt: buildRefinementUrlPrompt(gap, topic, questions, answers),
+            maxTokens: urlDiscoveryTokenLimit(),
           });
           const parsed = parseJson<UrlDiscoveryPayload>(response.text);
           if (!parsed)
@@ -773,9 +759,8 @@ export const curateCollection = inngest.createFunction(
               actionableGaps,
               questions,
               answers,
-              mode,
             ),
-            maxTokens: curateTokenLimit(mode),
+            maxTokens: curateTokenLimit(),
           });
           const refined = parseJson<CollectionOutput>(response.text);
           if (refined) {
@@ -892,7 +877,6 @@ export const curateCollection = inngest.createFunction(
           json: finalJson,
         }),
         completeCuratorSession(sessionId, {
-          mode,
           model: 'claude-sonnet-4-6',
           phase: 'complete',
           sectionCount: currentCollection.sections.length,

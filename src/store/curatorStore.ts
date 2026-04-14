@@ -4,7 +4,7 @@ import { InterviewQuestionsSchema } from '../inngest/prompts';
 import type { ImportPayload } from '../lib/importPayload';
 import type { InterviewQuestion } from '../inngest/types';
 
-export type CurationMode = 'normal' | 'debug';
+export type CurationMode = 'normal';
 
 export type Phase =
   | 'idle'

@@ -87,7 +87,6 @@ export function CuratePageClient({
     phase,
     topic,
     sessionId,
-    mode,
     questions,
     selections,
     notes,
@@ -102,7 +101,6 @@ export function CuratePageClient({
     realtimeEnabled,
     setSessionId,
     setPhase,
-    setMode,
     setSelections,
     setNotes,
     setError,
@@ -396,7 +394,7 @@ export function CuratePageClient({
     const res = await fetch('/api/curate/answer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId, questions, answers, mode }),
+      body: JSON.stringify({ sessionId, questions, answers }),
     });
 
     if (!res.ok) {
@@ -576,42 +574,6 @@ export function CuratePageClient({
                     );
                   })}
 
-                  <div className={styles.inputGroup}>
-                    <span className={styles.label}>Mode</span>
-                    <div className={styles.modeOptions}>
-                      <label className={styles.modeOption}>
-                        <input
-                          type="radio"
-                          name="mode"
-                          value="debug"
-                          checked={mode === 'debug'}
-                          onChange={() => setMode('debug')}
-                        />
-                        <span>
-                          <strong>Debug</strong>
-                          <span className={styles.modeHelp}>
-                            Fewer sections, fewer candidates, lower token spend.
-                          </span>
-                        </span>
-                      </label>
-                      <label className={styles.modeOption}>
-                        <input
-                          type="radio"
-                          name="mode"
-                          value="normal"
-                          checked={mode === 'normal'}
-                          onChange={() => setMode('normal')}
-                        />
-                        <span>
-                          <strong>Normal</strong>
-                          <span className={styles.modeHelp}>
-                            Fuller planning and research for a production-style
-                            run.
-                          </span>
-                        </span>
-                      </label>
-                    </div>
-                  </div>
                   <div className={styles.actions}>
                     <button
                       type="submit"

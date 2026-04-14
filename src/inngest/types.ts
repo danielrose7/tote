@@ -1,4 +1,4 @@
-export type CurationMode = 'normal' | 'debug';
+export type CurationMode = 'normal';
 
 export interface InterviewQuestion {
   id: string;

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type {
-  CurationMode,
   InterviewQuestion,
   SectionPlan,
   ExtractedSection,
@@ -99,23 +98,15 @@ export function buildPlanPrompt(
   topic: string,
   questions: InterviewQuestion[],
   answers: Record<string, string>,
-  mode: CurationMode,
 ): string {
   return `Topic: ${topic}
 
 ${formatAnswers(questions, answers)}
 
-Mode: ${mode}
-
 Plan a focused product collection. Determine:
 1. A specific, purposeful title (not "Best X" or "Top Y")
 2. A 1-2 sentence intro naming the real scenario
 3. 3-6 named sections, each with a clear purpose and a targetCount (how many items to find)
-
-If mode is "debug":
-- Keep the plan intentionally small for a low-cost test run
-- Return exactly 2 sections
-- Keep targetCount to 1-2 items per section
 
 Return only valid JSON:
 {
@@ -130,7 +121,6 @@ export function buildUrlDiscoveryPrompt(
   topic: string,
   questions: InterviewQuestion[],
   answers: Record<string, string>,
-  mode: CurationMode,
 ): string {
   const candidateTarget = section.targetCount * 2 + 2;
   return `Find ${candidateTarget} candidate product page URLs for the "${section.title}" section of a collection on: ${topic}
@@ -139,7 +129,7 @@ ${formatAnswers(questions, answers)}
 
 Section rationale: ${section.rationale}
 
-Search one query at a time. Stop as soon as you have ${candidateTarget} product page URLs across different brands and retailers.${mode === 'debug' ? '\n\nDebug mode: run 1-2 searches only, return 3-5 URLs.' : ''}
+Search one query at a time. Stop as soon as you have ${candidateTarget} product page URLs across different brands and retailers.
 
 Output ONLY valid JSON when done: { "urls": ["https://...", ...] }`;
 }
@@ -150,7 +140,6 @@ export function buildCuratePrompt(
   extractedSections: ExtractedSection[],
   questions: InterviewQuestion[],
   answers: Record<string, string>,
-  mode: CurationMode,
 ): string {
   const sectionsJson = JSON.stringify(
     extractedSections.map((s) => ({
@@ -187,10 +176,6 @@ When flagging warnings, be specific and actionable. Each warning must name:
 Format: "[section]: [problem] — search: [query]"
 Only flag things that more URL discovery could actually fix. Skip informational gaps that are just editorial notes.
 
-If mode is "debug":
-- Keep the shortlist intentionally small
-- Preserve only the strongest candidates needed to validate the workflow
-
 Return only valid JSON matching the schema in your system prompt.`;
 }
 
@@ -220,7 +205,6 @@ export function buildRefinementUrlPrompt(
   topic: string,
   questions: InterviewQuestion[],
   answers: Record<string, string>,
-  mode: CurationMode,
 ): string {
   return `Find 4-8 candidate product page URLs to address this gap in a collection on: ${topic}
 
@@ -231,11 +215,10 @@ Search hint: ${gap.searchHint}
 
 ${formatAnswers(questions, answers)}
 
-These are candidates for extraction — cast a wide net across different brands and retailers.${mode === 'debug' ? '\nDebug mode: run 1 search, return 2-3 URLs.' : ''}
-
+Search one query at a time. Stop as soon as you have 4-8 product page URLs.
 Use web search. Prioritise independent specialty retailers.
 Return individual product page URLs only — not category or listing pages.
-Return only valid JSON: { "urls": ["https://...", ...] }`;
+Output ONLY valid JSON when done: { "urls": ["https://...", ...] }`;
 }
 
 export function buildRefinementCuratePrompt(
@@ -244,7 +227,6 @@ export function buildRefinementCuratePrompt(
   gaps: CurationGap[],
   questions: InterviewQuestion[],
   answers: Record<string, string>,
-  mode: CurationMode,
 ): string {
   return `You are refining an existing curated product collection by addressing identified gaps.
 
@@ -276,5 +258,5 @@ Instructions:
 - Apply the same curatorial lens and note style as the existing collection
 - Drop items with no usable data
 
-${mode === 'debug' ? '- Keep the shortlist intentionally small\n' : ''}Return only valid JSON matching the schema in your system prompt.`;
+Return only valid JSON matching the schema in your system prompt.`;
 }
