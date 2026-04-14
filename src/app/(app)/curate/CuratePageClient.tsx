@@ -34,17 +34,20 @@ const milestoneLabels: Record<string, string> = {
   'answers-received': 'Answers locked',
   planned: 'Plan drafted',
   extracting: 'Extraction queued',
-  curating: 'Final curation',
+  curating: 'Initial curation',
   complete: 'Collection written',
 };
 
-// claude-sonnet-4-6 pricing: $3/1M input, $15/1M output
-function estimateCost(inputTokens: number, outputTokens: number): number {
-  return (inputTokens / 1_000_000) * 3 + (outputTokens / 1_000_000) * 15;
-}
-
-function formatCost(inputTokens: number, outputTokens: number): string {
-  const cost = estimateCost(inputTokens, outputTokens);
+// claude-sonnet-4-6 pricing: $3/1M input, $15/1M output, $0.01/search
+function formatCost(
+  inputTokens: number,
+  outputTokens: number,
+  webSearchRequests = 0,
+): string {
+  const cost =
+    (inputTokens / 1_000_000) * 3 +
+    (outputTokens / 1_000_000) * 15 +
+    webSearchRequests * 0.01;
   return cost < 0.01 ? `<$0.01` : `~$${cost.toFixed(2)}`;
 }
 
@@ -218,20 +221,92 @@ export function CuratePageClient({
   }, [progress]);
 
   const latestProgress = progress[progress.length - 1] ?? null;
-  const completedMilestones = progress.filter(
-    (entry) =>
-      [
-        'acknowledged',
-        'interview-sent',
-        'answers-received',
-        'planned',
-        'extracting',
-        'curating',
-        'complete',
-      ].includes(entry.step) ||
-      entry.step.startsWith('refining-') ||
-      entry.step.startsWith('refine-complete-'),
+
+  const progressByStep = useMemo(
+    () => Object.fromEntries(progress.map((e) => [e.step, e])),
+    [progress],
   );
+
+  type StepStatus = 'completed' | 'active' | 'pending';
+  type PipelineStage = {
+    label: string;
+    status: StepStatus;
+    steps: Array<{ label: string; status: StepStatus }>;
+  };
+
+  const wizardPipeline = useMemo((): PipelineStage[] => {
+    const doneKeys = new Set(progress.map((e) => e.step));
+
+    let maxPass = 0;
+    for (const e of progress) {
+      if (e.step.startsWith('refining-')) {
+        const n = parseInt(e.step.split('-')[1], 10);
+        if (!isNaN(n) && n > maxPass) maxPass = n;
+      }
+    }
+    if (phase === 'refining' && maxPass === 0) maxPass = 1;
+
+    function stepStatus(key: string): StepStatus {
+      return doneKeys.has(key) ? 'completed' : 'pending';
+    }
+
+    const shapeSteps: Array<{ label: string; status: StepStatus }> = [];
+    for (let p = 1; p <= maxPass; p++) {
+      shapeSteps.push({
+        label: `Refine ${p}`,
+        status: stepStatus(`refine-complete-${p}`),
+      });
+    }
+
+    const stages: Array<{
+      label: string;
+      keys: string[];
+      steps: Array<{ label: string; status: StepStatus }>;
+    }> = [
+      {
+        label: 'Scope',
+        keys: ['interview-sent', 'answers-received', 'planned'],
+        steps: [
+          { label: 'Interview', status: stepStatus('interview-sent') },
+          { label: 'Answers', status: stepStatus('answers-received') },
+          { label: 'Plan', status: stepStatus('planned') },
+        ],
+      },
+      {
+        label: 'Scout',
+        keys: ['urls-found', 'extracting', 'curating'],
+        steps: [
+          { label: 'Links', status: stepStatus('urls-found') },
+          { label: 'Extract', status: stepStatus('extracting') },
+          { label: 'Curation', status: stepStatus('curating') },
+        ],
+      },
+      {
+        label: 'Shape',
+        keys: [
+          'complete',
+          ...Array.from(
+            { length: maxPass },
+            (_, i) => `refine-complete-${i + 1}`,
+          ),
+        ],
+        steps: shapeSteps,
+      },
+    ];
+
+    // Derive each stage's status from its steps
+    return stages.map((stage) => {
+      const allDone = stage.keys.every((k) => doneKeys.has(k));
+      const anyDone = stage.keys.some((k) => doneKeys.has(k));
+      const status: StepStatus = allDone
+        ? 'completed'
+        : anyDone
+          ? 'active'
+          : 'pending';
+      return { label: stage.label, status, steps: stage.steps };
+    });
+  }, [progress, phase]);
+
   const searchEvents = progress.filter(
     (entry) =>
       entry.step.startsWith('searching-') ||
@@ -480,29 +555,37 @@ export function CuratePageClient({
               </p>
             </div>
 
-            {completedMilestones.length > 0 && (
-              <div className={styles.progressCard}>
-                <h2 className={styles.sectionTitle}>Milestones</h2>
-                <ul className={styles.milestoneList}>
-                  {completedMilestones.map((entry) => (
-                    <li key={entry.ts} className={styles.milestoneItem}>
-                      <span className={styles.milestoneDot} />
-                      <div>
-                        <p className={styles.milestoneLabel}>
-                          {formatStepLabel(entry.step)}
-                        </p>
-                        <p className={styles.milestoneMessage}>
-                          {entry.message}
-                        </p>
-                        {entry.detail && (
-                          <p className={styles.milestoneDetail}>
-                            {entry.detail}
-                          </p>
-                        )}
+            {wizardPipeline.length > 0 && (
+              <div className={styles.pipelineWrap}>
+                <ol className={styles.pipeline}>
+                  {wizardPipeline.map((stage) => (
+                    <li
+                      key={stage.label}
+                      className={styles.pipelineStage}
+                      data-status={stage.status}
+                    >
+                      <div className={styles.pipelineStageHeader}>
+                        <span className={styles.pipelineDot} />
+                        <span className={styles.pipelineStageLabel}>
+                          {stage.label}
+                        </span>
                       </div>
+                      {stage.status !== 'pending' && (
+                        <ol className={styles.pipelineSubSteps}>
+                          {stage.steps.map((step) => (
+                            <li
+                              key={step.label}
+                              className={styles.pipelineSubStep}
+                              data-status={step.status}
+                            >
+                              {step.label}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
                     </li>
                   ))}
-                </ul>
+                </ol>
               </div>
             )}
 
@@ -606,11 +689,12 @@ export function CuratePageClient({
                 <>
                   {' · '}
                   <span
-                    title={`${tokenUsage.inputTokens.toLocaleString()} in / ${tokenUsage.outputTokens.toLocaleString()} out`}
+                    title={`${tokenUsage.inputTokens.toLocaleString()} in / ${tokenUsage.outputTokens.toLocaleString()} out / ${tokenUsage.webSearchRequests ?? 0} searches`}
                   >
                     {formatCost(
                       tokenUsage.inputTokens,
                       tokenUsage.outputTokens,
+                      tokenUsage.webSearchRequests ?? 0,
                     )}
                   </span>
                 </>

@@ -80,6 +80,13 @@ export async function addCredits(
   return rows[0].balance_cents as number;
 }
 
+export type DeductExtras = {
+  urlCount?: number;
+  candidateCount?: number;
+  durationMs?: number;
+  codeExecutionCount?: number;
+};
+
 export async function deductCredits(
   userId: string,
   cents: number,
@@ -88,6 +95,7 @@ export async function deductCredits(
   outputTokens: number,
   webSearchRequests: number,
   stepLabel?: string,
+  extras?: DeductExtras,
 ): Promise<number> {
   const rows = await sql`
     UPDATE user_credits
@@ -99,9 +107,11 @@ export async function deductCredits(
 
   await sql`
     INSERT INTO credit_transactions
-      (clerk_user_id, amount_cents, type, curator_session_id, input_tokens, output_tokens, web_search_requests, step_label)
+      (clerk_user_id, amount_cents, type, curator_session_id, input_tokens, output_tokens, web_search_requests, step_label,
+       url_count, candidate_count, duration_ms, code_execution_count)
     VALUES
-      (${userId}, ${-cents}, 'deduction', ${curatorSessionId}, ${inputTokens}, ${outputTokens}, ${webSearchRequests}, ${stepLabel ?? null})
+      (${userId}, ${-cents}, 'deduction', ${curatorSessionId}, ${inputTokens}, ${outputTokens}, ${webSearchRequests}, ${stepLabel ?? null},
+       ${extras?.urlCount ?? null}, ${extras?.candidateCount ?? null}, ${extras?.durationMs ?? null}, ${extras?.codeExecutionCount ?? null})
   `;
 
   return (rows[0]?.balance_cents as number | undefined) ?? 0;

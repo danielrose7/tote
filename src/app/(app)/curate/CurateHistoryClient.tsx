@@ -8,9 +8,16 @@ import { useToast } from '../../../components/ToastNotification';
 import { CreditsPanel } from './CreditsPanel';
 import styles from './curate.module.css';
 
-// claude-sonnet-4-6: $3/1M input, $15/1M output
-function formatCost(inputTokens: number, outputTokens: number): string {
-  const cost = (inputTokens / 1_000_000) * 3 + (outputTokens / 1_000_000) * 15;
+// claude-sonnet-4-6: $3/1M input, $15/1M output, $0.01/search
+function formatCost(
+  inputTokens: number,
+  outputTokens: number,
+  webSearchRequests = 0,
+): string {
+  const cost =
+    (inputTokens / 1_000_000) * 3 +
+    (outputTokens / 1_000_000) * 15 +
+    webSearchRequests * 0.01;
   return cost < 0.01 ? '<$0.01' : `~$${cost.toFixed(2)}`;
 }
 
@@ -107,9 +114,13 @@ export function CurateHistoryClient() {
                   {s.inputTokens != null && s.outputTokens != null && (
                     <span
                       className={styles.sessionCost}
-                      title={`${s.inputTokens.toLocaleString()} in / ${s.outputTokens.toLocaleString()} out`}
+                      title={`${s.inputTokens.toLocaleString()} in / ${s.outputTokens.toLocaleString()} out / ${s.webSearchRequests ?? 0} searches`}
                     >
-                      {formatCost(s.inputTokens, s.outputTokens)}
+                      {formatCost(
+                        s.inputTokens,
+                        s.outputTokens,
+                        s.webSearchRequests ?? 0,
+                      )}
                     </span>
                   )}
                 </span>

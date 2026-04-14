@@ -338,7 +338,11 @@ export const curateCollection = inngest.createFunction(
                 stopReason: response.summary.stopReason,
                 textPreview: text.slice(0, 500),
               });
-              return { urls: [], usage: null };
+              return {
+                urls: [] as string[],
+                usage: null,
+                summary: response.summary,
+              };
             }
             console.log('[curate-collection] find-urls:done', {
               at: nowIso(),
@@ -347,7 +351,11 @@ export const curateCollection = inngest.createFunction(
               slug,
               urlCount: parsed.urls.length,
             });
-            return { urls: parsed.urls, usage: response.usage };
+            return {
+              urls: parsed.urls,
+              usage: response.usage,
+              summary: response.summary,
+            };
           });
           return { section, slug, found };
         }),
@@ -379,6 +387,11 @@ export const curateCollection = inngest.createFunction(
                   found.usage!.outputTokens,
                   found.usage!.webSearchRequests,
                   `find-urls-${slug}`,
+                  {
+                    urlCount: found.urls.length,
+                    codeExecutionCount: found.summary?.codeExecutionCount,
+                    durationMs: found.summary?.durationMs,
+                  },
                 ),
               ),
             ),
@@ -426,9 +439,13 @@ export const curateCollection = inngest.createFunction(
     });
 
     const totalUrlCount = urlSections.reduce((n, s) => n + s.urls.length, 0);
+    await step.realtime.publish('urls-found', ch.progress, {
+      step: 'urls-found',
+      message: `${totalUrlCount} URLs found across ${urlSections.length} sections`,
+    });
     await step.realtime.publish('extraction-queued', ch.progress, {
       step: 'extracting',
-      message: `${totalUrlCount} URLs queued — extracting with extension...`,
+      message: `Extracting pages with extension...`,
     });
 
     // Wait for all sections to be extracted in one bulk event
@@ -468,16 +485,16 @@ export const curateCollection = inngest.createFunction(
       totalExtracted,
     });
 
-    // Step 6: Curate the final shortlist and write the file
+    // Step 6: Curate the initial collection
     await step.realtime.publish('curating', ch.progress, {
       step: 'curating',
-      message: `Extracted ${totalExtracted} items — curating final shortlist...`,
+      message: `Extracted ${totalExtracted} items — curating initial collection...`,
     });
 
     await step.run('persist-curating-phase', () =>
       patchSession(sessionId, {
         phase: 'curating',
-        lastProgressMessage: `Extracted ${totalExtracted} items — curating final shortlist...`,
+        lastProgressMessage: `Extracted ${totalExtracted} items — curating initial collection...`,
       }),
     );
 
@@ -531,7 +548,12 @@ export const curateCollection = inngest.createFunction(
         itemCount,
         warningCount: collection.warnings.length,
       });
+      const candidateCount = extractedSections.reduce(
+        (n, s) => n + s.items.length,
+        0,
+      );
       await logStep(sessionId, 'curate-and-write', 'completed', {
+        candidateCount,
         itemCount,
         sectionCount: collection.sections.length,
         warningCount: collection.warnings.length,
@@ -541,9 +563,11 @@ export const curateCollection = inngest.createFunction(
       return {
         title: collection.title,
         sectionCount: collection.sections.length,
+        candidateCount,
         itemCount,
         json: collectionJson,
         usage: response.usage,
+        summary: response.summary,
       };
     });
 
@@ -565,6 +589,10 @@ export const curateCollection = inngest.createFunction(
           result.usage!.outputTokens,
           0,
           'curate-and-write',
+          {
+            candidateCount: result.candidateCount,
+            durationMs: result.summary?.durationMs,
+          },
         ),
       );
     }
@@ -666,8 +694,17 @@ export const curateCollection = inngest.createFunction(
             maxTokens: urlDiscoveryTokenLimit(mode),
           });
           const parsed = parseJson<UrlDiscoveryPayload>(response.text);
-          if (!parsed) return { urls: [], usage: null };
-          return { urls: parsed.urls, usage: response.usage };
+          if (!parsed)
+            return {
+              urls: [] as string[],
+              usage: null,
+              summary: response.summary,
+            };
+          return {
+            urls: parsed.urls,
+            usage: response.usage,
+            summary: response.summary,
+          };
         });
 
         totalInputTokens += foundGap.usage?.inputTokens ?? 0;
@@ -688,6 +725,11 @@ export const curateCollection = inngest.createFunction(
               foundGap.usage!.outputTokens,
               foundGap.usage!.webSearchRequests,
               `find-urls-${gapSlug}`,
+              {
+                urlCount: foundGap.urls.length,
+                codeExecutionCount: foundGap.summary?.codeExecutionCount,
+                durationMs: foundGap.summary?.durationMs,
+              },
             ),
           );
         }
@@ -769,7 +811,16 @@ export const curateCollection = inngest.createFunction(
               warningCount: refined.warnings.length,
             });
           }
-          return { collection: refined, usage: response.usage };
+          const candidateCount = refinedSections.reduce(
+            (n, s) => n + s.items.length,
+            0,
+          );
+          return {
+            collection: refined,
+            usage: response.usage,
+            summary: response.summary,
+            candidateCount,
+          };
         },
       );
 
@@ -790,6 +841,10 @@ export const curateCollection = inngest.createFunction(
             refineResult.usage!.outputTokens,
             0,
             `refine-collection-${pass}`,
+            {
+              candidateCount: refineResult.candidateCount,
+              durationMs: refineResult.summary?.durationMs,
+            },
           ),
         );
       }

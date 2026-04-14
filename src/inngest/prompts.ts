@@ -123,21 +123,17 @@ export function buildUrlDiscoveryPrompt(
   answers: Record<string, string>,
   mode: CurationMode,
 ): string {
-  return `Find ${section.targetCount}-${section.targetCount + 2} product page URLs for the "${section.title}" section of a collection on: ${topic}
+  const candidateTarget = section.targetCount * 2 + 2;
+  return `Find ${candidateTarget}-${candidateTarget + 4} candidate product page URLs for the "${section.title}" section of a collection on: ${topic}
 
 ${formatAnswers(questions, answers)}
 
-Mode: ${mode}
-
 Section rationale: ${section.rationale}
 
-If mode is "debug":
-- Run 1-2 searches only, collect the most credible URLs from results
-- Stop once you have ${section.targetCount}-${section.targetCount + 1} strong candidates
+Cast a wide net — these are candidates for extraction and curation, not a final shortlist. Aim for breadth across different brands and retailers.${mode === 'debug' ? '\n\nDebug mode: run 1-2 searches, return 3-5 URLs.' : ''}
 
-Use web search to find products at independent retailers. Avoid Amazon.
-IMPORTANT: Do NOT read or fetch any URLs. Collect product page URLs from search result titles and snippets only.
-Return individual product page URLs only — not collection or category pages as they won't be extracted properly in future steps.
+Use web search to find products at independent retailers and brand-direct sites.
+Return individual product page URLs only — not collection, category, or search result pages.
 Return only valid JSON: { "urls": ["https://...", ...] }`;
 }
 
@@ -154,8 +150,6 @@ export function buildCuratePrompt(
       title: s.title,
       items: s.items,
     })),
-    null,
-    2,
   );
 
   return `You have extracted product page data for a collection titled "${planTitle}".
@@ -169,15 +163,20 @@ Intro (use as-is or refine): ${planIntro}
 Extracted product data per section (scraped from product pages via browser extension):
 ${sectionsJson}
 
-Now curate the final shortlist from this extracted data:
+You have more candidates than you need — be selective. Curate a tight shortlist from this extracted data:
 - Use sourceUrl as the product URL
 - Derive the merchant name from the domain (e.g. gardenheir.com → "Gardenheir", america.felco.com → "FELCO")
 - Write one specific, honest note per item using the extracted title, description, and product details
 - Drop items with no usable data (missing title and description)
-- Drop weak picks rather than padding to hit a count
-- Apply the lens strictly — the note should make the lens audible
-- Flag anything uncertain in warnings
-- No Amazon URLs
+- Drop duplicates, near-duplicates, and weaker alternatives — keep the best per niche
+- Apply the lens strictly and ruthlessly — if the note would be vague, drop the item instead
+
+When flagging warnings, be specific and actionable. Each warning must name:
+  1. The section affected
+  2. Exactly what is missing or wrong (specific product type, constraint violated, etc.)
+  3. A ready-to-use search query to find a replacement (e.g. "wool base layer merino under $100 site:icebreaker.com OR woolx.com")
+Format: "[section]: [problem] — search: [query]"
+Only flag things that more URL discovery could actually fix. Skip informational gaps that are just editorial notes.
 
 If mode is "debug":
 - Keep the shortlist intentionally small
@@ -214,7 +213,7 @@ export function buildRefinementUrlPrompt(
   answers: Record<string, string>,
   mode: CurationMode,
 ): string {
-  return `Find 2-4 product page URLs to address this gap in a collection on: ${topic}
+  return `Find 4-8 candidate product page URLs to address this gap in a collection on: ${topic}
 
 Gap type: ${gap.kind}
 Section: ${gap.sectionTitle}
@@ -223,12 +222,10 @@ Search hint: ${gap.searchHint}
 
 ${formatAnswers(questions, answers)}
 
-Mode: ${mode}
-${mode === 'debug' ? '- Run 1 search only, collect 1-2 URLs' : ''}
+These are candidates for extraction — cast a wide net across different brands and retailers.${mode === 'debug' ? '\nDebug mode: run 1 search, return 2-3 URLs.' : ''}
 
-Use web search. Prioritise independent specialty retailers. Avoid Amazon.
-IMPORTANT: Do NOT read or fetch any URLs. Collect product page URLs from search result titles and snippets only.
-Return individual product page URLs only — avoid collection or category pages as we are after specific items.
+Use web search. Prioritise independent specialty retailers.
+Return individual product page URLs only — not category or listing pages.
 Return only valid JSON: { "urls": ["https://...", ...] }`;
 }
 

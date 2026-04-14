@@ -109,6 +109,7 @@ export const CuratorSession = co.map({
   collectionId: z.string().optional(), // Jazz Block ID of the imported collection
   inputTokens: z.number().optional(),
   outputTokens: z.number().optional(),
+  webSearchRequests: z.number().optional(),
 });
 
 export const CuratorSessionList = co.list(CuratorSession);

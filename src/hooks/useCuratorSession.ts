@@ -81,6 +81,7 @@ export function useCuratorSession(sessionId: string | null) {
     if (tokenUsage) {
       jazzSession.$jazz.set('inputTokens', tokenUsage.inputTokens);
       jazzSession.$jazz.set('outputTokens', tokenUsage.outputTokens);
+      jazzSession.$jazz.set('webSearchRequests', tokenUsage.webSearchRequests);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, result, tokenUsage, sessionId, me.$isLoaded]);
@@ -154,28 +155,13 @@ export function useCuratorSession(sessionId: string | null) {
 
   // --- Extraction drain loop ---
   // Returns extracted items for a section without posting to the server.
+  // Assumes pending entries for all URLs in the section are already in progress state.
   async function extractSection(
     section: SectionToExtract,
   ): Promise<ExtractedItem[]> {
     const isMock =
       section.mock ?? process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
     const items: ExtractedItem[] = [];
-
-    // Add pending entries for this section's URLs
-    setExtractionProgress((prev) => {
-      const newEntries = section.urls.map((url) => ({
-        url,
-        domain: toDomain(url),
-        status: 'pending' as const,
-      }));
-      if (!prev)
-        return { current: 0, total: section.urls.length, entries: newEntries };
-      return {
-        current: prev.current,
-        total: prev.total + section.urls.length,
-        entries: [...prev.entries, ...newEntries],
-      };
-    });
 
     for (const url of section.urls) {
       setExtractionProgress((prev) => {
@@ -238,6 +224,30 @@ export function useCuratorSession(sessionId: string | null) {
           }
         }
         extensionCheckedRef.current = true;
+      }
+
+      // Pre-initialize the full batch as pending so the total URL count is
+      // visible upfront — prevents the growing denominator UX.
+      const pendingSections = extractionQueueRef.current.filter(
+        (s) => !extractedSlugsRef.current.has(s.slug),
+      );
+      if (pendingSections.length > 0) {
+        setExtractionProgress((prev) => {
+          const newEntries = pendingSections.flatMap((s) =>
+            s.urls.map((url) => ({
+              url,
+              domain: toDomain(url),
+              status: 'pending' as const,
+            })),
+          );
+          const total = newEntries.length;
+          if (!prev) return { current: 0, total, entries: newEntries };
+          return {
+            current: prev.current,
+            total: prev.total + total,
+            entries: [...prev.entries, ...newEntries],
+          };
+        });
       }
 
       // Extract all sections currently in the queue as one batch, then submit

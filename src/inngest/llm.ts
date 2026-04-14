@@ -14,6 +14,8 @@ export type LLMResponseSummary = {
   textChars: number;
   toolUseCount: number;
   toolNames: string[];
+  codeExecutionCount: number;
+  durationMs: number;
 };
 
 export type LLMResponse = {
@@ -35,10 +37,14 @@ export type LLMClient = {
   }): Promise<LLMResponse>;
 };
 
-function fromAnthropicResponse(response: Anthropic.Message): LLMResponse {
+function fromAnthropicResponse(
+  response: Anthropic.Message,
+  durationMs: number,
+): LLMResponse {
   let textChars = 0;
   let textBlockCount = 0;
   let toolUseCount = 0;
+  let codeExecutionCount = 0;
   const toolNames: string[] = [];
   const textParts: string[] = [];
 
@@ -49,11 +55,14 @@ function fromAnthropicResponse(response: Anthropic.Message): LLMResponse {
       textParts.push(block.text);
     } else if (
       block.type === 'server_tool_use' ||
-      block.type === 'web_search_tool_result'
+      block.type === 'web_search_tool_result' ||
+      block.type === 'code_execution_tool_use' ||
+      block.type === 'code_execution_tool_result'
     ) {
       toolUseCount += 1;
       if ('name' in block && typeof block.name === 'string') {
         toolNames.push(block.name);
+        if (block.name === 'code_execution') codeExecutionCount += 1;
       }
     }
   }
@@ -75,6 +84,8 @@ function fromAnthropicResponse(response: Anthropic.Message): LLMResponse {
       textChars,
       toolUseCount,
       toolNames,
+      codeExecutionCount,
+      durationMs,
     },
   };
 }
@@ -91,8 +102,10 @@ function createAnthropicClient(): LLMClient {
     params: Parameters<typeof client.messages.create>[0],
   ): Promise<LLMResponse> {
     try {
+      const startedAt = Date.now();
       const response = fromAnthropicResponse(
         await client.messages.create(params),
+        Date.now() - startedAt,
       );
       if (response.summary.stopReason === 'max_tokens') {
         throw new Error(
@@ -129,7 +142,14 @@ function createAnthropicClient(): LLMClient {
         model,
         max_tokens: maxTokens,
         system,
-        tools: [{ type: 'web_search_20250305' as const, name: 'web_search' }],
+        tools: [
+          {
+            type: 'web_search_20260209' as const,
+            name: 'web_search',
+            max_uses: 7,
+          },
+          { type: 'code_execution_20260120' as const, name: 'code_execution' },
+        ],
         messages: [{ role: 'user', content: prompt }],
       });
     },
