@@ -101,7 +101,7 @@ function createAnthropicClient(): LLMClient {
   const model = 'claude-sonnet-4-6';
 
   async function call(
-    params: Parameters<typeof client.messages.create>[0],
+    params: Anthropic.MessageCreateParamsNonStreaming,
   ): Promise<LLMResponse> {
     try {
       const startedAt = Date.now();
