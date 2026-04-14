@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { InterviewQuestionsSchema } from "../inngest/prompts";
+import {
+	FollowUpQuestionsSchema,
+	InterviewQuestionsSchema,
+} from "../inngest/prompts";
 import type {
 	CuratorPhase,
 	InterviewQuestion,
@@ -214,7 +217,10 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 				patch.questionRound = snap.questionRound as InterviewRound;
 
 			if (Array.isArray(snap.questions) && snap.questions.length > 0) {
-				const parsed = InterviewQuestionsSchema.safeParse(snap.questions);
+				const parsed =
+					snap.questionRound === 2
+						? FollowUpQuestionsSchema.safeParse(snap.questions)
+						: InterviewQuestionsSchema.safeParse(snap.questions);
 				if (parsed.success) patch.questions = parsed.data;
 			}
 
@@ -362,7 +368,10 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 					prev.phase === "interview-round-2"
 				) {
 					const d = data as { questions: unknown; round?: InterviewRound };
-					const parsed = InterviewQuestionsSchema.safeParse(d.questions);
+					const parsed =
+						d.round === 2
+							? FollowUpQuestionsSchema.safeParse(d.questions)
+							: InterviewQuestionsSchema.safeParse(d.questions);
 					if (parsed.success) patch.questions = parsed.data;
 					if (d.round === 1 || d.round === 2) patch.questionRound = d.round;
 					patch.phase =

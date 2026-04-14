@@ -1,53 +1,54 @@
-import { realtime } from 'inngest';
-import { z } from 'zod';
-import { InterviewQuestionsSchema } from './prompts';
+import { realtime } from "inngest";
+import { z } from "zod";
+import { FollowUpQuestionsSchema, InterviewQuestionsSchema } from "./prompts";
 
 export const curationChannel = realtime.channel({
-  name: ({ sessionId }: { sessionId: string }) => `curation:${sessionId}`,
-  topics: {
-    interview: {
-      schema: z.object({
-        questions: InterviewQuestionsSchema,
-      }),
-    },
-    progress: {
-      schema: z.object({
-        step: z.string(),
-        message: z.string(),
-        detail: z.string().optional(),
-      }),
-    },
-    result: {
-      schema: z.object({
-        title: z.string(),
-        sectionCount: z.number(),
-        itemCount: z.number(),
-        json: z.string(),
-      }),
-    },
-    urls: {
-      schema: z.object({
-        sections: z.array(
-          z.object({
-            title: z.string(),
-            slug: z.string(),
-            urls: z.array(z.string()),
-          }),
-        ),
-        mock: z.boolean().optional(),
-      }),
-    },
-    'section-urls': {
-      schema: z.object({
-        sections: z.array(
-          z.object({
-            slug: z.string(),
-            title: z.string(),
-            urls: z.array(z.string()),
-          }),
-        ),
-        mock: z.boolean().optional(),
-      }),
-    },
-  },
+	name: ({ sessionId }: { sessionId: string }) => `curation:${sessionId}`,
+	topics: {
+		interview: {
+			schema: z.object({
+				round: z.union([z.literal(1), z.literal(2)]),
+				questions: z.union([InterviewQuestionsSchema, FollowUpQuestionsSchema]),
+			}),
+		},
+		progress: {
+			schema: z.object({
+				step: z.string(),
+				message: z.string(),
+				detail: z.string().optional(),
+			}),
+		},
+		result: {
+			schema: z.object({
+				title: z.string(),
+				sectionCount: z.number(),
+				itemCount: z.number(),
+				json: z.string(),
+			}),
+		},
+		urls: {
+			schema: z.object({
+				sections: z.array(
+					z.object({
+						title: z.string(),
+						slug: z.string(),
+						urls: z.array(z.string()),
+					}),
+				),
+				mock: z.boolean().optional(),
+			}),
+		},
+		"section-urls": {
+			schema: z.object({
+				sections: z.array(
+					z.object({
+						slug: z.string(),
+						title: z.string(),
+						urls: z.array(z.string()),
+					}),
+				),
+				mock: z.boolean().optional(),
+			}),
+		},
+	},
 });

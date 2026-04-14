@@ -40,8 +40,16 @@ export const InterviewQuestionsSchema = z
 	.min(3)
 	.max(5);
 
+export const FollowUpQuestionsSchema = z.array(InterviewQuestionSchema).min(1);
+
 const questionsJsonSchema = JSON.stringify(
 	z.toJSONSchema(InterviewQuestionsSchema),
+	null,
+	2,
+);
+
+const followUpQuestionsJsonSchema = JSON.stringify(
+	z.toJSONSchema(FollowUpQuestionsSchema),
 	null,
 	2,
 );
@@ -103,7 +111,7 @@ Rules:
 - The last question should always ask about constraints
 
 Return a JSON array matching this schema exactly — no markdown, no explanation:
-${questionsJsonSchema}`;
+${followUpQuestionsJsonSchema}`;
 }
 
 export function buildCategoryResearchPrompt(
@@ -140,7 +148,7 @@ export function buildRound2QuestionsPrompt(
 	answers: Record<string, string>,
 	research: CategoryResearchBrief,
 ): string {
-	return `Generate exactly 1-2 targeted Round 2 follow-up questions for this curation.
+	return `Generate targeted Round 2 follow-up questions for this curation.
 
 Topic: ${topic}
 
@@ -152,6 +160,7 @@ ${JSON.stringify(research, null, 2)}
 
 Rules:
 - Ask only what is necessary to resolve the highest-value ambiguity
+- Usually ask 1-2 questions, but ask more if the category genuinely needs it
 - Keep the questions conversational and easy to answer
 - Prefer fork-in-the-road questions over broad surveys
 - If a constraints question is needed, include a "No constraints" option

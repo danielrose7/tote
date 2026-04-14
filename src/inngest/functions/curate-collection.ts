@@ -24,6 +24,7 @@ import {
 	buildUrlDiscoverySystemPrompt,
 	CategoryResearchBriefSchema,
 	CURATOR_SYSTEM_PROMPT,
+	FollowUpQuestionsSchema,
 	FramingBriefSchema,
 	InterviewQuestionsSchema,
 } from "../prompts";
@@ -367,7 +368,7 @@ export const curateCollection = inngest.createFunction(
 						maxTokens: interviewTokenLimit(),
 					});
 					const raw = parseJson<unknown>(response.text);
-					const result = InterviewQuestionsSchema.safeParse(raw);
+					const result = FollowUpQuestionsSchema.safeParse(raw);
 					if (!result.success) {
 						throw new Error(
 							`Failed to parse round 2 questions: ${JSON.stringify(result.error.issues)} | raw: ${response.text.slice(0, 300)}`,
