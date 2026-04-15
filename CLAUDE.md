@@ -50,6 +50,7 @@ pnpm build        # Production build
 The dev-only collection curator lives at `/dev/curate`.
 
 - Workflow background: [docs/CURATOR_WORKFLOW.md](./docs/CURATOR_WORKFLOW.md)
+- Prompt patterns & best practices: [docs/PROMPT_PATTERNS.md](./docs/PROMPT_PATTERNS.md)
 - Inngest Realtime React hooks reference: [https://www.inngest.com/docs-markdown/features/realtime/react-hooks](https://www.inngest.com/docs-markdown/features/realtime/react-hooks)
 
 ## Guidelines
@@ -67,12 +68,12 @@ Jazz wraps CoMap and CoList objects in proxies that **throw on direct mutation**
 
 ```ts
 // ❌ Throws: "Cannot update a CoMap directly. Use $jazz.set instead."
-item.name = "New name";
+item.name = 'New name';
 item.slotData = { ...item.slotData, maxSelections: 3 };
 
 // ✅ Correct
-item.$jazz.set("name", "New name");
-item.$jazz.set("slotData", { ...item.slotData, maxSelections: 3 });
+item.$jazz.set('name', 'New name');
+item.$jazz.set('slotData', { ...item.slotData, maxSelections: 3 });
 ```
 
 ### CoList items — use `.$jazz.splice()`
