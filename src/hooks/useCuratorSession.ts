@@ -39,7 +39,7 @@ export function useCuratorSession(sessionId: string | null) {
     setPhase,
     setError,
     setExtractionProgress,
-    hydrateFromKv,
+    hydrateFromSync,
     setRealtimeEnabled,
   } = useCuratorStore();
 
@@ -93,14 +93,14 @@ export function useCuratorSession(sessionId: string | null) {
       if (!res.ok) return;
       const snap = await res.json();
 
-      // Restore ref-domain data before calling hydrateFromKv
+      // Restore ref-domain data before calling hydrateFromSync
       if (snap.extractedSlugs) {
         for (const slug of snap.extractedSlugs as string[]) {
           extractedSlugsRef.current.add(slug);
         }
       }
 
-      hydrateFromKv(snap);
+      hydrateFromSync(snap);
 
       // Re-queue any sections not yet extracted (initial + refinement gap sections)
       if (snap.urlSections) {

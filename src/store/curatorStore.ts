@@ -11,16 +11,11 @@ import type {
 } from '../inngest/types';
 import type { ImportPayload } from '../lib/importPayload';
 import { validatePayload } from '../lib/importPayload';
+import type { ProgressEntry } from '../lib/curatorStepLog';
+export type { ProgressEntry };
 
 export type CurationMode = 'normal';
 export type Phase = 'idle' | CuratorPhase;
-
-export interface ProgressEntry {
-  step: string;
-  message: string;
-  detail?: string;
-  ts: number;
-}
 
 export interface Result {
   title: string;
@@ -109,7 +104,7 @@ interface CuratorState {
   setRealtimeEnabled: (enabled: boolean) => void;
 
   /** Atomically hydrate from a KV sync response. */
-  hydrateFromKv: (snap: Record<string, unknown>) => void;
+  hydrateFromSync: (snap: Record<string, unknown>) => void;
 
   /** Handle a single realtime topic message — phase transitions + state updates. */
   applyRealtimeMessage: (topicName: string, data: unknown) => void;
@@ -135,7 +130,7 @@ const initialState: Omit<
   | 'setCopied'
   | 'setImporting'
   | 'setRealtimeEnabled'
-  | 'hydrateFromKv'
+  | 'hydrateFromSync'
   | 'applyRealtimeMessage'
   | 'reset'
 > = {
@@ -210,7 +205,7 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
   setImporting: (importing) => set({ importing }),
   setRealtimeEnabled: (realtimeEnabled) => set({ realtimeEnabled }),
 
-  hydrateFromKv: (snap) =>
+  hydrateFromSync: (snap) =>
     set((s) => {
       const patch: Partial<CuratorState> = {};
 
@@ -246,9 +241,21 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
         }
       }
 
-      // Synthesize milestone history from persisted phase so the pipeline
-      // sidebar and event log are populated after a page refresh.
-      if (s.progress.length === 0 && snap.phase) {
+      // Use the real progress log from the DB when available; fall back to
+      // synthesizing from phase for sessions that predate progress logging.
+      if (
+        s.progress.length === 0 &&
+        Array.isArray(snap.progressLog) &&
+        snap.progressLog.length > 0
+      ) {
+        // Deduplicate by step name in case of Inngest retries writing duplicates
+        const seen = new Set<string>();
+        patch.progress = (snap.progressLog as ProgressEntry[]).filter((e) => {
+          if (seen.has(e.step)) return false;
+          seen.add(e.step);
+          return true;
+        });
+      } else if (s.progress.length === 0 && snap.phase) {
         const phase = snap.phase as string;
         const milestoneOrder = [
           'interview-round-1',

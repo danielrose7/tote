@@ -5,7 +5,7 @@ import {
   createCuratorSession,
   failCuratorSession,
 } from '../../lib/curatorSessionsDb';
-import { logStep } from '../../lib/curatorStepLog';
+import { logProgressEvent, logStep } from '../../lib/curatorStepLog';
 import { curationChannel } from '../channels';
 import { inngest } from '../client';
 import { createLLMClient } from '../llm';
@@ -202,6 +202,11 @@ export const curateCollection = inngest.createFunction(
       Promise.all([
         patchSession(sessionId, { phase: 'interview-round-1' }),
         createCuratorSession(sessionId, requestedBy, topic),
+        logProgressEvent(sessionId, {
+          step: 'interview-round-1-sent',
+          message: 'Round 1 questions sent — waiting for your answers.',
+          ts: Date.now(),
+        }),
       ]),
     );
 
@@ -259,12 +264,19 @@ export const curateCollection = inngest.createFunction(
     });
 
     await step.run('persist-research-phase', () =>
-      patchSession(sessionId, {
-        phase: 'researching',
-        answers: round1Answers,
-        lastProgressMessage:
-          'Round 1 answers received. Researching the category...',
-      }),
+      Promise.all([
+        patchSession(sessionId, {
+          phase: 'researching',
+          answers: round1Answers,
+          lastProgressMessage:
+            'Round 1 answers received. Researching the category...',
+        }),
+        logProgressEvent(sessionId, {
+          step: 'answers-round-1-received',
+          message: 'Round 1 answers received. Researching the category...',
+          ts: Date.now(),
+        }),
+      ]),
     );
 
     // Step 3: Research the category before planning
@@ -332,13 +344,23 @@ export const curateCollection = inngest.createFunction(
     const research = categoryResearchResult.research;
 
     await step.run('persist-category-research', () =>
-      patchSession(sessionId, {
-        phase: research.followUpNeeded ? 'interview-round-2' : 'framing',
-        researchBriefJson: JSON.stringify(research),
-        lastProgressMessage: research.followUpNeeded
-          ? 'Category research complete — preparing follow-up questions.'
-          : 'Category research complete — building curatorial brief.',
-      }),
+      Promise.all([
+        patchSession(sessionId, {
+          phase: research.followUpNeeded ? 'interview-round-2' : 'framing',
+          researchBriefJson: JSON.stringify(research),
+          lastProgressMessage: research.followUpNeeded
+            ? 'Category research complete — preparing follow-up questions.'
+            : 'Category research complete — building curatorial brief.',
+        }),
+        logProgressEvent(sessionId, {
+          step: 'category-research-complete',
+          message: research.followUpNeeded
+            ? 'Category research complete. A few follow-up questions will sharpen the direction.'
+            : 'Category research complete. Building curatorial brief...',
+          detail: research.suggestedLenses.join(', ') || undefined,
+          ts: Date.now(),
+        }),
+      ]),
     );
 
     await step.realtime.publish('category-research-complete', ch.progress, {
@@ -406,13 +428,20 @@ export const curateCollection = inngest.createFunction(
       round2Questions = round2QuestionResult.questions;
 
       await step.run('persist-round-2-questions', () =>
-        patchSession(sessionId, {
-          questions: round2Questions,
-          questionRound: 2,
-          phase: 'interview-round-2',
-          lastProgressMessage:
-            'Round 2 questions sent — waiting for your answers.',
-        }),
+        Promise.all([
+          patchSession(sessionId, {
+            questions: round2Questions,
+            questionRound: 2,
+            phase: 'interview-round-2',
+            lastProgressMessage:
+              'Round 2 questions sent — waiting for your answers.',
+          }),
+          logProgressEvent(sessionId, {
+            step: 'interview-round-2-sent',
+            message: 'Round 2 questions sent — waiting for your answers.',
+            ts: Date.now(),
+          }),
+        ]),
       );
 
       await step.realtime.publish('interview-round-2-questions', ch.interview, {
@@ -453,12 +482,19 @@ export const curateCollection = inngest.createFunction(
       });
 
       await step.run('persist-framing-phase', () =>
-        patchSession(sessionId, {
-          phase: 'framing',
-          answers: { ...round1Answers, ...round2Answers },
-          lastProgressMessage:
-            'Round 2 answers received. Building curatorial brief...',
-        }),
+        Promise.all([
+          patchSession(sessionId, {
+            phase: 'framing',
+            answers: { ...round1Answers, ...round2Answers },
+            lastProgressMessage:
+              'Round 2 answers received. Building curatorial brief...',
+          }),
+          logProgressEvent(sessionId, {
+            step: 'answers-round-2-received',
+            message: 'Round 2 answers received. Building curatorial brief...',
+            ts: Date.now(),
+          }),
+        ]),
       );
     } else {
       await step.run('persist-no-followup-framing-phase', () =>
@@ -535,13 +571,21 @@ export const curateCollection = inngest.createFunction(
     });
 
     await step.run('persist-planning-phase', () =>
-      patchSession(sessionId, {
-        phase: 'planning',
-        questionRound: round2Questions.length > 0 ? 2 : 1,
-        answers: { ...round1Answers, ...round2Answers },
-        framingBriefJson: JSON.stringify(framingBrief),
-        lastProgressMessage: 'Curatorial brief ready. Planning collection...',
-      }),
+      Promise.all([
+        patchSession(sessionId, {
+          phase: 'planning',
+          questionRound: round2Questions.length > 0 ? 2 : 1,
+          answers: { ...round1Answers, ...round2Answers },
+          framingBriefJson: JSON.stringify(framingBrief),
+          lastProgressMessage: 'Curatorial brief ready. Planning collection...',
+        }),
+        logProgressEvent(sessionId, {
+          step: 'framing-complete',
+          message: 'Curatorial brief ready. Planning collection...',
+          detail: framingBrief.goal,
+          ts: Date.now(),
+        }),
+      ]),
     );
 
     // Step 5: Plan the collection structure
@@ -619,6 +663,15 @@ export const curateCollection = inngest.createFunction(
       message: `Plan ready: ${plan.sections.length} sections`,
       detail: plan.sections.map((s) => s.title).join(', '),
     });
+
+    await step.run('persist-planned', () =>
+      logProgressEvent(sessionId, {
+        step: 'planned',
+        message: `Plan ready: ${plan.sections.length} sections`,
+        detail: plan.sections.map((s) => s.title).join(', '),
+        ts: Date.now(),
+      }),
+    );
 
     // Step 6: Discover URLs per section via web search (no page reading)
     // Each section is its own named step so it's individually memoized/retryable
@@ -746,11 +799,23 @@ export const curateCollection = inngest.createFunction(
 
     // Step 7: Persist URL data for reconnect, then wait for extractions
     await step.run('persist-session-urls', () =>
-      patchSession(sessionId, {
-        phase: 'extracting',
-        urlSections,
-        lastProgressMessage: 'URL discovery complete — extracting pages...',
-      }),
+      Promise.all([
+        patchSession(sessionId, {
+          phase: 'extracting',
+          urlSections,
+          lastProgressMessage: 'URL discovery complete — extracting pages...',
+        }),
+        logProgressEvent(sessionId, {
+          step: 'urls-found',
+          message: `${totalUrlCount} URLs found across ${urlSections.length} sections`,
+          ts: Date.now(),
+        }),
+        logProgressEvent(sessionId, {
+          step: 'extracting',
+          message: 'Extracting pages with extension...',
+          ts: Date.now() + 1,
+        }),
+      ]),
     );
 
     // Also publish urls topic for reconnect/sync restore in the browser
@@ -813,10 +878,18 @@ export const curateCollection = inngest.createFunction(
     });
 
     await step.run('persist-curating-phase', () =>
-      patchSession(sessionId, {
-        phase: 'curating',
-        lastProgressMessage: `Extracted ${totalExtracted} items — curating initial collection...`,
-      }),
+      Promise.all([
+        patchSession(sessionId, {
+          phase: 'curating',
+          lastProgressMessage: `Extracted ${totalExtracted} items — curating initial collection...`,
+        }),
+        logProgressEvent(sessionId, {
+          step: 'curating',
+          message: `Extracted ${totalExtracted} items — curating initial collection...`,
+          detail: `Evaluating ${totalExtracted} candidates across ${extractedSections.length} sections`,
+          ts: Date.now(),
+        }),
+      ]),
     );
 
     const result = await step.run('curate-and-write', async () => {
@@ -926,11 +999,19 @@ export const curateCollection = inngest.createFunction(
     });
 
     await step.run('persist-hospitality-phase', () =>
-      patchSession(sessionId, {
-        phase: 'hospitality',
-        lastProgressMessage:
-          'Applying a hospitality pass to make the shortlist feel more thoughtful...',
-      }),
+      Promise.all([
+        patchSession(sessionId, {
+          phase: 'hospitality',
+          lastProgressMessage:
+            'Applying a hospitality pass to make the shortlist feel more thoughtful...',
+        }),
+        logProgressEvent(sessionId, {
+          step: 'hospitality',
+          message:
+            'Applying a hospitality pass to make the shortlist feel more thoughtful...',
+          ts: Date.now(),
+        }),
+      ]),
     );
 
     const hospitalityResult = await step.run('hospitality-pass', async () => {
@@ -989,11 +1070,18 @@ export const curateCollection = inngest.createFunction(
         break;
 
       await step.run(`persist-refine-phase-${pass}`, () =>
-        patchSession(sessionId, {
-          phase: 'refining',
-          refinementPass: pass,
-          lastProgressMessage: `Refinement pass ${pass}: analysing warnings...`,
-        }),
+        Promise.all([
+          patchSession(sessionId, {
+            phase: 'refining',
+            refinementPass: pass,
+            lastProgressMessage: `Refinement pass ${pass}: analysing warnings...`,
+          }),
+          logProgressEvent(sessionId, {
+            step: `refining-${pass}`,
+            message: `Refinement pass ${pass}: analysing ${currentCollection.warnings.length} warnings...`,
+            ts: Date.now(),
+          }),
+        ]),
       );
 
       await step.realtime.publish(`refining-${pass}`, ch.progress, {
@@ -1231,18 +1319,25 @@ export const curateCollection = inngest.createFunction(
         );
         // Update persisted result with refined collection (still in-progress)
         await step.run(`persist-refine-result-${pass}`, () =>
-          patchSession(sessionId, {
-            phase: 'refining',
-            tokenUsage: {
-              inputTokens: totalInputTokens,
-              outputTokens: totalOutputTokens,
-              webSearchRequests: totalWebSearchRequests,
-            },
-            title: currentCollection.title,
-            sectionCount: currentCollection.sections.length,
-            itemCount: refinedItemCount,
-            json: refinedJson,
-          }),
+          Promise.all([
+            patchSession(sessionId, {
+              phase: 'refining',
+              tokenUsage: {
+                inputTokens: totalInputTokens,
+                outputTokens: totalOutputTokens,
+                webSearchRequests: totalWebSearchRequests,
+              },
+              title: currentCollection.title,
+              sectionCount: currentCollection.sections.length,
+              itemCount: refinedItemCount,
+              json: refinedJson,
+            }),
+            logProgressEvent(sessionId, {
+              step: `refine-complete-${pass}`,
+              message: `Refinement pass ${pass} complete — ${refinedItemCount} items across ${currentCollection.sections.length} sections`,
+              ts: Date.now(),
+            }),
+          ]),
         );
         await step.realtime.publish('result', ch.result, {
           ...result,
@@ -1291,6 +1386,11 @@ export const curateCollection = inngest.createFunction(
           phase: 'complete',
           sectionCount: currentCollection.sections.length,
           itemCount: finalItemCount,
+        }),
+        logProgressEvent(sessionId, {
+          step: 'complete',
+          message: 'Done.',
+          ts: Date.now(),
         }),
       ]),
     );

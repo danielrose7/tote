@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isCurator } from '../../../../../inngest/curator-auth';
 import { readSession } from '../../../../../lib/curatorSession';
+import { getProgressLog } from '../../../../../lib/curatorStepLog';
 
 export async function GET(
   _request: Request,
@@ -11,7 +12,10 @@ export async function GET(
   }
 
   const { sessionId } = await params;
-  const session = await readSession(sessionId);
+  const [session, progressLog] = await Promise.all([
+    readSession(sessionId),
+    getProgressLog(sessionId),
+  ]);
 
   return NextResponse.json({
     phase: session?.phase ?? null,
@@ -35,5 +39,6 @@ export async function GET(
     extractedSlugs: session?.extractedSlugs ?? null,
     tokenUsage: session?.tokenUsage ?? null,
     refinementUrlSections: session?.refinementUrlSections ?? null,
+    progressLog: progressLog.length > 0 ? progressLog : null,
   });
 }
