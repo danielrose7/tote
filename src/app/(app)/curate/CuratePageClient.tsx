@@ -44,13 +44,13 @@ function formatCost(
 const phaseStatusLabel: Record<string, string> = {
   started: 'Waiting for workflow acknowledgment',
   'interview-round-1': 'Waiting for Round 1 answers',
-  researching: 'Researching the category...',
+  researching: 'Researching the category — usually 30–90s...',
   'interview-round-2': 'Waiting for follow-up questions',
-  framing: 'Building curatorial brief...',
+  framing: 'Building curatorial brief — usually under a minute...',
   planning: 'Planning collection structure...',
   extracting: 'Extracting pages...',
-  curating: 'Curating initial shortlist...',
-  hospitality: 'Applying hospitality pass...',
+  curating: 'Curating the shortlist — usually 60–90s...',
+  hospitality: 'Refining collection...',
   refining: 'Refining collection...',
   complete: 'Collection complete',
   error: 'Something went wrong',
@@ -72,6 +72,7 @@ export function CuratePageClient({
     result,
     importPayload,
     tokenUsage,
+    framingBrief,
     error,
     copied,
     importing,
@@ -264,10 +265,6 @@ export function CuratePageClient({
     }
 
     const shapeSteps: Array<{ label: string; status: StepStatus }> = [];
-    shapeSteps.push({
-      label: 'Hospitality',
-      status: stepStatus('hospitality'),
-    });
     for (let p = 1; p <= maxPass; p++) {
       shapeSteps.push({
         label: `Refine ${p}`,
@@ -316,7 +313,6 @@ export function CuratePageClient({
       {
         label: 'Polish',
         keys: [
-          'hospitality',
           'complete',
           ...Array.from(
             { length: maxPass },
@@ -545,8 +541,8 @@ export function CuratePageClient({
                   <form onSubmit={handleAnswers} className={styles.form}>
                     <p className={styles.subheading}>
                       {questionRound === 2
-                        ? 'A few follow-up questions to sharpen the direction.'
-                        : 'A few quick questions to anchor the curatorial direction.'}
+                        ? `Round 2 of 2. We've researched ${topic || 'the category'} — these questions help us dial in the specifics before we build.`
+                        : `Round 1 of 2. After you answer, we'll research the category (~30–90s), then come back with a few sharper follow-up questions.`}
                     </p>
 
                     {questions.map((q) => {
@@ -631,6 +627,26 @@ export function CuratePageClient({
                   </form>
                 )}
 
+              {/* ── Framing brief ── */}
+              {framingBrief &&
+                (phase === 'planning' ||
+                  phase === 'extracting' ||
+                  phase === 'curating' ||
+                  phase === 'hospitality' ||
+                  phase === 'refining' ||
+                  phase === 'complete') && (
+                  <div className={styles.framingBriefCard}>
+                    <p className={styles.framingBriefGoal}>
+                      {framingBrief.goal}
+                    </p>
+                    {framingBrief.tasteDirection && (
+                      <p className={styles.framingBriefMeta}>
+                        {framingBrief.tasteDirection}
+                      </p>
+                    )}
+                  </div>
+                )}
+
               {/* ── Unified activity feed ── */}
               <div className={styles.activityCard}>
                 <div className={styles.activityHeader}>
@@ -651,6 +667,11 @@ export function CuratePageClient({
                           {latestProgress.detail}
                         </p>
                       )}
+                    {phase === 'refining' && (
+                      <p className={styles.statusDetail}>
+                        Usually 1–2 refinement passes.
+                      </p>
+                    )}
                   </div>
                   <div className={styles.statusActions}>
                     <span className={styles.phaseBadge}>{phase}</span>
@@ -691,14 +712,23 @@ export function CuratePageClient({
                           </span>
                           {entry.step === 'planned' && entry.detail && (
                             <div className={styles.planSections}>
-                              {entry.detail.split(', ').map((title) => (
-                                <span
-                                  key={title}
-                                  className={styles.planSection}
-                                >
-                                  {title}
-                                </span>
-                              ))}
+                              <span className={styles.planSectionsLabel}>
+                                Here's how we're approaching it:
+                              </span>
+                              <ul className={styles.planSectionList}>
+                                {entry.detail.split(', ').map((title) => (
+                                  <li
+                                    key={title}
+                                    className={styles.planSection}
+                                  >
+                                    {title}
+                                  </li>
+                                ))}
+                              </ul>
+                              <span className={styles.planSectionsNote}>
+                                A focused selection within each — not a
+                                comprehensive guide.
+                              </span>
                             </div>
                           )}
                         </div>
@@ -791,6 +821,9 @@ export function CuratePageClient({
               {phase === 'complete' && result && (
                 <div className={styles.result}>
                   <h2 className={styles.resultTitle}>{result.title}</h2>
+                  {framingBrief?.goal && (
+                    <p className={styles.resultGoal}>{framingBrief.goal}</p>
+                  )}
                   <p className={styles.resultMeta}>
                     {result.sectionCount} sections · {result.itemCount} items
                     {tokenUsage && (

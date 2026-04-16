@@ -809,6 +809,7 @@ export const curateCollection = inngest.createFunction(
     await step.realtime.publish('curating', ch.progress, {
       step: 'curating',
       message: `Extracted ${totalExtracted} items — curating initial collection...`,
+      detail: `Evaluating ${totalExtracted} candidates across ${extractedSections.length} sections`,
     });
 
     await step.run('persist-curating-phase', () =>

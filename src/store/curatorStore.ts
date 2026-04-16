@@ -152,6 +152,7 @@ const initialState: Omit<
   result: null,
   importPayload: null,
   tokenUsage: null,
+  framingBrief: null,
   error: null,
   copied: false,
   importing: false,
@@ -226,6 +227,14 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
             ? FollowUpQuestionsSchema.safeParse(snap.questions)
             : InterviewQuestionsSchema.safeParse(snap.questions);
         if (parsed.success) patch.questions = parsed.data;
+      }
+
+      if (snap.framingBriefJson) {
+        try {
+          patch.framingBrief = JSON.parse(
+            snap.framingBriefJson as string,
+          ) as FramingBrief;
+        } catch {}
       }
 
       if (snap.result) {
@@ -390,8 +399,15 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
           step: string;
           message: string;
           detail?: string;
+          framingBriefJson?: string;
         };
         const { step, message, detail } = d;
+
+        if (step === 'framing-complete' && d.framingBriefJson) {
+          try {
+            patch.framingBrief = JSON.parse(d.framingBriefJson) as FramingBrief;
+          } catch {}
+        }
 
         if (step === 'answers-round-1-received') patch.phase = 'researching';
         if (step === 'answers-round-2-received') patch.phase = 'framing';
