@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { BraveSearchResult } from './lib/braveSearch';
 import type {
   CategoryResearchBrief,
   CollectionOutput,
@@ -221,26 +222,130 @@ function formatAnswers(
     .join('\n\n');
 }
 
-export function buildUrlDiscoverySystemPrompt(): string {
+// Slim framing brief for URL discovery — omits curation-only fields
+function formatUrlDiscoveryBrief(brief: FramingBrief): string {
+  return JSON.stringify({
+    goal: brief.goal,
+    recipientContext: brief.recipientContext,
+    constraints: brief.constraints,
+    avoid: brief.avoid,
+  });
+}
+
+type SearchResult = Pick<BraveSearchResult, 'title' | 'url' | 'description'>;
+type ResultSet = { query: string; results: SearchResult[] };
+
+function formatResultSets(resultSets: ResultSet[]): string {
+  return JSON.stringify(
+    resultSets.map((r) => ({
+      query: r.query,
+      results: r.results.map((s) => ({
+        title: s.title,
+        url: s.url,
+        description: s.description,
+      })),
+    })),
+  );
+}
+
+export function buildUrlQueryGenSystemPrompt(): string {
   const now = new Date();
-  const month = now.toLocaleString('en-US', { month: 'long' });
-  const year = now.getFullYear();
-  return `You are a product URL finder for a curation tool. The current month is ${month} ${year}.
+  return `You are a search query planner for a product curation tool. Current month: ${now.toLocaleString('en-US', { month: 'long' })} ${now.getFullYear()}.
 
-Search strategy — follow this exactly:
-1. Run ONE search at a time. Evaluate results before deciding whether to search again.
-2. Stop searching as soon as you have reached the target URL count. Do not keep searching once you have enough.
-3. When you have enough URLs, immediately output the JSON — no summary, no explanation, no preamble.
+Generate queries that surface individual product pages on brand-direct and specialty retailer sites.
+- Each query should target a different angle: material, use case, price tier, style, or construction
+- Write queries around product attributes — not specific brand names (unless the brief names them)
+- Queries should complement each other and cover different corners of the section
 
-Search rules:
-- Collect URLs only from search result titles and snippets — do not attempt to fetch or visit pages.
-- Form queries around product attributes, use case, and quality signals — not specific brands or sites. Attribute-based queries let real search results surface who makes the best thing right now, rather than anchoring on brands from training data.
-- Do not use site: filters. Do not search for a specific brand unless the brief explicitly names it.
-- Prefer brand-direct sites and independent specialty retailers in the URLs you collect. Avoid Amazon and generic marketplaces.
-- Only include individual product pages — not category, collection, or search result pages.
-- You have a limited search budget. Use only as many searches as needed.
+Return ONLY valid JSON: { "queries": ["query1", ...] }`;
+}
 
-Output: respond with ONLY this JSON, nothing else — { "urls": ["https://...", ...] }`;
+export function buildUrlQueryGenPrompt(
+  section: SectionPlan,
+  topic: string,
+  brief: FramingBrief,
+): string {
+  const candidateTarget = section.targetCount * 2 + 2;
+  return `Generate 7 search queries to find individual product page URLs for the "${section.title}" section.
+
+<topic>${topic}</topic>
+
+<brief>${formatUrlDiscoveryBrief(brief)}</brief>
+
+<section>
+Title: ${section.title}
+Rationale: ${section.rationale}
+Target: ${candidateTarget} candidate URLs
+</section>
+
+Return ONLY valid JSON: { "queries": ["q1", "q2", "q3", "q4", "q5", "q6", "q7"] }`;
+}
+
+export function buildUrlExtractionSystemPrompt(): string {
+  return `You are a product URL extractor. Given search results, identify individual product page URLs that match the brief.
+- Include only individual product pages — not category, collection, or search result pages
+- Prefer brand-direct sites and independent specialty retailers — exclude Amazon and generic marketplaces
+- Apply all constraints from the brief
+
+Return ONLY valid JSON: { "urls": ["https://...", ...] }`;
+}
+
+export function buildUrlExtractionPrompt(
+  section: SectionPlan,
+  resultSets: ResultSet[],
+  brief: FramingBrief,
+): string {
+  const candidateTarget = section.targetCount * 2 + 2;
+  return `Extract individual product page URLs for the "${section.title}" section from these search results.
+
+<brief>${formatUrlDiscoveryBrief(brief)}</brief>
+
+<section_rationale>${section.rationale}</section_rationale>
+
+<search_results>${formatResultSets(resultSets)}</search_results>
+
+Target ${candidateTarget} URLs across different brands. Return ONLY valid JSON: { "urls": ["https://...", ...] }`;
+}
+
+export function buildRefinementQueryGenPrompt(
+  gap: CurationGap,
+  topic: string,
+  brief: FramingBrief,
+): string {
+  return `Generate 5 search queries to find product page URLs that address this curation gap.
+
+<topic>${topic}</topic>
+
+<brief>${formatUrlDiscoveryBrief(brief)}</brief>
+
+<gap>
+Type: ${gap.kind}
+Section: ${gap.sectionTitle}
+Description: ${gap.description}
+Search hint: ${gap.searchHint}
+</gap>
+
+Use the search hint as a starting point. Return ONLY valid JSON: { "queries": ["q1", "q2", "q3", "q4", "q5"] }`;
+}
+
+export function buildRefinementExtractionPrompt(
+  gap: CurationGap,
+  resultSets: ResultSet[],
+  brief: FramingBrief,
+): string {
+  return `Extract product page URLs that address this curation gap.
+
+<gap>
+Type: ${gap.kind}
+Section: ${gap.sectionTitle}
+Description: ${gap.description}
+</gap>
+
+<brief>${formatUrlDiscoveryBrief(brief)}</brief>
+
+<search_results>${formatResultSets(resultSets)}</search_results>
+
+Target 4-8 URLs. Return ONLY valid JSON: { "urls": ["https://...", ...] }`;
 }
 
 export function buildPlanPrompt(topic: string, brief: FramingBrief): string {
@@ -267,30 +372,6 @@ Return only valid JSON:
   "intro": string,
   "sections": [{ "title": string, "slug": string, "targetCount": number, "rationale": string }]
 }`;
-}
-
-export function buildUrlDiscoveryPrompt(
-  section: SectionPlan,
-  topic: string,
-  brief: FramingBrief,
-): string {
-  const candidateTarget = section.targetCount * 2 + 2;
-  return `Find ${candidateTarget} candidate product page URLs for the "${section.title}" section.
-
-<topic>${topic}</topic>
-
-<framing_brief>
-${formatFramingBrief(brief)}
-</framing_brief>
-
-<section>
-Title: ${section.title}
-Rationale: ${section.rationale}
-</section>
-
-Search one query at a time. Stop as soon as you have ${candidateTarget} product page URLs across different brands and retailers.
-
-Output ONLY valid JSON when done: { "urls": ["https://...", ...] }`;
 }
 
 export function buildCuratePrompt(

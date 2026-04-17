@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { RetryAfterError } from 'inngest';
-import { braveSearch } from '../lib/braveSearch';
+import { braveSearch, type BraveSearchResult } from '../lib/braveSearch';
+
+export type SearchResultSet = { query: string; results: BraveSearchResult[] };
 
 export type LLMUsage = {
   inputTokens: number;
@@ -36,6 +38,16 @@ export type LLMClient = {
     system: string;
     prompt: string;
     maxTokens: number;
+    model?: string;
+  }): Promise<LLMResponse>;
+  /** Generate queries, run them in parallel, extract from all results in one pass. */
+  batchSearch(params: {
+    querySystem: string;
+    queryPrompt: string;
+    extractionSystem: string;
+    buildExtractionPrompt: (results: SearchResultSet[]) => string;
+    queryMaxTokens?: number;
+    extractionMaxTokens?: number;
     model?: string;
   }): Promise<LLMResponse>;
 };
@@ -130,6 +142,58 @@ function createAnthropicClient(): LLMClient {
       }
       throw error;
     }
+  }
+
+  async function callRaw(
+    params: Anthropic.MessageCreateParamsNonStreaming,
+  ): Promise<Anthropic.Message> {
+    try {
+      return await client.messages.create(params);
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+      if (status === 429) {
+        const retryAfter = (error as { headers?: Record<string, string> })
+          ?.headers?.['retry-after'];
+        throw new RetryAfterError(
+          'Rate limited',
+          new Date(
+            Date.now() + (retryAfter ? parseInt(retryAfter) * 1000 : 60_000),
+          ),
+        );
+      }
+      if (status === 529)
+        throw new RetryAfterError('Overloaded', new Date(Date.now() + 30_000));
+      throw error;
+    }
+  }
+
+  function extractText(msg: Anthropic.Message): string {
+    return msg.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('\n')
+      .trim();
+  }
+
+  function sumUsage(
+    a: Anthropic.Message,
+    b: Anthropic.Message,
+  ): { inputTokens: number; outputTokens: number } {
+    const aCacheWrite = a.usage?.cache_creation_input_tokens ?? 0;
+    const aCacheRead = a.usage?.cache_read_input_tokens ?? 0;
+    const bCacheWrite = b.usage?.cache_creation_input_tokens ?? 0;
+    const bCacheRead = b.usage?.cache_read_input_tokens ?? 0;
+    return {
+      inputTokens:
+        (a.usage?.input_tokens ?? 0) +
+        aCacheWrite +
+        aCacheRead +
+        (b.usage?.input_tokens ?? 0) +
+        bCacheWrite +
+        bCacheRead,
+      outputTokens:
+        (a.usage?.output_tokens ?? 0) + (b.usage?.output_tokens ?? 0),
+    };
   }
 
   return {
@@ -383,6 +447,113 @@ function createAnthropicClient(): LLMClient {
           toolNames: Array(totalWebSearchRequests).fill('web_search'),
           codeExecutionCount: 0,
           durationMs: totalDurationMs,
+        },
+      };
+    },
+
+    async batchSearch({
+      querySystem,
+      queryPrompt,
+      extractionSystem,
+      buildExtractionPrompt,
+      queryMaxTokens = 300,
+      extractionMaxTokens = 4000,
+      model: overrideModel,
+    }) {
+      const searchModel = overrideModel ?? 'claude-haiku-4-5-20251001';
+      const totalStartedAt = Date.now();
+
+      // Step 1: Generate all queries in one call
+      const queryStartedAt = Date.now();
+      const queryRaw = await callRaw({
+        model: searchModel,
+        max_tokens: queryMaxTokens,
+        system: querySystem,
+        messages: [{ role: 'user', content: queryPrompt }],
+      });
+      const queryDurationMs = Date.now() - queryStartedAt;
+
+      const queryText = extractText(queryRaw);
+      const queryStripped = queryText
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```\s*$/, '')
+        .trim();
+      let queries: string[] = [];
+      try {
+        queries =
+          (JSON.parse(queryStripped) as { queries: string[] }).queries ?? [];
+      } catch {
+        throw new Error(
+          `Failed to parse search queries: ${queryText.slice(0, 200)}`,
+        );
+      }
+
+      console.log('[llm] batchSearch:queries', {
+        model: searchModel,
+        count: queries.length,
+        queries,
+      });
+
+      // Step 2: Run all searches in parallel
+      const searchStartedAt = Date.now();
+      const resultSets: SearchResultSet[] = await Promise.all(
+        queries.map(async (query) => {
+          try {
+            return { query, results: await braveSearch({ query }) };
+          } catch (err) {
+            console.error('[llm] batchSearch:search-error', {
+              query,
+              error: String(err),
+            });
+            return { query, results: [] };
+          }
+        }),
+      );
+      const searchDurationMs = Date.now() - searchStartedAt;
+
+      console.log('[llm] batchSearch:searches-complete', {
+        searches: queries.length,
+        totalResults: resultSets.reduce((n, s) => n + s.results.length, 0),
+        searchDurationMs,
+      });
+
+      // Step 3: Extract URLs from all results in one call
+      const extractionStartedAt = Date.now();
+      const extractionRaw = await callRaw({
+        model: searchModel,
+        max_tokens: extractionMaxTokens,
+        system: extractionSystem,
+        messages: [
+          { role: 'user', content: buildExtractionPrompt(resultSets) },
+        ],
+      });
+      const extractionDurationMs = Date.now() - extractionStartedAt;
+
+      const text = extractText(extractionRaw);
+      const usage = sumUsage(queryRaw, extractionRaw);
+
+      console.log('[llm] batchSearch:done', {
+        ...usage,
+        webSearchRequests: queries.length,
+        queryDurationMs,
+        searchDurationMs,
+        extractionDurationMs,
+        totalDurationMs: Date.now() - totalStartedAt,
+        textPreview: text.slice(0, 200),
+      });
+
+      return {
+        text,
+        usage: { ...usage, webSearchRequests: queries.length },
+        summary: {
+          stopReason: extractionRaw.stop_reason ?? null,
+          contentBlockTypes: ['text'],
+          textBlockCount: 1,
+          textChars: text.length,
+          toolUseCount: 0,
+          toolNames: [],
+          codeExecutionCount: 0,
+          durationMs: queryDurationMs + searchDurationMs + extractionDurationMs,
         },
       };
     },

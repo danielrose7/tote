@@ -17,11 +17,14 @@ import {
   buildHospitalityPassPrompt,
   buildPlanPrompt,
   buildRefinementCuratePrompt,
-  buildRefinementUrlPrompt,
+  buildRefinementExtractionPrompt,
+  buildRefinementQueryGenPrompt,
   buildRound1QuestionsPrompt,
   buildRound2QuestionsPrompt,
-  buildUrlDiscoveryPrompt,
-  buildUrlDiscoverySystemPrompt,
+  buildUrlExtractionPrompt,
+  buildUrlExtractionSystemPrompt,
+  buildUrlQueryGenPrompt,
+  buildUrlQueryGenSystemPrompt,
   CategoryResearchBriefSchema,
   CURATOR_SYSTEM_PROMPT,
   FollowUpQuestionsSchema,
@@ -356,6 +359,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
             usage.inputTokens,
             usage.outputTokens,
             usage.webSearchRequests,
+            'claude-haiku-4-5-20251001',
           ),
           sessionId,
           usage.inputTokens,
@@ -717,17 +721,19 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       });
 
       const found = await step.run(`find-urls-${slug}`, async () => {
-        const startedAt = Date.now();
         console.log('[curate-collection] find-urls:start', {
           at: nowIso(),
           sessionId,
           section: section.title,
           slug,
         });
-        const response = await llm.generateWithSearch({
-          system: buildUrlDiscoverySystemPrompt(),
-          prompt: buildUrlDiscoveryPrompt(section, topic, framingBrief),
-          maxTokens: urlDiscoveryTokenLimit(),
+        const response = await llm.batchSearch({
+          querySystem: buildUrlQueryGenSystemPrompt(),
+          queryPrompt: buildUrlQueryGenPrompt(section, topic, framingBrief),
+          extractionSystem: buildUrlExtractionSystemPrompt(),
+          buildExtractionPrompt: (results) =>
+            buildUrlExtractionPrompt(section, results, framingBrief),
+          extractionMaxTokens: urlDiscoveryTokenLimit(),
         });
         console.log('[curate-collection] find-urls:response', {
           ...response.summary,
@@ -735,19 +741,16 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           sessionId,
           section: section.title,
           slug,
-          durationMs: Date.now() - startedAt,
         });
 
-        const text = response.text;
-        const parsed = parseJson<UrlDiscoveryPayload>(text);
+        const parsed = parseJson<UrlDiscoveryPayload>(response.text);
         if (!parsed) {
           console.error('[curate-collection] find-urls:parse-failed', {
             at: nowIso(),
             sessionId,
             section: section.title,
             slug,
-            stopReason: response.summary.stopReason,
-            textPreview: text.slice(0, 500),
+            textPreview: response.text.slice(0, 500),
           });
           return {
             urls: [] as string[],
@@ -784,6 +787,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
               usage.inputTokens,
               usage.outputTokens,
               usage.webSearchRequests,
+              'claude-haiku-4-5-20251001',
             ),
             sessionId,
             usage.inputTokens,
@@ -1176,10 +1180,17 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         });
 
         const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
-          const response = await llm.generateWithSearch({
-            system: buildUrlDiscoverySystemPrompt(),
-            prompt: buildRefinementUrlPrompt(gap, topic, framingBrief),
-            maxTokens: urlDiscoveryTokenLimit(),
+          const response = await llm.batchSearch({
+            querySystem: buildUrlQueryGenSystemPrompt(),
+            queryPrompt: buildRefinementQueryGenPrompt(
+              gap,
+              topic,
+              framingBrief,
+            ),
+            extractionSystem: buildUrlExtractionSystemPrompt(),
+            buildExtractionPrompt: (results) =>
+              buildRefinementExtractionPrompt(gap, results, framingBrief),
+            extractionMaxTokens: urlDiscoveryTokenLimit(),
           });
           const parsed = parseJson<UrlDiscoveryPayload>(response.text);
           if (!parsed)
@@ -1210,6 +1221,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
                 usage.inputTokens,
                 usage.outputTokens,
                 usage.webSearchRequests,
+                'claude-haiku-4-5-20251001',
               ),
               sessionId,
               usage.inputTokens,
