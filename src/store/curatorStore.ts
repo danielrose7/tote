@@ -43,6 +43,7 @@ interface CuratorState {
   // Session identity
   sessionId: string | null;
   topic: string;
+  sessionTitle: string | null;
   phase: Phase;
   mode: CurationMode;
 
@@ -136,6 +137,7 @@ const initialState: Omit<
 > = {
   sessionId: null,
   topic: '',
+  sessionTitle: null,
   phase: 'idle',
   mode: 'normal',
   questions: [],
@@ -211,6 +213,7 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 
       if (snap.phase) patch.phase = snap.phase as Phase;
       if (snap.topic && !s.topic) patch.topic = snap.topic as string;
+      if (snap.sessionTitle) patch.sessionTitle = snap.sessionTitle as string;
       if (snap.tokenUsage)
         patch.tokenUsage = snap.tokenUsage as CuratorState['tokenUsage'];
       if (snap.questionRound === 1 || snap.questionRound === 2)

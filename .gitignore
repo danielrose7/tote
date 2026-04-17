@@ -42,3 +42,4 @@ chrome-extension/tote-extension.zip
 chrome-extension/dist.crx
 chrome-extension/dist.pem
 chrome-extension/dist.zip
+.env*.local

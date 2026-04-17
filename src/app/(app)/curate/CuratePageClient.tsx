@@ -62,6 +62,7 @@ export function CuratePageClient({
   const {
     phase,
     topic,
+    sessionTitle,
     sessionId,
     questions,
     questionRound,
@@ -474,7 +475,9 @@ export function CuratePageClient({
     <main className={styles.main}>
       <div className={styles.container}>
         <div className={styles.historyHeader}>
-          <h1 className={styles.heading}>{topic || 'Collection Curator'}</h1>
+          <h1 className={styles.heading}>
+            {sessionTitle || topic || 'Collection Curator'}
+          </h1>
           <a href="/curate" className={styles.backLink}>
             All sessions
           </a>
@@ -541,7 +544,7 @@ export function CuratePageClient({
                   <form onSubmit={handleAnswers} className={styles.form}>
                     <p className={styles.subheading}>
                       {questionRound === 2
-                        ? `Round 2 of 2. We've researched ${topic || 'the category'} — these questions help us dial in the specifics before we build.`
+                        ? `Round 2 of 2. We've researched ${sessionTitle || topic || 'the category'} — these questions help us dial in the specifics before we build.`
                         : `Round 1 of 2. After you answer, we'll research the category (~30–90s), then come back with a few sharper follow-up questions.`}
                     </p>
 

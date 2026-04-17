@@ -20,6 +20,7 @@ export async function GET(
   return NextResponse.json({
     phase: session?.phase ?? null,
     topic: session?.topic ?? null,
+    sessionTitle: session?.title ?? null,
     questions: session?.questions ?? null,
     questionRound: session?.questionRound ?? null,
     answers: session?.answers ?? null,

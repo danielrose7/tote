@@ -210,6 +210,36 @@ export const curateCollection = inngest.createFunction(
       ]),
     );
 
+    // Generate a short display title for the session using Haiku — runs in
+    // parallel with waiting for answers so there's no latency cost.
+    await step.run('generate-session-title', async () => {
+      const response = await llm.generate({
+        model: 'claude-haiku-4-5-20251001',
+        system:
+          'You generate concise titles for product curation sessions. Return only the title — no quotes, no punctuation, no explanation.',
+        prompt: `Generate a 3-5 word title that captures the essence of this curation request.
+
+<examples>
+Input: "I want to find the best minimalist running shoes for wide feet, focusing on road running, under $150" → Minimalist Wide Running Shoes
+Input: "Looking for kitchen knives as a gift for my dad who loves cooking Japanese food" → Japanese Kitchen Knives Gift
+Input: "Baby gear for a 3-month-old — natural materials, considered design, small condo in Salt Lake City" → Natural Baby Gear Essentials
+</examples>
+
+<request>${topic}</request>`,
+        maxTokens: 20,
+      });
+      const title = response.text.trim().replace(/^["']|["']$/g, '');
+      await Promise.all([
+        title ? patchSession(sessionId, { title }) : Promise.resolve(),
+        logStep(sessionId, 'generate-session-title', 'completed', {
+          title,
+          inputTokens: response.usage?.inputTokens ?? 0,
+          outputTokens: response.usage?.outputTokens ?? 0,
+          durationMs: response.summary.durationMs,
+        }),
+      ]);
+    });
+
     let totalInputTokens = round1QuestionResult.usage?.inputTokens ?? 0;
     let totalOutputTokens = round1QuestionResult.usage?.outputTokens ?? 0;
     let totalWebSearchRequests = 0;
