@@ -226,7 +226,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
 </examples>
 
 <request>${topic}</request>`,
-        maxTokens: 20,
+        maxTokens: 60,
       });
       const title = response.text.trim().replace(/^["']|["']$/g, '');
       await Promise.all([
@@ -827,6 +827,8 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       sections: urlSections,
     });
 
+    const totalUrlCount = urlSections.reduce((n, s) => n + s.urls.length, 0);
+
     // Step 7: Persist URL data for reconnect, then wait for extractions
     await step.run('persist-session-urls', () =>
       Promise.all([
@@ -852,8 +854,6 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     await step.realtime.publish('urls-ready', ch.urls, {
       sections: urlSections,
     });
-
-    const totalUrlCount = urlSections.reduce((n, s) => n + s.urls.length, 0);
     await step.realtime.publish('urls-found', ch.progress, {
       step: 'urls-found',
       message: `${totalUrlCount} URLs found across ${urlSections.length} sections`,
