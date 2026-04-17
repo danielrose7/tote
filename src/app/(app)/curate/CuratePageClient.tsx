@@ -285,6 +285,8 @@ export function CuratePageClient({
           'interview-round-1-sent',
           'answers-round-1-received',
           'category-research-complete',
+          'interview-round-2-sent',
+          'answers-round-2-received',
           'framing-complete',
           'planned',
         ],
@@ -293,6 +295,10 @@ export function CuratePageClient({
           {
             label: 'Research',
             status: stepStatus('category-research-complete'),
+          },
+          {
+            label: 'Round 2',
+            status: stepStatus('interview-round-2-sent'),
           },
           {
             label: 'Follow-up',
