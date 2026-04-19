@@ -22,7 +22,6 @@ import { useCollections } from '../hooks/useCollections';
 import type {
   ExtractedMetadata,
   MessagePayload,
-  RawPageCapture,
 } from '../lib/extractors/types';
 import { loadOwnerGroup } from '../lib/loadOwnerGroup';
 import {
@@ -88,53 +87,20 @@ function getDomain(url: string): string {
   }
 }
 
-const API_BASE =
-  process.env.NODE_ENV === 'production'
-    ? 'https://tote.tools'
-    : 'http://localhost:3000';
-
-/**
- * Gzip a string using the browser-native CompressionStream API.
- */
-async function gzipString(input: string): Promise<Blob> {
-  const blob = new Blob([input]);
-  const stream = blob.stream().pipeThrough(new CompressionStream('gzip'));
-  return new Response(stream).blob();
-}
+import { uploadCapture } from '../lib/capture';
 
 /**
  * Fire-and-forget: capture raw page data and upload to R2.
- * Errors are silently logged — capture should never block the save flow.
  */
-async function uploadCapture(tabId: number): Promise<void> {
+async function captureTab(tabId: number): Promise<void> {
   try {
-    // 1. Ask content script for raw page capture
     const response: MessagePayload = await chrome.tabs.sendMessage(tabId, {
       type: 'CAPTURE_RAW_PAGE',
     } as MessagePayload);
 
-    if (!response?.capture) return;
-
-    // 2. Get presigned URL from API
-    const presignRes = await fetch(`${API_BASE}/api/extract/capture/presign`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: response.capture.url }),
-    });
-
-    if (!presignRes.ok) return;
-    const { presignedUrl } = await presignRes.json();
-
-    // 3. Gzip and upload directly to R2
-    const compressed = await gzipString(JSON.stringify(response.capture));
-    await fetch(presignedUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Encoding': 'gzip',
-      },
-      body: compressed,
-    });
+    if (response?.capture) {
+      await uploadCapture(response.capture);
+    }
   } catch (err) {
     console.error('[Tote] Capture upload failed (non-blocking):', err);
   }
@@ -798,7 +764,7 @@ function PopupContent() {
 
             // Fire-and-forget: capture raw page data for corpus
             if (deepExtractEnabled && tab.id) {
-              uploadCapture(tab.id);
+              captureTab(tab.id);
             }
           }
         },

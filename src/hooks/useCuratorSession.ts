@@ -181,7 +181,7 @@ export function useCuratorSession(sessionId: string | null) {
         const fixture = MOCK_EXTRACTED_ITEMS[url];
         metadata = fixture ? { ...fixture } : null;
       } else {
-        metadata = await refreshViaExtension(url);
+        metadata = await refreshViaExtension(url, { capture: true });
       }
 
       items.push({ sourceUrl: url, ...metadata });
