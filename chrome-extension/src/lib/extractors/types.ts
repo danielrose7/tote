@@ -1,12 +1,27 @@
+export interface ProductVariant {
+  name: string;
+  price?: string;
+  currency?: string;
+  sku?: string;
+  color?: string;
+  size?: string;
+  available?: boolean;
+  imageUrl?: string;
+}
+
 export interface ExtractedMetadata {
   url: string;
   title?: string;
   description?: string;
   imageUrl?: string;
+  images?: string[];
   price?: string;
   currency?: string;
   brand?: string;
   availability?: string;
+  sku?: string;
+  color?: string;
+  variants?: ProductVariant[];
   platform?: 'shopify' | 'squarespace' | 'woocommerce' | 'unknown';
 }
 

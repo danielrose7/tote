@@ -4,6 +4,7 @@
 import type {
   ExtractedMetadata,
   ExtractionResult,
+  ProductVariant,
   RawPageCapture,
 } from './types';
 
@@ -116,7 +117,7 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
       const data = JSON.parse(script.textContent || '');
       const match = findProduct(data);
       if (match) {
-        const { product, groupName, variantMatched } = match;
+        const { product, groupName, variantMatched, allVariants } = match;
 
         // If the JSON-LD product has an explicit same-origin URL that doesn't
         // match the current page path, this data is stale (e.g. from a previous
@@ -127,6 +128,12 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
         if (canonicalUrl && !urlPathMatchesPage(canonicalUrl)) {
           return null;
         }
+
+        // Collect all images from the product (may be array)
+        const images = extractAllImages(product.image);
+
+        // Build variant list from ProductGroup
+        const variants = allVariants ? extractVariants(allVariants) : undefined;
 
         return {
           // When we couldn't match the selected variant, use the group name (e.g.
@@ -140,9 +147,13 @@ function extractJsonLd(): Partial<ExtractedMetadata> | null {
           imageUrl: variantMatched
             ? resolveUrl(extractImage(product.image))
             : undefined,
+          images: images.length > 1 ? images : undefined,
           price: extractProductPrice(product.offers)?.price,
           currency: extractProductPrice(product.offers)?.currency,
           brand: extractBrand(product.brand),
+          sku: product.sku || undefined,
+          color: product.color || undefined,
+          variants: variants && variants.length > 0 ? variants : undefined,
         };
       }
     } catch {
@@ -179,6 +190,8 @@ interface ProductFindResult {
   // variant-specific name (e.g. "Wildcat" instead of "Wildcat - Matte Black | ...").
   groupName?: string;
   variantMatched: boolean;
+  // Full variant list from ProductGroup (if available)
+  allVariants?: any[];
 }
 
 function findProduct(data: unknown): ProductFindResult | null {
@@ -194,28 +207,33 @@ function findProduct(data: unknown): ProductFindResult | null {
     }
     if (types.some((t) => t === 'ProductGroup')) {
       const d = data as any;
-      if (Array.isArray(d.hasVariant)) {
+      const allVariants = Array.isArray(d.hasVariant)
+        ? d.hasVariant
+        : undefined;
+      if (allVariants) {
         const variantId = extractCurrentVariantId();
         if (variantId) {
-          const matched = d.hasVariant.find((v: any) => {
+          const matched = allVariants.find((v: any) => {
             const vid = String(
               v?.['@id'] ?? v?.productID ?? v?.sku ?? v?.identifier ?? '',
             );
             return vid.includes(variantId);
           });
-          if (matched) return { product: matched, variantMatched: true };
+          if (matched)
+            return { product: matched, variantMatched: true, allVariants };
         }
         // Couldn't identify the selected variant — fall back to first with offers
         // but flag it so we can use the group name and skip variant-specific image
-        const withOffers = d.hasVariant.find((v: any) => v?.offers);
+        const withOffers = allVariants.find((v: any) => v?.offers);
         if (withOffers)
           return {
             product: withOffers,
             groupName: d.name,
             variantMatched: false,
+            allVariants,
           };
       }
-      if (d.offers) return { product: d, variantMatched: true };
+      if (d.offers) return { product: d, variantMatched: true, allVariants };
     }
   }
 
@@ -247,6 +265,50 @@ function extractImage(
     if (first && typeof first === 'object' && 'url' in first) return first.url;
   }
   return undefined;
+}
+
+// Extract all image URLs from JSON-LD image field (may be string, array, or object array)
+function extractAllImages(image: unknown): string[] {
+  if (!image) return [];
+  if (typeof image === 'string')
+    return [resolveUrl(image)].filter(Boolean) as string[];
+  if (Array.isArray(image)) {
+    return image
+      .map((img) => {
+        if (typeof img === 'string') return resolveUrl(img);
+        if (img && typeof img === 'object' && 'url' in img)
+          return resolveUrl(img.url);
+        return undefined;
+      })
+      .filter(Boolean) as string[];
+  }
+  if (typeof image === 'object' && 'url' in (image as any)) {
+    const url = resolveUrl((image as any).url);
+    return url ? [url] : [];
+  }
+  return [];
+}
+
+// Extract variant list from JSON-LD hasVariant array
+function extractVariants(variants: any[]): ProductVariant[] {
+  return variants
+    .map((v) => {
+      const offer = Array.isArray(v.offers) ? v.offers[0] : v.offers;
+      const available = offer?.availability
+        ? String(offer.availability).includes('InStock')
+        : undefined;
+      return {
+        name: v.name || '',
+        price: offer?.price?.toString(),
+        currency: offer?.priceCurrency,
+        sku: v.sku || undefined,
+        color: v.color || undefined,
+        size: v.size || undefined,
+        available,
+        imageUrl: resolveUrl(extractImage(v.image)),
+      };
+    })
+    .filter((v) => v.name);
 }
 
 function extractProductPrice(offers: any): {
@@ -594,9 +656,13 @@ export function extractMetadata(): ExtractionResult {
     title: title ? decodeHtmlEntities(title) : undefined,
     description: description ? decodeHtmlEntities(description) : undefined,
     imageUrl: jsonLd?.imageUrl || og.imageUrl || domImage,
+    images: jsonLd?.images,
     price: jsonLd?.price || domPrice.price || og.price,
     currency: jsonLd?.currency || domPrice.currency || og.currency,
     brand: jsonLd?.brand || og.brand,
+    sku: jsonLd?.sku,
+    color: jsonLd?.color,
+    variants: jsonLd?.variants,
     platform,
   };
 
@@ -604,9 +670,13 @@ export function extractMetadata(): ExtractionResult {
   if (merged.title) extractedFields.push('title');
   if (merged.description) extractedFields.push('description');
   if (merged.imageUrl) extractedFields.push('imageUrl');
+  if (merged.images) extractedFields.push('images');
   if (merged.price) extractedFields.push('price');
   if (merged.currency) extractedFields.push('currency');
   if (merged.brand) extractedFields.push('brand');
+  if (merged.sku) extractedFields.push('sku');
+  if (merged.color) extractedFields.push('color');
+  if (merged.variants) extractedFields.push('variants');
 
   // Calculate confidence
   const criticalFields = ['title', 'imageUrl', 'price'];

@@ -200,7 +200,7 @@ export function ExtractDashboardClient() {
                   <td style={styles.tdRight}>{gap.availableIn} captures</td>
                   <td style={styles.tdRight}>{gap.availableRate}%</td>
                   <td style={styles.tdRight}>
-                    <span style={{ color: '#ef4444' }}>0</span>
+                    <span style={{ color: '#dc2626' }}>0</span>
                   </td>
                 </tr>
               ))}
@@ -225,10 +225,10 @@ export function ExtractDashboardClient() {
                       width: `${rate}%`,
                       backgroundColor:
                         rate > 50
-                          ? '#22c55e'
+                          ? '#16a34a'
                           : rate > 20
-                            ? '#eab308'
-                            : '#ef4444',
+                            ? '#ca8a04'
+                            : '#dc2626',
                     }}
                   />
                 </div>
@@ -288,7 +288,7 @@ export function ExtractDashboardClient() {
                           c.jsonLdFields.hasVariants ||
                           c.jsonLdFields.hasMultipleImages ||
                           c.jsonLdFields.hasMaterial) && (
-                          <span style={{ color: '#eab308' }}>
+                          <span style={{ color: '#b45309' }}>
                             Untapped:{' '}
                             {[
                               c.jsonLdFields.hasRating && 'ratings',
@@ -323,7 +323,7 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 function ConfidenceBadge({ value }: { value: number }) {
-  const color = value >= 0.8 ? '#22c55e' : value >= 0.5 ? '#eab308' : '#ef4444';
+  const color = value >= 0.8 ? '#16a34a' : value >= 0.5 ? '#ca8a04' : '#dc2626';
   return (
     <span
       style={{
@@ -343,24 +343,24 @@ const styles: Record<string, React.CSSProperties> = {
     margin: '0 auto',
     padding: '2rem 1rem',
     fontFamily: 'system-ui, -apple-system, sans-serif',
-    color: '#e2e8f0',
+    color: '#1e293b',
   },
   h1: { fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' },
   h2: {
     fontSize: '1.1rem',
     fontWeight: 600,
     marginBottom: '0.75rem',
-    borderBottom: '1px solid #334155',
+    borderBottom: '1px solid #e2e8f0',
     paddingBottom: '0.5rem',
   },
   section: { marginBottom: '2.5rem' },
-  muted: { color: '#94a3b8', fontSize: '0.875rem' },
-  error: { color: '#ef4444' },
+  muted: { color: '#64748b', fontSize: '0.875rem' },
+  error: { color: '#dc2626' },
   statRow: { display: 'flex', gap: '2rem', marginBottom: '1rem' },
   stat: { textAlign: 'center' },
   statValue: { fontSize: '2rem', fontWeight: 700 },
   statLabel: {
-    color: '#94a3b8',
+    color: '#64748b',
     fontSize: '0.75rem',
     textTransform: 'uppercase',
   },
@@ -372,21 +372,21 @@ const styles: Record<string, React.CSSProperties> = {
   th: {
     textAlign: 'left',
     padding: '0.5rem 0.75rem',
-    borderBottom: '1px solid #334155',
-    color: '#94a3b8',
+    borderBottom: '1px solid #e2e8f0',
+    color: '#64748b',
     fontWeight: 500,
   },
   thRight: {
     textAlign: 'right',
     padding: '0.5rem 0.75rem',
-    borderBottom: '1px solid #334155',
-    color: '#94a3b8',
+    borderBottom: '1px solid #e2e8f0',
+    color: '#64748b',
     fontWeight: 500,
   },
-  td: { padding: '0.4rem 0.75rem', borderBottom: '1px solid #1e293b' },
+  td: { padding: '0.4rem 0.75rem', borderBottom: '1px solid #f1f5f9' },
   tdRight: {
     padding: '0.4rem 0.75rem',
-    borderBottom: '1px solid #1e293b',
+    borderBottom: '1px solid #f1f5f9',
     textAlign: 'right',
     fontVariantNumeric: 'tabular-nums',
   },
@@ -401,7 +401,7 @@ const styles: Record<string, React.CSSProperties> = {
   barTrack: {
     flex: 1,
     height: 16,
-    backgroundColor: '#1e293b',
+    backgroundColor: '#f1f5f9',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -419,16 +419,16 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     padding: '0.5rem 0.75rem',
     background: 'none',
-    border: '1px solid #1e293b',
+    border: '1px solid #e2e8f0',
     borderRadius: 4,
-    color: '#e2e8f0',
+    color: '#1e293b',
     cursor: 'pointer',
     fontSize: '0.875rem',
   },
   captureList: { padding: '0.5rem 0 0.5rem 1.5rem' },
   captureCard: {
     padding: '0.5rem 0.75rem',
-    borderLeft: '2px solid #334155',
+    borderLeft: '2px solid #e2e8f0',
     marginBottom: '0.5rem',
   },
   captureUrl: {
@@ -443,7 +443,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
     gap: '0.75rem',
     fontSize: '0.75rem',
-    color: '#94a3b8',
+    color: '#64748b',
   },
-  link: { color: '#60a5fa', textDecoration: 'none' },
+  link: { color: '#2563eb', textDecoration: 'none' },
 };
