@@ -80,3 +80,174 @@ export function presignR2PutUrl(opts: {
   sortedParams.set('X-Amz-Signature', signature);
   return `https://${host}/${encodedKey}?${sortedParams.toString()}`;
 }
+
+// --- Authorization header signing (for server-side GET/PUT/LIST) ---
+
+function r2Host(): string {
+  return `${R2_BUCKET}.${ACCOUNT_ID}.r2.cloudflarestorage.com`;
+}
+
+function signRequest(
+  method: string,
+  path: string,
+  queryString: string,
+  headers: Record<string, string>,
+  payloadHash: string,
+): Record<string, string> {
+  const now = new Date();
+  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const amzDate = `${dateStamp}T${now.toISOString().slice(11, 19).replace(/:/g, '')}Z`;
+  const credentialScope = `${dateStamp}/auto/s3/aws4_request`;
+
+  const allHeaders = {
+    ...headers,
+    'x-amz-date': amzDate,
+    'x-amz-content-sha256': payloadHash,
+  };
+  const signedHeaderKeys = Object.keys(allHeaders).sort().join(';');
+  const canonicalHeaders = Object.keys(allHeaders)
+    .sort()
+    .map((k) => `${k}:${allHeaders[k]}`)
+    .join('\n');
+
+  const canonicalRequest = [
+    method,
+    path,
+    queryString,
+    `${canonicalHeaders}\n`,
+    signedHeaderKeys,
+    payloadHash,
+  ].join('\n');
+
+  const stringToSign = [
+    'AWS4-HMAC-SHA256',
+    amzDate,
+    credentialScope,
+    sha256(canonicalRequest),
+  ].join('\n');
+
+  const signingKey = getSigningKey(SECRET_ACCESS_KEY, dateStamp);
+  const signature = hmacSha256(signingKey, stringToSign).toString('hex');
+
+  return {
+    ...allHeaders,
+    Authorization: `AWS4-HMAC-SHA256 Credential=${ACCESS_KEY_ID}/${credentialScope}, SignedHeaders=${signedHeaderKeys}, Signature=${signature}`,
+  };
+}
+
+export interface R2ObjectInfo {
+  key: string;
+  size: number;
+  lastModified: string;
+}
+
+/**
+ * List objects in the R2 bucket by prefix. Handles pagination.
+ */
+export async function listR2Objects(prefix: string): Promise<R2ObjectInfo[]> {
+  const host = r2Host();
+  const results: R2ObjectInfo[] = [];
+  let continuationToken: string | undefined;
+
+  do {
+    const params = new URLSearchParams({ 'list-type': '2', prefix });
+    if (continuationToken) params.set('continuation-token', continuationToken);
+    const qs = params.toString();
+
+    const headers = signRequest('GET', '/', qs, { host }, 'UNSIGNED-PAYLOAD');
+    const res = await fetch(`https://${host}/?${qs}`, { headers });
+
+    if (!res.ok) {
+      throw new Error(`R2 LIST failed: ${res.status} ${await res.text()}`);
+    }
+
+    const xml = await res.text();
+
+    // Parse objects from XML
+    const keyMatches = xml.matchAll(/<Key>([^<]+)<\/Key>/g);
+    const sizeMatches = xml.matchAll(/<Size>(\d+)<\/Size>/g);
+    const dateMatches = xml.matchAll(/<LastModified>([^<]+)<\/LastModified>/g);
+
+    const keys = [...keyMatches].map((m) => m[1]);
+    const sizes = [...sizeMatches].map((m) => Number(m[1]));
+    const dates = [...dateMatches].map((m) => m[1]);
+
+    for (let i = 0; i < keys.length; i++) {
+      results.push({ key: keys[i], size: sizes[i], lastModified: dates[i] });
+    }
+
+    // Check for pagination
+    const truncated = xml.includes('<IsTruncated>true</IsTruncated>');
+    const tokenMatch = xml.match(
+      /<NextContinuationToken>([^<]+)<\/NextContinuationToken>/,
+    );
+    continuationToken = truncated && tokenMatch ? tokenMatch[1] : undefined;
+  } while (continuationToken);
+
+  return results;
+}
+
+/**
+ * Get an object from R2. Returns the raw response body as a Buffer.
+ */
+export async function getR2Object(key: string): Promise<Buffer> {
+  const host = r2Host();
+  const encodedKey = key
+    .split('/')
+    .map((s) => encodeURIComponent(s))
+    .join('/');
+
+  const headers = signRequest(
+    'GET',
+    `/${encodedKey}`,
+    '',
+    { host },
+    'UNSIGNED-PAYLOAD',
+  );
+  const res = await fetch(`https://${host}/${encodedKey}`, { headers });
+
+  if (!res.ok) {
+    throw new Error(`R2 GET failed: ${res.status} ${await res.text()}`);
+  }
+
+  return Buffer.from(await res.arrayBuffer());
+}
+
+/**
+ * Put an object into R2.
+ */
+export async function putR2Object(
+  key: string,
+  body: Buffer | string,
+  contentType = 'application/json',
+): Promise<void> {
+  const host = r2Host();
+  const encodedKey = key
+    .split('/')
+    .map((s) => encodeURIComponent(s))
+    .join('/');
+  const payload = typeof body === 'string' ? Buffer.from(body) : body;
+  const payloadHash = sha256(payload.toString());
+
+  const headers = signRequest(
+    'PUT',
+    `/${encodedKey}`,
+    '',
+    {
+      host,
+      'content-type': contentType,
+      'content-length': String(payload.length),
+    },
+    payloadHash,
+  );
+
+  const res = await fetch(`https://${host}/${encodedKey}`, {
+    method: 'PUT',
+    headers,
+    body: payload,
+  });
+
+  if (!res.ok) {
+    throw new Error(`R2 PUT failed: ${res.status} ${await res.text()}`);
+  }
+}

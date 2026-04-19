@@ -39,6 +39,7 @@ tmp/
 chrome-extension/.env.development
 chrome-extension/.env.production
 chrome-extension/tote-extension.zip
+chrome-extension/fixtures/captures/
 chrome-extension/dist.crx
 chrome-extension/dist.pem
 chrome-extension/dist.zip
