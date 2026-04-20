@@ -1,6 +1,6 @@
 {
   "name": "tote-extension",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "Save products to your Tote collections from any webpage",
   "type": "module",
   "scripts": {
