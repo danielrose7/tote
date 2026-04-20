@@ -1,9 +1,6 @@
 import type { RawPageCapture } from './extractors/types';
 
-const API_BASE =
-  process.env.NODE_ENV === 'production'
-    ? 'https://tote.tools'
-    : 'http://localhost:3000';
+const API_BASE = 'https://tote.tools';
 
 /**
  * Upload a raw page capture to R2 via presigned URL.
