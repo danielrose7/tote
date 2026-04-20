@@ -43,6 +43,6 @@
     "https://clerk.tote.tools/*"
   ],
   "externally_connectable": {
-    "matches": ["https://tote.tools/*", "http://localhost:3000/*"]
+    "matches": ["https://tote.tools/*"]
   }
 }
