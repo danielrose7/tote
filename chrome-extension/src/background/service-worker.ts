@@ -238,7 +238,7 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'save-to-tote',
     title: 'Save to Tote',
-    contexts: ['page', 'link'],
+    contexts: ['page', 'link', 'image'],
   });
 });
 
