@@ -87,7 +87,17 @@ async function refreshBlockMetadata(
       updatedProductData.description = metadata.description;
     }
     if (metadata.imageUrl) {
-      updatedProductData.imageUrl = metadata.imageUrl;
+      // Preserve user-selected image if it's still among the extracted results
+      const extractedImages = [metadata.imageUrl, ...(metadata.images || [])];
+      const currentStillValid =
+        updatedProductData.imageUrl &&
+        extractedImages.includes(updatedProductData.imageUrl);
+      if (!currentStillValid) {
+        updatedProductData.imageUrl = metadata.imageUrl;
+      }
+    }
+    if (metadata.images) {
+      updatedProductData.images = metadata.images;
     }
     if (metadata.price) {
       updatedProductData.price = metadata.price;

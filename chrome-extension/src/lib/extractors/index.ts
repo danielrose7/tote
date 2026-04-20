@@ -606,6 +606,316 @@ function detectPlatform(): ExtractedMetadata['platform'] {
   return 'unknown';
 }
 
+// --- Image gallery extraction helpers ---
+
+// Patterns to exclude from image URLs (logos, icons, tracking pixels, etc.)
+const IMAGE_EXCLUDE_PATTERNS =
+  /logo|icon|favicon|sprite|placeholder|spacer|pixel|tracking|badge|avatar|rating|star/i;
+
+// Shopify CDN size suffixes
+const SHOPIFY_SIZE_REGEX =
+  /_(?:\d+x\d*|\d*x\d+|pico|icon|thumb|small|compact|medium|large|grande|master|original)(?=\.\w+)/;
+
+// Known gallery container selectors, ordered by specificity
+const GALLERY_SELECTORS = [
+  'media-gallery',
+  'product-media-carousel',
+  'scroll-carousel',
+  'slider-component',
+  '.swiper-wrapper',
+  '[data-product-target="swiperContainer"]',
+  '.slick-list',
+  '.woocommerce-product-gallery',
+  '.woocommerce-product-gallery__wrapper',
+  '.product-gallery',
+  '.product-images',
+  '.product-media',
+  '.product__media-list',
+  '.product__images',
+  '[class*="product-gallery"]',
+  '[class*="product-image"]',
+  '[class*="gallery-viewer"]',
+  '.carousel-inner',
+];
+
+// Parse srcset attribute and return URL with largest w descriptor
+function parseSrcset(srcset: string): string | undefined {
+  let best: { url: string; width: number } | undefined;
+  for (const entry of srcset.split(',')) {
+    const parts = entry.trim().split(/\s+/);
+    if (parts.length < 2) continue;
+    const url = parts[0];
+    const descriptor = parts[1];
+    const wMatch = descriptor.match(/^(\d+)w$/);
+    if (wMatch) {
+      const w = parseInt(wMatch[1], 10);
+      if (!best || w > best.width) best = { url, width: w };
+    }
+  }
+  return best?.url;
+}
+
+// Normalize image URL for deduplication by stripping CDN size/quality variants
+function normalizeImageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+
+    // Normalize protocol to https for comparison (http vs https shouldn't matter)
+    parsed.protocol = 'https:';
+
+    // Next.js image proxy: extract the real URL
+    if (parsed.pathname === '/_next/image' && parsed.searchParams.has('url')) {
+      return normalizeImageUrl(
+        decodeURIComponent(parsed.searchParams.get('url')!),
+      );
+    }
+
+    // Strip common resize/quality/cache query params
+    for (const param of [
+      'width',
+      'w',
+      'h',
+      'height',
+      'quality',
+      'q',
+      'format',
+      'fit',
+      'crop',
+      'dpr',
+      'v',
+    ]) {
+      parsed.searchParams.delete(param);
+    }
+
+    let normalized = parsed.toString();
+
+    // Shopify CDN size suffixes
+    normalized = normalized.replace(SHOPIFY_SIZE_REGEX, '');
+
+    // Cloudinary transform segments: /c_fill,w_300,h_300/
+    normalized = normalized.replace(
+      /\/[a-z]_[a-z0-9]+(?:,[a-z]_[a-z0-9]+)*\//g,
+      '/',
+    );
+
+    return normalized;
+  } catch {
+    return url;
+  }
+}
+
+// Deduplicate images by normalized URL, preserving first occurrence order
+function deduplicateImages(urls: string[]): string[] {
+  const seen = new Map<string, string>(); // normalized → first original
+  const result: string[] = [];
+  for (const url of urls) {
+    const key = normalizeImageUrl(url);
+    if (!seen.has(key)) {
+      seen.set(key, url);
+      result.push(url);
+    }
+  }
+  return result;
+}
+
+// Upgrade a Shopify CDN URL to a display-quality resolution
+function upgradeImageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    // Shopify CDN: replace small width with 1200 (good for cards/previews)
+    if (
+      parsed.hostname.includes('shopify.com') ||
+      parsed.hostname.includes('cdn.shopify.com') ||
+      parsed.searchParams.has('width')
+    ) {
+      const currentWidth = parseInt(
+        parsed.searchParams.get('width') || '9999',
+        10,
+      );
+      if (currentWidth < 800) {
+        parsed.searchParams.set('width', '1200');
+        return parsed.toString();
+      }
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
+
+// Resolve the best URL from a single <img> element
+function resolveImageUrl(img: Element): string | undefined {
+  const dataZoom = img.getAttribute('data-zoom-src');
+  if (dataZoom && !dataZoom.startsWith('data:'))
+    return upgradeImageUrl(resolveUrl(dataZoom)!);
+
+  // Check data-srcset (lazysizes) before data-src
+  const dataSrcset = img.getAttribute('data-srcset');
+  if (dataSrcset) {
+    const largest = parseSrcset(dataSrcset);
+    if (largest) return upgradeImageUrl(resolveUrl(largest)!);
+  }
+
+  const dataSrc = img.getAttribute('data-src');
+  if (dataSrc && !dataSrc.startsWith('data:'))
+    return upgradeImageUrl(resolveUrl(dataSrc)!);
+
+  const dataOriginal = img.getAttribute('data-original');
+  if (dataOriginal && !dataOriginal.startsWith('data:'))
+    return upgradeImageUrl(resolveUrl(dataOriginal)!);
+
+  const srcset = img.getAttribute('srcset');
+  if (srcset) {
+    const largest = parseSrcset(srcset);
+    if (largest) return upgradeImageUrl(resolveUrl(largest)!);
+  }
+
+  const src = (img as HTMLImageElement).src || img.getAttribute('src') || '';
+  if (src && !src.startsWith('data:')) return upgradeImageUrl(resolveUrl(src)!);
+
+  return undefined;
+}
+
+// Check if an image URL looks like a non-product image
+function isExcludedImage(url: string): boolean {
+  return IMAGE_EXCLUDE_PATTERNS.test(url);
+}
+
+// Collect resolved image URLs from all <img> elements inside a container
+function collectImagesFromContainer(container: Element): string[] {
+  const imgs = container.querySelectorAll(
+    'img:not(.slick-cloned img):not([aria-hidden="true"])',
+  );
+  const urls: string[] = [];
+
+  for (const img of imgs) {
+    // Skip tiny indicator/dot images — but not responsive images that use
+    // placeholder dimensions with srcset/data-srcset for actual sizes
+    const w = img.getAttribute('width');
+    const h = img.getAttribute('height');
+    const hasSrcset =
+      img.hasAttribute('srcset') || img.hasAttribute('data-srcset');
+    if (!hasSrcset && w && h && parseInt(w, 10) < 50 && parseInt(h, 10) < 50)
+      continue;
+
+    const url = resolveImageUrl(img);
+    if (url && !isExcludedImage(url)) {
+      urls.push(url);
+    }
+  }
+
+  return urls;
+}
+
+// Check if an element matches any known gallery selector
+function isGalleryContainer(el: Element): boolean {
+  for (const selector of GALLERY_SELECTORS) {
+    try {
+      if (el.matches(selector)) return true;
+    } catch {
+      // Invalid selector for this element
+    }
+  }
+  return false;
+}
+
+// Count direct and nested <img> elements
+function countImages(el: Element): number {
+  return el.querySelectorAll('img').length;
+}
+
+const MAX_GALLERY_IMAGES = 15;
+
+// Extract all product images from DOM using layered strategy
+function extractAllImagesFromDOM(ogImageUrl?: string): string[] {
+  let images: string[] = [];
+
+  // Layer 1: og:image anchor — find it in DOM, walk up to gallery container
+  if (ogImageUrl) {
+    const normalizedOg = normalizeImageUrl(ogImageUrl);
+    const allImgs = document.querySelectorAll('img');
+
+    let anchorImg: Element | null = null;
+    for (const img of allImgs) {
+      const url = resolveImageUrl(img);
+      if (url && normalizeImageUrl(url) === normalizedOg) {
+        anchorImg = img;
+        break;
+      }
+    }
+
+    if (anchorImg) {
+      // Walk up ancestors looking for a gallery container
+      let current: Element | null = anchorImg.parentElement;
+      let maxDepth = 8;
+      while (current && maxDepth-- > 0) {
+        if (isGalleryContainer(current) || countImages(current) >= 2) {
+          images = collectImagesFromContainer(current);
+          break;
+        }
+        current = current.parentElement;
+      }
+    }
+  }
+
+  // Layer 2: Known gallery selectors
+  if (images.length < 2) {
+    for (const selector of GALLERY_SELECTORS) {
+      try {
+        const container = document.querySelector(selector);
+        if (container) {
+          const found = collectImagesFromContainer(container);
+          if (found.length >= 2) {
+            images = found;
+            break;
+          }
+        }
+      } catch {
+        // Invalid selector
+      }
+    }
+  }
+
+  // Layer 3: Heuristic scan — large images in product-related containers
+  if (images.length < 2) {
+    const containers = document.querySelectorAll(
+      'main, article, [class*="product"], [class*="pdp"]',
+    );
+    const heuristicUrls: string[] = [];
+
+    for (const container of containers) {
+      const imgs = container.querySelectorAll('img');
+      for (const img of imgs) {
+        // Skip if inside header/footer/nav
+        if (
+          img.closest(
+            'header, footer, nav, [class*="footer"], [class*="header"], [class*="nav-"]',
+          )
+        )
+          continue;
+
+        // Require reasonable size
+        const w =
+          parseInt(img.getAttribute('width') || '0', 10) ||
+          (img as HTMLImageElement).naturalWidth ||
+          0;
+        if (w > 0 && w < 100) continue;
+
+        const url = resolveImageUrl(img);
+        if (url && !isExcludedImage(url)) {
+          heuristicUrls.push(url);
+        }
+      }
+    }
+
+    if (heuristicUrls.length >= 2) {
+      images = heuristicUrls;
+    }
+  }
+
+  return deduplicateImages(images).slice(0, MAX_GALLERY_IMAGES);
+}
+
 // Get best product image from DOM
 function extractImageFromDOM(): string | undefined {
   // Priority: product images, then gallery, then main content
@@ -645,8 +955,19 @@ export function extractMetadata(): ExtractionResult {
   // Prefers JSON-LD/OG over h1 since many sites don't use h1 for product names.
   const knownTitle = jsonLd?.title || og.title || undefined;
   const domPrice = extractPriceFromDOM(knownTitle);
-  const domImage = extractImageFromDOM();
+  const ogImageUrl = og.imageUrl;
+  const domImages = extractAllImagesFromDOM(ogImageUrl);
+  const domImageFallback = extractImageFromDOM();
   const platform = detectPlatform();
+
+  // Merge all image sources, deduplicate
+  const allImages = deduplicateImages(
+    [
+      ...(jsonLd?.images || []),
+      ...(ogImageUrl ? [ogImageUrl] : []),
+      ...domImages,
+    ].filter(Boolean),
+  );
 
   // Merge with priority: JSON-LD > DOM > Open Graph
   const title = jsonLd?.title || og.title;
@@ -655,8 +976,9 @@ export function extractMetadata(): ExtractionResult {
     url,
     title: title ? decodeHtmlEntities(title) : undefined,
     description: description ? decodeHtmlEntities(description) : undefined,
-    imageUrl: jsonLd?.imageUrl || og.imageUrl || domImage,
-    images: jsonLd?.images,
+    imageUrl:
+      jsonLd?.imageUrl || ogImageUrl || domImages[0] || domImageFallback,
+    images: allImages.length > 1 ? allImages : undefined,
     price: jsonLd?.price || domPrice.price || og.price,
     currency: jsonLd?.currency || domPrice.currency || og.currency,
     brand: jsonLd?.brand || og.brand,

@@ -107,16 +107,58 @@ async function captureTab(tabId: number): Promise<void> {
 }
 
 /**
+ * Image picker - horizontal scrollable thumbnail row
+ */
+function ImagePicker({
+  images,
+  selected,
+  onSelect,
+}: {
+  images: string[];
+  selected: string;
+  onSelect: (url: string) => void;
+}) {
+  if (images.length <= 1) return null;
+
+  return (
+    <div className="image-picker">
+      {images.map((url) => (
+        <img
+          key={url}
+          src={url}
+          alt=""
+          className={`image-picker-thumb${url === selected ? ' selected' : ''}`}
+          onClick={() => onSelect(url)}
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.display = 'none';
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
  * Metadata preview component - shown regardless of auth state
  */
-function MetadataPreview({ metadata }: { metadata: ExtractedMetadata | null }) {
+function MetadataPreview({
+  metadata,
+  selectedImageUrl,
+  onImageSelect,
+}: {
+  metadata: ExtractedMetadata | null;
+  selectedImageUrl: string | null;
+  onImageSelect: (url: string) => void;
+}) {
   if (!metadata) return null;
+
+  const displayImage = selectedImageUrl || metadata.imageUrl;
 
   return (
     <div className="preview">
-      {metadata.imageUrl ? (
+      {displayImage ? (
         <img
-          src={metadata.imageUrl}
+          src={displayImage}
           alt=""
           className="preview-image"
           onError={(e) => {
@@ -125,6 +167,13 @@ function MetadataPreview({ metadata }: { metadata: ExtractedMetadata | null }) {
         />
       ) : (
         <div className="preview-image-placeholder">No image found</div>
+      )}
+      {metadata.images && (
+        <ImagePicker
+          images={metadata.images}
+          selected={displayImage || ''}
+          onSelect={onImageSelect}
+        />
       )}
       <div className="preview-content">
         <div className="preview-title">{metadata.title || 'Untitled'}</div>
@@ -479,6 +528,7 @@ function SaveUI({
           productData: {
             url: metadata.url,
             imageUrl: metadata.imageUrl,
+            images: metadata.images,
             price: metadata.price,
             description: metadata.description,
           },
@@ -723,6 +773,7 @@ function PopupHeader() {
 function PopupContent() {
   const [status, setStatus] = useState<Status>('loading');
   const [metadata, setMetadata] = useState<ExtractedMetadata | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savedCollectionId, setSavedCollectionId] = useState<string | null>(
     null,
@@ -824,7 +875,11 @@ function PopupContent() {
 
       {status === 'ready' && metadata && (
         <>
-          <MetadataPreview metadata={metadata} />
+          <MetadataPreview
+            metadata={metadata}
+            selectedImageUrl={selectedImageUrl}
+            onImageSelect={setSelectedImageUrl}
+          />
 
           <SignedOut>
             <SignInPrompt />
@@ -832,7 +887,13 @@ function PopupContent() {
 
           <SignedIn>
             <JazzProvider>
-              <SaveUI metadata={metadata} onSuccess={handleSuccess} />
+              <SaveUI
+                metadata={{
+                  ...metadata,
+                  imageUrl: selectedImageUrl || metadata.imageUrl,
+                }}
+                onSuccess={handleSuccess}
+              />
             </JazzProvider>
           </SignedIn>
         </>
