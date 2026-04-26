@@ -78,6 +78,10 @@ function extractPriceFromText(
 function resolveUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // Protocol-relative URLs (e.g. //cdn.shopify.com/...) — always treat as https.
+  // Doing this explicitly avoids relying on window.location as a base, which
+  // can misbehave in jsdom test environments where document.baseURI isn't set.
+  if (url.startsWith('//')) return 'https:' + url;
   try {
     return new URL(url, window.location.href).href;
   } catch {
@@ -96,6 +100,40 @@ function urlPathMatchesPage(url: string): boolean {
     return normalize(resolved.pathname) === normalize(window.location.pathname);
   } catch {
     return true;
+  }
+}
+
+// Check whether the current page URL slug matches a product's identifier fields.
+// Used as a fallback when URL paths don't match exactly — Shopify stores
+// sometimes serve a product at a legacy SKU-based handle (e.g. /products/gt-2809)
+// while the JSON-LD canonical URL uses the display name handle (e.g.
+// /products/classic-long-sleeve-henley). The slug "gt-2809" still appears
+// in the JSON-LD productID "GT-2809-BK3", confirming it's the same product.
+// This is distinct from SPA stale-data cases (like Sézane) where the JSON-LD
+// URL belongs to a completely different product.
+function pageSlugMatchesProductId(product: any): boolean {
+  try {
+    const slug = window.location.pathname.split('/').pop()?.toLowerCase() ?? '';
+    if (!slug) return false;
+    const slugNorm = slug.replace(/[^a-z0-9]/g, '');
+    const candidates = [
+      product?.productID,
+      product?.sku,
+      product?.productGroupID,
+      product?.identifier,
+      product?.mpn,
+    ]
+      .filter(Boolean)
+      .map((v: unknown) =>
+        String(v)
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, ''),
+      );
+    return candidates.some(
+      (id) => id.startsWith(slugNorm) || slugNorm.startsWith(id),
+    );
+  } catch {
+    return false;
   }
 }
 
@@ -610,7 +648,7 @@ function detectPlatform(): ExtractedMetadata['platform'] {
 
 // Patterns to exclude from image URLs (logos, icons, tracking pixels, etc.)
 const IMAGE_EXCLUDE_PATTERNS =
-  /logo|icon|favicon|sprite|placeholder|spacer|pixel|tracking|badge|avatar|rating|star/i;
+  /logo|icon|favicon|sprite|placeholder|spacer|pixel|tracking|badge|avatar|rating|star|wordmark/i;
 
 // Shopify CDN size suffixes
 const SHOPIFY_SIZE_REGEX =
@@ -776,9 +814,11 @@ function resolveImageUrl(img: Element): string | undefined {
   return undefined;
 }
 
-// Check if an image URL looks like a non-product image
-function isExcludedImage(url: string): boolean {
-  return IMAGE_EXCLUDE_PATTERNS.test(url);
+// Check if an image (by URL or alt text) looks like a non-product image
+function isExcludedImage(url: string, altText?: string): boolean {
+  if (IMAGE_EXCLUDE_PATTERNS.test(url)) return true;
+  if (altText && IMAGE_EXCLUDE_PATTERNS.test(altText)) return true;
+  return false;
 }
 
 // Collect resolved image URLs from all <img> elements inside a container
@@ -789,6 +829,9 @@ function collectImagesFromContainer(container: Element): string[] {
   const urls: string[] = [];
 
   for (const img of imgs) {
+    // Skip images inside modal/dialog overlays (e.g. email capture popups)
+    if (img.closest('[aria-modal="true"], [role="dialog"], dialog')) continue;
+
     // Skip tiny indicator/dot images — but not responsive images that use
     // placeholder dimensions with srcset/data-srcset for actual sizes
     const w = img.getAttribute('width');
@@ -799,7 +842,8 @@ function collectImagesFromContainer(container: Element): string[] {
       continue;
 
     const url = resolveImageUrl(img);
-    if (url && !isExcludedImage(url)) {
+    const alt = img.getAttribute('alt') ?? undefined;
+    if (url && !isExcludedImage(url, alt)) {
       urls.push(url);
     }
   }
@@ -824,11 +868,69 @@ function countImages(el: Element): number {
   return el.querySelectorAll('img').length;
 }
 
+// Active-slide selectors for common carousel frameworks.
+// When a carousel marks the currently-visible slide, we want that image first
+// (it's what the user is actually looking at), ahead of DOM order.
+const ACTIVE_SLIDE_SELECTORS = [
+  '.flickity-cell.is-selected', // Flickity
+  '.slick-slide.slick-active.slick-current', // Slick
+  '.swiper-slide-active', // Swiper
+  '[data-slide].active', // Bootstrap carousel
+  '.carousel-item.active', // Bootstrap
+  '[class*="slide"][aria-selected="true"]',
+  '[class*="slide"][aria-current="true"]',
+];
+
+// If the gallery container has an active/selected slide, return its image URL
+// so we can promote it to the front of the list.
+function extractActiveSlideImage(container: Element): string | undefined {
+  for (const selector of ACTIVE_SLIDE_SELECTORS) {
+    try {
+      const activeSlide = container.querySelector(selector);
+      if (activeSlide) {
+        const img = activeSlide.querySelector('img');
+        if (img) {
+          const url = resolveImageUrl(img);
+          if (
+            url &&
+            !isExcludedImage(url, img.getAttribute('alt') ?? undefined)
+          )
+            return url;
+        }
+      }
+    } catch {
+      // Invalid selector
+    }
+  }
+  return undefined;
+}
+
+// Reorder images so that `activeUrl` (if present in the list) comes first.
+function promoteActiveImage(
+  images: string[],
+  activeUrl: string | undefined,
+): string[] {
+  if (!activeUrl) return images;
+  const normalizedActive = normalizeImageUrl(activeUrl);
+  const idx = images.findIndex(
+    (url) => normalizeImageUrl(url) === normalizedActive,
+  );
+  if (idx <= 0) return images; // already first or not found
+  return [images[idx], ...images.slice(0, idx), ...images.slice(idx + 1)];
+}
+
 const MAX_GALLERY_IMAGES = 15;
 
-// Extract all product images from DOM using layered strategy
-function extractAllImagesFromDOM(ogImageUrl?: string): string[] {
+// Extract all product images from DOM using layered strategy.
+// Returns { images, activeSlideUrl } — activeSlideUrl is the image from the
+// currently-selected carousel slide (if any), so callers can prioritize it
+// over the static og:image when the user has a variant/color selected.
+function extractAllImagesFromDOM(ogImageUrl?: string): {
+  images: string[];
+  activeSlideUrl: string | undefined;
+} {
   let images: string[] = [];
+  let activeSlideUrl: string | undefined;
 
   // Layer 1: og:image anchor — find it in DOM, walk up to gallery container
   if (ogImageUrl) {
@@ -845,12 +947,20 @@ function extractAllImagesFromDOM(ogImageUrl?: string): string[] {
     }
 
     if (anchorImg) {
-      // Walk up ancestors looking for a gallery container
+      // Walk up ancestors looking for a gallery container.
+      // Always require >= 2 images even when a known gallery selector matches —
+      // broad selectors like [class*="product-image"] can hit single-image wrappers
+      // (e.g. .product-image-wrapper on Goodwear's Flickity theme) and stop the
+      // walk before we reach the actual carousel (.flickity-slider).
       let current: Element | null = anchorImg.parentElement;
       let maxDepth = 8;
       while (current && maxDepth-- > 0) {
-        if (isGalleryContainer(current) || countImages(current) >= 2) {
-          images = collectImagesFromContainer(current);
+        if (countImages(current) >= 2) {
+          activeSlideUrl = extractActiveSlideImage(current);
+          images = promoteActiveImage(
+            collectImagesFromContainer(current),
+            activeSlideUrl,
+          );
           break;
         }
         current = current.parentElement;
@@ -866,7 +976,8 @@ function extractAllImagesFromDOM(ogImageUrl?: string): string[] {
         if (container) {
           const found = collectImagesFromContainer(container);
           if (found.length >= 2) {
-            images = found;
+            activeSlideUrl = extractActiveSlideImage(container);
+            images = promoteActiveImage(found, activeSlideUrl);
             break;
           }
         }
@@ -886,10 +997,10 @@ function extractAllImagesFromDOM(ogImageUrl?: string): string[] {
     for (const container of containers) {
       const imgs = container.querySelectorAll('img');
       for (const img of imgs) {
-        // Skip if inside header/footer/nav
+        // Skip if inside header/footer/nav/modal
         if (
           img.closest(
-            'header, footer, nav, [class*="footer"], [class*="header"], [class*="nav-"]',
+            'header, footer, nav, [class*="footer"], [class*="header"], [class*="nav-"], [aria-modal="true"], [role="dialog"], dialog',
           )
         )
           continue;
@@ -902,7 +1013,8 @@ function extractAllImagesFromDOM(ogImageUrl?: string): string[] {
         if (w > 0 && w < 100) continue;
 
         const url = resolveImageUrl(img);
-        if (url && !isExcludedImage(url)) {
+        const alt = img.getAttribute('alt') ?? undefined;
+        if (url && !isExcludedImage(url, alt)) {
           heuristicUrls.push(url);
         }
       }
@@ -913,7 +1025,10 @@ function extractAllImagesFromDOM(ogImageUrl?: string): string[] {
     }
   }
 
-  return deduplicateImages(images).slice(0, MAX_GALLERY_IMAGES);
+  return {
+    images: deduplicateImages(images).slice(0, MAX_GALLERY_IMAGES),
+    activeSlideUrl,
+  };
 }
 
 // Get best product image from DOM
@@ -932,7 +1047,12 @@ function extractImageFromDOM(): string | undefined {
   for (const selector of selectors) {
     try {
       const img = document.querySelector(selector) as HTMLImageElement | null;
-      if (img?.src && !img.src.includes('logo') && !img.src.includes('icon')) {
+      if (
+        img?.src &&
+        !img.src.includes('logo') &&
+        !img.src.includes('icon') &&
+        !img.closest('[aria-modal="true"], [role="dialog"], dialog')
+      ) {
         return img.src;
       }
     } catch {
@@ -956,7 +1076,8 @@ export function extractMetadata(): ExtractionResult {
   const knownTitle = jsonLd?.title || og.title || undefined;
   const domPrice = extractPriceFromDOM(knownTitle);
   const ogImageUrl = og.imageUrl;
-  const domImages = extractAllImagesFromDOM(ogImageUrl);
+  const { images: domImages, activeSlideUrl } =
+    extractAllImagesFromDOM(ogImageUrl);
   const domImageFallback = extractImageFromDOM();
   const platform = detectPlatform();
 
@@ -969,7 +1090,9 @@ export function extractMetadata(): ExtractionResult {
     ].filter(Boolean),
   );
 
-  // Merge with priority: JSON-LD > DOM > Open Graph
+  // Image priority: JSON-LD variant match > active carousel slide > og:image > DOM fallback.
+  // activeSlideUrl reflects the variant the user actually has selected (e.g. Flickity
+  // is-selected cell), so it wins over the static og:image when variants differ.
   const title = jsonLd?.title || og.title;
   const description = jsonLd?.description || og.description;
   const merged: ExtractedMetadata = {
@@ -977,7 +1100,11 @@ export function extractMetadata(): ExtractionResult {
     title: title ? decodeHtmlEntities(title) : undefined,
     description: description ? decodeHtmlEntities(description) : undefined,
     imageUrl:
-      jsonLd?.imageUrl || ogImageUrl || domImages[0] || domImageFallback,
+      jsonLd?.imageUrl ||
+      activeSlideUrl ||
+      ogImageUrl ||
+      domImages[0] ||
+      domImageFallback,
     images: allImages.length > 1 ? allImages : undefined,
     price: jsonLd?.price || domPrice.price || og.price,
     currency: jsonLd?.currency || domPrice.currency || og.currency,
