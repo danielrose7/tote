@@ -125,9 +125,23 @@ export const extractorScript = `
       return null;
     }
 
+    // Fix URLs that JSON-LD generators over-encode (%3F→?, %3D→=, %26→&).
+    function fixOverEncodedUrl(url) {
+      return url.replace(/%3F/gi, '?').replace(/%3D/gi, '=').replace(/%26/gi, '&');
+    }
+
+    // Reject Shopify lazy-load template URLs like image_{width}x.jpg before JS substitutes real values.
+    function hasTemplateVariable(url) {
+      return /\\{[^}]+\\}/.test(url);
+    }
+
     function resolveUrl(url) {
       if (!url) return undefined;
+      url = fixOverEncodedUrl(url);
+      if (hasTemplateVariable(url)) return undefined;
       if (url.indexOf('http://') === 0 || url.indexOf('https://') === 0) return url;
+      // Protocol-relative URLs — always treat as https.
+      if (url.indexOf('//') === 0) return 'https:' + url;
       try { return new URL(url, window.location.href).href; } catch(e) { return url; }
     }
 
@@ -292,6 +306,43 @@ export const extractorScript = `
       return { price: candidates[0].price, currency: candidates[0].currency };
     }
 
+    // ── Image exclusion & active slide ────────────────────────────────────
+
+    var IMAGE_EXCLUDE_PATTERNS = /logo|icon|favicon|sprite|placeholder|spacer|pixel|tracking|badge|avatar|rating|star|wordmark|share.?image/i;
+
+    function isExcludedImage(url, alt) {
+      if (IMAGE_EXCLUDE_PATTERNS.test(url)) return true;
+      if (alt && IMAGE_EXCLUDE_PATTERNS.test(alt)) return true;
+      return false;
+    }
+
+    var ACTIVE_SLIDE_SELECTORS = [
+      '.flickity-cell.is-selected',
+      '.slick-slide.slick-active.slick-current',
+      '.swiper-slide-active',
+      '[data-slide].active',
+      '.carousel-item.active',
+      '[class*="slide"][aria-selected="true"]',
+      '[class*="slide"][aria-current="true"]',
+    ];
+
+    function extractActiveSlideImage() {
+      for (var i = 0; i < ACTIVE_SLIDE_SELECTORS.length; i++) {
+        try {
+          var slide = document.querySelector(ACTIVE_SLIDE_SELECTORS[i]);
+          if (slide) {
+            var img = slide.querySelector('img');
+            if (img) {
+              var url = resolveUrl(img.src || img.getAttribute('src') || '');
+              var alt = img.getAttribute('alt') || '';
+              if (url && !isExcludedImage(url, alt)) return url;
+            }
+          }
+        } catch(e) {}
+      }
+      return undefined;
+    }
+
     // ── DOM image ─────────────────────────────────────────────────────────
 
     function extractImageFromDOM() {
@@ -302,7 +353,11 @@ export const extractorScript = `
       for (var i = 0; i < selectors.length; i++) {
         try {
           var img = document.querySelector(selectors[i]);
-          if (img && img.src && img.src.indexOf('logo') === -1 && img.src.indexOf('icon') === -1) return img.src;
+          if (img && img.src
+            && !isExcludedImage(img.src, img.getAttribute('alt') || '')
+            && !img.closest('[aria-modal="true"],[role="dialog"],dialog')) {
+            return img.src;
+          }
         } catch(e) {}
       }
       return undefined;
@@ -315,15 +370,22 @@ export const extractorScript = `
     var knownTitle = (jsonLd && jsonLd.title) || og.title || undefined;
     var domPrice = extractPriceFromDOM(knownTitle);
     var domImage = extractImageFromDOM();
+    var activeSlideUrl = extractActiveSlideImage();
+
+    // Filter og:image through isExcludedImage — store-wide share images
+    // (e.g. Shopify-share-image.png) must not become the primary product image.
+    var ogImageUrl = og.imageUrl;
+    var filteredOgImageUrl = ogImageUrl && !isExcludedImage(ogImageUrl) ? ogImageUrl : undefined;
 
     var title = (jsonLd && jsonLd.title) || og.title;
     var description = (jsonLd && jsonLd.description) || og.description;
 
+    // Image priority: JSON-LD variant match > active carousel slide > og:image > DOM fallback.
     var result = {
       url: window.location.href,
       title: title ? decodeHtmlEntities(title) : undefined,
       description: description ? decodeHtmlEntities(description) : undefined,
-      imageUrl: (jsonLd && jsonLd.imageUrl) || og.imageUrl || domImage,
+      imageUrl: (jsonLd && jsonLd.imageUrl) || activeSlideUrl || filteredOgImageUrl || domImage,
       price: (jsonLd && jsonLd.price) || domPrice.price || og.price,
       currency: (jsonLd && jsonLd.currency) || domPrice.currency || og.currency,
       brand: (jsonLd && jsonLd.brand) || og.brand,

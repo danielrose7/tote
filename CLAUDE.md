@@ -32,6 +32,17 @@ docs/
 - `src/app/providers.tsx` - Clerk + Jazz provider setup
 - `chrome-extension/src/lib/extractors/` - Metadata extraction logic
 
+## Extraction Logic — Keep Two Files in Sync
+
+The extraction logic lives in two places and **must stay in sync**:
+
+1. `chrome-extension/src/lib/extractors/index.ts` — TypeScript, runs as a content script in the browser
+2. `mobile-app/src/lib/extractorScript.ts` — Hand-ported ES5, injected into a WebView via `injectJavaScript()`
+
+**Rule: any fix or improvement to extraction logic in one file must be applied to the other.**
+
+The mobile script is a template literal (backtick string), so regex backslashes need double-escaping (`\\d` instead of `\d`). Logic, helper names, and comments should otherwise match as closely as possible.
+
 ## Commands
 
 ```bash
