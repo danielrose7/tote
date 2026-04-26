@@ -74,9 +74,17 @@ function extractPriceFromText(
   return { price, currency };
 }
 
+// Fix URLs that JSON-LD generators over-encode: %3F→?, %3D→=, %26→&.
+// We deliberately do NOT use decodeURIComponent (decodes %2F, %20, etc.)
+// or decodeURI (skips reserved chars like %3F). Only query-structure chars.
+function fixOverEncodedUrl(url: string): string {
+  return url.replace(/%3F/gi, '?').replace(/%3D/gi, '=').replace(/%26/gi, '&');
+}
+
 // Resolve a potentially-relative URL to an absolute one using the current page origin.
 function resolveUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
+  url = fixOverEncodedUrl(url);
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   // Protocol-relative URLs (e.g. //cdn.shopify.com/...) — always treat as https.
   // Doing this explicitly avoids relying on window.location as a base, which
