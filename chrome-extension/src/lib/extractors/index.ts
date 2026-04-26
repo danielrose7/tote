@@ -81,10 +81,21 @@ function fixOverEncodedUrl(url: string): string {
   return url.replace(/%3F/gi, '?').replace(/%3D/gi, '=').replace(/%26/gi, '&');
 }
 
+// Return true if the URL contains an unresolved template variable like {width}.
+// Shopify lazy-load uses srcset templates (e.g. image_{width}x.jpg) where JS
+// substitutes the actual width. If captured before substitution, the URL is
+// broken and will 404.
+function hasTemplateVariable(url: string): boolean {
+  return /\{[^}]+\}/.test(url);
+}
+
 // Resolve a potentially-relative URL to an absolute one using the current page origin.
 function resolveUrl(url: string | undefined): string | undefined {
   if (!url) return undefined;
   url = fixOverEncodedUrl(url);
+  // Reject unresolved template variables like {width} — Shopify lazy-load
+  // uses these in srcset templates and JS substitutes real values at runtime.
+  if (hasTemplateVariable(url)) return undefined;
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   // Protocol-relative URLs (e.g. //cdn.shopify.com/...) — always treat as https.
   // Doing this explicitly avoids relying on window.location as a base, which
@@ -656,7 +667,7 @@ function detectPlatform(): ExtractedMetadata['platform'] {
 
 // Patterns to exclude from image URLs (logos, icons, tracking pixels, etc.)
 const IMAGE_EXCLUDE_PATTERNS =
-  /logo|icon|favicon|sprite|placeholder|spacer|pixel|tracking|badge|avatar|rating|star|wordmark/i;
+  /logo|icon|favicon|sprite|placeholder|spacer|pixel|tracking|badge|avatar|rating|star|wordmark|share.?image/i;
 
 // Shopify CDN size suffixes
 const SHOPIFY_SIZE_REGEX =
@@ -1089,11 +1100,17 @@ export function extractMetadata(): ExtractionResult {
   const domImageFallback = extractImageFromDOM();
   const platform = detectPlatform();
 
-  // Merge all image sources, deduplicate
+  // Filter og:image through the same exclusion check as DOM images.
+  // Store-wide social share images (e.g. Shopify-share-image.png) must not
+  // become the primary product image or appear in the gallery.
+  const filteredOgImageUrl =
+    ogImageUrl && !isExcludedImage(ogImageUrl) ? ogImageUrl : undefined;
+
+  // Merge all image sources, deduplicate.
   const allImages = deduplicateImages(
     [
       ...(jsonLd?.images || []),
-      ...(ogImageUrl ? [ogImageUrl] : []),
+      ...(filteredOgImageUrl ? [filteredOgImageUrl] : []),
       ...domImages,
     ].filter(Boolean),
   );
@@ -1110,7 +1127,7 @@ export function extractMetadata(): ExtractionResult {
     imageUrl:
       jsonLd?.imageUrl ||
       activeSlideUrl ||
-      ogImageUrl ||
+      filteredOgImageUrl ||
       domImages[0] ||
       domImageFallback,
     images: allImages.length > 1 ? allImages : undefined,
