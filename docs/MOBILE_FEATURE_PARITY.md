@@ -4,10 +4,10 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 
 ## Remaining Gaps
 
-|                 | Low Effort         | High Effort                     |
-| --------------- | ------------------ | ------------------------------- |
-| **High Impact** | Edit product notes | —                               |
-| **Low Impact**  | —                  | Reorder items/slots/collections |
+|                 | Low Effort | High Effort                     |
+| --------------- | ---------- | ------------------------------- |
+| **High Impact** | —          | —                               |
+| **Low Impact**  | —          | Reorder items/slots/collections |
 
 ---
 
@@ -25,16 +25,16 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 
 ## Products
 
-| Feature                            | Web         | iOS               |
-| ---------------------------------- | ----------- | ----------------- |
-| Save product via extension         | ✅ (Chrome) | ✅ (Share sheet)  |
-| Save product manually (paste URL)  | ✅          | ✅                |
-| View product (image, title, price) | ✅          | ✅                |
-| Open product URL                   | ✅          | ✅                |
-| Refresh product metadata           | ✅          | ✅                |
-| Edit product (name, price, notes)  | ✅          | ✅ (name + price) |
-| Delete product                     | ✅          | ✅                |
-| Reorder products                   | ✅          | ❌                |
+| Feature                            | Web         | iOS              |
+| ---------------------------------- | ----------- | ---------------- |
+| Save product via extension         | ✅ (Chrome) | ✅ (Share sheet) |
+| Save product manually (paste URL)  | ✅          | ✅               |
+| View product (image, title, price) | ✅          | ✅               |
+| Open product URL                   | ✅          | ✅               |
+| Refresh product metadata           | ✅          | ✅               |
+| Edit product (name, price, notes)  | ✅          | ✅               |
+| Delete product                     | ✅          | ✅               |
+| Reorder products                   | ✅          | ❌               |
 
 ## Slots
 
