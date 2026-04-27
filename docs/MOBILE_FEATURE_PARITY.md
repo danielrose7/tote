@@ -4,24 +4,24 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 
 ## Remaining Gaps
 
-|                 | Low Effort | High Effort                     |
-| --------------- | ---------- | ------------------------------- |
-| **High Impact** | —          | —                               |
-| **Low Impact**  | —          | Reorder items/slots/collections |
+|                 | Low Effort | High Effort         |
+| --------------- | ---------- | ------------------- |
+| **High Impact** | —          | —                   |
+| **Low Impact**  | —          | Reorder collections |
 
 ---
 
 ## Collections
 
-| Feature                    | Web | iOS                     |
-| -------------------------- | --- | ----------------------- |
-| List all collections       | ✅  | ✅                      |
-| Create collection          | ✅  | ✅ (via save sheet)     |
-| Edit collection name/color | ✅  | ✅ (from detail screen) |
-| Delete collection          | ✅  | ✅ (swipe on list)      |
-| View collection detail     | ✅  | ✅                      |
-| Grid / list view modes     | ✅  | ✅                      |
-| Reorder collections        | ✅  | ❌                      |
+| Feature                    | Web | iOS                      |
+| -------------------------- | --- | ------------------------ |
+| List all collections       | ✅  | ✅                       |
+| Create collection          | ✅  | ✅ (via save sheet)      |
+| Edit collection name/color | ✅  | ✅ (from detail screen)  |
+| Delete collection          | ✅  | ✅ (swipe on list)       |
+| View collection detail     | ✅  | ✅                       |
+| Grid / list view modes     | ✅  | ✅                       |
+| Reorder collections        | ✅  | ❌ (products + slots ✅) |
 
 ## Products
 
@@ -34,7 +34,7 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 | Refresh product metadata           | ✅          | ✅               |
 | Edit product (name, price, notes)  | ✅          | ✅               |
 | Delete product                     | ✅          | ✅               |
-| Reorder products                   | ✅          | ❌               |
+| Reorder products                   | ✅          | ✅               |
 
 ## Slots
 
@@ -45,7 +45,7 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 | Create slot                          | ✅  | ✅ (via save sheet)     |
 | Edit slot name                       | ✅  | ✅                      |
 | Delete slot                          | ✅  | ✅ (from slot settings) |
-| Reorder slots                        | ✅  | ❌                      |
+| Reorder slots                        | ✅  | ✅                      |
 | Slot budget (set limit, track total) | ✅  | ✅                      |
 | Slot max selections                  | ✅  | ✅                      |
 | Mark product as selected             | ✅  | ✅                      |
