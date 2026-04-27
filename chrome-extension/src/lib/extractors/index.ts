@@ -100,7 +100,7 @@ function resolveUrl(url: string | undefined): string | undefined {
   // Protocol-relative URLs (e.g. //cdn.shopify.com/...) — always treat as https.
   // Doing this explicitly avoids relying on window.location as a base, which
   // can misbehave in jsdom test environments where document.baseURI isn't set.
-  if (url.startsWith('//')) return 'https:' + url;
+  if (url.startsWith('//')) return `https:${url}`;
   try {
     return new URL(url, window.location.href).href;
   } catch {
@@ -122,42 +122,34 @@ function urlPathMatchesPage(url: string): boolean {
   }
 }
 
-// Check whether the current page URL slug matches a product's identifier fields.
-// Used as a fallback when URL paths don't match exactly — Shopify stores
-// sometimes serve a product at a legacy SKU-based handle (e.g. /products/gt-2809)
-// while the JSON-LD canonical URL uses the display name handle (e.g.
-// /products/classic-long-sleeve-henley). The slug "gt-2809" still appears
-// in the JSON-LD productID "GT-2809-BK3", confirming it's the same product.
-// This is distinct from SPA stale-data cases (like Sézane) where the JSON-LD
-// URL belongs to a completely different product.
-function pageSlugMatchesProductId(product: any): boolean {
-  try {
-    const slug = window.location.pathname.split('/').pop()?.toLowerCase() ?? '';
-    if (!slug) return false;
-    const slugNorm = slug.replace(/[^a-z0-9]/g, '');
-    const candidates = [
-      product?.productID,
-      product?.sku,
-      product?.productGroupID,
-      product?.identifier,
-      product?.mpn,
-    ]
-      .filter(Boolean)
-      .map((v: unknown) =>
-        String(v)
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, ''),
-      );
-    return candidates.some(
-      (id) => id.startsWith(slugNorm) || slugNorm.startsWith(id),
-    );
-  } catch {
-    return false;
-  }
-}
+type JsonRecord = Record<string, unknown>;
+type JsonLdOffer = JsonRecord & {
+  price?: unknown;
+  priceCurrency?: string;
+  availability?: string;
+  url?: string;
+};
+type JsonLdProductLike = JsonRecord & {
+  '@id'?: string;
+  '@graph'?: unknown[];
+  '@type'?: string | string[];
+  brand?: unknown;
+  color?: string;
+  hasVariant?: JsonLdProductLike[];
+  identifier?: string;
+  image?: unknown;
+  mpn?: string;
+  name?: string;
+  offers?: JsonLdOffer | JsonLdOffer[];
+  productID?: string;
+  productGroupID?: string;
+  size?: string;
+  sku?: string;
+  url?: string;
+};
 
 // Extract the canonical URL from a product object (offers.url, @id, or url field).
-function productCanonicalUrl(product: any): string | undefined {
+function productCanonicalUrl(product: JsonLdProductLike): string | undefined {
   const offers = product?.offers;
   const offerUrl = Array.isArray(offers) ? offers[0]?.url : offers?.url;
   return offerUrl || product?.url || product?.['@id'] || undefined;
@@ -241,14 +233,14 @@ function extractCurrentVariantId(): string | null {
 }
 
 interface ProductFindResult {
-  product: any;
+  product: JsonLdProductLike;
   // When we fell back to a hasVariant item without matching the selected variant,
   // groupName holds the ProductGroup's name so we can use that instead of the
   // variant-specific name (e.g. "Wildcat" instead of "Wildcat - Matte Black | ...").
   groupName?: string;
   variantMatched: boolean;
   // Full variant list from ProductGroup (if available)
-  allVariants?: any[];
+  allVariants?: JsonLdProductLike[];
 }
 
 function findProduct(data: unknown): ProductFindResult | null {
@@ -263,14 +255,14 @@ function findProduct(data: unknown): ProductFindResult | null {
       return { product: data, variantMatched: true };
     }
     if (types.some((t) => t === 'ProductGroup')) {
-      const d = data as any;
+      const d = data as JsonLdProductLike;
       const allVariants = Array.isArray(d.hasVariant)
         ? d.hasVariant
         : undefined;
       if (allVariants) {
         const variantId = extractCurrentVariantId();
         if (variantId) {
-          const matched = allVariants.find((v: any) => {
+          const matched = allVariants.find((v) => {
             const vid = String(
               v?.['@id'] ?? v?.productID ?? v?.sku ?? v?.identifier ?? '',
             );
@@ -281,7 +273,7 @@ function findProduct(data: unknown): ProductFindResult | null {
         }
         // Couldn't identify the selected variant — fall back to first with offers
         // but flag it so we can use the group name and skip variant-specific image
-        const withOffers = allVariants.find((v: any) => v?.offers);
+        const withOffers = allVariants.find((v) => v?.offers);
         if (withOffers)
           return {
             product: withOffers,
@@ -294,8 +286,9 @@ function findProduct(data: unknown): ProductFindResult | null {
     }
   }
 
-  if ('@graph' in data && Array.isArray((data as any)['@graph'])) {
-    for (const item of (data as any)['@graph']) {
+  const graph = (data as JsonLdProductLike)['@graph'];
+  if (Array.isArray(graph)) {
+    for (const item of graph) {
       const product = findProduct(item);
       if (product) return product;
     }
@@ -339,15 +332,15 @@ function extractAllImages(image: unknown): string[] {
       })
       .filter(Boolean) as string[];
   }
-  if (typeof image === 'object' && 'url' in (image as any)) {
-    const url = resolveUrl((image as any).url);
+  if (typeof image === 'object' && 'url' in image) {
+    const url = resolveUrl(String(image.url));
     return url ? [url] : [];
   }
   return [];
 }
 
 // Extract variant list from JSON-LD hasVariant array
-function extractVariants(variants: any[]): ProductVariant[] {
+function extractVariants(variants: JsonLdProductLike[]): ProductVariant[] {
   return variants
     .map((v) => {
       const offer = Array.isArray(v.offers) ? v.offers[0] : v.offers;
@@ -368,7 +361,7 @@ function extractVariants(variants: any[]): ProductVariant[] {
     .filter((v) => v.name);
 }
 
-function extractProductPrice(offers: any): {
+function extractProductPrice(offers: JsonLdProductLike['offers']): {
   price?: string;
   currency?: string;
 } {
@@ -381,10 +374,10 @@ function extractProductPrice(offers: any): {
   };
 }
 
-function extractBrand(brand: any): string | undefined {
+function extractBrand(brand: unknown): string | undefined {
   if (!brand) return undefined;
   if (typeof brand === 'string') return brand;
-  if (typeof brand === 'object' && 'name' in brand) return brand.name;
+  if (typeof brand === 'object' && 'name' in brand) return String(brand.name);
   return undefined;
 }
 
@@ -544,7 +537,7 @@ function scorePriceElement(el: Element, h1Text: string): number {
   while (node && node !== document.body) {
     const cls = (node.getAttribute('class') ?? '').toLowerCase();
     const id = (node.getAttribute('id') ?? '').toLowerCase();
-    const ctx = cls + ' ' + id;
+    const ctx = `${cls} ${id}`;
 
     // Penalize related/recommended/cross-sell sections
     if (
@@ -722,9 +715,8 @@ function normalizeImageUrl(url: string): string {
 
     // Next.js image proxy: extract the real URL
     if (parsed.pathname === '/_next/image' && parsed.searchParams.has('url')) {
-      return normalizeImageUrl(
-        decodeURIComponent(parsed.searchParams.get('url')!),
-      );
+      const proxiedUrl = parsed.searchParams.get('url');
+      if (proxiedUrl) return normalizeImageUrl(decodeURIComponent(proxiedUrl));
     }
 
     // Strip common resize/quality/cache query params
@@ -803,40 +795,56 @@ function upgradeImageUrl(url: string): string {
 // Resolve the best URL from a single <img> element
 function resolveImageUrl(img: Element): string | undefined {
   const dataZoom = img.getAttribute('data-zoom-src');
-  if (dataZoom && !dataZoom.startsWith('data:'))
-    return upgradeImageUrl(resolveUrl(dataZoom)!);
+  if (dataZoom && !dataZoom.startsWith('data:')) {
+    const resolved = resolveUrl(dataZoom);
+    if (resolved) return upgradeImageUrl(resolved);
+  }
 
   // Check data-srcset (lazysizes) before data-src
   const dataSrcset = img.getAttribute('data-srcset');
   if (dataSrcset) {
     const largest = parseSrcset(dataSrcset);
-    if (largest) return upgradeImageUrl(resolveUrl(largest)!);
+    const resolved = largest ? resolveUrl(largest) : undefined;
+    if (resolved) return upgradeImageUrl(resolved);
   }
 
   const dataSrc = img.getAttribute('data-src');
-  if (dataSrc && !dataSrc.startsWith('data:'))
-    return upgradeImageUrl(resolveUrl(dataSrc)!);
+  if (dataSrc && !dataSrc.startsWith('data:')) {
+    const resolved = resolveUrl(dataSrc);
+    if (resolved) return upgradeImageUrl(resolved);
+  }
 
   const dataOriginal = img.getAttribute('data-original');
-  if (dataOriginal && !dataOriginal.startsWith('data:'))
-    return upgradeImageUrl(resolveUrl(dataOriginal)!);
+  if (dataOriginal && !dataOriginal.startsWith('data:')) {
+    const resolved = resolveUrl(dataOriginal);
+    if (resolved) return upgradeImageUrl(resolved);
+  }
 
   const srcset = img.getAttribute('srcset');
   if (srcset) {
     const largest = parseSrcset(srcset);
-    if (largest) return upgradeImageUrl(resolveUrl(largest)!);
+    const resolved = largest ? resolveUrl(largest) : undefined;
+    if (resolved) return upgradeImageUrl(resolved);
   }
 
   const src = (img as HTMLImageElement).src || img.getAttribute('src') || '';
-  if (src && !src.startsWith('data:')) return upgradeImageUrl(resolveUrl(src)!);
+  if (src && !src.startsWith('data:')) {
+    const resolved = resolveUrl(src);
+    if (resolved) return upgradeImageUrl(resolved);
+  }
 
   return undefined;
 }
 
 // Check if an image (by URL or alt text) looks like a non-product image
-function isExcludedImage(url: string, altText?: string): boolean {
+function isExcludedImage(
+  url: string,
+  altText?: string,
+  image?: Element,
+): boolean {
   if (IMAGE_EXCLUDE_PATTERNS.test(url)) return true;
   if (altText && IMAGE_EXCLUDE_PATTERNS.test(altText)) return true;
+  if (image?.getAttribute('itemprop')?.toLowerCase() === 'logo') return true;
   return false;
 }
 
@@ -862,24 +870,12 @@ function collectImagesFromContainer(container: Element): string[] {
 
     const url = resolveImageUrl(img);
     const alt = img.getAttribute('alt') ?? undefined;
-    if (url && !isExcludedImage(url, alt)) {
+    if (url && !isExcludedImage(url, alt, img)) {
       urls.push(url);
     }
   }
 
   return urls;
-}
-
-// Check if an element matches any known gallery selector
-function isGalleryContainer(el: Element): boolean {
-  for (const selector of GALLERY_SELECTORS) {
-    try {
-      if (el.matches(selector)) return true;
-    } catch {
-      // Invalid selector for this element
-    }
-  }
-  return false;
 }
 
 // Count direct and nested <img> elements
@@ -912,7 +908,7 @@ function extractActiveSlideImage(container: Element): string | undefined {
           const url = resolveImageUrl(img);
           if (
             url &&
-            !isExcludedImage(url, img.getAttribute('alt') ?? undefined)
+            !isExcludedImage(url, img.getAttribute('alt') ?? undefined, img)
           )
             return url;
         }
@@ -1033,7 +1029,7 @@ function extractAllImagesFromDOM(ogImageUrl?: string): {
 
         const url = resolveImageUrl(img);
         const alt = img.getAttribute('alt') ?? undefined;
-        if (url && !isExcludedImage(url, alt)) {
+        if (url && !isExcludedImage(url, alt, img)) {
           heuristicUrls.push(url);
         }
       }
@@ -1068,8 +1064,7 @@ function extractImageFromDOM(): string | undefined {
       const img = document.querySelector(selector) as HTMLImageElement | null;
       if (
         img?.src &&
-        !img.src.includes('logo') &&
-        !img.src.includes('icon') &&
+        !isExcludedImage(img.src, img.getAttribute('alt') ?? undefined, img) &&
         !img.closest('[aria-modal="true"], [role="dialog"], dialog')
       ) {
         return img.src;
@@ -1080,6 +1075,360 @@ function extractImageFromDOM(): string | undefined {
   }
 
   return undefined;
+}
+
+const MAX_COLLECTION_ITEMS = 24;
+
+function normalizeWhitespace(
+  text: string | undefined | null,
+): string | undefined {
+  const normalized = text?.replace(/\s+/g, ' ').trim();
+  return normalized || undefined;
+}
+
+function isLikelyProductUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.href);
+    const path = parsed.pathname.toLowerCase();
+    if (parsed.origin !== window.location.origin) return false;
+    if (path === window.location.pathname.toLowerCase()) return false;
+    return (
+      /\/products?\//.test(path) ||
+      /\/p\//.test(path) ||
+      /\/product[-/]/.test(path) ||
+      /\/shop\/.+/.test(path) ||
+      /\bsku\b/.test(parsed.search.toLowerCase())
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isLikelyCollectionPage(): boolean {
+  const path = window.location.pathname.toLowerCase();
+  if (
+    /\/products?\//.test(path) ||
+    /\/p\//.test(path) ||
+    /\/product[-/]/.test(path)
+  ) {
+    return false;
+  }
+  return (
+    /\/collections?\//.test(path) ||
+    /\/categories?\//.test(path) ||
+    /\/catalog\//.test(path) ||
+    /\/shop\//.test(path) ||
+    /\/search/.test(path) ||
+    /\/strollers?\//.test(path) ||
+    /\/car-seats?\//.test(path) ||
+    /\/accessories?\//.test(path)
+  );
+}
+
+function productUrlScore(url: string): number {
+  try {
+    const path = new URL(url, window.location.href).pathname.toLowerCase();
+    if (/\/products?\//.test(path)) return 30;
+    if (/\/p\//.test(path)) return 25;
+    if (/\/product[-/]/.test(path)) return 20;
+    return 0;
+  } catch {
+    return 0;
+  }
+}
+
+function findLikelyProductCard(anchor: HTMLAnchorElement): Element {
+  let current: Element | null = anchor;
+  let best: Element = anchor;
+  let depth = 0;
+
+  while (current && current !== document.body && depth < 8) {
+    const classId = `${current.getAttribute('class') || ''} ${
+      current.getAttribute('id') || ''
+    }`.toLowerCase();
+    const productLinkCount = Array.from(
+      current.querySelectorAll('a[href]'),
+    ).filter((a) => isLikelyProductUrl((a as HTMLAnchorElement).href)).length;
+    const textLength = (current.textContent || '')
+      .replace(/\s+/g, ' ')
+      .trim().length;
+
+    if (
+      /product|card|tile|grid|item|result|listing/.test(classId) &&
+      productLinkCount <= 4 &&
+      textLength <= 2200
+    ) {
+      best = current;
+    }
+
+    current = current.parentElement;
+    depth++;
+  }
+
+  return best;
+}
+
+function extractTitleFromCard(
+  card: Element,
+  anchor: HTMLAnchorElement,
+): string | undefined {
+  const selectors = [
+    '[class*="title"]',
+    '[class*="name"]',
+    '[data-testid*="title"]',
+    '[data-testid*="name"]',
+    'h2',
+    'h3',
+    'h4',
+  ];
+
+  for (const selector of selectors) {
+    try {
+      const el = card.querySelector(selector);
+      const text = normalizeWhitespace(el?.textContent);
+      if (text && text.length <= 140 && !PRICE_REGEX.test(text)) return text;
+    } catch {
+      // Invalid selector
+    } finally {
+      PRICE_REGEX.lastIndex = 0;
+    }
+  }
+
+  const aria = normalizeWhitespace(anchor.getAttribute('aria-label'));
+  if (aria && aria.length <= 140) return aria;
+
+  const anchorText = normalizeWhitespace(anchor.textContent);
+  if (
+    anchorText &&
+    anchorText.length <= 140 &&
+    !/buy|shop|explore|view/i.test(anchorText)
+  ) {
+    return anchorText;
+  }
+
+  const img = card.querySelector('img[alt]') as HTMLImageElement | null;
+  const alt = normalizeWhitespace(img?.getAttribute('alt'));
+  return alt && alt.length <= 180 ? alt : undefined;
+}
+
+function extractDescriptionFromCard(
+  card: Element,
+  title?: string,
+  price?: string,
+): string | undefined {
+  const pieces: string[] = [];
+  const selectors = [
+    '[class*="description"]',
+    '[class*="subtitle"]',
+    '[class*="summary"]',
+    '[class*="feature"]',
+    'p',
+    'li',
+  ];
+
+  for (const selector of selectors) {
+    try {
+      for (const el of Array.from(card.querySelectorAll(selector))) {
+        const text = normalizeWhitespace(el.textContent);
+        if (!text) continue;
+        if (title && text === title) continue;
+        if (price && text.includes(price)) continue;
+        if (/^(buy|shop|explore|compare|previous|next)$/i.test(text)) continue;
+        if (text.length < 4 || text.length > 220) continue;
+        if (!pieces.includes(text)) pieces.push(text);
+        if (pieces.length >= 6) break;
+      }
+    } catch {
+      // Invalid selector
+    }
+    if (pieces.length >= 6) break;
+  }
+
+  return pieces.length ? pieces.join(' | ') : undefined;
+}
+
+function extractPriceFromCard(card: Element): {
+  price?: string;
+  currency?: string;
+} {
+  const selectors = [
+    '[itemprop="price"]',
+    '[data-price]',
+    '[class*="price"]',
+    '[class*="Price"]',
+    '[data-testid*="price"]',
+  ];
+
+  for (const selector of selectors) {
+    try {
+      for (const el of Array.from(card.querySelectorAll(selector))) {
+        const content =
+          el.getAttribute('content') || el.getAttribute('data-price');
+        if (content && /^[\d.,]+$/.test(content)) {
+          return { price: content, currency: undefined };
+        }
+        const parsed = extractPriceFromText(el.textContent || '');
+        if (parsed) return parsed;
+      }
+    } catch {
+      // Invalid selector
+    }
+  }
+
+  const parsed = extractPriceFromText(card.textContent || '');
+  return parsed || {};
+}
+
+function extractBrandFromCard(card: Element): string | undefined {
+  const selectors = [
+    '[itemprop="brand"]',
+    '[class*="brand"]',
+    '[class*="vendor"]',
+    '[data-testid*="brand"]',
+  ];
+
+  for (const selector of selectors) {
+    try {
+      const text = normalizeWhitespace(
+        card.querySelector(selector)?.textContent,
+      );
+      if (text && text.length <= 80) return text;
+    } catch {
+      // Invalid selector
+    }
+  }
+
+  return undefined;
+}
+
+function extractCollectionItemsFromShopifyAnalytics(): ExtractedMetadata[] {
+  type ShopifyAnalyticsProduct = {
+    handle?: string;
+    title?: string;
+    vendor?: string;
+    variants?: Array<{
+      name?: string;
+      price?: number | string;
+      sku?: string;
+    }>;
+  };
+  type ShopifyAnalyticsMeta = {
+    currency?: string;
+    products?: ShopifyAnalyticsProduct[];
+  };
+  const analytics = (
+    window as Window & {
+      ShopifyAnalytics?: { meta?: ShopifyAnalyticsMeta };
+    }
+  ).ShopifyAnalytics?.meta;
+  const products = Array.isArray(analytics?.products) ? analytics.products : [];
+  return products
+    .map((product): ExtractedMetadata | null => {
+      const variant = Array.isArray(product?.variants)
+        ? product.variants[0]
+        : undefined;
+      const handle = product?.handle;
+      if (!handle) return null;
+      const rawPrice = variant?.price;
+      const price =
+        typeof rawPrice === 'number'
+          ? (rawPrice / 100).toFixed(2).replace(/\.00$/, '')
+          : rawPrice != null
+            ? String(rawPrice)
+            : undefined;
+
+      const url = resolveUrl(`/products/${handle}`);
+      if (!url) return null;
+
+      return {
+        url,
+        title: normalizeWhitespace(variant?.name || product?.title || handle),
+        price,
+        currency: analytics?.currency,
+        brand: normalizeWhitespace(product?.vendor),
+        sku: variant?.sku,
+        pageType: 'product',
+      };
+    })
+    .filter((item: ExtractedMetadata | null): item is ExtractedMetadata =>
+      Boolean(item?.url && item.title),
+    );
+}
+
+function extractCollectionItemsFromDOM(): ExtractedMetadata[] {
+  const byKey = new Map<string, ExtractedMetadata & { _score?: number }>();
+  const anchors = Array.from(document.querySelectorAll('a[href]')).filter((a) =>
+    isLikelyProductUrl((a as HTMLAnchorElement).href),
+  ) as HTMLAnchorElement[];
+
+  for (const anchor of anchors) {
+    const sourceUrl = resolveUrl(anchor.getAttribute('href') || anchor.href);
+    if (!sourceUrl) continue;
+
+    const card = findLikelyProductCard(anchor);
+    const { price, currency } = extractPriceFromCard(card);
+    const title = extractTitleFromCard(card, anchor);
+    const imageUrl = collectImagesFromContainer(card)[0];
+    const brand = extractBrandFromCard(card);
+    const description = extractDescriptionFromCard(card, title, price);
+
+    if (!title && !imageUrl && !price) continue;
+
+    const normalizedTitle = title?.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const key =
+      normalizedTitle && price ? `${normalizedTitle}:${price}` : sourceUrl;
+    const score =
+      productUrlScore(sourceUrl) +
+      (title ? 10 : 0) +
+      (imageUrl ? 5 : 0) +
+      (price ? 5 : 0) +
+      (description ? 3 : 0);
+    const existing = byKey.get(key);
+    if (existing && (existing._score || 0) >= score) continue;
+
+    byKey.set(key, {
+      url: sourceUrl,
+      title,
+      description,
+      imageUrl,
+      price,
+      currency,
+      brand,
+      pageType: 'product',
+      _score: score,
+    });
+  }
+
+  return Array.from(byKey.values())
+    .sort((a, b) => (b._score || 0) - (a._score || 0))
+    .slice(0, MAX_COLLECTION_ITEMS)
+    .map(({ _score, ...item }) => item);
+}
+
+function extractCollectionItems(): ExtractedMetadata[] {
+  const byUrl = new Map<string, ExtractedMetadata>();
+
+  for (const item of [
+    ...extractCollectionItemsFromShopifyAnalytics(),
+    ...extractCollectionItemsFromDOM(),
+  ]) {
+    if (!item.url) continue;
+    const existing = byUrl.get(item.url);
+    byUrl.set(item.url, {
+      ...item,
+      ...existing,
+      title: existing?.title || item.title,
+      description: existing?.description || item.description,
+      imageUrl: existing?.imageUrl || item.imageUrl,
+      price: existing?.price || item.price,
+      currency: existing?.currency || item.currency,
+      brand: existing?.brand || item.brand,
+      sku: existing?.sku || item.sku,
+      pageType: 'product',
+    });
+  }
+
+  return Array.from(byUrl.values()).slice(0, MAX_COLLECTION_ITEMS);
 }
 
 // Main extraction function
@@ -1099,6 +1448,9 @@ export function extractMetadata(): ExtractionResult {
     extractAllImagesFromDOM(ogImageUrl);
   const domImageFallback = extractImageFromDOM();
   const platform = detectPlatform();
+  const collectionItems = extractCollectionItems();
+  const shouldTreatAsCollection =
+    collectionItems.length >= 2 && isLikelyCollectionPage();
 
   // Filter og:image through the same exclusion check as DOM images.
   // Store-wide social share images (e.g. Shopify-share-image.png) must not
@@ -1137,6 +1489,12 @@ export function extractMetadata(): ExtractionResult {
     sku: jsonLd?.sku,
     color: jsonLd?.color,
     variants: jsonLd?.variants,
+    pageType: shouldTreatAsCollection
+      ? 'collection'
+      : title || jsonLd?.price || og.price || domPrice.price
+        ? 'product'
+        : 'unknown',
+    collectionItems: shouldTreatAsCollection ? collectionItems : undefined,
     platform,
   };
 
@@ -1151,6 +1509,8 @@ export function extractMetadata(): ExtractionResult {
   if (merged.sku) extractedFields.push('sku');
   if (merged.color) extractedFields.push('color');
   if (merged.variants) extractedFields.push('variants');
+  if (merged.pageType) extractedFields.push('pageType');
+  if (merged.collectionItems) extractedFields.push('collectionItems');
 
   // Calculate confidence
   const criticalFields = ['title', 'imageUrl', 'price'];
