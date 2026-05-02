@@ -7,6 +7,7 @@ import type {
   ExtractedSection,
   FramingBrief,
   InterviewQuestion,
+  MarketLandscape,
   SectionPlan,
 } from './types';
 import { CURATOR_PERSONA } from './workspace/CURATOR';
@@ -66,6 +67,28 @@ export const CategoryResearchBriefSchema = z.object({
   followUpQuestionGoals: z.array(z.string()).max(3),
 });
 
+export const MarketLandscapeSchema = z.object({
+  sourceQueries: z.array(z.string()).min(2).max(8),
+  recurringProducts: z
+    .array(
+      z.object({
+        name: z.string(),
+        brand: z.string().optional(),
+        mentions: z.number().int().min(1).max(20),
+        useCases: z.array(z.string()).min(1).max(6),
+        possibleUrls: z.array(z.string()).max(6),
+      }),
+    )
+    .max(18),
+  recurringSections: z
+    .array(z.object({ label: z.string(), rationale: z.string() }))
+    .min(2)
+    .max(10),
+  tradeoffs: z.array(z.string()).min(2).max(10),
+  compatibilityGotchas: z.array(z.string()).max(10),
+  weakSignals: z.array(z.string()).max(8),
+});
+
 export const FramingBriefSchema = z.object({
   recipientContext: z.string(),
   goal: z.string(),
@@ -79,6 +102,12 @@ export const FramingBriefSchema = z.object({
 
 const categoryResearchJsonSchema = JSON.stringify(
   z.toJSONSchema(CategoryResearchBriefSchema),
+  null,
+  2,
+);
+
+const marketLandscapeJsonSchema = JSON.stringify(
+  z.toJSONSchema(MarketLandscapeSchema),
   null,
   2,
 );
@@ -130,14 +159,55 @@ ${formatAnswers(questions, answers)}
 </task>
 
 <rules>
-- Use web search to understand the category landscape — product URL collection comes in a later dedicated phase
-- Focus on buyer decision-making, hospitality, and curation structure
+- Use web search for category understanding — don't collect product URLs yet
+- Focus on how buyers make decisions in this space: key tradeoffs, common pitfalls, decision structure
 - Set followUpNeeded: true only if one or two clarifications would meaningfully change what gets built
-- Keep followUpQuestionGoals short and high-signal
+- Each followUpQuestionGoal should name a specific decision it would unlock
 </rules>
 
 Return only valid JSON matching this schema:
 ${categoryResearchJsonSchema}`;
+}
+
+export function buildMarketLandscapePrompt(
+  topic: string,
+  questions: InterviewQuestion[],
+  answers: Record<string, string>,
+  research: CategoryResearchBrief,
+): string {
+  return `Build a source-seeded market landscape for this product curation request.
+
+<topic>${topic}</topic>
+
+<interview>
+${formatAnswers(questions, answers)}
+</interview>
+
+<category_research>
+${JSON.stringify(research, null, 2)}
+</category_research>
+
+<task>
+Use web search to scout the market before collection planning. Look across reputable editorial roundups, specialist blogs, forum discussions, brand pages, and retailer category pages.
+
+Extract:
+- recurring product names and brands that show up across sources
+- recurring "best for" labels or use-case buckets
+- common tradeoffs and buyer gotchas
+- source queries that were useful for understanding the space
+- weak signals where the web results look affiliate-heavy, stale, or too generic
+</task>
+
+<rules>
+- Extract signals (product names, use cases, tradeoffs) — not editorial text
+- Do not rank products
+- Treat affiliate roundups as signals, not authority
+- possibleUrls may include product, brand, editorial, or retailer URLs discovered during search; later steps will find product pages separately
+- Limit to patterns that recur across sources — skip one-off mentions
+</rules>
+
+Return only valid JSON matching this schema:
+${marketLandscapeJsonSchema}`;
 }
 
 export function buildRound2QuestionsPrompt(
@@ -173,6 +243,21 @@ function formatFramingBrief(brief: FramingBrief): string {
   return JSON.stringify(brief, null, 2);
 }
 
+function formatMarketLandscape(landscape?: MarketLandscape): string {
+  if (!landscape) return 'No market landscape available.';
+  return JSON.stringify(
+    {
+      recurringProducts: landscape.recurringProducts.slice(0, 12),
+      recurringSections: landscape.recurringSections,
+      tradeoffs: landscape.tradeoffs,
+      compatibilityGotchas: landscape.compatibilityGotchas,
+      weakSignals: landscape.weakSignals,
+    },
+    null,
+    2,
+  );
+}
+
 export function buildFramingPrompt(
   topic: string,
   round1Questions: InterviewQuestion[],
@@ -180,6 +265,7 @@ export function buildFramingPrompt(
   research: CategoryResearchBrief,
   round2Questions: InterviewQuestion[] = [],
   round2Answers: Record<string, string> = {},
+  marketLandscape?: MarketLandscape,
 ): string {
   const round2Block =
     round2Questions.length > 0
@@ -198,6 +284,10 @@ ${formatAnswers(round1Questions, round1Answers)}
 ${JSON.stringify(research, null, 2)}
 </category_research>
 
+<market_landscape>
+${formatMarketLandscape(marketLandscape)}
+</market_landscape>
+
 <task>
 Define:
 - who this is for and the scenario
@@ -208,6 +298,8 @@ Define:
 - what to avoid
 - practical planning notes
 </task>
+
+Use the market landscape as awareness of the category, but keep the brief centered on the user's scenario and constraints.
 
 Return only valid JSON matching this schema:
 ${framingBriefJsonSchema}`;
@@ -264,6 +356,7 @@ export function buildUrlQueryGenPrompt(
   section: SectionPlan,
   topic: string,
   brief: FramingBrief,
+  marketLandscape?: MarketLandscape,
 ): string {
   const candidateTarget = section.targetCount * 2 + 2;
   return `Generate 7 search queries to find individual product page URLs for the "${section.title}" section.
@@ -272,11 +365,15 @@ export function buildUrlQueryGenPrompt(
 
 <brief>${formatUrlDiscoveryBrief(brief)}</brief>
 
+<market_landscape>${formatMarketLandscape(marketLandscape)}</market_landscape>
+
 <section>
 Title: ${section.title}
 Rationale: ${section.rationale}
 Target: ${candidateTarget} candidate URLs
 </section>
+
+Use recurring products and section labels from the landscape only when they genuinely fit the brief; do not turn the search into a list of famous brands.
 
 Return ONLY valid JSON: { "queries": ["q1", "q2", "q3", "q4", "q5", "q6", "q7"] }`;
 }
@@ -294,11 +391,14 @@ export function buildUrlExtractionPrompt(
   section: SectionPlan,
   resultSets: ResultSet[],
   brief: FramingBrief,
+  marketLandscape?: MarketLandscape,
 ): string {
   const candidateTarget = section.targetCount * 2 + 2;
   return `Extract individual product page URLs for the "${section.title}" section from these search results.
 
 <brief>${formatUrlDiscoveryBrief(brief)}</brief>
+
+<market_landscape>${formatMarketLandscape(marketLandscape)}</market_landscape>
 
 <section_rationale>${section.rationale}</section_rationale>
 
@@ -348,7 +448,11 @@ Description: ${gap.description}
 Target 4-8 URLs. Return ONLY valid JSON: { "urls": ["https://...", ...] }`;
 }
 
-export function buildPlanPrompt(topic: string, brief: FramingBrief): string {
+export function buildPlanPrompt(
+  topic: string,
+  brief: FramingBrief,
+  marketLandscape?: MarketLandscape,
+): string {
   return `Plan a focused product collection.
 
 <topic>${topic}</topic>
@@ -357,13 +461,19 @@ export function buildPlanPrompt(topic: string, brief: FramingBrief): string {
 ${formatFramingBrief(brief)}
 </framing_brief>
 
+<market_landscape>
+${formatMarketLandscape(marketLandscape)}
+</market_landscape>
+
 <task>
 Determine:
 1. A specific, purposeful title (not "Best X" or "Top Y")
-2. A 1-2 sentence intro naming the real scenario
-3. 3-6 named sections, each with a clear purpose and a targetCount
+2. A 1–2 sentence intro that leads with who this is for in the first 5–8 words — not "This collection..." or a category observation — then states the constraint or philosophy driving the picks
+3. 3–6 named sections, each with a clear purpose and a targetCount
 
-Use the framing brief to decide structure. Section roles may include safe defaults, practical anchors, signature picks, elevated options, or delight moments where relevant.
+Section titles should name the decision criterion — why items belong together for this scenario (e.g. "Replaces multiple items", "Folds when not in use", "Worth the permanent footprint").
+
+Use the framing brief to decide structure. Use the market landscape to avoid obvious omissions and overly overlapping sections, but do not copy mainstream roundup categories when a more specific scenario-driven structure would be better.
 </task>
 
 Return only valid JSON:
@@ -407,7 +517,6 @@ Selection rules:
 - Drop items with no usable data (missing title and description)
 - Drop duplicates, near-duplicates, and weaker alternatives — keep the best per niche
 - Prefer items that fit the recipient context, success definition, and tradeoffs in the framing brief
-- Preserve room for one or two signature picks that feel unusually thoughtful rather than merely correct
 - Flag sections with no usable extracted items as warnings rather than padding with weak picks
 
 Writing rules:
@@ -434,7 +543,9 @@ export function buildHospitalityPassPrompt(
   collection: CollectionOutput,
   brief: FramingBrief,
 ): string {
-  return `Improve a curated collection using hospitality principles.
+  return `Apply a hospitality pass to make this collection feel made for this person, not just well-curated.
+
+Getting the products right is service. This pass adds color — the 1–2 touches that make the person feel seen.
 
 <framing_brief>
 ${formatFramingBrief(brief)}
@@ -445,12 +556,14 @@ ${JSON.stringify(collection, null, 2)}
 </current_collection>
 
 <task>
-- Keep the collection practical, specific, and grounded in real use
-- Make it feel more tailored to the person or scenario in the brief
-- Strengthen one or two items or notes so the collection feels unusually thoughtful
-- Preserve valid URLs and items unless there is a clear reason to change them
-- Keep note style concise and specific — skip filler and generic language
-- Use warnings when the data is too weak to improve honestly
+Read the framing brief for specific signals: a named constraint, a detail the person mentioned, something about their exact scenario that isn't yet reflected in the collection.
+
+Use those signals to find 1–2 moments to improve:
+- Rewrite a note around their specific situation rather than the product's general benefits
+- Sharpen a section title to their exact use case
+- Swap a pick for one that fits a stated constraint better — only if the extracted data supports it
+
+Leave everything else unchanged. Preserve all URLs and items not affected. Use warnings when the data is too weak to support a genuine improvement.
 </task>
 
 Return only valid JSON matching the schema in your system prompt.`;
