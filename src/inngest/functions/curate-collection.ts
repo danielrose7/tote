@@ -99,9 +99,7 @@ export const curateCollection = inngest.createFunction(
     id: 'curate-collection',
     retries: 14,
     triggers: [{ event: 'curation/start' as CurationStartEvent['name'] }],
-    // Utah: singleton per session — no race conditions if triggered twice
     concurrency: { key: 'event.data.sessionId', limit: 25 },
-    // Utah: cancel current run if user starts fresh for the same session
     cancelOn: [
       {
         event: 'curation/start' as CurationStartEvent['name'],
