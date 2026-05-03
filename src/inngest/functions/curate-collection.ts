@@ -874,171 +874,178 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     );
 
     // Step 6: Discover URLs per section via web search (no page reading)
-    // Each section is its own named step so it's individually memoized/retryable
-    const urlSections: UrlSection[] = [];
+    // All sections run in parallel — each section's chain of steps is internally
+    // sequential (find → deduct → validate) but sections don't block each other.
+    const urlSectionResults = await Promise.all(
+      plan.sections.map(async (section) => {
+        const slug = parameterize(section.title);
 
-    // Discover URLs sequentially — publish searching event per section just before it starts
-    for (const section of plan.sections) {
-      const slug = parameterize(section.title);
-
-      await step.realtime.publish(`searching-${slug}`, ch.progress, {
-        step: 'searching',
-        message: `Searching for "${section.title}"...`,
-      });
-
-      const found = await step.run(`find-urls-${slug}`, async () => {
-        console.log('[curate-collection] find-urls:start', {
-          at: nowIso(),
-          sessionId,
-          section: section.title,
-          slug,
-        });
-        const response = await llm.batchSearch({
-          querySystem: buildUrlQueryGenSystemPrompt(),
-          queryPrompt: buildUrlQueryGenPrompt(
-            section,
-            topic,
-            framingBrief,
-            marketLandscape,
-          ),
-          extractionSystem: buildUrlExtractionSystemPrompt(),
-          buildExtractionPrompt: (results) =>
-            buildUrlExtractionPrompt(
-              section,
-              results,
-              framingBrief,
-              marketLandscape,
-            ),
-          extractionMaxTokens: urlDiscoveryTokenLimit(),
-        });
-        console.log('[curate-collection] find-urls:response', {
-          ...response.summary,
-          at: nowIso(),
-          sessionId,
-          section: section.title,
-          slug,
+        await step.realtime.publish(`searching-${slug}`, ch.progress, {
+          step: 'searching',
+          message: `Searching for "${section.title}"...`,
         });
 
-        const parsed = parseJson<UrlDiscoveryPayload>(response.text);
-        if (!parsed) {
-          console.error('[curate-collection] find-urls:parse-failed', {
+        const found = await step.run(`find-urls-${slug}`, async () => {
+          console.log('[curate-collection] find-urls:start', {
             at: nowIso(),
             sessionId,
             section: section.title,
             slug,
-            textPreview: response.text.slice(0, 500),
+          });
+          const response = await llm.batchSearch({
+            querySystem: buildUrlQueryGenSystemPrompt(),
+            queryPrompt: buildUrlQueryGenPrompt(
+              section,
+              topic,
+              framingBrief,
+              marketLandscape,
+            ),
+            extractionSystem: buildUrlExtractionSystemPrompt(),
+            buildExtractionPrompt: (results) =>
+              buildUrlExtractionPrompt(
+                section,
+                results,
+                framingBrief,
+                marketLandscape,
+              ),
+            extractionMaxTokens: urlDiscoveryTokenLimit(),
+          });
+          console.log('[curate-collection] find-urls:response', {
+            ...response.summary,
+            at: nowIso(),
+            sessionId,
+            section: section.title,
+            slug,
+          });
+
+          const parsed = parseJson<UrlDiscoveryPayload>(response.text);
+          if (!parsed) {
+            console.error('[curate-collection] find-urls:parse-failed', {
+              at: nowIso(),
+              sessionId,
+              section: section.title,
+              slug,
+              textPreview: response.text.slice(0, 500),
+            });
+            return {
+              urls: [] as string[],
+              usage: null,
+              summary: response.summary,
+              parseFailed: true,
+            };
+          }
+          console.log('[curate-collection] find-urls:done', {
+            at: nowIso(),
+            sessionId,
+            section: section.title,
+            slug,
+            urlCount: parsed.urls.length,
           });
           return {
-            urls: [] as string[],
-            usage: null,
+            urls: parsed.urls,
+            usage: response.usage,
             summary: response.summary,
-            parseFailed: true,
+            parseFailed: false,
           };
-        }
-        console.log('[curate-collection] find-urls:done', {
-          at: nowIso(),
-          sessionId,
-          section: section.title,
-          slug,
-          urlCount: parsed.urls.length,
         });
-        return {
-          urls: parsed.urls,
-          usage: response.usage,
-          summary: response.summary,
-          parseFailed: false,
-        };
-      });
 
-      totalInputTokens += found.usage?.inputTokens ?? 0;
-      totalOutputTokens += found.usage?.outputTokens ?? 0;
-      totalWebSearchRequests += found.usage?.webSearchRequests ?? 0;
-
-      if (requestedBy !== 'unknown' && found.usage) {
-        const usage = found.usage;
-        await step.run(`deduct-credits-urls-${slug}`, () =>
-          deductCredits(
-            requestedBy,
-            runCostCents(
+        if (requestedBy !== 'unknown' && found.usage) {
+          const usage = found.usage;
+          await step.run(`deduct-credits-urls-${slug}`, () =>
+            deductCredits(
+              requestedBy,
+              runCostCents(
+                usage.inputTokens,
+                usage.outputTokens,
+                usage.webSearchRequests,
+                'claude-haiku-4-5-20251001',
+              ),
+              sessionId,
               usage.inputTokens,
               usage.outputTokens,
               usage.webSearchRequests,
-              'claude-haiku-4-5-20251001',
+              `find-urls-${slug}`,
+              {
+                urlCount: found.urls.length,
+                codeExecutionCount: found.summary?.codeExecutionCount,
+                durationMs: found.summary?.durationMs,
+              },
             ),
-            sessionId,
-            usage.inputTokens,
-            usage.outputTokens,
-            usage.webSearchRequests,
-            `find-urls-${slug}`,
-            {
-              urlCount: found.urls.length,
-              codeExecutionCount: found.summary?.codeExecutionCount,
-              durationMs: found.summary?.durationMs,
-            },
-          ),
-        );
-      }
+          );
+        }
 
-      // Validate discovered URLs with HEAD requests — filter out hallucinated 404s
-      const validatedUrls = found.parseFailed
-        ? []
-        : await step.run(`validate-urls-${slug}`, async () => {
-            const results = await Promise.allSettled(
-              found.urls.map((url) =>
-                fetch(url, {
-                  method: 'HEAD',
-                  signal: AbortSignal.timeout(5000),
-                })
-                  .then((r) => ({ url, ok: r.ok || r.status < 400 }))
-                  .catch(() => ({ url, ok: false })),
-              ),
-            );
-            const valid = results
-              .filter((r) => r.status === 'fulfilled' && r.value.ok)
-              .map(
-                (r) =>
-                  (r as PromiseFulfilledResult<{ url: string; ok: boolean }>)
-                    .value.url,
+        // Validate discovered URLs with HEAD requests — filter out hallucinated 404s
+        const validatedUrls = found.parseFailed
+          ? []
+          : await step.run(`validate-urls-${slug}`, async () => {
+              const results = await Promise.allSettled(
+                found.urls.map((url) =>
+                  fetch(url, {
+                    method: 'HEAD',
+                    signal: AbortSignal.timeout(5000),
+                  })
+                    .then((r) => ({ url, ok: r.ok || r.status < 400 }))
+                    .catch(() => ({ url, ok: false })),
+                ),
               );
-            const dropped = found.urls.length - valid.length;
-            if (dropped > 0) {
-              console.log('[curate-collection] validate-urls:dropped', {
-                at: nowIso(),
-                sessionId,
-                section: section.title,
-                dropped,
-                kept: valid.length,
-              });
+              const valid = results
+                .filter((r) => r.status === 'fulfilled' && r.value.ok)
+                .map(
+                  (r) =>
+                    (r as PromiseFulfilledResult<{ url: string; ok: boolean }>)
+                      .value.url,
+                );
+              const dropped = found.urls.length - valid.length;
+              if (dropped > 0) {
+                console.log('[curate-collection] validate-urls:dropped', {
+                  at: nowIso(),
+                  sessionId,
+                  section: section.title,
+                  dropped,
+                  kept: valid.length,
+                });
+              }
+              return valid;
+            });
+
+        const finalUrls = found.parseFailed ? [] : validatedUrls;
+        const domains = finalUrls
+          .map((u) => {
+            try {
+              return new URL(u).hostname;
+            } catch {
+              return u;
             }
-            return valid;
-          });
+          })
+          .join(', ');
 
-      const finalUrls = found.parseFailed ? [] : validatedUrls;
-      const domains = finalUrls
-        .map((u) => {
-          try {
-            return new URL(u).hostname;
-          } catch {
-            return u;
-          }
-        })
-        .join(', ');
+        const droppedCount = found.parseFailed
+          ? 0
+          : found.urls.length - finalUrls.length;
 
-      const droppedCount = found.parseFailed
-        ? 0
-        : found.urls.length - finalUrls.length;
+        await step.realtime.publish(`found-urls-${slug}`, ch.progress, {
+          step: found.parseFailed ? 'search-parse-failed' : 'found-urls',
+          message: found.parseFailed
+            ? `Search returned an unreadable response for "${section.title}"`
+            : `Found ${finalUrls.length} URLs for "${section.title}"${droppedCount > 0 ? ` (${droppedCount} invalid dropped)` : ''}`,
+          detail: found.parseFailed
+            ? 'No URLs could be extracted from the model output. This is likely a parsing or formatting issue.'
+            : domains || undefined,
+        });
 
-      await step.realtime.publish(`found-urls-${slug}`, ch.progress, {
-        step: found.parseFailed ? 'search-parse-failed' : 'found-urls',
-        message: found.parseFailed
-          ? `Search returned an unreadable response for "${section.title}"`
-          : `Found ${finalUrls.length} URLs for "${section.title}"${droppedCount > 0 ? ` (${droppedCount} invalid dropped)` : ''}`,
-        detail: found.parseFailed
-          ? 'No URLs could be extracted from the model output. This is likely a parsing or formatting issue.'
-          : domains || undefined,
-      });
+        return {
+          urlSection: { title: section.title, slug, urls: finalUrls },
+          usage: found.usage,
+        };
+      }),
+    );
 
-      urlSections.push({ title: section.title, slug, urls: finalUrls });
+    const urlSections: UrlSection[] = [];
+    for (const { urlSection, usage } of urlSectionResults) {
+      totalInputTokens += usage?.inputTokens ?? 0;
+      totalOutputTokens += usage?.outputTokens ?? 0;
+      totalWebSearchRequests += usage?.webSearchRequests ?? 0;
+      urlSections.push(urlSection);
     }
 
     // Send all sections in one message so the browser knows the full URL count upfront
@@ -1441,90 +1448,97 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         patchSession(sessionId, { gaps: actionableGaps }),
       );
 
-      // 7b. URL discovery per gap
-      const refinementUrlSections: UrlSection[] = [];
-      for (let gi = 0; gi < actionableGaps.length; gi++) {
-        const gap = actionableGaps[gi];
-        const gapSlug = `gap-${pass}-${gi}`;
+      // 7b. URL discovery per gap — all gaps run in parallel
+      const gapUrlResults = await Promise.all(
+        actionableGaps.map(async (gap, gi) => {
+          const gapSlug = `gap-${pass}-${gi}`;
 
-        await step.realtime.publish(`searching-${gapSlug}`, ch.progress, {
-          step: 'searching',
-          message: `Finding URLs for gap: "${gap.description}"`,
-        });
-
-        const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
-          const response = await llm.batchSearch({
-            querySystem: buildUrlQueryGenSystemPrompt(),
-            queryPrompt: buildRefinementQueryGenPrompt(
-              gap,
-              topic,
-              framingBrief,
-            ),
-            extractionSystem: buildUrlExtractionSystemPrompt(),
-            buildExtractionPrompt: (results) =>
-              buildRefinementExtractionPrompt(gap, results, framingBrief),
-            extractionMaxTokens: urlDiscoveryTokenLimit(),
+          await step.realtime.publish(`searching-${gapSlug}`, ch.progress, {
+            step: 'searching',
+            message: `Finding URLs for gap: "${gap.description}"`,
           });
-          const parsed = parseJson<UrlDiscoveryPayload>(response.text);
-          if (!parsed)
+
+          const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
+            const response = await llm.batchSearch({
+              querySystem: buildUrlQueryGenSystemPrompt(),
+              queryPrompt: buildRefinementQueryGenPrompt(
+                gap,
+                topic,
+                framingBrief,
+              ),
+              extractionSystem: buildUrlExtractionSystemPrompt(),
+              buildExtractionPrompt: (results) =>
+                buildRefinementExtractionPrompt(gap, results, framingBrief),
+              extractionMaxTokens: urlDiscoveryTokenLimit(),
+            });
+            const parsed = parseJson<UrlDiscoveryPayload>(response.text);
+            if (!parsed)
+              return {
+                urls: [] as string[],
+                usage: null,
+                summary: response.summary,
+                parseFailed: true,
+              };
             return {
-              urls: [] as string[],
-              usage: null,
+              urls: parsed.urls,
+              usage: response.usage,
               summary: response.summary,
-              parseFailed: true,
+              parseFailed: false,
             };
-          return {
-            urls: parsed.urls,
-            usage: response.usage,
-            summary: response.summary,
-            parseFailed: false,
-          };
-        });
+          });
 
-        totalInputTokens += foundGap.usage?.inputTokens ?? 0;
-        totalOutputTokens += foundGap.usage?.outputTokens ?? 0;
-        totalWebSearchRequests += foundGap.usage?.webSearchRequests ?? 0;
-
-        if (requestedBy !== 'unknown' && foundGap.usage) {
-          const usage = foundGap.usage;
-          await step.run(`deduct-credits-${gapSlug}`, () =>
-            deductCredits(
-              requestedBy,
-              runCostCents(
+          if (requestedBy !== 'unknown' && foundGap.usage) {
+            const usage = foundGap.usage;
+            await step.run(`deduct-credits-${gapSlug}`, () =>
+              deductCredits(
+                requestedBy,
+                runCostCents(
+                  usage.inputTokens,
+                  usage.outputTokens,
+                  usage.webSearchRequests,
+                  'claude-haiku-4-5-20251001',
+                ),
+                sessionId,
                 usage.inputTokens,
                 usage.outputTokens,
                 usage.webSearchRequests,
-                'claude-haiku-4-5-20251001',
+                `find-urls-${gapSlug}`,
+                {
+                  urlCount: foundGap.urls.length,
+                  codeExecutionCount: foundGap.summary?.codeExecutionCount,
+                  durationMs: foundGap.summary?.durationMs,
+                },
               ),
-              sessionId,
-              usage.inputTokens,
-              usage.outputTokens,
-              usage.webSearchRequests,
-              `find-urls-${gapSlug}`,
-              {
-                urlCount: foundGap.urls.length,
-                codeExecutionCount: foundGap.summary?.codeExecutionCount,
-                durationMs: foundGap.summary?.durationMs,
-              },
-            ),
-          );
-        }
+            );
+          }
 
-        await step.realtime.publish(`found-urls-${gapSlug}`, ch.progress, {
-          step: foundGap.parseFailed ? 'search-parse-failed' : 'found-urls',
-          message: foundGap.parseFailed
-            ? `Search returned an unreadable response for gap: "${gap.description}"`
-            : `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
-          detail: foundGap.parseFailed
-            ? 'No URLs could be extracted from the model output. This is likely a parsing or formatting issue.'
-            : undefined,
-        });
+          await step.realtime.publish(`found-urls-${gapSlug}`, ch.progress, {
+            step: foundGap.parseFailed ? 'search-parse-failed' : 'found-urls',
+            message: foundGap.parseFailed
+              ? `Search returned an unreadable response for gap: "${gap.description}"`
+              : `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
+            detail: foundGap.parseFailed
+              ? 'No URLs could be extracted from the model output. This is likely a parsing or formatting issue.'
+              : undefined,
+          });
 
-        refinementUrlSections.push({
-          title: gap.description,
-          slug: gapSlug,
-          urls: foundGap.urls,
-        });
+          return {
+            urlSection: {
+              title: gap.description,
+              slug: gapSlug,
+              urls: foundGap.urls,
+            },
+            usage: foundGap.usage,
+          };
+        }),
+      );
+
+      const refinementUrlSections: UrlSection[] = [];
+      for (const { urlSection, usage } of gapUrlResults) {
+        totalInputTokens += usage?.inputTokens ?? 0;
+        totalOutputTokens += usage?.outputTokens ?? 0;
+        totalWebSearchRequests += usage?.webSearchRequests ?? 0;
+        refinementUrlSections.push(urlSection);
       }
 
       // Send all gap sections in one message
