@@ -337,7 +337,7 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
         if (idx >= 7)
           synthesized.push({
             step: 'hospitality',
-            message: 'Running hospitality pass on the shortlist...',
+            message: 'Polishing the shortlist...',
             ts: ts++,
           });
         if (idx >= 8) {

@@ -1180,21 +1180,18 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     // Step 8: Hospitality pass before refinement
     await step.realtime.publish('hospitality', ch.progress, {
       step: 'hospitality',
-      message:
-        'Applying a hospitality pass to make the shortlist feel more thoughtful...',
+      message: 'Polishing the shortlist...',
     });
 
     await step.run('persist-hospitality-phase', () =>
       Promise.all([
         patchSession(sessionId, {
           phase: 'hospitality',
-          lastProgressMessage:
-            'Applying a hospitality pass to make the shortlist feel more thoughtful...',
+          lastProgressMessage: 'Polishing the shortlist...',
         }),
         logProgressEvent(sessionId, {
           step: 'hospitality',
-          message:
-            'Applying a hospitality pass to make the shortlist feel more thoughtful...',
+          message: 'Polishing the shortlist...',
           ts: Date.now(),
         }),
       ]),

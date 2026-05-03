@@ -414,6 +414,10 @@ export function CuratePageClient({
       ]),
     );
 
+    // Optimistically advance so the UI doesn't appear frozen while Inngest
+    // processes the event — realtime will override with the real next phase.
+    setPhase(questionRound === 1 ? 'researching' : 'framing');
+
     const res = await fetch('/api/curate/answer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
