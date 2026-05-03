@@ -65,6 +65,24 @@ Output:
 {"title":"Men's Down Sweater Hoody","price":279,"currency":"USD","brand":"Patagonia","description":"A versatile hooded jacket filled with 800-fill-power recycled down.","imageUrl":"https://www.patagonia.com/dw/image/v2/BDJB_PRD/on/demandware.static/-/Sites-patagonia-master/default/dw7e6efb3c/images/hi-res/84701_BLK.jpg"}
 </example>`;
 
+// Titles that indicate the page blocked or errored rather than returning real content
+const CF_FAILURE_TITLES = [
+  'access denied',
+  '403 forbidden',
+  '404 not found',
+  'page not found',
+  'just a moment',
+  'robot or human',
+  'are you a robot',
+  'enable javascript',
+];
+
+function isCfFailureTitle(title?: string): boolean {
+  if (!title) return true;
+  const lower = title.toLowerCase();
+  return CF_FAILURE_TITLES.some((t) => lower.includes(t));
+}
+
 /** Call the CF Browser Run worker for metadata extraction. */
 export async function extractViaCf(url: string): Promise<ExtractedItem | null> {
   const workerUrl = process.env.EXTRACTOR_WORKER_URL;
@@ -99,6 +117,13 @@ export async function extractViaCf(url: string): Promise<ExtractedItem | null> {
     };
     if (!body.ok || !body.data) return null;
     const d = body.data as Partial<ExtractedItem>;
+    if (isCfFailureTitle(d.title)) {
+      console.warn('[server-extraction] cf:failure-title', {
+        url,
+        title: d.title,
+      });
+      return null;
+    }
     return {
       sourceUrl: url,
       title: d.title,
