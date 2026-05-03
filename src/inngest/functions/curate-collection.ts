@@ -1797,6 +1797,9 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           phase: 'complete',
           sectionCount: currentCollection.sections.length,
           itemCount: finalItemCount,
+          inputTokens: totalInputTokens,
+          outputTokens: totalOutputTokens,
+          webSearchRequests: totalWebSearchRequests,
         }),
         logProgressEvent(sessionId, {
           step: 'complete',
