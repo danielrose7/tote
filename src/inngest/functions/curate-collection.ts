@@ -253,23 +253,22 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     let totalOutputTokens = round1QuestionResult.usage?.outputTokens ?? 0;
     let totalWebSearchRequests = 0;
 
-    if (requestedBy !== 'unknown' && round1QuestionResult.usage) {
-      const usage = round1QuestionResult.usage;
-      await step.run('deduct-credits-generate-questions-r1', () =>
-        deductCredits(
-          requestedBy,
-          runCostCents(usage.inputTokens, usage.outputTokens, 0),
-          sessionId,
-          usage.inputTokens,
-          usage.outputTokens,
+    await step.run('deduct-credits-generate-questions-r1', () =>
+      deductCredits(
+        requestedBy,
+        runCostCents(
+          round1QuestionResult.usage?.inputTokens ?? 0,
+          round1QuestionResult.usage?.outputTokens ?? 0,
           0,
-          'generate-questions-r1',
-          {
-            durationMs: round1QuestionResult.summary?.durationMs,
-          },
         ),
-      );
-    }
+        sessionId,
+        round1QuestionResult.usage?.inputTokens ?? 0,
+        round1QuestionResult.usage?.outputTokens ?? 0,
+        0,
+        'generate-questions-r1',
+        { durationMs: round1QuestionResult.summary?.durationMs },
+      ),
+    );
 
     // Step 2: Wait for Round 1 answers
     const round1AnswersEvent = await step.waitForEvent('wait-for-answers-r1', {
@@ -357,30 +356,27 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     totalWebSearchRequests +=
       categoryResearchResult.usage?.webSearchRequests ?? 0;
 
-    if (requestedBy !== 'unknown' && categoryResearchResult.usage) {
-      const usage = categoryResearchResult.usage;
-      await step.run('deduct-credits-category-research', () =>
-        deductCredits(
-          requestedBy,
-          runCostCents(
-            usage.inputTokens,
-            usage.outputTokens,
-            usage.webSearchRequests,
-            'claude-haiku-4-5-20251001',
-          ),
-          sessionId,
-          usage.inputTokens,
-          usage.outputTokens,
-          usage.webSearchRequests,
-          'category-research',
-          {
-            durationMs: categoryResearchResult.summary?.durationMs,
-            codeExecutionCount:
-              categoryResearchResult.summary?.codeExecutionCount,
-          },
+    await step.run('deduct-credits-category-research', () =>
+      deductCredits(
+        requestedBy,
+        runCostCents(
+          categoryResearchResult.usage?.inputTokens ?? 0,
+          categoryResearchResult.usage?.outputTokens ?? 0,
+          categoryResearchResult.usage?.webSearchRequests ?? 0,
+          'claude-haiku-4-5-20251001',
         ),
-      );
-    }
+        sessionId,
+        categoryResearchResult.usage?.inputTokens ?? 0,
+        categoryResearchResult.usage?.outputTokens ?? 0,
+        categoryResearchResult.usage?.webSearchRequests ?? 0,
+        'category-research',
+        {
+          durationMs: categoryResearchResult.summary?.durationMs,
+          codeExecutionCount:
+            categoryResearchResult.summary?.codeExecutionCount,
+        },
+      ),
+    );
 
     const research = categoryResearchResult.research;
 
@@ -427,30 +423,26 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     totalWebSearchRequests +=
       marketLandscapeResult.usage?.webSearchRequests ?? 0;
 
-    if (requestedBy !== 'unknown' && marketLandscapeResult.usage) {
-      const usage = marketLandscapeResult.usage;
-      await step.run('deduct-credits-market-landscape', () =>
-        deductCredits(
-          requestedBy,
-          runCostCents(
-            usage.inputTokens,
-            usage.outputTokens,
-            usage.webSearchRequests,
-            'claude-haiku-4-5-20251001',
-          ),
-          sessionId,
-          usage.inputTokens,
-          usage.outputTokens,
-          usage.webSearchRequests,
-          'market-landscape',
-          {
-            durationMs: marketLandscapeResult.summary?.durationMs,
-            codeExecutionCount:
-              marketLandscapeResult.summary?.codeExecutionCount,
-          },
+    await step.run('deduct-credits-market-landscape', () =>
+      deductCredits(
+        requestedBy,
+        runCostCents(
+          marketLandscapeResult.usage?.inputTokens ?? 0,
+          marketLandscapeResult.usage?.outputTokens ?? 0,
+          marketLandscapeResult.usage?.webSearchRequests ?? 0,
+          'claude-haiku-4-5-20251001',
         ),
-      );
-    }
+        sessionId,
+        marketLandscapeResult.usage?.inputTokens ?? 0,
+        marketLandscapeResult.usage?.outputTokens ?? 0,
+        marketLandscapeResult.usage?.webSearchRequests ?? 0,
+        'market-landscape',
+        {
+          durationMs: marketLandscapeResult.summary?.durationMs,
+          codeExecutionCount: marketLandscapeResult.summary?.codeExecutionCount,
+        },
+      ),
+    );
 
     const marketLandscape = marketLandscapeResult.landscape;
 
@@ -525,23 +517,22 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       totalInputTokens += round2QuestionResult.usage?.inputTokens ?? 0;
       totalOutputTokens += round2QuestionResult.usage?.outputTokens ?? 0;
 
-      if (requestedBy !== 'unknown' && round2QuestionResult.usage) {
-        const usage = round2QuestionResult.usage;
-        await step.run('deduct-credits-generate-questions-r2', () =>
-          deductCredits(
-            requestedBy,
-            runCostCents(usage.inputTokens, usage.outputTokens, 0),
-            sessionId,
-            usage.inputTokens,
-            usage.outputTokens,
+      await step.run('deduct-credits-generate-questions-r2', () =>
+        deductCredits(
+          requestedBy,
+          runCostCents(
+            round2QuestionResult.usage?.inputTokens ?? 0,
+            round2QuestionResult.usage?.outputTokens ?? 0,
             0,
-            'generate-questions-r2',
-            {
-              durationMs: round2QuestionResult.summary?.durationMs,
-            },
           ),
-        );
-      }
+          sessionId,
+          round2QuestionResult.usage?.inputTokens ?? 0,
+          round2QuestionResult.usage?.outputTokens ?? 0,
+          0,
+          'generate-questions-r2',
+          { durationMs: round2QuestionResult.summary?.durationMs },
+        ),
+      );
 
       round2Questions = round2QuestionResult.questions;
 
@@ -663,23 +654,22 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     totalInputTokens += framingResult.usage?.inputTokens ?? 0;
     totalOutputTokens += framingResult.usage?.outputTokens ?? 0;
 
-    if (requestedBy !== 'unknown' && framingResult.usage) {
-      const usage = framingResult.usage;
-      await step.run('deduct-credits-build-framing-brief', () =>
-        deductCredits(
-          requestedBy,
-          runCostCents(usage.inputTokens, usage.outputTokens, 0),
-          sessionId,
-          usage.inputTokens,
-          usage.outputTokens,
+    await step.run('deduct-credits-build-framing-brief', () =>
+      deductCredits(
+        requestedBy,
+        runCostCents(
+          framingResult.usage?.inputTokens ?? 0,
+          framingResult.usage?.outputTokens ?? 0,
           0,
-          'build-framing-brief',
-          {
-            durationMs: framingResult.summary?.durationMs,
-          },
         ),
-      );
-    }
+        sessionId,
+        framingResult.usage?.inputTokens ?? 0,
+        framingResult.usage?.outputTokens ?? 0,
+        0,
+        'build-framing-brief',
+        { durationMs: framingResult.summary?.durationMs },
+      ),
+    );
 
     let framingBrief = framingResult.brief;
 
@@ -763,6 +753,22 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       framingBrief = correctedFramingResult.brief;
       totalInputTokens += correctedFramingResult.usage?.inputTokens ?? 0;
       totalOutputTokens += correctedFramingResult.usage?.outputTokens ?? 0;
+      await step.run('deduct-credits-build-framing-brief-corrected', () =>
+        deductCredits(
+          requestedBy,
+          runCostCents(
+            correctedFramingResult.usage?.inputTokens ?? 0,
+            correctedFramingResult.usage?.outputTokens ?? 0,
+            0,
+          ),
+          sessionId,
+          correctedFramingResult.usage?.inputTokens ?? 0,
+          correctedFramingResult.usage?.outputTokens ?? 0,
+          0,
+          'build-framing-brief-corrected',
+          { durationMs: correctedFramingResult.summary?.durationMs },
+        ),
+      );
     }
 
     await step.realtime.publish('framing-complete', ch.progress, {
@@ -840,23 +846,22 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     totalInputTokens += planResult.usage?.inputTokens ?? 0;
     totalOutputTokens += planResult.usage?.outputTokens ?? 0;
 
-    if (requestedBy !== 'unknown' && planResult.usage) {
-      const usage = planResult.usage;
-      await step.run('deduct-credits-plan-collection', () =>
-        deductCredits(
-          requestedBy,
-          runCostCents(usage.inputTokens, usage.outputTokens, 0),
-          sessionId,
-          usage.inputTokens,
-          usage.outputTokens,
+    await step.run('deduct-credits-plan-collection', () =>
+      deductCredits(
+        requestedBy,
+        runCostCents(
+          planResult.usage?.inputTokens ?? 0,
+          planResult.usage?.outputTokens ?? 0,
           0,
-          'plan-collection',
-          {
-            durationMs: planResult.summary?.durationMs,
-          },
         ),
-      );
-    }
+        sessionId,
+        planResult.usage?.inputTokens ?? 0,
+        planResult.usage?.outputTokens ?? 0,
+        0,
+        'plan-collection',
+        { durationMs: planResult.summary?.durationMs },
+      ),
+    );
 
     await step.realtime.publish('planned', ch.progress, {
       step: 'planned',
@@ -949,30 +954,27 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           };
         });
 
-        if (requestedBy !== 'unknown' && found.usage) {
-          const usage = found.usage;
-          await step.run(`deduct-credits-urls-${slug}`, () =>
-            deductCredits(
-              requestedBy,
-              runCostCents(
-                usage.inputTokens,
-                usage.outputTokens,
-                usage.webSearchRequests,
-                'claude-haiku-4-5-20251001',
-              ),
-              sessionId,
-              usage.inputTokens,
-              usage.outputTokens,
-              usage.webSearchRequests,
-              `find-urls-${slug}`,
-              {
-                urlCount: found.urls.length,
-                codeExecutionCount: found.summary?.codeExecutionCount,
-                durationMs: found.summary?.durationMs,
-              },
+        await step.run(`deduct-credits-urls-${slug}`, () =>
+          deductCredits(
+            requestedBy,
+            runCostCents(
+              found.usage?.inputTokens ?? 0,
+              found.usage?.outputTokens ?? 0,
+              found.usage?.webSearchRequests ?? 0,
+              'claude-haiku-4-5-20251001',
             ),
-          );
-        }
+            sessionId,
+            found.usage?.inputTokens ?? 0,
+            found.usage?.outputTokens ?? 0,
+            found.usage?.webSearchRequests ?? 0,
+            `find-urls-${slug}`,
+            {
+              urlCount: found.urls.length,
+              codeExecutionCount: found.summary?.codeExecutionCount,
+              durationMs: found.summary?.durationMs,
+            },
+          ),
+        );
 
         // Validate discovered URLs with HEAD requests — filter out hallucinated 404s
         const validatedUrls = found.parseFailed
@@ -1131,10 +1133,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       totalOutputTokens += r.usage.outputTokens;
       totalWebSearchRequests += r.usage.webSearchRequests;
 
-      if (
-        requestedBy !== 'unknown' &&
-        (r.usage.inputTokens > 0 || r.cfCount > 0)
-      ) {
+      if (r.usage.inputTokens > 0 || r.cfCount > 0) {
         await step.run(`deduct-credits-extract-${r.slug}`, () =>
           deductCredits(
             requestedBy,
@@ -1284,24 +1283,25 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     totalOutputTokens += result.usage?.outputTokens ?? 0;
 
     // Deduct per-step credits for curation
-    if (requestedBy !== 'unknown' && result.usage) {
-      const usage = result.usage;
-      await step.run('deduct-credits-curate', () =>
-        deductCredits(
-          requestedBy,
-          runCostCents(usage.inputTokens, usage.outputTokens, 0),
-          sessionId,
-          usage.inputTokens,
-          usage.outputTokens,
+    await step.run('deduct-credits-curate', () =>
+      deductCredits(
+        requestedBy,
+        runCostCents(
+          result.usage?.inputTokens ?? 0,
+          result.usage?.outputTokens ?? 0,
           0,
-          'curate-and-write',
-          {
-            candidateCount: result.candidateCount,
-            durationMs: result.summary?.durationMs,
-          },
         ),
-      );
-    }
+        sessionId,
+        result.usage?.inputTokens ?? 0,
+        result.usage?.outputTokens ?? 0,
+        0,
+        'curate-and-write',
+        {
+          candidateCount: result.candidateCount,
+          durationMs: result.summary?.durationMs,
+        },
+      ),
+    );
 
     let currentCollection = parseJson<CollectionOutput>(result.json);
     if (!currentCollection) {
@@ -1351,23 +1351,22 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     totalInputTokens += hospitalityResult.usage?.inputTokens ?? 0;
     totalOutputTokens += hospitalityResult.usage?.outputTokens ?? 0;
 
-    if (requestedBy !== 'unknown' && hospitalityResult.usage) {
-      const usage = hospitalityResult.usage;
-      await step.run('deduct-credits-hospitality-pass', () =>
-        deductCredits(
-          requestedBy,
-          runCostCents(usage.inputTokens, usage.outputTokens, 0),
-          sessionId,
-          usage.inputTokens,
-          usage.outputTokens,
+    await step.run('deduct-credits-hospitality-pass', () =>
+      deductCredits(
+        requestedBy,
+        runCostCents(
+          hospitalityResult.usage?.inputTokens ?? 0,
+          hospitalityResult.usage?.outputTokens ?? 0,
           0,
-          'hospitality-pass',
-          {
-            durationMs: hospitalityResult.summary?.durationMs,
-          },
         ),
-      );
-    }
+        sessionId,
+        hospitalityResult.usage?.inputTokens ?? 0,
+        hospitalityResult.usage?.outputTokens ?? 0,
+        0,
+        'hospitality-pass',
+        { durationMs: hospitalityResult.summary?.durationMs },
+      ),
+    );
 
     if (hospitalityResult.collection) {
       currentCollection = hospitalityResult.collection;
@@ -1426,20 +1425,21 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       totalInputTokens += gapsResult.usage?.inputTokens ?? 0;
       totalOutputTokens += gapsResult.usage?.outputTokens ?? 0;
 
-      if (requestedBy !== 'unknown' && gapsResult.usage) {
-        const usage = gapsResult.usage;
-        await step.run(`deduct-credits-gaps-${pass}`, () =>
-          deductCredits(
-            requestedBy,
-            runCostCents(usage.inputTokens, usage.outputTokens, 0),
-            sessionId,
-            usage.inputTokens,
-            usage.outputTokens,
+      await step.run(`deduct-credits-gaps-${pass}`, () =>
+        deductCredits(
+          requestedBy,
+          runCostCents(
+            gapsResult.usage?.inputTokens ?? 0,
+            gapsResult.usage?.outputTokens ?? 0,
             0,
-            `parse-gaps-${pass}`,
           ),
-        );
-      }
+          sessionId,
+          gapsResult.usage?.inputTokens ?? 0,
+          gapsResult.usage?.outputTokens ?? 0,
+          0,
+          `parse-gaps-${pass}`,
+        ),
+      );
 
       const actionableGaps = gapsResult.gaps.filter((g) => g.actionable);
       if (actionableGaps.length === 0) break;
@@ -1487,30 +1487,27 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
             };
           });
 
-          if (requestedBy !== 'unknown' && foundGap.usage) {
-            const usage = foundGap.usage;
-            await step.run(`deduct-credits-${gapSlug}`, () =>
-              deductCredits(
-                requestedBy,
-                runCostCents(
-                  usage.inputTokens,
-                  usage.outputTokens,
-                  usage.webSearchRequests,
-                  'claude-haiku-4-5-20251001',
-                ),
-                sessionId,
-                usage.inputTokens,
-                usage.outputTokens,
-                usage.webSearchRequests,
-                `find-urls-${gapSlug}`,
-                {
-                  urlCount: foundGap.urls.length,
-                  codeExecutionCount: foundGap.summary?.codeExecutionCount,
-                  durationMs: foundGap.summary?.durationMs,
-                },
+          await step.run(`deduct-credits-${gapSlug}`, () =>
+            deductCredits(
+              requestedBy,
+              runCostCents(
+                foundGap.usage?.inputTokens ?? 0,
+                foundGap.usage?.outputTokens ?? 0,
+                foundGap.usage?.webSearchRequests ?? 0,
+                'claude-haiku-4-5-20251001',
               ),
-            );
-          }
+              sessionId,
+              foundGap.usage?.inputTokens ?? 0,
+              foundGap.usage?.outputTokens ?? 0,
+              foundGap.usage?.webSearchRequests ?? 0,
+              `find-urls-${gapSlug}`,
+              {
+                urlCount: foundGap.urls.length,
+                codeExecutionCount: foundGap.summary?.codeExecutionCount,
+                durationMs: foundGap.summary?.durationMs,
+              },
+            ),
+          );
 
           await step.realtime.publish(`found-urls-${gapSlug}`, ch.progress, {
             step: foundGap.parseFailed ? 'search-parse-failed' : 'found-urls',
@@ -1605,10 +1602,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         totalOutputTokens += r.usage.outputTokens;
         totalWebSearchRequests += r.usage.webSearchRequests;
 
-        if (
-          requestedBy !== 'unknown' &&
-          (r.usage.inputTokens > 0 || r.cfCount > 0)
-        ) {
+        if (r.usage.inputTokens > 0 || r.cfCount > 0) {
           await step.run(`deduct-credits-extract-${r.slug}`, () =>
             deductCredits(
               requestedBy,
@@ -1702,24 +1696,25 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       totalInputTokens += refineResult.usage?.inputTokens ?? 0;
       totalOutputTokens += refineResult.usage?.outputTokens ?? 0;
 
-      if (requestedBy !== 'unknown' && refineResult.usage) {
-        const usage = refineResult.usage;
-        await step.run(`deduct-credits-refine-${pass}`, () =>
-          deductCredits(
-            requestedBy,
-            runCostCents(usage.inputTokens, usage.outputTokens, 0),
-            sessionId,
-            usage.inputTokens,
-            usage.outputTokens,
+      await step.run(`deduct-credits-refine-${pass}`, () =>
+        deductCredits(
+          requestedBy,
+          runCostCents(
+            refineResult.usage?.inputTokens ?? 0,
+            refineResult.usage?.outputTokens ?? 0,
             0,
-            `refine-collection-${pass}`,
-            {
-              candidateCount: refineResult.candidateCount,
-              durationMs: refineResult.summary?.durationMs,
-            },
           ),
-        );
-      }
+          sessionId,
+          refineResult.usage?.inputTokens ?? 0,
+          refineResult.usage?.outputTokens ?? 0,
+          0,
+          `refine-collection-${pass}`,
+          {
+            candidateCount: refineResult.candidateCount,
+            durationMs: refineResult.summary?.durationMs,
+          },
+        ),
+      );
 
       if (refineResult.collection) {
         currentCollection = refineResult.collection;
@@ -1797,9 +1792,6 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           phase: 'complete',
           sectionCount: currentCollection.sections.length,
           itemCount: finalItemCount,
-          inputTokens: totalInputTokens,
-          outputTokens: totalOutputTokens,
-          webSearchRequests: totalWebSearchRequests,
         }),
         logProgressEvent(sessionId, {
           step: 'complete',
