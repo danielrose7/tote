@@ -1,8 +1,10 @@
-import { useAuth, useOAuth, useSignIn, useSignUp, useUser } from "@clerk/expo";
+import { useAuth, useUser } from "@clerk/expo";
+import { useSignIn, useSignUp } from "@clerk/expo/legacy";
 import { Ionicons } from "@expo/vector-icons";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { type Block, JazzAccount } from "@tote/schema";
+import * as AuthSession from "expo-auth-session";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useAccount } from "jazz-tools/expo";
@@ -43,10 +45,6 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const HOME_COLLECTION_CARD_HEIGHT = 80;
 
 function SignInScreen() {
-	const { startOAuthFlow: startGoogle } = useOAuth({
-		strategy: "oauth_google",
-	});
-	const { startOAuthFlow: startApple } = useOAuth({ strategy: "oauth_apple" });
 	const {
 		isLoaded: isSignInLoaded,
 		signIn,
@@ -63,6 +61,7 @@ function SignInScreen() {
 	const [password, setPassword] = useState("");
 	const [verificationCode, setVerificationCode] = useState("");
 	const [awaitingVerification, setAwaitingVerification] = useState(false);
+	const [oauthLoading, setOauthLoading] = useState(false);
 	const [emailLoading, setEmailLoading] = useState(false);
 	const emailActionLabel = awaitingVerification
 		? "Verify email"
@@ -80,14 +79,56 @@ function SignInScreen() {
 		return "Please try again.";
 	}
 
-	async function handleSignIn(startFlow: typeof startGoogle) {
+	async function handleSignIn(strategy: "oauth_google" | "oauth_apple") {
+		if (oauthLoading) return;
+
+		setOauthLoading(true);
+
 		try {
-			const { createdSessionId, setActive } = await startFlow();
-			if (createdSessionId && setActive) {
-				await setActive({ session: createdSessionId });
+			if (!isSignInLoaded || !isSignUpLoaded || !signIn || !signUp) return;
+
+			const redirectUrl = AuthSession.makeRedirectUri({
+				path: "oauth-native-callback",
+			});
+
+			await signIn.create({ strategy, redirectUrl });
+
+			const externalVerificationRedirectURL =
+				signIn.firstFactorVerification.externalVerificationRedirectURL;
+
+			if (!externalVerificationRedirectURL) {
+				throw new Error("OAuth redirect URL was not returned by Clerk.");
+			}
+
+			WebBrowser.dismissAuthSession();
+			const authSessionResult = await WebBrowser.openAuthSessionAsync(
+				externalVerificationRedirectURL.toString(),
+				redirectUrl,
+			);
+
+			if (authSessionResult.type !== "success") return;
+
+			const rotatingTokenNonce =
+				new URL(authSessionResult.url).searchParams.get("rotating_token_nonce") ||
+				"";
+
+			await signIn.reload({ rotatingTokenNonce });
+
+			let createdSessionId = "";
+			if (signIn.status === "complete") {
+				createdSessionId = signIn.createdSessionId || "";
+			} else if (signIn.firstFactorVerification.status === "transferable") {
+				await signUp.create({ transfer: true });
+				createdSessionId = signUp.createdSessionId || "";
+			}
+
+			if (createdSessionId && setActiveSignIn) {
+				await setActiveSignIn({ session: createdSessionId });
 			}
 		} catch (err) {
 			console.error("OAuth error:", err);
+		} finally {
+			setOauthLoading(false);
 		}
 	}
 
@@ -180,14 +221,20 @@ function SignInScreen() {
 					</View>
 					<View style={styles.authButtons}>
 						<TouchableOpacity
-							style={styles.button}
-							onPress={() => handleSignIn(startGoogle)}
+							style={[styles.button, oauthLoading && styles.buttonDisabled]}
+							onPress={() => handleSignIn("oauth_google")}
+							disabled={oauthLoading}
 						>
 							<Text style={styles.buttonText}>Continue with Google</Text>
 						</TouchableOpacity>
 						<TouchableOpacity
-							style={[styles.button, styles.buttonApple]}
-							onPress={() => handleSignIn(startApple)}
+							style={[
+								styles.button,
+								styles.buttonApple,
+								oauthLoading && styles.buttonDisabled,
+							]}
+							onPress={() => handleSignIn("oauth_apple")}
+							disabled={oauthLoading}
 						>
 							<Text style={styles.buttonText}>Continue with Apple</Text>
 						</TouchableOpacity>

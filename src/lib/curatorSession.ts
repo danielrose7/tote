@@ -37,6 +37,7 @@ export interface CuratorSessionData {
 	questionRound?: InterviewRound;
 	answers?: Record<string, string>;
 	researchBriefJson?: string;
+	marketLandscapeJson?: string;
 	framingBriefJson?: string;
 	extractedSlugs?: string[];
 	refinementPass?: number;

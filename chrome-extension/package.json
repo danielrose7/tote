@@ -1,6 +1,6 @@
 {
   "name": "tote-extension",
-  "version": "0.1.3",
+  "version": "1.0.4",
   "description": "Save products to your Tote collections from any webpage",
   "type": "module",
   "scripts": {
@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run",
-    "corpus:sync": "npx tsx scripts/sync-corpus.ts"
+    "corpus:sync": "npx tsx scripts/sync-corpus.ts",
+    "corpus:benchmark": "npx tsx scripts/benchmark-cf.ts"
   },
   "dependencies": {
     "@clerk/chrome-extension": "^2.3.1",

@@ -2318,8 +2318,8 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
-  - "ClerkExpo (from `../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios`)"
-  - "ClerkGoogleSignIn (from `../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios`)"
+  - "ClerkExpo (from `../../node_modules/.pnpm/@clerk+expo@3.1.2_349e9bd116c4960fdb132bd1bd60cb0a/node_modules/@clerk/expo/ios`)"
+  - "ClerkGoogleSignIn (from `../../node_modules/.pnpm/@clerk+expo@3.1.2_349e9bd116c4960fdb132bd1bd60cb0a/node_modules/@clerk/expo/ios`)"
   - "CojsonCoreRn (from `../../node_modules/.pnpm/cojson-core-rn@0.19.14_react-native@0.83.2_@babel+core@7.28.5_@react-native+metro-confi_4f6bc11f52ec4f0ca0872edbb783f1bf/node_modules/cojson-core-rn`)"
   - "EXApplication (from `../../node_modules/.pnpm/expo-application@55.0.9_expo@55.0.8/node_modules/expo-application/ios`)"
   - "EXConstants (from `../../node_modules/.pnpm/expo-constants@55.0.7_expo@55.0.8_react-native@0.83.2_@babel+core@7.28.5_@react-native+_99fe94795cafa3433fc0e21040f0767c/node_modules/expo-constants/ios`)"
@@ -2436,9 +2436,9 @@ SPEC REPOS:
 
 EXTERNAL SOURCES:
   ClerkExpo:
-    :path: "../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios"
+    :path: "../../node_modules/.pnpm/@clerk+expo@3.1.2_349e9bd116c4960fdb132bd1bd60cb0a/node_modules/@clerk/expo/ios"
   ClerkGoogleSignIn:
-    :path: "../../node_modules/.pnpm/@clerk+expo@3.1.2_c28c24a00e4b0dae61bda10d5fdf9c2f/node_modules/@clerk/expo/ios"
+    :path: "../../node_modules/.pnpm/@clerk+expo@3.1.2_349e9bd116c4960fdb132bd1bd60cb0a/node_modules/@clerk/expo/ios"
   CojsonCoreRn:
     :path: "../../node_modules/.pnpm/cojson-core-rn@0.19.14_react-native@0.83.2_@babel+core@7.28.5_@react-native+metro-confi_4f6bc11f52ec4f0ca0872edbb783f1bf/node_modules/cojson-core-rn"
   EXApplication:
@@ -2674,7 +2674,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
-  hermes-engine: c9e083af9d81a1eae9a06c0e1b64f2e3213049f9
+  hermes-engine: 58b2cdbb2d9091b580960fec88bc2e1f4da0eda8
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCTDeprecation: a522c536d2c7be8f518dd834883cf6dce1d4f545
   RCTRequired: 44337def23abb244c025e9e7ab58f9cd3d63ec7d
@@ -2684,7 +2684,7 @@ SPEC CHECKSUMS:
   React: f4edc7518ccb0b54a6f580d89dd91471844b4990
   React-callinvoker: 79ef4e3f1c021571f6d2dafbe45ca432b2f3a146
   React-Core: c19ad4660fd48bc8abc060d979f8ee37f1fc4a5a
-  React-Core-prebuilt: 508c063d9ee3cb7786cee7ed866ed24c080b440c
+  React-Core-prebuilt: cb899ee50fa2a854e38b4d302e70d9fc233bd6a4
   React-CoreModules: f94ec3ee2bac588d033ad15a2377af746284f8c8
   React-cxxreact: de66364f2d5fb77d3da3cfa927b2fd960892c711
   React-debug: 4f6739c820d7da9c20f48caa985573b6a847e5f5
@@ -2749,7 +2749,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: d69159b417e8c9d82b8fe4d0a27def4c3e8f767f
   ReactCodegen: 2efa4568dc3e173dffe148a092e06066115d3e8f
   ReactCommon: 8868269b67561136a7970be188b40738135af077
-  ReactNativeDependencies: ecb7d32cec65233b2edbf49af68540925dc6142e
+  ReactNativeDependencies: 401d7be63d1b3df6c4af6441e02a027981dc3430
   RNCAsyncStorage: 3a4f5e2777dae1688b781a487923a08569e27fe4
   RNGestureHandler: 5494787ce29288a8941fa825663f2b1fa0a5aaf1
   RNReanimated: 208cfbd93c4f4710f45dcf09923c36f393639bb8

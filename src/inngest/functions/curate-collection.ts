@@ -1,4 +1,5 @@
 import { deductCredits, runCostCents } from '../../lib/credits';
+import { extractSection } from '../server-extraction';
 import { patchSession, writeSession } from '../../lib/curatorSession';
 import {
   completeCuratorSession,
@@ -15,6 +16,7 @@ import {
   buildFramingPrompt,
   buildGapsPrompt,
   buildHospitalityPassPrompt,
+  buildMarketLandscapePrompt,
   buildPlanPrompt,
   buildRefinementCuratePrompt,
   buildRefinementExtractionPrompt,
@@ -30,6 +32,7 @@ import {
   FollowUpQuestionsSchema,
   FramingBriefSchema,
   InterviewQuestionsSchema,
+  MarketLandscapeSchema,
 } from '../prompts';
 import type {
   CollectionOutput,
@@ -377,11 +380,82 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
 
     const research = categoryResearchResult.research;
 
+    await step.realtime.publish('market-landscape-started', ch.progress, {
+      step: 'market-landscape-started',
+      message: 'Scouting source lists and recurring products...',
+    });
+
+    const marketLandscapeResult = await step.run(
+      'market-landscape',
+      async () => {
+        const response = await llm.generateWithSearch({
+          system: CURATOR_SYSTEM_PROMPT,
+          prompt: buildMarketLandscapePrompt(
+            topic,
+            round1Questions,
+            round1Answers,
+            research,
+          ),
+          maxTokens: researchTokenLimit(),
+        });
+        const raw = parseJson<unknown>(response.text);
+        const result = MarketLandscapeSchema.safeParse(raw);
+        if (!result.success) {
+          throw new Error(
+            `Failed to parse market landscape: ${JSON.stringify(result.error.issues)} | raw: ${response.text.slice(0, 300)}`,
+          );
+        }
+        await logStep(sessionId, 'market-landscape', 'completed', {
+          recurringProductCount: result.data.recurringProducts.length,
+          recurringSectionCount: result.data.recurringSections.length,
+          tradeoffCount: result.data.tradeoffs.length,
+        });
+        return {
+          landscape: result.data,
+          usage: response.usage,
+          summary: response.summary,
+        };
+      },
+    );
+
+    totalInputTokens += marketLandscapeResult.usage?.inputTokens ?? 0;
+    totalOutputTokens += marketLandscapeResult.usage?.outputTokens ?? 0;
+    totalWebSearchRequests +=
+      marketLandscapeResult.usage?.webSearchRequests ?? 0;
+
+    if (requestedBy !== 'unknown' && marketLandscapeResult.usage) {
+      const usage = marketLandscapeResult.usage;
+      await step.run('deduct-credits-market-landscape', () =>
+        deductCredits(
+          requestedBy,
+          runCostCents(
+            usage.inputTokens,
+            usage.outputTokens,
+            usage.webSearchRequests,
+            'claude-haiku-4-5-20251001',
+          ),
+          sessionId,
+          usage.inputTokens,
+          usage.outputTokens,
+          usage.webSearchRequests,
+          'market-landscape',
+          {
+            durationMs: marketLandscapeResult.summary?.durationMs,
+            codeExecutionCount:
+              marketLandscapeResult.summary?.codeExecutionCount,
+          },
+        ),
+      );
+    }
+
+    const marketLandscape = marketLandscapeResult.landscape;
+
     await step.run('persist-category-research', () =>
       Promise.all([
         patchSession(sessionId, {
           phase: research.followUpNeeded ? 'interview-round-2' : 'framing',
           researchBriefJson: JSON.stringify(research),
+          marketLandscapeJson: JSON.stringify(marketLandscape),
           lastProgressMessage: research.followUpNeeded
             ? 'Category research complete — preparing follow-up questions.'
             : 'Category research complete — building curatorial brief.',
@@ -396,6 +470,12 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         }),
       ]),
     );
+
+    await step.realtime.publish('market-landscape-complete', ch.progress, {
+      step: 'market-landscape-complete',
+      message: `Market landscape ready: ${marketLandscape.recurringProducts.length} recurring products, ${marketLandscape.recurringSections.length} section patterns`,
+      detail: marketLandscape.recurringSections.map((s) => s.label).join(', '),
+    });
 
     await step.realtime.publish('category-research-complete', ch.progress, {
       step: 'category-research-complete',
@@ -552,6 +632,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           research,
           round2Questions,
           round2Answers,
+          marketLandscape,
         ),
         maxTokens: framingTokenLimit(),
       });
@@ -630,7 +711,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       });
       const response = await llm.generate({
         system: CURATOR_SYSTEM_PROMPT,
-        prompt: buildPlanPrompt(topic, framingBrief),
+        prompt: buildPlanPrompt(topic, framingBrief, marketLandscape),
         maxTokens: planTokenLimit(),
       });
       console.log('[curate-collection] plan:response', {
@@ -729,10 +810,20 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         });
         const response = await llm.batchSearch({
           querySystem: buildUrlQueryGenSystemPrompt(),
-          queryPrompt: buildUrlQueryGenPrompt(section, topic, framingBrief),
+          queryPrompt: buildUrlQueryGenPrompt(
+            section,
+            topic,
+            framingBrief,
+            marketLandscape,
+          ),
           extractionSystem: buildUrlExtractionSystemPrompt(),
           buildExtractionPrompt: (results) =>
-            buildUrlExtractionPrompt(section, results, framingBrief),
+            buildUrlExtractionPrompt(
+              section,
+              results,
+              framingBrief,
+              marketLandscape,
+            ),
           extractionMaxTokens: urlDiscoveryTokenLimit(),
         });
         console.log('[curate-collection] find-urls:response', {
@@ -839,7 +930,8 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         patchSession(sessionId, {
           phase: 'extracting',
           urlSections,
-          lastProgressMessage: 'URL discovery complete — extracting pages...',
+          lastProgressMessage:
+            'URL discovery complete — extracting pages server-side...',
         }),
         logProgressEvent(sessionId, {
           step: 'urls-found',
@@ -862,41 +954,101 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       step: 'urls-found',
       message: `${totalUrlCount} URLs found across ${urlSections.length} sections`,
     });
-    await step.realtime.publish('extraction-queued', ch.progress, {
-      step: 'extracting',
-      message: `Extracting pages with extension...`,
-    });
-
-    // Wait for all sections to be extracted in one bulk event
-    const extractionsEvt = await step.waitForEvent('wait-for-extractions', {
-      event: 'curation/extractions' as CurationExtractionsEvent['name'],
-      timeout: '30m',
-      if: `async.data.sessionId == "${sessionId}"`,
-    });
-
-    if (!extractionsEvt) {
-      await step.realtime.publish('timed-out-extractions', ch.progress, {
-        step: 'error',
-        message:
-          'Timed out waiting for extractions. Start a new session to try again.',
+    // Publish before-extraction messages per section (sequential, gives realtime visibility)
+    for (const section of urlSections) {
+      await step.realtime.publish(`extracting-${section.slug}`, ch.progress, {
+        step: 'extracting',
+        message: `Extracting "${section.title}" (${section.urls.length} URLs)...`,
       });
-      await step.run('persist-extraction-timeout', () =>
-        patchSession(sessionId, { phase: 'error' }),
-      );
-      return;
     }
 
-    const extractedSections: ExtractedSection[] = extractionsEvt.data.sections;
+    // Run all sections in parallel — each section uses 2-tier CF+web-search extraction
+    const extractionResults = await Promise.all(
+      urlSections.map((section) =>
+        step.run(`extract-section-${section.slug}`, () =>
+          extractSection(section),
+        ),
+      ),
+    );
+
+    const extractedSections: ExtractedSection[] = extractionResults;
+
+    for (const r of extractionResults) {
+      const tierDetail = [
+        r.cfCount > 0 && `${r.cfCount} via CF`,
+        r.webSearchCount > 0 && `${r.webSearchCount} via web search`,
+        r.failedCount > 0 && `${r.failedCount} failed`,
+      ]
+        .filter(Boolean)
+        .join(', ');
+
+      await step.realtime.publish(`extracted-${r.slug}`, ch.progress, {
+        step: 'extracted',
+        message: `"${r.title}": ${r.items.length} products extracted`,
+        detail: tierDetail || undefined,
+      });
+    }
+
     await step.run('persist-extracted-slugs', () =>
       patchSession(sessionId, {
-        extractedSlugs: extractedSections.map((s) => s.slug),
+        extractedSlugs: extractionResults.map((r) => r.slug),
       }),
     );
+
+    for (const r of extractionResults) {
+      totalInputTokens += r.usage.inputTokens;
+      totalOutputTokens += r.usage.outputTokens;
+      totalWebSearchRequests += r.usage.webSearchRequests;
+
+      if (
+        requestedBy !== 'unknown' &&
+        (r.usage.inputTokens > 0 || r.cfCount > 0)
+      ) {
+        await step.run(`deduct-credits-extract-${r.slug}`, () =>
+          deductCredits(
+            requestedBy,
+            runCostCents(
+              r.usage.inputTokens,
+              r.usage.outputTokens,
+              0,
+              'claude-sonnet-4-6',
+              r.usage.webSearchRequests,
+            ),
+            sessionId,
+            r.usage.inputTokens,
+            r.usage.outputTokens,
+            r.usage.webSearchRequests,
+            `extract-section-${r.slug}`,
+            {
+              urlCount: r.items.length,
+              durationMs: r.durationMs,
+              cfCount: r.cfCount,
+              webSearchCount: r.webSearchCount,
+              failedCount: r.failedCount,
+            },
+          ),
+        );
+      }
+    }
 
     const totalExtracted = extractedSections.reduce(
       (n: number, s: ExtractedSection) => n + s.items.length,
       0,
     );
+
+    await step.run('log-extraction-complete', () =>
+      logProgressEvent(sessionId, {
+        step: 'extraction-complete',
+        message: `${totalExtracted} products extracted across ${extractedSections.length} sections`,
+        ts: Date.now(),
+      }),
+    );
+
+    await step.realtime.publish('extraction-complete', ch.progress, {
+      step: 'extraction-complete',
+      message: `${totalExtracted} products extracted — curating collection...`,
+    });
+
     console.log('[curate-collection] extractions-received', {
       at: nowIso(),
       sessionId,
@@ -1268,18 +1420,42 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         patchSession(sessionId, { refinementUrlSections }),
       );
 
-      // 7c. Wait for all gap extractions in one bulk event
-      const gapExtractionsEvt = await step.waitForEvent(
-        `wait-for-gap-extractions-${pass}`,
-        {
-          event: 'curation/extractions' as CurationExtractionsEvent['name'],
-          timeout: '30m',
-          if: `async.data.sessionId == "${sessionId}"`,
-        },
+      // 7c. Extract gap URLs server-side using 2-tier CF+web-search strategy
+      if (refinementUrlSections.length === 0) break;
+
+      for (const section of refinementUrlSections) {
+        await step.realtime.publish(`extracting-${section.slug}`, ch.progress, {
+          step: 'extracting',
+          message: `Extracting gap: "${section.title}" (${section.urls.length} URLs)...`,
+        });
+      }
+
+      const gapExtractionResults = await Promise.all(
+        refinementUrlSections.map((section) =>
+          step.run(`extract-section-${section.slug}`, () =>
+            extractSection(section),
+          ),
+        ),
       );
-      if (!gapExtractionsEvt) break; // timeout — proceed with what we have
-      const refinedSections: ExtractedSection[] =
-        gapExtractionsEvt.data.sections;
+
+      const refinedSections: ExtractedSection[] = gapExtractionResults;
+
+      for (const r of gapExtractionResults) {
+        const tierDetail = [
+          r.cfCount > 0 && `${r.cfCount} via CF`,
+          r.webSearchCount > 0 && `${r.webSearchCount} via web search`,
+          r.failedCount > 0 && `${r.failedCount} failed`,
+        ]
+          .filter(Boolean)
+          .join(', ');
+
+        await step.realtime.publish(`extracted-${r.slug}`, ch.progress, {
+          step: 'extracted',
+          message: `"${r.title}": ${r.items.length} products extracted`,
+          detail: tierDetail || undefined,
+        });
+      }
+
       await step.run(`persist-refined-slugs-${pass}`, () =>
         patchSession(sessionId, {
           extractedSlugs: [
@@ -1287,6 +1463,64 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
             ...refinedSections.map((s) => s.slug),
           ],
         }),
+      );
+
+      for (const r of gapExtractionResults) {
+        totalInputTokens += r.usage.inputTokens;
+        totalOutputTokens += r.usage.outputTokens;
+        totalWebSearchRequests += r.usage.webSearchRequests;
+
+        if (
+          requestedBy !== 'unknown' &&
+          (r.usage.inputTokens > 0 || r.cfCount > 0)
+        ) {
+          await step.run(`deduct-credits-extract-${r.slug}`, () =>
+            deductCredits(
+              requestedBy,
+              runCostCents(
+                r.usage.inputTokens,
+                r.usage.outputTokens,
+                0,
+                'claude-sonnet-4-6',
+                r.usage.webSearchRequests,
+              ),
+              sessionId,
+              r.usage.inputTokens,
+              r.usage.outputTokens,
+              r.usage.webSearchRequests,
+              `extract-section-${r.slug}`,
+              {
+                urlCount: r.items.length,
+                durationMs: r.durationMs,
+                cfCount: r.cfCount,
+                webSearchCount: r.webSearchCount,
+                failedCount: r.failedCount,
+              },
+            ),
+          );
+        }
+      }
+
+      const gapTotalExtracted = refinedSections.reduce(
+        (n, s) => n + s.items.length,
+        0,
+      );
+
+      await step.run(`log-gap-extraction-complete-${pass}`, () =>
+        logProgressEvent(sessionId, {
+          step: `extraction-complete-gap-${pass}`,
+          message: `${gapTotalExtracted} products extracted across ${refinedSections.length} gap sections`,
+          ts: Date.now(),
+        }),
+      );
+
+      await step.realtime.publish(
+        `extraction-complete-gap-${pass}`,
+        ch.progress,
+        {
+          step: 'extraction-complete',
+          message: `${gapTotalExtracted} gap products extracted — refining collection...`,
+        },
       );
 
       if (refinedSections.length === 0) break;

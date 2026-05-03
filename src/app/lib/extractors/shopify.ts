@@ -1,3 +1,4 @@
+import { filterImageUrl } from "./image";
 import type { ExtractionResult } from "./types";
 
 interface ShopifyProduct {
@@ -95,11 +96,13 @@ export async function extractShopifyProduct(
 
 		const title = product.title;
 		const description = product.description?.replace(/<[^>]+>/g, " ").trim();
-		const imageUrl = product.featured_image
-			? optimizeShopifyImageUrl(product.featured_image)
-			: product.images?.[0]
-				? optimizeShopifyImageUrl(product.images[0])
-				: undefined;
+		const imageUrl = filterImageUrl(
+			product.featured_image
+				? optimizeShopifyImageUrl(product.featured_image)
+				: product.images?.[0]
+					? optimizeShopifyImageUrl(product.images[0])
+					: undefined,
+		);
 		const price = formatPrice(product.price_min || product.price);
 		const brand = product.vendor;
 		const availability = product.available ? "InStock" : "OutOfStock";

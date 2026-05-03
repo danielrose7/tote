@@ -1,3 +1,4 @@
+import { filterImageUrl } from "./image";
 import type { ExtractedMetadata, ExtractionResult } from "./types";
 
 interface JsonLdProduct {
@@ -110,7 +111,7 @@ export function extractJsonLd(html: string): ExtractionResult | null {
 
 			if (product) {
 				const { price, currency, availability } = extractPrice(product.offers);
-				const imageUrl = extractImage(product.image);
+				const imageUrl = filterImageUrl(extractImage(product.image));
 				const brand = extractBrand(product.brand);
 
 				const result: ExtractedMetadata = {

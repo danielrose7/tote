@@ -8,7 +8,6 @@ import { useToast } from '../../../components/ToastNotification';
 import type { SectionToExtract } from '../../../hooks/useCuratorSession';
 import { useCuratorSession } from '../../../hooks/useCuratorSession';
 import { curationChannel } from '../../../inngest/channels';
-import { checkExtensionAvailable } from '../../../lib/extension';
 import { createCollectionFromPayload } from '../../../lib/importPayload';
 import { BlockList, JazzAccount } from '../../../schema';
 import { useCuratorStore } from '../../../store/curatorStore';
@@ -407,19 +406,6 @@ export function CuratePageClient({
   async function handleAnswers(e: React.FormEvent) {
     e.preventDefault();
     if (!answersComplete || !questionRound) return;
-
-    // Fail fast: check extension before committing to a run
-    const isMock = process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
-    if (!isMock) {
-      const available = await checkExtensionAvailable();
-      if (!available) {
-        setError(
-          'Tote extension not installed or not responding. Install the extension and try again.',
-        );
-        setPhase('error');
-        return;
-      }
-    }
 
     const answers: Answers = Object.fromEntries(
       questions.map((q) => [

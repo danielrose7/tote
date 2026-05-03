@@ -1,3 +1,4 @@
+import { filterImageUrl } from "./image";
 import type { ExtractionResult } from "./types";
 
 function getMetaContent(html: string, names: string[]): string | undefined {
@@ -52,7 +53,9 @@ export function extractOpenGraph(html: string): ExtractionResult | null {
 		"twitter:description",
 		"description",
 	]);
-	const imageUrl = getMetaContent(html, ["og:image", "twitter:image"]);
+	const imageUrl = filterImageUrl(
+		getMetaContent(html, ["og:image", "twitter:image"]),
+	);
 	const price = getMetaContent(html, [
 		"product:price:amount",
 		"og:price:amount",

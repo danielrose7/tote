@@ -310,9 +310,10 @@ export const extractorScript = `
 
     var IMAGE_EXCLUDE_PATTERNS = /logo|icon|favicon|sprite|placeholder|spacer|pixel|tracking|badge|avatar|rating|star|wordmark|share.?image/i;
 
-    function isExcludedImage(url, alt) {
+    function isExcludedImage(url, alt, image) {
       if (IMAGE_EXCLUDE_PATTERNS.test(url)) return true;
       if (alt && IMAGE_EXCLUDE_PATTERNS.test(alt)) return true;
+      if (image && (image.getAttribute('itemprop') || '').toLowerCase() === 'logo') return true;
       return false;
     }
 
@@ -335,7 +336,7 @@ export const extractorScript = `
             if (img) {
               var url = resolveUrl(img.src || img.getAttribute('src') || '');
               var alt = img.getAttribute('alt') || '';
-              if (url && !isExcludedImage(url, alt)) return url;
+              if (url && !isExcludedImage(url, alt, img)) return url;
             }
           }
         } catch(e) {}
@@ -354,13 +355,166 @@ export const extractorScript = `
         try {
           var img = document.querySelector(selectors[i]);
           if (img && img.src
-            && !isExcludedImage(img.src, img.getAttribute('alt') || '')
+            && !isExcludedImage(img.src, img.getAttribute('alt') || '', img)
             && !img.closest('[aria-modal="true"],[role="dialog"],dialog')) {
             return img.src;
           }
         } catch(e) {}
       }
       return undefined;
+    }
+
+    // ── Collection/listing items ─────────────────────────────────────────
+
+    function normalizeWhitespace(text) {
+      var normalized = text ? String(text).replace(/\\s+/g, ' ').trim() : '';
+      return normalized || undefined;
+    }
+
+    function isLikelyProductUrl(url) {
+      try {
+        var parsed = new URL(url, window.location.href);
+        var path = parsed.pathname.toLowerCase();
+        if (parsed.origin !== window.location.origin) return false;
+        if (path === window.location.pathname.toLowerCase()) return false;
+        return /\\/products?\\//.test(path) || /\\/p\\//.test(path) || /\\/product[-/]/.test(path) || /\\/shop\\/.+/.test(path);
+      } catch(e) { return false; }
+    }
+
+    function isLikelyCollectionPage() {
+      var path = window.location.pathname.toLowerCase();
+      if (/\\/products?\\//.test(path) || /\\/p\\//.test(path) || /\\/product[-/]/.test(path)) return false;
+      return /\\/collections?\\//.test(path) || /\\/categories?\\//.test(path) || /\\/catalog\\//.test(path) || /\\/shop\\//.test(path) || /\\/search/.test(path) || /\\/strollers?\\//.test(path) || /\\/car-seats?\\//.test(path) || /\\/accessories?\\//.test(path);
+    }
+
+    function findLikelyProductCard(anchor) {
+      var current = anchor;
+      var best = anchor;
+      var depth = 0;
+      while (current && current !== document.body && depth < 8) {
+        var classId = ((current.getAttribute('class') || '') + ' ' + (current.getAttribute('id') || '')).toLowerCase();
+        var links = current.querySelectorAll('a[href]');
+        var productLinkCount = 0;
+        for (var i = 0; i < links.length; i++) {
+          if (isLikelyProductUrl(links[i].href)) productLinkCount++;
+        }
+        var textLength = ((current.textContent || '').replace(/\\s+/g, ' ').trim()).length;
+        if (/product|card|tile|grid|item|result|listing/.test(classId) && productLinkCount <= 4 && textLength <= 2200) {
+          best = current;
+        }
+        current = current.parentElement;
+        depth++;
+      }
+      return best;
+    }
+
+    function resolveCardImage(card) {
+      var img = card.querySelector('img');
+      if (!img) return undefined;
+      var srcset = img.getAttribute('data-srcset') || img.getAttribute('srcset') || '';
+      if (srcset) {
+        var first = srcset.split(',')[0].trim().split(/\\s+/)[0];
+        if (first) return resolveUrl(first);
+      }
+      return resolveUrl(img.getAttribute('data-src') || img.getAttribute('src') || img.src || '');
+    }
+
+    function extractTitleFromCard(card, anchor) {
+      var selectors = ['[class*="title"]','[class*="name"]','[data-testid*="title"]','[data-testid*="name"]','h2','h3','h4'];
+      for (var i = 0; i < selectors.length; i++) {
+        try {
+          var el = card.querySelector(selectors[i]);
+          var text = normalizeWhitespace(el && el.textContent);
+          if (text && text.length <= 140 && !PRICE_REGEX.test(text)) return text;
+          PRICE_REGEX.lastIndex = 0;
+        } catch(e) {}
+      }
+      var aria = normalizeWhitespace(anchor.getAttribute('aria-label'));
+      if (aria && aria.length <= 140) return aria;
+      var anchorText = normalizeWhitespace(anchor.textContent);
+      if (anchorText && anchorText.length <= 140 && !/buy|shop|explore|view/i.test(anchorText)) return anchorText;
+      var img = card.querySelector('img[alt]');
+      var alt = normalizeWhitespace(img && img.getAttribute('alt'));
+      return alt && alt.length <= 180 ? alt : undefined;
+    }
+
+    function extractPriceFromCard(card) {
+      var selectors = ['[itemprop="price"]','[data-price]','[class*="price"]','[class*="Price"]','[data-testid*="price"]'];
+      for (var i = 0; i < selectors.length; i++) {
+        try {
+          var els = card.querySelectorAll(selectors[i]);
+          for (var j = 0; j < els.length; j++) {
+            var content = els[j].getAttribute('content') || els[j].getAttribute('data-price');
+            if (content && /^[\\d.,]+$/.test(content)) return { price: content, currency: undefined };
+            var parsed = extractPriceFromText(els[j].textContent || '');
+            if (parsed) return parsed;
+          }
+        } catch(e) {}
+      }
+      return extractPriceFromText(card.textContent || '') || {};
+    }
+
+    function extractBrandFromCard(card) {
+      var selectors = ['[itemprop="brand"]','[class*="brand"]','[class*="vendor"]','[data-testid*="brand"]'];
+      for (var i = 0; i < selectors.length; i++) {
+        try {
+          var text = normalizeWhitespace((card.querySelector(selectors[i]) || {}).textContent);
+          if (text && text.length <= 80) return text;
+        } catch(e) {}
+      }
+      return undefined;
+    }
+
+    function extractDescriptionFromCard(card, title, price) {
+      var pieces = [];
+      var selectors = ['[class*="description"]','[class*="subtitle"]','[class*="summary"]','[class*="feature"]','p','li'];
+      for (var i = 0; i < selectors.length && pieces.length < 6; i++) {
+        try {
+          var els = card.querySelectorAll(selectors[i]);
+          for (var j = 0; j < els.length && pieces.length < 6; j++) {
+            var text = normalizeWhitespace(els[j].textContent);
+            if (!text || text === title || (price && text.indexOf(price) !== -1)) continue;
+            if (/^(buy|shop|explore|compare|previous|next)$/i.test(text)) continue;
+            if (text.length < 4 || text.length > 220) continue;
+            if (pieces.indexOf(text) === -1) pieces.push(text);
+          }
+        } catch(e) {}
+      }
+      return pieces.length ? pieces.join(' | ') : undefined;
+    }
+
+    function extractCollectionItems() {
+      var byKey = {};
+      var anchors = document.querySelectorAll('a[href]');
+      for (var i = 0; i < anchors.length; i++) {
+        var anchor = anchors[i];
+        if (!isLikelyProductUrl(anchor.href)) continue;
+        var sourceUrl = resolveUrl(anchor.getAttribute('href') || anchor.href);
+        if (!sourceUrl) continue;
+        var card = findLikelyProductCard(anchor);
+        var priceInfo = extractPriceFromCard(card);
+        var title = extractTitleFromCard(card, anchor);
+        var imageUrl = resolveCardImage(card);
+        var brand = extractBrandFromCard(card);
+        var description = extractDescriptionFromCard(card, title, priceInfo.price);
+        if (!title && !imageUrl && !priceInfo.price) continue;
+        var normalizedTitle = title ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-') : '';
+        var key = normalizedTitle && priceInfo.price ? normalizedTitle + ':' + priceInfo.price : sourceUrl;
+        if (byKey[key]) continue;
+        byKey[key] = {
+          url: sourceUrl,
+          title: title,
+          description: description,
+          imageUrl: imageUrl,
+          price: priceInfo.price,
+          currency: priceInfo.currency,
+          brand: brand,
+          pageType: 'product',
+        };
+      }
+      var items = [];
+      Object.keys(byKey).slice(0, 24).forEach(function(key) { items.push(byKey[key]); });
+      return items;
     }
 
     // ── Main ──────────────────────────────────────────────────────────────
@@ -371,6 +525,8 @@ export const extractorScript = `
     var domPrice = extractPriceFromDOM(knownTitle);
     var domImage = extractImageFromDOM();
     var activeSlideUrl = extractActiveSlideImage();
+    var collectionItems = extractCollectionItems();
+    var shouldTreatAsCollection = collectionItems.length >= 2 && isLikelyCollectionPage();
 
     // Filter og:image through isExcludedImage — store-wide share images
     // (e.g. Shopify-share-image.png) must not become the primary product image.
@@ -389,6 +545,10 @@ export const extractorScript = `
       price: (jsonLd && jsonLd.price) || domPrice.price || og.price,
       currency: (jsonLd && jsonLd.currency) || domPrice.currency || og.currency,
       brand: (jsonLd && jsonLd.brand) || og.brand,
+      pageType: shouldTreatAsCollection
+        ? 'collection'
+        : (title || (jsonLd && jsonLd.price) || og.price || domPrice.price ? 'product' : 'unknown'),
+      collectionItems: shouldTreatAsCollection ? collectionItems : undefined,
     };
 
     window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'METADATA_RESULT', data: result }));

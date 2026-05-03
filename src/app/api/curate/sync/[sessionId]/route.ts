@@ -25,6 +25,7 @@ export async function GET(
     questionRound: session?.questionRound ?? null,
     answers: session?.answers ?? null,
     researchBriefJson: session?.researchBriefJson ?? null,
+    marketLandscapeJson: session?.marketLandscapeJson ?? null,
     framingBriefJson: session?.framingBriefJson ?? null,
     refinementPass: session?.refinementPass ?? null,
     result:

@@ -1,0 +1,11 @@
+name = "tote-extractor"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+[browser]
+binding = "BROWSER"
+
+# Set via: wrangler secret put EXTRACTOR_SECRET
+# [vars]
+# EXTRACTOR_SECRET = ""

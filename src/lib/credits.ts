@@ -27,6 +27,7 @@ const PRICING = {
 type SupportedModel = keyof typeof PRICING;
 
 const BRAVE_SEARCH_COST_CENTS = 0.5; // $5.00 / 1K requests
+const ANTHROPIC_WEB_SEARCH_COST_CENTS = 1.0; // $10.00 / 1K requests
 
 /** Total cost in cents for a step, given model, tokens, and web searches. */
 export function runCostCents(
@@ -34,13 +35,18 @@ export function runCostCents(
   outputTokens: number,
   webSearchRequests: number,
   model: SupportedModel = 'claude-sonnet-4-6',
+  anthropicWebSearchRequests = 0,
 ): number {
   const { input: inputRate, output: outputRate } = PRICING[model];
   const tokenCost =
     (inputTokens / 1_000_000) * inputRate * 100 +
     (outputTokens / 1_000_000) * outputRate * 100;
   const searchCost = webSearchRequests * BRAVE_SEARCH_COST_CENTS;
-  return Math.ceil((tokenCost + searchCost) * MARGIN_MULTIPLIER);
+  const anthropicSearchCost =
+    anthropicWebSearchRequests * ANTHROPIC_WEB_SEARCH_COST_CENTS;
+  return Math.ceil(
+    (tokenCost + searchCost + anthropicSearchCost) * MARGIN_MULTIPLIER,
+  );
 }
 
 export async function grantCredits(
@@ -98,6 +104,9 @@ export type DeductExtras = {
   candidateCount?: number;
   durationMs?: number;
   codeExecutionCount?: number;
+  cfCount?: number;
+  webSearchCount?: number;
+  failedCount?: number;
 };
 
 export async function deductCredits(

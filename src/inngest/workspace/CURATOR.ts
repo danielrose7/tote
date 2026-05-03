@@ -92,6 +92,7 @@ Every collection must conform to this exact JSON shape:
           "sourceUrl": "direct product page URL — not homepage, not search result",
           "merchant": "store name",
           "price": "$XX or null",
+          "imageUrl": "copy verbatim from extracted data if present, else omit",
           "note": "one sentence, specific, honest, lens-appropriate"
         }
       ]

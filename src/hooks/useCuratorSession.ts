@@ -2,9 +2,6 @@
 
 import { useAccount } from 'jazz-tools/react';
 import { useEffect, useRef } from 'react';
-import { MOCK_EXTRACTED_ITEMS } from '../inngest/fixtures/extracted-items';
-import type { ExtractedItem } from '../inngest/types';
-import { checkExtensionAvailable, refreshViaExtension } from '../lib/extension';
 import { JazzAccount } from '../schema';
 import { useCuratorStore } from '../store/curatorStore';
 
@@ -15,45 +12,21 @@ export interface SectionToExtract {
   mock?: boolean;
 }
 
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
-function toDomain(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
-}
-
 export function useCuratorSession(sessionId: string | null) {
   const me = useAccount(JazzAccount, {
     resolve: { root: { curatorSessions: true } },
   });
 
-  const {
-    phase,
-    result,
-    tokenUsage,
-    setPhase,
-    setError,
-    setExtractionProgress,
-    hydrateFromSync,
-    setRealtimeEnabled,
-  } = useCuratorStore();
+  const { phase, result, tokenUsage, hydrateFromSync, setRealtimeEnabled } =
+    useCuratorStore();
 
-  // --- Drain loop refs ---
-  const extractionQueueRef = useRef<SectionToExtract[]>([]);
-  const extractionRunningRef = useRef(false);
   const extractedSlugsRef = useRef<Set<string>>(new Set());
-  const extensionCheckedRef = useRef(false);
 
   // --- Jazz write side effect ---
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: Jazz session proxy type is not exported.
   const jazzSessionRef = useRef<any>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: Jazz session proxy type is not exported.
   function getJazzSession(): any {
     if (jazzSessionRef.current) return jazzSessionRef.current;
     if (!me.$isLoaded || !me.root?.curatorSessions?.$isLoaded || !sessionId)
@@ -68,6 +41,8 @@ export function useCuratorSession(sessionId: string | null) {
     return null;
   }
 
+  // Keep this effect keyed to the persisted fields only; getJazzSession is a local resolver around refs/account state.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Adding getJazzSession would rerun on every render.
   useEffect(() => {
     if (!sessionId || !me.$isLoaded) return;
     const jazzSession = getJazzSession();
@@ -101,18 +76,6 @@ export function useCuratorSession(sessionId: string | null) {
       }
 
       hydrateFromSync(snap);
-
-      // Re-queue any sections not yet extracted (initial + refinement gap sections)
-      if (snap.urlSections) {
-        for (const section of snap.urlSections as SectionToExtract[]) {
-          queueSectionForExtraction(section);
-        }
-      }
-      if (snap.refinementUrlSections) {
-        for (const section of snap.refinementUrlSections as SectionToExtract[]) {
-          queueSectionForExtraction(section);
-        }
-      }
     } catch {
       // best-effort
     }
@@ -120,6 +83,7 @@ export function useCuratorSession(sessionId: string | null) {
 
   // Mount-time sync guard
   const hasSyncedRef = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: syncFromKv closes over queue helpers intentionally.
   useEffect(() => {
     if (
       !sessionId ||
@@ -153,153 +117,15 @@ export function useCuratorSession(sessionId: string | null) {
     return () => window.removeEventListener('focus', handler);
   }, [sessionId]);
 
-  // --- Extraction drain loop ---
-  // Returns extracted items for a section without posting to the server.
-  // Assumes pending entries for all URLs in the section are already in progress state.
-  async function extractSection(
-    section: SectionToExtract,
-  ): Promise<ExtractedItem[]> {
-    const isMock =
-      section.mock ?? process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
-    const items: ExtractedItem[] = [];
-
-    for (const url of section.urls) {
-      setExtractionProgress((prev) => {
-        if (!prev) return prev;
-        const idx = prev.entries.findIndex(
-          (e) => e.url === url && e.status === 'pending',
-        );
-        if (idx === -1) return prev;
-        const newEntries = [...prev.entries];
-        newEntries[idx] = { ...newEntries[idx], status: 'loading' };
-        return { ...prev, entries: newEntries };
-      });
-
-      let metadata: Awaited<ReturnType<typeof refreshViaExtension>> = null;
-      if (isMock) {
-        await sleep(350);
-        const fixture = MOCK_EXTRACTED_ITEMS[url];
-        metadata = fixture ? { ...fixture } : null;
-      } else {
-        metadata = await refreshViaExtension(url, { capture: true });
-      }
-
-      items.push({ sourceUrl: url, ...metadata });
-
-      setExtractionProgress((prev) => {
-        if (!prev) return prev;
-        const idx = prev.entries.findIndex(
-          (e) => e.url === url && e.status === 'loading',
-        );
-        if (idx === -1) return prev;
-        const newEntries = [...prev.entries];
-        newEntries[idx] = {
-          ...newEntries[idx],
-          status: metadata ? 'done' : 'skipped',
-          title: metadata?.title,
-        };
-        return { ...prev, current: prev.current + 1, entries: newEntries };
-      });
-    }
-
-    return items;
+  // Server handles extraction via 2-tier CF + web search strategy.
+  function queueSectionForExtraction(_section: SectionToExtract) {
+    // no-op: server handles extraction
   }
 
-  async function drainExtractionQueue() {
-    if (extractionRunningRef.current) return;
-    extractionRunningRef.current = true;
-
-    try {
-      if (!extensionCheckedRef.current) {
-        const isMock = process.env.NEXT_PUBLIC_CURATOR_MOCK === 'true';
-        if (!isMock) {
-          const available = await checkExtensionAvailable();
-          if (!available) {
-            setError(
-              'Tote extension not installed or not responding. Install the extension and try again.',
-            );
-            setPhase('error');
-            extractionQueueRef.current = [];
-            return;
-          }
-        }
-        extensionCheckedRef.current = true;
-      }
-
-      // Pre-initialize the full batch as pending so the total URL count is
-      // visible upfront — prevents the growing denominator UX.
-      const pendingSections = extractionQueueRef.current.filter(
-        (s) => !extractedSlugsRef.current.has(s.slug),
-      );
-      if (pendingSections.length > 0) {
-        setExtractionProgress((prev) => {
-          const newEntries = pendingSections.flatMap((s) =>
-            s.urls.map((url) => ({
-              url,
-              domain: toDomain(url),
-              status: 'pending' as const,
-              sectionTitle: s.title,
-              sectionTag: s.slug.startsWith('gap-')
-                ? ('gap' as const)
-                : ('initial' as const),
-            })),
-          );
-          const total = newEntries.length;
-          if (!prev) return { current: 0, total, entries: newEntries };
-          return {
-            current: prev.current,
-            total: prev.total + total,
-            entries: [...prev.entries, ...newEntries],
-          };
-        });
-      }
-
-      // Extract all sections currently in the queue as one batch, then submit
-      // them in a single event so Inngest receives one curation/extractions event
-      // per batch (initial sections first, gap sections as a separate batch later).
-      const batchSections: {
-        slug: string;
-        title: string;
-        items: ExtractedItem[];
-      }[] = [];
-      while (extractionQueueRef.current.length > 0) {
-        const section = extractionQueueRef.current.shift()!;
-        if (extractedSlugsRef.current.has(section.slug)) continue;
-        const items = await extractSection(section);
-        extractedSlugsRef.current.add(section.slug);
-        batchSections.push({ slug: section.slug, title: section.title, items });
-      }
-
-      if (batchSections.length === 0) return;
-
-      const res = await fetch('/api/curate/extractions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, sections: batchSections }),
-      });
-
-      if (!res.ok) {
-        setError('Failed to submit extraction results.');
-        setPhase('error');
-      }
-    } finally {
-      extractionRunningRef.current = false;
-    }
-  }
-
-  function queueSectionForExtraction(section: SectionToExtract) {
-    if (extractedSlugsRef.current.has(section.slug)) return;
-    if (extractionQueueRef.current.some((s) => s.slug === section.slug)) return;
-    extractionQueueRef.current.push(section);
-    drainExtractionQueue();
-  }
-
-  // Reset drain loop refs when sessionId changes
+  // Reset refs when sessionId changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: This reset should run only when sessionId changes.
   useEffect(() => {
-    extractionQueueRef.current = [];
-    extractionRunningRef.current = false;
     extractedSlugsRef.current = new Set();
-    extensionCheckedRef.current = false;
     jazzSessionRef.current = null;
     hasSyncedRef.current = false;
   }, [sessionId]);
