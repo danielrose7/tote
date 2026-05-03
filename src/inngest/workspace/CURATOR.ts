@@ -93,6 +93,7 @@ Every collection must conform to this exact JSON shape:
           "merchant": "store name",
           "price": "$XX or null",
           "imageUrl": "copy verbatim from extracted data if present, else omit",
+          "images": ["copy verbatim array from extracted data if present, else omit — product images only, not logos"],
           "note": "one sentence, specific, honest, lens-appropriate"
         }
       ]

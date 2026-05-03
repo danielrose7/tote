@@ -94,6 +94,7 @@ export interface CollectionItem {
   price: string;
   note: string;
   imageUrl?: string;
+  images?: string[];
 }
 
 export interface CollectionSection {
@@ -117,6 +118,7 @@ export interface ExtractedItem {
   brand?: string;
   availability?: string;
   imageUrl?: string;
+  images?: string[];
   pageType?: 'product' | 'collection' | 'unknown';
   collectionItems?: ExtractedItem[];
 }

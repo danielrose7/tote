@@ -26,6 +26,7 @@ const ProductSchema = z.object({
   brand: z.string(),
   description: z.string().optional(),
   imageUrl: z.string().url().optional(),
+  images: z.array(z.string().url()).optional(),
 });
 
 type ProductSchemaType = z.infer<typeof ProductSchema>;
@@ -54,6 +55,7 @@ No markdown fences, no explanation — just the JSON object.
 - brand: the manufacturer or brand name
 - description: optional short description (1-2 sentences)
 - imageUrl: optional direct URL to the main product image
+- images: optional array of additional product image URLs — product photos only, not logos or icons
 - If you cannot find the product, still return a best-effort JSON object
 </rules>
 
@@ -245,6 +247,7 @@ Search for the product and return a JSON object with the product details.`,
         brand: p.brand,
         description: p.description,
         imageUrl: p.imageUrl,
+        images: p.images,
         pageType: 'product',
       };
 
