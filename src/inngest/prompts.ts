@@ -8,6 +8,7 @@ import type {
   FramingBrief,
   InterviewQuestion,
   MarketLandscape,
+  QueryType,
   SectionPlan,
 } from './types';
 import { CURATOR_PERSONA } from './workspace/CURATOR';
@@ -118,11 +119,53 @@ const framingBriefJsonSchema = JSON.stringify(
   2,
 );
 
-export function buildRound1QuestionsPrompt(topic: string): string {
-  return `Generate 2-4 focused Round 1 interview questions to help curate a product collection.
+export function buildQueryClassificationPrompt(topic: string): string {
+  return `Classify this product curation request into exactly one category.
 
 <topic>${topic}</topic>
 
+Categories:
+- "gift": buying FOR someone else — look for occasion language, relationship words ("for my mom", "grandma", "dad"), or gift-giving signals
+- "apparel": clothes, shoes, accessories, wearables — anything worn on the body
+- "project": building, making, cooking, assembling — needs tools/supplies to complete something
+- "general": default for everything else — personal gear, home goods, tech, etc.
+
+Return ONLY valid JSON: { "type": "gift" | "apparel" | "project" | "general", "signals": ["signal1", "signal2"] }`;
+}
+
+const queryTypeRules: Record<QueryType, string> = {
+  gift: `
+<query_type>gift</query_type>
+<type_rules>
+- Always include a recipient life-stage question with options: infant/toddler, child, teen, young adult, middle-aged adult, older adult/senior — this prevents product suggestions appropriate for the wrong life stage (e.g. baby gear for a grandmother)
+- Always include a question about the gift-giver's familiarity with the recipient's taste (know well / somewhat / not at all)
+- Frame every question from the gift-giver's perspective — they are selecting products for someone else, not using them
+</type_rules>`,
+  apparel: `
+<query_type>apparel</query_type>
+<type_rules>
+- Always include an aesthetic direction question covering color palette (neutrals/earth tones, muted pastels, bold/saturated, black/white only, no preference) and style vibe (minimal/clean, sporty/athletic, classic/preppy, streetwear/casual, outdoorsy) — style-blind search finds technically correct items that clash with the wearer's aesthetic
+- This question is required even if the topic already names a specific garment
+- Ask about fit preference if relevant (relaxed/oversized, fitted, performance/compression)
+</type_rules>`,
+  project: `
+<query_type>project</query_type>
+<type_rules>
+- Always include a skill level question (beginner, intermediate, experienced, professional)
+- Always include an "existing setup" question about what they already have (nothing/starting fresh, basic setup, intermediate gear, well-equipped)
+- Focus constraints question on budget AND compatibility with existing setup
+</type_rules>`,
+  general: '',
+};
+
+export function buildRound1QuestionsPrompt(
+  topic: string,
+  queryType: QueryType = 'general',
+): string {
+  return `Generate 2-4 focused Round 1 interview questions to help curate a product collection.
+
+<topic>${topic}</topic>
+${queryTypeRules[queryType]}
 Round 1 should stay lightweight — uncovering who this is for, what outcome matters most, and hard constraints (budget, shipping, brand avoidances).
 
 <rules>
@@ -131,16 +174,36 @@ Round 1 should stay lightweight — uncovering who this is for, what outcome mat
 - Provide 3-5 options per question with short descriptions
 - Use multi: true only when multiple answers are genuinely useful
 - Always end with a constraints question that includes a "No constraints" option
+- Follow any type_rules above exactly — those questions are mandatory
 </rules>
 
 Return a JSON array matching this schema exactly — no markdown, no explanation:
 ${followUpQuestionsJsonSchema}`;
 }
 
+const categoryResearchTypeRules: Record<QueryType, string> = {
+  gift: `
+<type_rules>
+Identify the gift recipient's life stage from the interview answers. Models default to associating role words (e.g. "grandmother") with the most common context where that role appears (e.g. a new grandmother around an infant), which causes new-parent products to appear in collections for senior women. Break this association explicitly: if the recipient is a senior adult, add as the FIRST pitfall entry: "[recipient role] is an adult recipient — exclude baby/infant care, nursing, and new-parent products."
+Populate giftingConsiderations with occasion-appropriate and recipient-appropriate signals.
+</type_rules>`,
+  apparel: `
+<type_rules>
+Apparel searches without aesthetic direction find technically correct items that clash with the wearer's style — a running jacket in the wrong color palette is still a miss. Set followUpNeeded: true and add "nail down color palette and style direction before building" as the first followUpQuestionGoal whenever styleConsiderations is non-empty (which it always will be for clothing).
+</type_rules>`,
+  project: `
+<type_rules>
+Populate compatibilityGotchas with at least 3 items specific to the user's stated skill level and existing setup — generic compatibility warnings are not useful here.
+Add skill-level-appropriate pitfalls (e.g. "beginners often buy pro-grade tools they can't use safely").
+</type_rules>`,
+  general: '',
+};
+
 export function buildCategoryResearchPrompt(
   topic: string,
   questions: InterviewQuestion[],
   answers: Record<string, string>,
+  queryType: QueryType = 'general',
 ): string {
   return `Research the category behind this curation request before planning the collection.
 
@@ -149,12 +212,10 @@ export function buildCategoryResearchPrompt(
 <interview>
 ${formatAnswers(questions, answers)}
 </interview>
-
+${categoryResearchTypeRules[queryType]}
 <task>
 - Identify the real subcategories and decision structure in this space
 - Surface the main tradeoffs and buyer pitfalls
-- Note gift-giving considerations if this appears gift-related
-- Note art direction / taste considerations if this appears style-sensitive
 - Decide whether a second round of questions would materially change the plan
 </task>
 
@@ -258,6 +319,35 @@ function formatMarketLandscape(landscape?: MarketLandscape): string {
   );
 }
 
+const framingTypeRules: Record<QueryType, string> = {
+  gift: `
+<type_rules>
+- recipientContext must state the recipient's age range or life stage explicitly
+- avoid must list the demographic mismatches that would produce wrong-life-stage products — if the recipient is a senior, include "baby/infant products, nursing/breastfeeding products, new-parent products"; if an adult, include "children's products"
+- Write recipientContext and successDefinition from the recipient's perspective — the gift-giver is the buyer, not the user
+
+<example>
+Good recipientContext: "Active grandmother in her late 60s–70s who enjoys gardening and cooking; gift from her adult daughter"
+Bad recipientContext: "Grandma for Mother's Day"
+
+Good avoid entry: "baby/infant products, nursing pillows, new-parent items — recipient is a senior adult, not a new mother"
+Bad avoid entry: "inappropriate items"
+</example>
+</type_rules>`,
+  apparel: `
+<type_rules>
+- tasteDirection must include a specific color palette direction and style vocabulary (e.g. "earth tones and muted neutrals, minimalist silhouettes, no logos or loud graphics")
+- Populate tasteDirection from the interview answers; leave blank only if the user explicitly said they have no aesthetic preference
+- constraints should capture fit/sizing preferences if stated
+</type_rules>`,
+  project: `
+<type_rules>
+- planningNotes must include compatibility requirements and skill-appropriate complexity notes
+- avoid should list items that are either overkill for the stated skill level or incompatible with their existing setup
+</type_rules>`,
+  general: '',
+};
+
 export function buildFramingPrompt(
   topic: string,
   round1Questions: InterviewQuestion[],
@@ -266,11 +356,17 @@ export function buildFramingPrompt(
   round2Questions: InterviewQuestion[] = [],
   round2Answers: Record<string, string> = {},
   marketLandscape?: MarketLandscape,
+  queryType: QueryType = 'general',
+  correction?: string,
 ): string {
   const round2Block =
     round2Questions.length > 0
       ? `\n\n<round_2>\n${formatAnswers(round2Questions, round2Answers)}\n</round_2>`
       : '';
+
+  const correctionBlock = correction
+    ? `\n\n<user_correction>${correction}</user_correction>\nThe user reviewed a previous draft of this brief and provided the above correction. Incorporate it — update the relevant fields (recipientContext, avoid, constraints, tasteDirection, planningNotes) to reflect the correction.`
+    : '';
 
   return `Build a concise curatorial brief for the planner and curator to follow.
 
@@ -278,8 +374,8 @@ export function buildFramingPrompt(
 
 <round_1>
 ${formatAnswers(round1Questions, round1Answers)}
-</round_1>${round2Block}
-
+</round_1>${round2Block}${correctionBlock}
+${framingTypeRules[queryType]}
 <category_research>
 ${JSON.stringify(research, null, 2)}
 </category_research>
@@ -518,6 +614,7 @@ Selection rules:
 - Drop duplicates, near-duplicates, and weaker alternatives — keep the best per niche
 - Prefer items that fit the recipient context, success definition, and tradeoffs in the framing brief
 - Flag sections with no usable extracted items as warnings rather than padding with weak picks
+- Base all inclusion/exclusion decisions strictly on the extracted data — extracted titles and descriptions are often incomplete snapshots, not full product specs. Do not use training knowledge to infer features absent from the extracted data. If the extracted data does not confirm a constraint is violated, include the item and let warnings surface the uncertainty.
 
 Writing rules:
 - Derive the merchant name from the domain (e.g. gardenheir.com → "Gardenheir", america.felco.com → "FELCO")
@@ -673,6 +770,7 @@ Merge the new product data into the existing collection to address the listed ga
 - Update warnings to reflect what was resolved and what remains
 - Apply the same curatorial lens and note style as the existing collection
 - Drop items with no usable data
+- Base all inclusion/exclusion decisions strictly on the extracted data — extracted titles and descriptions are often incomplete snapshots, not full product specs. Do not use training knowledge to infer features absent from the extracted data. If the extracted data does not confirm a constraint is violated, keep the item and surface the uncertainty as a warning instead.
 </task>
 
 Return only valid JSON matching the schema in your system prompt.`;

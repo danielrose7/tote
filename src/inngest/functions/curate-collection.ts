@@ -10,6 +10,7 @@ import { logProgressEvent, logStep } from '../../lib/curatorStepLog';
 import { curationChannel } from '../channels';
 import { inngest } from '../client';
 import { createLLMClient } from '../llm';
+import { parseJson } from '../lib/parseJson';
 import {
   buildCategoryResearchPrompt,
   buildCuratePrompt,
@@ -18,6 +19,7 @@ import {
   buildHospitalityPassPrompt,
   buildMarketLandscapePrompt,
   buildPlanPrompt,
+  buildQueryClassificationPrompt,
   buildRefinementCuratePrompt,
   buildRefinementExtractionPrompt,
   buildRefinementQueryGenPrompt,
@@ -37,11 +39,14 @@ import {
 import type {
   CollectionOutput,
   CurationAnswersEvent,
+  CurationBriefApprovedEvent,
   CurationExtractionsEvent,
   CurationGap,
   CurationStartEvent,
   ExtractedSection,
   InterviewQuestion,
+  QueryClassification,
+  QueryType,
   SectionPlan,
   UrlSection,
 } from '../types';
@@ -49,29 +54,6 @@ import type {
 const llm = createLLMClient();
 
 type UrlDiscoveryPayload = { urls: string[] };
-
-function parseJson<T>(text: string): T | null {
-  // Strip markdown code fences if present
-  const stripped = text
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```\s*$/, '')
-    .trim();
-  // Try direct parse first
-  try {
-    return JSON.parse(stripped) as T;
-  } catch {
-    // Try to extract JSON array or object from mixed content
-    const match = stripped.match(/(\[[\s\S]*\]|\{[\s\S]*\})/);
-    if (match) {
-      try {
-        return JSON.parse(match[0]) as T;
-      } catch {
-        return null;
-      }
-    }
-    return null;
-  }
-}
 
 function parameterize(title: string): string {
   return title
@@ -155,6 +137,27 @@ export const curateCollection = inngest.createFunction(
       message: 'Workflow started — generating Round 1 questions…',
     });
 
+    // Step 0: Classify the query type (cheap Haiku call, runs in parallel perception)
+    const classificationResult = await step.run('classify-query', async () => {
+      const response = await llm.generate({
+        model: 'claude-haiku-4-5-20251001',
+        system:
+          'Classify product curation requests. Return only valid JSON — no markdown, no explanation.',
+        prompt: buildQueryClassificationPrompt(topic),
+        maxTokens: 300,
+      });
+      const parsed = parseJson<QueryClassification>(response.text);
+      return (
+        parsed ?? ({ type: 'general', signals: [] } as QueryClassification)
+      );
+    });
+
+    const queryType: QueryType = classificationResult.type;
+
+    await step.run('persist-query-type', () =>
+      patchSession(sessionId, { queryType }),
+    );
+
     // Step 1: Generate context-specific Round 1 questions
     const round1QuestionResult = await step.run(
       'generate-questions-r1',
@@ -163,7 +166,7 @@ export const curateCollection = inngest.createFunction(
         const response = await llm.generate({
           system:
             'You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.',
-          prompt: buildRound1QuestionsPrompt(topic),
+          prompt: buildRound1QuestionsPrompt(topic, queryType),
           maxTokens: Math.max(maxTokens, interviewTokenLimit()),
         });
         const raw = parseJson<unknown>(response.text);
@@ -325,6 +328,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
             topic,
             round1Questions,
             round1Answers,
+            queryType,
           ),
           maxTokens: researchTokenLimit(),
         });
@@ -633,6 +637,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           round2Questions,
           round2Answers,
           marketLandscape,
+          queryType,
         ),
         maxTokens: framingTokenLimit(),
       });
@@ -676,11 +681,93 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       );
     }
 
-    const framingBrief = framingResult.brief;
+    let framingBrief = framingResult.brief;
+
+    // Step 4b: Brief review gate — show user the brief before expensive execution
+    await step.realtime.publish('brief-review-ready', ch.progress, {
+      step: 'brief-review-ready',
+      message: 'Brief ready — please review before we start building.',
+      framingBriefJson: JSON.stringify(framingBrief),
+    });
+
+    await step.run('persist-brief-review-phase', () =>
+      Promise.all([
+        patchSession(sessionId, {
+          phase: 'brief-review',
+          questionRound: round2Questions.length > 0 ? 2 : 1,
+          answers: { ...round1Answers, ...round2Answers },
+          framingBriefJson: JSON.stringify(framingBrief),
+          lastProgressMessage: 'Brief ready — waiting for your approval.',
+        }),
+        logProgressEvent(sessionId, {
+          step: 'brief-review-ready',
+          message: 'Brief ready — waiting for your approval.',
+          ts: Date.now(),
+        }),
+      ]),
+    );
+
+    const briefApprovalEvent = await step.waitForEvent(
+      'wait-for-brief-approval',
+      {
+        event: 'curation/brief-approved' as CurationBriefApprovedEvent['name'],
+        timeout: '20m',
+        if: `async.data.sessionId == "${sessionId}"`,
+      },
+    );
+
+    if (!briefApprovalEvent) {
+      await step.realtime.publish('timed-out-brief', ch.progress, {
+        step: 'error',
+        message:
+          'Timed out waiting for brief approval. Start a new session to try again.',
+      });
+      await step.run('persist-error-phase-brief', () =>
+        patchSession(sessionId, { phase: 'error' }),
+      );
+      return;
+    }
+
+    const correction = briefApprovalEvent.data.correction?.trim() ?? '';
+
+    if (correction) {
+      // Rebuild framing brief with user correction injected
+      const correctedFramingResult = await step.run(
+        'build-framing-brief-corrected',
+        async () => {
+          const response = await llm.generate({
+            system: CURATOR_SYSTEM_PROMPT,
+            prompt: buildFramingPrompt(
+              topic,
+              round1Questions,
+              round1Answers,
+              research,
+              round2Questions,
+              round2Answers,
+              marketLandscape,
+              queryType,
+              correction,
+            ),
+            maxTokens: framingTokenLimit(),
+          });
+          const raw = parseJson<unknown>(response.text);
+          const result = FramingBriefSchema.safeParse(raw);
+          if (!result.success) {
+            throw new Error(
+              `Failed to parse corrected framing brief: ${JSON.stringify(result.error.issues)}`,
+            );
+          }
+          return { brief: result.data, usage: response.usage };
+        },
+      );
+      framingBrief = correctedFramingResult.brief;
+      totalInputTokens += correctedFramingResult.usage?.inputTokens ?? 0;
+      totalOutputTokens += correctedFramingResult.usage?.outputTokens ?? 0;
+    }
 
     await step.realtime.publish('framing-complete', ch.progress, {
       step: 'framing-complete',
-      message: 'Curatorial brief ready. Planning collection...',
+      message: 'Brief approved. Planning collection...',
       detail: framingBrief.goal,
       framingBriefJson: JSON.stringify(framingBrief),
     });
@@ -689,14 +776,12 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       Promise.all([
         patchSession(sessionId, {
           phase: 'planning',
-          questionRound: round2Questions.length > 0 ? 2 : 1,
-          answers: { ...round1Answers, ...round2Answers },
           framingBriefJson: JSON.stringify(framingBrief),
-          lastProgressMessage: 'Curatorial brief ready. Planning collection...',
+          lastProgressMessage: 'Brief approved. Planning collection...',
         }),
         logProgressEvent(sessionId, {
           step: 'framing-complete',
-          message: 'Curatorial brief ready. Planning collection...',
+          message: 'Brief approved. Planning collection...',
           detail: framingBrief.goal,
           ts: Date.now(),
         }),
@@ -894,7 +979,42 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         );
       }
 
-      const domains = found.urls
+      // Validate discovered URLs with HEAD requests — filter out hallucinated 404s
+      const validatedUrls = found.parseFailed
+        ? []
+        : await step.run(`validate-urls-${slug}`, async () => {
+            const results = await Promise.allSettled(
+              found.urls.map((url) =>
+                fetch(url, {
+                  method: 'HEAD',
+                  signal: AbortSignal.timeout(5000),
+                })
+                  .then((r) => ({ url, ok: r.ok || r.status < 400 }))
+                  .catch(() => ({ url, ok: false })),
+              ),
+            );
+            const valid = results
+              .filter((r) => r.status === 'fulfilled' && r.value.ok)
+              .map(
+                (r) =>
+                  (r as PromiseFulfilledResult<{ url: string; ok: boolean }>)
+                    .value.url,
+              );
+            const dropped = found.urls.length - valid.length;
+            if (dropped > 0) {
+              console.log('[curate-collection] validate-urls:dropped', {
+                at: nowIso(),
+                sessionId,
+                section: section.title,
+                dropped,
+                kept: valid.length,
+              });
+            }
+            return valid;
+          });
+
+      const finalUrls = found.parseFailed ? [] : validatedUrls;
+      const domains = finalUrls
         .map((u) => {
           try {
             return new URL(u).hostname;
@@ -904,17 +1024,21 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         })
         .join(', ');
 
+      const droppedCount = found.parseFailed
+        ? 0
+        : found.urls.length - finalUrls.length;
+
       await step.realtime.publish(`found-urls-${slug}`, ch.progress, {
         step: found.parseFailed ? 'search-parse-failed' : 'found-urls',
         message: found.parseFailed
           ? `Search returned an unreadable response for "${section.title}"`
-          : `Found ${found.urls.length} URLs for "${section.title}"`,
+          : `Found ${finalUrls.length} URLs for "${section.title}"${droppedCount > 0 ? ` (${droppedCount} invalid dropped)` : ''}`,
         detail: found.parseFailed
           ? 'No URLs could be extracted from the model output. This is likely a parsing or formatting issue.'
           : domains || undefined,
       });
 
-      urlSections.push({ title: section.title, slug, urls: found.urls });
+      urlSections.push({ title: section.title, slug, urls: finalUrls });
     }
 
     // Send all sections in one message so the browser knows the full URL count upfront

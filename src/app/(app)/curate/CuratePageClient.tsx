@@ -3,7 +3,7 @@
 import { useRealtime } from 'inngest/react';
 import { Group } from 'jazz-tools';
 import { useAccount } from 'jazz-tools/react';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '../../../components/ToastNotification';
 import type { SectionToExtract } from '../../../hooks/useCuratorSession';
 import { useCuratorSession } from '../../../hooks/useCuratorSession';
@@ -46,6 +46,7 @@ const phaseStatusLabel: Record<string, string> = {
   researching: 'Researching the category — usually 30–90s...',
   'interview-round-2': 'Waiting for follow-up questions',
   framing: 'Building curatorial brief — usually under a minute...',
+  'brief-review': 'Review the brief and approve to continue',
   planning: 'Planning collection structure...',
   extracting: 'Extracting pages...',
   curating: 'Curating the shortlist — usually 60–90s...',
@@ -341,9 +342,13 @@ export function CuratePageClient({
       phase === 'researching' ||
       phase === 'interview-round-2' ||
       phase === 'framing' ||
+      phase === 'brief-review' ||
       phase === 'planning'
     ) {
-      phaseFloor.Scope = phase === 'planning' ? 'completed' : 'active';
+      phaseFloor.Scope =
+        phase === 'planning' || phase === 'brief-review'
+          ? 'completed'
+          : 'active';
       if (isSearching) phaseFloor.Scout = 'active';
     } else if (phase === 'extracting') {
       phaseFloor.Scope = 'completed';
@@ -433,6 +438,25 @@ export function CuratePageClient({
       setError('Failed to submit answers.');
       setPhase('error');
     }
+  }
+
+  const [briefCorrection, setBriefCorrection] = useState('');
+  const [briefSubmitting, setBriefSubmitting] = useState(false);
+
+  async function handleBriefApproval(correction?: string) {
+    if (briefSubmitting) return;
+    setBriefSubmitting(true);
+    setPhase('planning');
+    const res = await fetch('/api/curate/brief-approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, correction: correction ?? '' }),
+    });
+    if (!res.ok) {
+      setError('Failed to approve brief.');
+      setPhase('error');
+    }
+    setBriefSubmitting(false);
   }
 
   async function handleImport() {
@@ -625,6 +649,75 @@ export function CuratePageClient({
                     </div>
                   </form>
                 )}
+
+              {/* ── Brief review ── */}
+              {phase === 'brief-review' && framingBrief && (
+                <div className={styles.form}>
+                  <p className={styles.subheading}>
+                    Here's the brief we'll use to build your collection. Approve
+                    to continue, or add a correction below.
+                  </p>
+                  <div className={styles.framingBriefCard}>
+                    <p className={styles.framingBriefGoal}>
+                      {framingBrief.goal}
+                    </p>
+                    {framingBrief.recipientContext && (
+                      <p className={styles.framingBriefMeta}>
+                        {framingBrief.recipientContext}
+                      </p>
+                    )}
+                    {framingBrief.tasteDirection && (
+                      <p className={styles.framingBriefMeta}>
+                        {framingBrief.tasteDirection}
+                      </p>
+                    )}
+                    {framingBrief.constraints.length > 0 && (
+                      <ul className={styles.framingBriefMeta}>
+                        {framingBrief.constraints.map((c) => (
+                          <li key={c}>{c}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {framingBrief.avoid.length > 0 && (
+                      <p className={styles.framingBriefMeta}>
+                        Avoid: {framingBrief.avoid.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <div className={styles.inputGroup}>
+                    <span className={styles.label}>
+                      Anything off? (optional)
+                    </span>
+                    <textarea
+                      className={styles.textarea}
+                      rows={3}
+                      value={briefCorrection}
+                      onChange={(e) => setBriefCorrection(e.target.value)}
+                      placeholder="e.g. She's in her 70s, not a new mom — please remove baby products from the brief"
+                    />
+                  </div>
+                  <div className={styles.actions}>
+                    <button
+                      type="button"
+                      className={styles.primaryButton}
+                      disabled={briefSubmitting}
+                      onClick={() => handleBriefApproval()}
+                    >
+                      {briefSubmitting ? 'Approving...' : 'Looks good →'}
+                    </button>
+                    {briefCorrection.trim() && (
+                      <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        disabled={briefSubmitting}
+                        onClick={() => handleBriefApproval(briefCorrection)}
+                      >
+                        Submit correction
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* ── Framing brief ── */}
               {framingBrief &&

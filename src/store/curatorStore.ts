@@ -265,6 +265,7 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
           'researching',
           'interview-round-2',
           'framing',
+          'brief-review',
           'planning',
           'extracting',
           'curating',
@@ -307,11 +308,17 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
           });
         if (idx >= 4)
           synthesized.push({
-            step: 'framing-complete',
-            message: 'Curatorial brief ready.',
+            step: 'brief-review-ready',
+            message: 'Brief ready — waiting for your approval.',
             ts: ts++,
           });
-        if (idx >= 5) {
+        if (idx >= 5)
+          synthesized.push({
+            step: 'framing-complete',
+            message: 'Brief approved.',
+            ts: ts++,
+          });
+        if (idx >= 6) {
           synthesized.push({
             step: 'planned',
             message: 'Plan drafted.',
@@ -328,19 +335,19 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
             ts: ts++,
           });
         }
-        if (idx >= 6)
+        if (idx >= 7)
           synthesized.push({
             step: 'curating',
             message: 'Extracted items — curating final shortlist...',
             ts: ts++,
           });
-        if (idx >= 7)
+        if (idx >= 8)
           synthesized.push({
             step: 'hospitality',
             message: 'Polishing the shortlist...',
             ts: ts++,
           });
-        if (idx >= 8) {
+        if (idx >= 9) {
           const pass = (snap.refinementPass as number) ?? 1;
           for (let p = 1; p <= pass; p++) {
             synthesized.push({
@@ -413,7 +420,10 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
         };
         const { step, message, detail } = d;
 
-        if (step === 'framing-complete' && d.framingBriefJson) {
+        if (
+          (step === 'brief-review-ready' || step === 'framing-complete') &&
+          d.framingBriefJson
+        ) {
           try {
             patch.framingBrief = JSON.parse(d.framingBriefJson) as FramingBrief;
           } catch {}
@@ -421,6 +431,7 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 
         if (step === 'answers-round-1-received') patch.phase = 'researching';
         if (step === 'answers-round-2-received') patch.phase = 'framing';
+        if (step === 'brief-review-ready') patch.phase = 'brief-review';
         if (step === 'framing-complete') patch.phase = 'planning';
         if (step === 'hospitality') patch.phase = 'hospitality';
         if (step === 'complete') patch.phase = 'complete';

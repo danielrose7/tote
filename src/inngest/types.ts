@@ -6,6 +6,7 @@ export type CuratorPhase =
   | 'researching'
   | 'interview-round-2'
   | 'framing'
+  | 'brief-review'
   | 'planning'
   | 'extracting'
   | 'curating'
@@ -13,6 +14,13 @@ export type CuratorPhase =
   | 'refining'
   | 'complete'
   | 'error';
+
+export type QueryType = 'gift' | 'apparel' | 'project' | 'general';
+
+export interface QueryClassification {
+  type: QueryType;
+  signals: string[];
+}
 
 export interface InterviewQuestion {
   id: string;
@@ -27,6 +35,14 @@ export interface CurationStartEvent {
     sessionId: string;
     topic: string;
     requestedBy: string;
+  };
+}
+
+export interface CurationBriefApprovedEvent {
+  name: 'curation/brief-approved';
+  data: {
+    sessionId: string;
+    correction?: string;
   };
 }
 
