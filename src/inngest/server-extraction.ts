@@ -286,27 +286,80 @@ Search for the product and return a JSON object with the product details.`,
   };
 }
 
+const MAX_COLLECTION_ITEMS = 5;
+
+const emptyUsage: ExtractionUsage = {
+  inputTokens: 0,
+  outputTokens: 0,
+  webSearchRequests: 0,
+};
+
+function mergeUsage(a: ExtractionUsage, b: ExtractionUsage): ExtractionUsage {
+  return {
+    inputTokens: a.inputTokens + b.inputTokens,
+    outputTokens: a.outputTokens + b.outputTokens,
+    webSearchRequests: a.webSearchRequests + b.webSearchRequests,
+  };
+}
+
 type UrlExtractionResult = {
-  item: ExtractedItem | null;
-  tier: 'cf' | 'web-search' | 'failed';
+  items: ExtractedItem[];
+  tier: 'cf' | 'web-search' | 'failed' | 'collection-expanded';
   usage: ExtractionUsage;
   durationMs: number;
 };
 
+/**
+ * Mine product URLs from a collection page result and extract each one.
+ * Uses collectionItems[].sourceUrl from CF; skips items that already have
+ * title+price to avoid redundant extraction.
+ */
+async function expandCollection(
+  collectionItem: ExtractedItem,
+): Promise<{ items: ExtractedItem[]; usage: ExtractionUsage }> {
+  const candidates = (collectionItem.collectionItems ?? [])
+    .filter((c) => c.sourceUrl)
+    .slice(0, MAX_COLLECTION_ITEMS);
+
+  if (candidates.length === 0) return { items: [], usage: emptyUsage };
+
+  const results = await Promise.all(
+    candidates.map(async (candidate) => {
+      // Already fully extracted by CF — use directly
+      if (candidate.title && candidate.price) {
+        return { item: candidate, usage: emptyUsage };
+      }
+      const r = await extractUrl(candidate.sourceUrl!);
+      const item = r.items[0] ?? null;
+      return { item, usage: r.usage };
+    }),
+  );
+
+  return {
+    items: results.flatMap((r) => (r.item ? [r.item] : [])),
+    usage: results.reduce((acc, r) => mergeUsage(acc, r.usage), emptyUsage),
+  };
+}
+
 /** Try CF first; fall back to web search if CF returns null or missing title. */
 export async function extractUrl(url: string): Promise<UrlExtractionResult> {
   const startedAt = Date.now();
-  const emptyUsage: ExtractionUsage = {
-    inputTokens: 0,
-    outputTokens: 0,
-    webSearchRequests: 0,
-  };
 
   // Tier 1: CF Browser Run
   const cfItem = await extractViaCf(url);
   if (cfItem && cfItem.title) {
+    // Collection page: mine product URLs instead of returning the page itself
+    if (cfItem.pageType === 'collection') {
+      const { items, usage } = await expandCollection(cfItem);
+      return {
+        items,
+        tier: 'collection-expanded',
+        usage,
+        durationMs: Date.now() - startedAt,
+      };
+    }
     return {
-      item: cfItem,
+      items: [cfItem],
       tier: 'cf',
       usage: emptyUsage,
       durationMs: Date.now() - startedAt,
@@ -317,7 +370,7 @@ export async function extractUrl(url: string): Promise<UrlExtractionResult> {
   const { item, usage } = await extractViaWebSearch(url);
   if (item) {
     return {
-      item,
+      items: [item],
       tier: 'web-search',
       usage,
       durationMs: Date.now() - startedAt,
@@ -325,7 +378,7 @@ export async function extractUrl(url: string): Promise<UrlExtractionResult> {
   }
 
   return {
-    item: null,
+    items: [],
     tier: 'failed',
     usage,
     durationMs: Date.now() - startedAt,
@@ -378,11 +431,11 @@ export async function extractSection(
     aggregatedUsage.outputTokens += r.usage.outputTokens;
     aggregatedUsage.webSearchRequests += r.usage.webSearchRequests;
 
-    if (r.tier === 'cf') cfCount++;
+    if (r.tier === 'cf' || r.tier === 'collection-expanded') cfCount++;
     else if (r.tier === 'web-search') webSearchCount++;
     else failedCount++;
 
-    if (r.item) items.push(r.item);
+    items.push(...r.items);
   }
 
   return {
