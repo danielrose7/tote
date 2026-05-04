@@ -220,6 +220,7 @@ Search for the page and return a JSON object. Use pageType "error" if the page i
             type: 'web_search_20250305' as 'web_search_20250305',
             name: 'web_search',
             max_uses: 3,
+            allowed_domains: [new URL(url).hostname],
           },
         ],
         messages,
