@@ -20,23 +20,17 @@ export async function completeCuratorSession(
     phase: string;
     sectionCount: number;
     itemCount: number;
-    inputTokens?: number;
-    outputTokens?: number;
-    webSearchRequests?: number;
   },
 ): Promise<void> {
   await sql`
     UPDATE curator_sessions
     SET
-      mode                = ${data.mode},
-      model               = ${data.model},
-      phase               = ${data.phase},
-      section_count       = ${data.sectionCount},
-      item_count          = ${data.itemCount},
-      input_tokens        = ${data.inputTokens ?? null},
-      output_tokens       = ${data.outputTokens ?? null},
-      web_search_requests = ${data.webSearchRequests ?? null},
-      completed_at        = now()
+      mode          = ${data.mode},
+      model         = ${data.model},
+      phase         = ${data.phase},
+      section_count = ${data.sectionCount},
+      item_count    = ${data.itemCount},
+      completed_at  = now()
     WHERE session_id = ${sessionId}
   `;
 }

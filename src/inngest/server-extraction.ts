@@ -19,51 +19,89 @@ export type SectionExtractionResult = {
   durationMs: number;
 };
 
-const ProductSchema = z.object({
-  title: z.string(),
-  price: z.number().positive(),
-  currency: z.string(),
-  brand: z.string(),
+const CollectionItemSchema = z.object({
+  sourceUrl: z.string().url(),
+  title: z.string().optional(),
+  price: z.number().positive().optional(),
+  currency: z.string().optional(),
+  brand: z.string().optional(),
   description: z.string().optional(),
   imageUrl: z.string().url().optional(),
-  images: z.array(z.string().url()).optional(),
 });
 
-type ProductSchemaType = z.infer<typeof ProductSchema>;
+const PageSchema = z.discriminatedUnion('pageType', [
+  z.object({
+    pageType: z.literal('product'),
+    title: z.string(),
+    price: z.number().positive(),
+    currency: z.string(),
+    brand: z.string(),
+    description: z.string().optional(),
+    imageUrl: z.string().url().optional(),
+    images: z.array(z.string().url()).optional(),
+  }),
+  z.object({
+    pageType: z.literal('collection'),
+    title: z.string(),
+    collectionItems: z.array(CollectionItemSchema).min(1),
+  }),
+  z.object({
+    pageType: z.literal('error'),
+    reason: z.string(),
+  }),
+]);
 
-const PRODUCT_JSON_SCHEMA = z.toJSONSchema(ProductSchema);
+type PageSchemaType = z.infer<typeof PageSchema>;
+
+const PAGE_JSON_SCHEMA = z.toJSONSchema(PageSchema);
 
 const SYSTEM_PROMPT = `<persona>
 You are a product data extraction specialist. You research product pages and extract structured metadata.
 </persona>
 
 <task>
-Given a product page URL, use web search to find the product and extract its metadata. Return a single JSON object matching the output format exactly.
+Given a URL, use web search to find the page and classify it as one of: product, collection, or error.
+Return a single JSON object matching the output format exactly.
 </task>
 
 <output_format>
 Return only a valid JSON object with this schema:
-${JSON.stringify(PRODUCT_JSON_SCHEMA, null, 2)}
+${JSON.stringify(PAGE_JSON_SCHEMA, null, 2)}
 
 No markdown fences, no explanation — just the JSON object.
 </output_format>
 
-<rules>
-- title: the product's full name as displayed on the page
-- price: a positive number (no currency symbols, no commas)
-- currency: 3-letter ISO code (e.g. "USD", "GBP", "EUR")
-- brand: the manufacturer or brand name
-- description: optional short description (1-2 sentences)
-- imageUrl: optional direct URL to the main product image
-- images: optional array of additional product image URLs — product photos only, not logos or icons
-- If you cannot find the product, still return a best-effort JSON object
-</rules>
+<page_types>
+**product** — a single product detail page with a clear price and purchasable item.
+  - title: full product name as shown
+  - price: positive number, no symbols or commas
+  - currency: 3-letter ISO code (USD, GBP, EUR, etc.)
+  - brand: manufacturer or brand name
+  - description: optional 1-2 sentence description
+  - imageUrl: optional direct URL to main product image
+  - images: optional array of additional product photo URLs (no logos/icons)
 
-<example>
+**collection** — a category, search results, or listing page showing multiple products.
+  - title: page or category name
+  - collectionItems: array of products found on the page, each with sourceUrl (required), plus title, price, currency, brand, description, imageUrl where available
+
+**error** — use this when the page is inaccessible (404, access denied, login wall, CAPTCHA) or contains no extractable product data. Do NOT hallucinate product details.
+  - reason: brief description of why extraction failed
+</page_types>
+
+<examples>
 URL: https://www.patagonia.com/product/mens-down-sweater-hoody/84701.html
 Output:
-{"title":"Men's Down Sweater Hoody","price":279,"currency":"USD","brand":"Patagonia","description":"A versatile hooded jacket filled with 800-fill-power recycled down.","imageUrl":"https://www.patagonia.com/dw/image/v2/BDJB_PRD/on/demandware.static/-/Sites-patagonia-master/default/dw7e6efb3c/images/hi-res/84701_BLK.jpg"}
-</example>`;
+{"pageType":"product","title":"Men's Down Sweater Hoody","price":279,"currency":"USD","brand":"Patagonia","description":"A versatile hooded jacket filled with 800-fill-power recycled down.","imageUrl":"https://www.patagonia.com/dw/image/v2/BDJB_PRD/on/demandware.static/-/Sites-patagonia-master/default/dw7e6efb3c/images/hi-res/84701_BLK.jpg"}
+
+URL: https://www.lululemon.com/en-us/c/womens-leggings
+Output:
+{"pageType":"collection","title":"Women's Leggings","collectionItems":[{"sourceUrl":"https://www.lululemon.com/en-us/p/align-pant-28/LW5CXIS.html","title":"Align Pant 28\"","price":98,"currency":"USD","brand":"lululemon"},{"sourceUrl":"https://www.lululemon.com/en-us/p/fast-and-free-tight/LW5ARXS.html","title":"Fast and Free Tight 25\"","price":128,"currency":"USD","brand":"lululemon"}]}
+
+URL: https://www.example.com/login?redirect=/product/123
+Output:
+{"pageType":"error","reason":"Login wall — product page requires authentication"}
+</examples>`;
 
 // Titles that indicate the page blocked or errored rather than returning real content
 const CF_FAILURE_TITLES = [
@@ -145,17 +183,11 @@ export async function extractViaCf(url: string): Promise<ExtractedItem | null> {
 /** Use Anthropic web_search_20250305 built-in tool to extract product metadata. */
 export async function extractViaWebSearch(
   url: string,
-): Promise<{ item: ExtractedItem | null; usage: ExtractionUsage }> {
-  const emptyUsage: ExtractionUsage = {
-    inputTokens: 0,
-    outputTokens: 0,
-    webSearchRequests: 0,
-  };
-
+): Promise<{ items: ExtractedItem[]; usage: ExtractionUsage }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.warn('[server-extraction] web-search:no-api-key');
-    return { item: null, usage: emptyUsage };
+    return { items: [], usage: emptyUsage };
   }
 
   const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 60_000 });
@@ -163,9 +195,9 @@ export async function extractViaWebSearch(
   const messages: Anthropic.MessageParam[] = [
     {
       role: 'user',
-      content: `Extract product metadata for this URL: ${url}
+      content: `Classify and extract metadata for this URL: ${url}
 
-Search for the product and return a JSON object with the product details.`,
+Search for the page and return a JSON object. Use pageType "error" if the page is inaccessible or has no extractable products — do not guess or hallucinate.`,
     },
   ];
 
@@ -187,8 +219,7 @@ Search for the product and return a JSON object with the product details.`,
           {
             type: 'web_search_20250305' as 'web_search_20250305',
             name: 'web_search',
-            max_uses: 2,
-            allowed_domains: [new URL(url).hostname],
+            max_uses: 3,
           },
         ],
         messages,
@@ -249,7 +280,7 @@ Search for the product and return a JSON object with the product details.`,
         break;
       }
 
-      const validation = ProductSchema.safeParse(parsed);
+      const validation = PageSchema.safeParse(parsed);
       if (!validation.success) {
         lastError = `Zod validation failed on attempt ${attempt}: ${JSON.stringify(validation.error.issues)}`;
         if (attempt < MAX_ATTEMPTS) {
@@ -263,7 +294,44 @@ Search for the product and return a JSON object with the product details.`,
         break;
       }
 
-      const p: ProductSchemaType = validation.data;
+      const currentUsage: ExtractionUsage = {
+        inputTokens: totalInputTokens,
+        outputTokens: totalOutputTokens,
+        webSearchRequests: totalWebSearchRequests,
+      };
+
+      const p: PageSchemaType = validation.data;
+
+      if (p.pageType === 'error') {
+        console.warn('[server-extraction] web-search:page-error', {
+          url,
+          reason: p.reason,
+        });
+        return { items: [], usage: currentUsage };
+      }
+
+      if (p.pageType === 'collection') {
+        const collectionItem: ExtractedItem = {
+          sourceUrl: url,
+          title: p.title,
+          pageType: 'collection',
+          collectionItems: p.collectionItems.map((c) => ({
+            sourceUrl: c.sourceUrl,
+            title: c.title,
+            price: c.price !== undefined ? String(c.price) : undefined,
+            currency: c.currency,
+            brand: c.brand,
+            description: c.description,
+            imageUrl: c.imageUrl,
+            pageType: 'product' as const,
+          })),
+        };
+        const { items, usage: expandUsage } =
+          await expandCollection(collectionItem);
+        return { items, usage: mergeUsage(currentUsage, expandUsage) };
+      }
+
+      // pageType === 'product'
       const item: ExtractedItem = {
         sourceUrl: url,
         title: p.title,
@@ -276,14 +344,7 @@ Search for the product and return a JSON object with the product details.`,
         pageType: 'product',
       };
 
-      return {
-        item,
-        usage: {
-          inputTokens: totalInputTokens,
-          outputTokens: totalOutputTokens,
-          webSearchRequests: totalWebSearchRequests,
-        },
-      };
+      return { items: [item], usage: currentUsage };
     } catch (err) {
       console.warn('[server-extraction] web-search:api-error', {
         url,
@@ -302,7 +363,7 @@ Search for the product and return a JSON object with the product details.`,
   });
 
   return {
-    item: null,
+    items: [],
     usage: {
       inputTokens: totalInputTokens,
       outputTokens: totalOutputTokens,
@@ -392,10 +453,10 @@ export async function extractUrl(url: string): Promise<UrlExtractionResult> {
   }
 
   // Tier 2: Anthropic web search
-  const { item, usage } = await extractViaWebSearch(url);
-  if (item) {
+  const { items: wsItems, usage } = await extractViaWebSearch(url);
+  if (wsItems.length > 0) {
     return {
-      items: [item],
+      items: wsItems,
       tier: 'web-search',
       usage,
       durationMs: Date.now() - startedAt,

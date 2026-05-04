@@ -15,13 +15,14 @@
  */
 
 import { sql } from './db';
+import { MODELS } from './models';
 
 const MARGIN_MULTIPLIER = 1; // TODO: raise to ~5 after cost calibration
 
 // Token pricing in dollars per million tokens
 const PRICING = {
-  'claude-sonnet-4-6': { input: 3.0, output: 15.0 },
-  'claude-haiku-4-5-20251001': { input: 0.8, output: 4.0 },
+  [MODELS.sonnet]: { input: 3.0, output: 15.0 },
+  [MODELS.haiku]: { input: 0.8, output: 4.0 },
 } as const;
 
 type SupportedModel = keyof typeof PRICING;
@@ -34,7 +35,7 @@ export function runCostCents(
   inputTokens: number,
   outputTokens: number,
   webSearchRequests: number,
-  model: SupportedModel = 'claude-sonnet-4-6',
+  model: SupportedModel = MODELS.sonnet,
   anthropicWebSearchRequests = 0,
 ): number {
   const { input: inputRate, output: outputRate } = PRICING[model];
