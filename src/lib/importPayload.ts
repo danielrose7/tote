@@ -1,5 +1,6 @@
 import { Group } from 'jazz-tools';
 import { Block, BlockList, type JazzAccount } from '../schema';
+import { normalizeUrl } from './normalizeUrl';
 
 export interface ImportItem {
   title: string;
@@ -82,7 +83,7 @@ export function createCollectionFromPayload(
           type: 'product',
           name: item.title || item.sourceUrl || 'Untitled',
           productData: {
-            url: item.sourceUrl || '',
+            url: normalizeUrl(item.sourceUrl || ''),
             imageUrl: item.imageUrl,
             images: item.images,
             price: item.price ?? undefined,

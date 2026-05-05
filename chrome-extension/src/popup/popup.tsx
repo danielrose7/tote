@@ -88,6 +88,7 @@ function getDomain(url: string): string {
 }
 
 import { uploadCapture } from '../lib/capture';
+import { normalizeUrl } from '../lib/normalizeUrl';
 
 /**
  * Fire-and-forget: capture raw page data and upload to R2.
@@ -526,7 +527,7 @@ function SaveUI({
           type: 'product',
           name: metadata.title || 'Untitled',
           productData: {
-            url: metadata.url,
+            url: normalizeUrl(metadata.url),
             imageUrl: metadata.imageUrl,
             images: metadata.images,
             price: metadata.price,
