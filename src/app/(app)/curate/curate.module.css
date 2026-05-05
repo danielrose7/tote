@@ -393,6 +393,39 @@
   flex-shrink: 0;
 }
 
+.connectionDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-border);
+  transition: background 0.3s ease;
+}
+
+.connectionDot[data-status='open'] {
+  background: #22c55e;
+}
+
+.connectionDot[data-status='connecting'],
+.connectionDot[data-status='paused'] {
+  background: #f59e0b;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.connectionDot[data-status='idle'] {
+  background: var(--color-border);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 .reconnectButton {
   padding: 0.25rem 0.6rem;
   border-radius: 6px;

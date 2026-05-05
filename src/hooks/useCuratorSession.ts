@@ -104,17 +104,17 @@ export function useCuratorSession(sessionId: string | null) {
     setTimeout(() => setRealtimeEnabled(true), 100);
   }
 
-  // --- Focus reconnect listener ---
-  const onFocusRef = useRef<() => void>(() => {});
-  onFocusRef.current = () => {
+  // Reconnect when the network comes back after a drop
+  const onOnlineRef = useRef<() => void>(() => {});
+  onOnlineRef.current = () => {
     if (phase === 'complete' || phase === 'error') return;
     handleReconnect();
   };
   useEffect(() => {
     if (!sessionId) return;
-    const handler = () => onFocusRef.current();
-    window.addEventListener('focus', handler);
-    return () => window.removeEventListener('focus', handler);
+    const handler = () => onOnlineRef.current();
+    window.addEventListener('online', handler);
+    return () => window.removeEventListener('online', handler);
   }, [sessionId]);
 
   // Server handles extraction via 2-tier CF + web search strategy.

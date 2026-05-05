@@ -122,12 +122,13 @@ export function CuratePageClient({
     [sessionId],
   );
 
-  const { messages } = useRealtime({
+  const { messages, connectionStatus } = useRealtime({
     // biome-ignore lint/style/noNonNullAssertion: enabled guard handles null
     channel: channel!,
     topics,
     token: realtimeToken,
     enabled: !!sessionId && realtimeEnabled,
+    pauseOnHidden: true,
   });
 
   // Track which realtime message IDs have been processed to avoid duplicates
@@ -768,14 +769,25 @@ export function CuratePageClient({
                   <div className={styles.statusActions}>
                     <span className={styles.phaseBadge}>{phase}</span>
                     {phase !== 'complete' && phase !== 'error' && (
-                      <button
-                        type="button"
-                        className={styles.reconnectButton}
-                        onClick={handleReconnect}
-                        title="Reconnect to realtime stream"
-                      >
-                        ↺ Reconnect
-                      </button>
+                      <>
+                        {connectionStatus === 'error' ||
+                        connectionStatus === 'closed' ? (
+                          <button
+                            type="button"
+                            className={styles.reconnectButton}
+                            onClick={handleReconnect}
+                            title="Stream disconnected — click to reconnect"
+                          >
+                            ↺ Reconnect
+                          </button>
+                        ) : (
+                          <span
+                            className={styles.connectionDot}
+                            data-status={connectionStatus}
+                            title={`Stream: ${connectionStatus}`}
+                          />
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
