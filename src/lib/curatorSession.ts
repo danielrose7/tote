@@ -1,16 +1,12 @@
 /**
  * Curator session persistence helpers.
  *
- * Uses the `redis` package with KV_REDIS_URL (Vercel Redis / Upstash).
- * Falls back to the local session file when KV_REDIS_URL is not set.
- *
+ * State lives in the `state` JSONB column on `curator_sessions` in Neon Postgres.
  * Phase and result are persisted server-side at each transition — in-progress
  * state lives in the browser via Inngest Realtime.
  */
 
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { createClient } from 'redis';
+import { sql } from './db';
 import type {
   CurationGap,
   CuratorPhase,
@@ -56,123 +52,34 @@ export interface CuratorSessionResult extends CuratorSessionData {
   json: string;
 }
 
-let _redis: ReturnType<typeof createClient> | null = null;
-
-async function getRedis() {
-  if (!process.env.KV_REDIS_URL) return null;
-  if (!_redis) {
-    _redis = createClient({ url: process.env.KV_REDIS_URL });
-    await _redis.connect();
-  }
-  return _redis;
-}
-
 export async function readSession(
   sessionId: string,
 ): Promise<CuratorSessionData | null> {
-  const redis = await getRedis();
-
-  if (redis) {
-    const raw = await redis.get(`curate:session:${sessionId}`);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as CuratorSessionData;
-    } catch {
-      return null;
-    }
-  }
-
-  // Local dev fallback: read from the session file written by the Inngest function.
-  try {
-    const raw = await readFile(
-      join(process.cwd(), 'collections', '.sessions', `${sessionId}.json`),
-      'utf-8',
-    );
-    const data = JSON.parse(raw);
-    // Session file stores { urlSections, mock, phase?, result? }
-    return {
-      phase: data.phase ?? null,
-      urlSections: data.urlSections ?? null,
-      ...(data.result ?? {}),
-    };
-  } catch {
-    return null;
-  }
+  const rows = await sql`
+    SELECT state FROM curator_sessions WHERE session_id = ${sessionId}
+  `;
+  const state = rows[0]?.state as CuratorSessionData | null | undefined;
+  return state ?? null;
 }
 
 export async function patchSession(
   sessionId: string,
   patch: Partial<CuratorSessionData>,
 ): Promise<void> {
-  const redis = await getRedis();
-  if (redis) {
-    const existing = (await readSession(sessionId)) ?? {};
-    await redis.set(
-      `curate:session:${sessionId}`,
-      JSON.stringify({ ...existing, ...patch }),
-      { EX: 60 * 60 * 24 * 30 },
-    );
-    return;
-  }
-  // Local dev: merge patch into the session file
-  try {
-    const path = join(
-      process.cwd(),
-      'collections',
-      '.sessions',
-      `${sessionId}.json`,
-    );
-    let existing: Record<string, unknown> = {};
-    try {
-      existing = JSON.parse(await readFile(path, 'utf-8'));
-    } catch {
-      // file doesn't exist yet
-    }
-    const { writeFile, mkdir } = await import('node:fs/promises');
-    await mkdir(join(process.cwd(), 'collections', '.sessions'), {
-      recursive: true,
-    });
-    await writeFile(path, JSON.stringify({ ...existing, ...patch }), 'utf-8');
-  } catch {
-    // best-effort
-  }
+  await sql`
+    UPDATE curator_sessions
+    SET state = COALESCE(state, '{}'::jsonb) || ${JSON.stringify(patch)}::jsonb
+    WHERE session_id = ${sessionId}
+  `;
 }
 
 export async function writeSession(
   sessionId: string,
   result: CuratorSessionResult,
 ): Promise<void> {
-  const redis = await getRedis();
-
-  if (redis) {
-    await redis.set(
-      `curate:session:${sessionId}`,
-      JSON.stringify(result),
-      { EX: 60 * 60 * 24 * 30 }, // 30 days
-    );
-    return;
-  }
-
-  // Local dev fallback: extend the existing session file.
-  try {
-    const path = join(
-      process.cwd(),
-      'collections',
-      '.sessions',
-      `${sessionId}.json`,
-    );
-    let existing: Record<string, unknown> = {};
-    try {
-      existing = JSON.parse(await readFile(path, 'utf-8'));
-    } catch {
-      // file doesn't exist yet
-    }
-    const { writeFile, mkdir } = await import('node:fs/promises');
-    await mkdir(join(process.cwd(), 'collections', '.sessions'), {
-      recursive: true,
-    });
-    await writeFile(path, JSON.stringify({ ...existing, result }), 'utf-8');
-  } catch {
-    // best-effort
-  }
+  await sql`
+    UPDATE curator_sessions
+    SET state = ${JSON.stringify(result)}::jsonb
+    WHERE session_id = ${sessionId}
+  `;
 }
