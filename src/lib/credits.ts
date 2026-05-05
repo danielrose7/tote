@@ -23,20 +23,23 @@ const MARGIN_MULTIPLIER = 1; // TODO: raise to ~5 after cost calibration
 const PRICING = {
   [MODELS.sonnet]: { input: 3.0, output: 15.0 },
   [MODELS.haiku]: { input: 0.8, output: 4.0 },
+  [MODELS.geminiFlash]: { input: 0.3, output: 2.5 },
 } as const;
 
 type SupportedModel = keyof typeof PRICING;
 
 const BRAVE_SEARCH_COST_CENTS = 0.5; // $5.00 / 1K requests
 const ANTHROPIC_WEB_SEARCH_COST_CENTS = 1.0; // $10.00 / 1K requests
+export const CF_PUPPETEER_COST_CENTS = 0.2; // $2.00 / 1K Browser Rendering sessions
 
-/** Total cost in cents for a step, given model, tokens, and web searches. */
+/** Total cost in cents for a step, given model, tokens, web searches, and CF sessions. */
 export function runCostCents(
   inputTokens: number,
   outputTokens: number,
   webSearchRequests: number,
   model: SupportedModel = MODELS.sonnet,
   anthropicWebSearchRequests = 0,
+  cfSessions = 0,
 ): number {
   const { input: inputRate, output: outputRate } = PRICING[model];
   const tokenCost =
@@ -45,8 +48,9 @@ export function runCostCents(
   const searchCost = webSearchRequests * BRAVE_SEARCH_COST_CENTS;
   const anthropicSearchCost =
     anthropicWebSearchRequests * ANTHROPIC_WEB_SEARCH_COST_CENTS;
+  const cfCost = cfSessions * CF_PUPPETEER_COST_CENTS;
   return Math.ceil(
-    (tokenCost + searchCost + anthropicSearchCost) * MARGIN_MULTIPLIER,
+    (tokenCost + searchCost + anthropicSearchCost + cfCost) * MARGIN_MULTIPLIER,
   );
 }
 
@@ -106,8 +110,10 @@ export type DeductExtras = {
   durationMs?: number;
   codeExecutionCount?: number;
   cfCount?: number;
-  webSearchCount?: number;
+  geminiCount?: number;
   failedCount?: number;
+  provider?: string;
+  model?: string;
 };
 
 export async function deductCredits(
@@ -131,10 +137,11 @@ export async function deductCredits(
   await sql`
     INSERT INTO credit_transactions
       (clerk_user_id, amount_cents, type, curator_session_id, input_tokens, output_tokens, web_search_requests, step_label,
-       url_count, candidate_count, duration_ms, code_execution_count)
+       url_count, candidate_count, duration_ms, code_execution_count, provider, model)
     VALUES
       (${userId}, ${-cents}, 'deduction', ${curatorSessionId}, ${inputTokens}, ${outputTokens}, ${webSearchRequests}, ${stepLabel ?? null},
-       ${extras?.urlCount ?? null}, ${extras?.candidateCount ?? null}, ${extras?.durationMs ?? null}, ${extras?.codeExecutionCount ?? null})
+       ${extras?.urlCount ?? null}, ${extras?.candidateCount ?? null}, ${extras?.durationMs ?? null}, ${extras?.codeExecutionCount ?? null},
+       ${extras?.provider ?? null}, ${extras?.model ?? null})
   `;
 
   return (rows[0]?.balance_cents as number | undefined) ?? 0;

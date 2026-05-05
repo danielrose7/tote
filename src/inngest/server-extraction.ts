@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import type { ExtractedItem, UrlSection } from './types';
+import { parseJson } from './lib/parseJson';
+import { MODELS } from '../lib/models';
 
 export type ExtractionUsage = {
   inputTokens: number;
@@ -14,7 +16,7 @@ export type SectionExtractionResult = {
   items: ExtractedItem[];
   usage: ExtractionUsage;
   cfCount: number;
-  webSearchCount: number;
+  geminiCount: number;
   failedCount: number;
   durationMs: number;
 };
@@ -26,7 +28,7 @@ const CollectionItemSchema = z.object({
   currency: z.string().optional(),
   brand: z.string().optional(),
   description: z.string().optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string().url().nullish(),
 });
 
 const PageSchema = z.discriminatedUnion('pageType', [
@@ -37,7 +39,7 @@ const PageSchema = z.discriminatedUnion('pageType', [
     currency: z.string(),
     brand: z.string(),
     description: z.string().optional(),
-    imageUrl: z.string().url().optional(),
+    imageUrl: z.string().url().nullish(),
     images: z.array(z.string().url()).optional(),
   }),
   z.object({
@@ -373,6 +375,155 @@ Search for the page and return a JSON object. Use pageType "error" if the page i
   };
 }
 
+type GeminiResponse = {
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string }> };
+  }>;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+  };
+};
+
+/** Use Gemini URL Context tool to extract product metadata without a pre-crawled HTML payload. */
+export async function extractViaGemini(
+  url: string,
+): Promise<{ items: ExtractedItem[]; usage: ExtractionUsage }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn('[server-extraction] gemini:no-api-key');
+    return { items: [], usage: emptyUsage };
+  }
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${MODELS.geminiFlash}:generateContent`;
+
+  const requestBody = {
+    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          {
+            text: `Classify and extract metadata for this URL: ${url}
+
+Use the url_context tool to fetch the page and return a JSON object. Use pageType "error" if the page is inaccessible or has no extractable products — do not guess or hallucinate.
+
+Return JSON only — no markdown fences, no explanation. Max 5 items for collection pages.`,
+          },
+        ],
+      },
+    ],
+    tools: [{ url_context: {} }],
+    // Note: responseMimeType is intentionally omitted — incompatible with url_context tool
+  };
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey,
+      },
+      body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(60_000),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      console.warn('[server-extraction] gemini:non-ok', {
+        url,
+        status: res.status,
+        errText: errText.slice(0, 200),
+      });
+      return { items: [], usage: emptyUsage };
+    }
+
+    const body = (await res.json()) as GeminiResponse;
+    const inputTokens = body.usageMetadata?.promptTokenCount ?? 0;
+    const outputTokens = body.usageMetadata?.candidatesTokenCount ?? 0;
+    const usage: ExtractionUsage = {
+      inputTokens,
+      outputTokens,
+      webSearchRequests: 0,
+    };
+
+    const text =
+      body.candidates?.[0]?.content?.parts
+        ?.filter((p): p is { text: string } => typeof p.text === 'string')
+        ?.map((p) => p.text)
+        ?.join('\n')
+        ?.trim() ?? '';
+
+    const parsed = parseJson<unknown>(text);
+    if (!parsed) {
+      console.warn('[server-extraction] gemini:parse-failed', {
+        url,
+        textPreview: text.slice(0, 200),
+      });
+      return { items: [], usage };
+    }
+
+    const validation = PageSchema.safeParse(parsed);
+    if (!validation.success) {
+      console.warn('[server-extraction] gemini:validation-failed', {
+        url,
+        issues: validation.error.issues,
+      });
+      return { items: [], usage };
+    }
+
+    const p = validation.data;
+
+    if (p.pageType === 'error') {
+      console.warn('[server-extraction] gemini:page-error', {
+        url,
+        reason: p.reason,
+      });
+      return { items: [], usage };
+    }
+
+    if (p.pageType === 'collection') {
+      const collectionItem: ExtractedItem = {
+        sourceUrl: url,
+        title: p.title,
+        pageType: 'collection',
+        collectionItems: p.collectionItems.map((c) => ({
+          sourceUrl: c.sourceUrl,
+          title: c.title,
+          price: c.price !== undefined ? String(c.price) : undefined,
+          currency: c.currency,
+          brand: c.brand,
+          description: c.description,
+          imageUrl: c.imageUrl ?? undefined,
+          pageType: 'product' as const,
+        })),
+      };
+      const { items, usage: expandUsage } =
+        await expandCollection(collectionItem);
+      return { items, usage: mergeUsage(usage, expandUsage) };
+    }
+
+    const item: ExtractedItem = {
+      sourceUrl: url,
+      title: p.title,
+      price: String(p.price),
+      currency: p.currency,
+      brand: p.brand,
+      description: p.description,
+      imageUrl: p.imageUrl ?? undefined,
+      images: p.images,
+      pageType: 'product',
+    };
+    return { items: [item], usage };
+  } catch (err) {
+    console.warn('[server-extraction] gemini:error', {
+      url,
+      error: String(err),
+    });
+    return { items: [], usage: emptyUsage };
+  }
+}
+
 const MAX_COLLECTION_ITEMS = 5;
 
 const emptyUsage: ExtractionUsage = {
@@ -391,7 +542,7 @@ function mergeUsage(a: ExtractionUsage, b: ExtractionUsage): ExtractionUsage {
 
 type UrlExtractionResult = {
   items: ExtractedItem[];
-  tier: 'cf' | 'web-search' | 'failed' | 'collection-expanded';
+  tier: 'cf' | 'gemini' | 'failed' | 'collection-expanded';
   usage: ExtractionUsage;
   durationMs: number;
 };
@@ -428,7 +579,7 @@ async function expandCollection(
   };
 }
 
-/** Try CF first; fall back to web search if CF returns null or missing title. */
+/** Try CF first; fall back to Gemini URL Context if CF returns null or missing title. */
 export async function extractUrl(url: string): Promise<UrlExtractionResult> {
   const startedAt = Date.now();
 
@@ -453,12 +604,12 @@ export async function extractUrl(url: string): Promise<UrlExtractionResult> {
     };
   }
 
-  // Tier 2: Anthropic web search
-  const { items: wsItems, usage } = await extractViaWebSearch(url);
-  if (wsItems.length > 0) {
+  // Tier 2: Gemini URL Context
+  const { items: geminiItems, usage } = await extractViaGemini(url);
+  if (geminiItems.length > 0) {
     return {
-      items: wsItems,
-      tier: 'web-search',
+      items: geminiItems,
+      tier: 'gemini',
       usage,
       durationMs: Date.now() - startedAt,
     };
@@ -487,7 +638,7 @@ export async function extractSection(
     webSearchRequests: 0,
   };
   let cfCount = 0;
-  let webSearchCount = 0;
+  let geminiCount = 0;
   let failedCount = 0;
 
   const urls = [...section.urls];
@@ -519,7 +670,7 @@ export async function extractSection(
     aggregatedUsage.webSearchRequests += r.usage.webSearchRequests;
 
     if (r.tier === 'cf' || r.tier === 'collection-expanded') cfCount++;
-    else if (r.tier === 'web-search') webSearchCount++;
+    else if (r.tier === 'gemini') geminiCount++;
     else failedCount++;
 
     items.push(...r.items);
@@ -531,7 +682,7 @@ export async function extractSection(
     items,
     usage: aggregatedUsage,
     cfCount,
-    webSearchCount,
+    geminiCount,
     failedCount,
     durationMs: Date.now() - startedAt,
   };

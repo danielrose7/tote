@@ -24,15 +24,23 @@ Callers (`curate-collection.ts`, sync API) stay unchanged — only the `curatorS
 
 ## Curator / Extraction
 
-### Jina Reader as tier-3 extraction fallback
+### Gemini URL Context as tier-2 extraction (replaces Anthropic web_search)
 
-`reader.jina.ai/{url}` fetches any URL and returns clean markdown using their own headless infrastructure — designed for bot-blocking situations.
+See `docs/EXTRACTION_PIPELINE_RESEARCH.md` for full benchmark results.
 
-**Why:** CF (tier-1) and Anthropic web_search (tier-2) both fail on sites that block crawlers (confirmed: lululemon blocks both). Jina is a single `fetch` call, free tier available, no HTML parsing needed.
+**Summary:** `gemini-3-flash-preview` with `tools: [{ url_context: {} }]` succeeded 7/8 URLs (including lululemon which blocks CF and Anthropic crawlers) at ~$0.95/1k URLs — vs ~$10/1k for Anthropic web_search. Single API call, 100% field coverage on products.
 
-**If implemented:** Slot between Anthropic web_search and `failed` tier in `extractUrl()` in `src/inngest/server-extraction.ts`. Pass the markdown to Claude with `PageSchema` — no tools needed.
+**If implemented:** Add between `extractViaCf()` and `extractViaWebSearch()` in `src/inngest/server-extraction.ts`. Auth via `X-goog-api-key` header, parse response with `parseJson()`. Note: incompatible with `responseMimeType: application/json` — parse free-form JSON from response. Wait for a stable (non-preview) `gemini-3-flash` model ID before shipping.
 
-**Already ruled out:** Anthropic document URL source (`type: "url"` document block) — fails with download/format errors on real e-commerce pages. Not viable for arbitrary web content.
+### Serper.dev as Google-backed alternative to Brave Search
+
+[Serper.dev](https://serper.dev) returns Google search results as JSON — functionally identical to `braveSearch.ts` but backed by Google's index.
+
+**Why consider it:** $0.30–1.00/1k queries (vs Brave at $3–5/1k), faster (1–2s), free 2,500 query trial. Google results have broader coverage than Brave for niche/international products.
+
+**Why not urgent:** Brave is working well and the cost difference doesn't matter at current search volume. Worth revisiting if search becomes a meaningful cost line or if Brave has coverage gaps.
+
+**If implemented:** Mirror `src/lib/braveSearch.ts` — same interface, swap endpoint and auth header.
 
 ### URL normalization at save time
 

@@ -1,4 +1,5 @@
 import { deductCredits, runCostCents } from '../../lib/credits';
+import { MODELS } from '../../lib/models';
 import { extractSection } from '../server-extraction';
 import { patchSession, writeSession } from '../../lib/curatorSession';
 import {
@@ -1093,7 +1094,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       });
     }
 
-    // Run all sections in parallel — each section uses 2-tier CF+web-search extraction
+    // Run all sections in parallel — each section uses 2-tier CF+Gemini extraction
     const extractionResults = await Promise.all(
       urlSections.map((section) =>
         step.run(`extract-section-${section.slug}`, () =>
@@ -1107,7 +1108,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     for (const r of extractionResults) {
       const tierDetail = [
         r.cfCount > 0 && `${r.cfCount} via CF`,
-        r.webSearchCount > 0 && `${r.webSearchCount} via web search`,
+        r.geminiCount > 0 && `${r.geminiCount} via Gemini`,
         r.failedCount > 0 && `${r.failedCount} failed`,
       ]
         .filter(Boolean)
@@ -1139,20 +1140,23 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
               r.usage.inputTokens,
               r.usage.outputTokens,
               0,
-              'claude-sonnet-4-6',
-              r.usage.webSearchRequests,
+              r.geminiCount > 0 ? MODELS.geminiFlash : MODELS.sonnet,
+              0,
+              r.cfCount,
             ),
             sessionId,
             r.usage.inputTokens,
             r.usage.outputTokens,
-            r.usage.webSearchRequests,
+            0,
             `extract-section-${r.slug}`,
             {
               urlCount: r.items.length,
               durationMs: r.durationMs,
               cfCount: r.cfCount,
-              webSearchCount: r.webSearchCount,
+              geminiCount: r.geminiCount,
               failedCount: r.failedCount,
+              provider: r.geminiCount > 0 ? 'google' : 'cloudflare',
+              model: r.geminiCount > 0 ? MODELS.geminiFlash : 'puppeteer',
             },
           ),
         );
@@ -1550,7 +1554,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         patchSession(sessionId, { refinementUrlSections }),
       );
 
-      // 7c. Extract gap URLs server-side using 2-tier CF+web-search strategy
+      // 7c. Extract gap URLs server-side using 2-tier CF+Gemini strategy
       if (refinementUrlSections.length === 0) break;
 
       for (const section of refinementUrlSections) {
@@ -1573,7 +1577,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       for (const r of gapExtractionResults) {
         const tierDetail = [
           r.cfCount > 0 && `${r.cfCount} via CF`,
-          r.webSearchCount > 0 && `${r.webSearchCount} via web search`,
+          r.geminiCount > 0 && `${r.geminiCount} via Gemini`,
           r.failedCount > 0 && `${r.failedCount} failed`,
         ]
           .filter(Boolean)
@@ -1608,20 +1612,23 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
                 r.usage.inputTokens,
                 r.usage.outputTokens,
                 0,
-                'claude-sonnet-4-6',
-                r.usage.webSearchRequests,
+                r.geminiCount > 0 ? MODELS.geminiFlash : MODELS.sonnet,
+                0,
+                r.cfCount,
               ),
               sessionId,
               r.usage.inputTokens,
               r.usage.outputTokens,
-              r.usage.webSearchRequests,
+              0,
               `extract-section-${r.slug}`,
               {
                 urlCount: r.items.length,
                 durationMs: r.durationMs,
                 cfCount: r.cfCount,
-                webSearchCount: r.webSearchCount,
+                geminiCount: r.geminiCount,
                 failedCount: r.failedCount,
+                provider: r.geminiCount > 0 ? 'google' : 'cloudflare',
+                model: r.geminiCount > 0 ? MODELS.geminiFlash : 'puppeteer',
               },
             ),
           );
