@@ -100,7 +100,7 @@ export const curateCollection = inngest.createFunction(
     id: 'curate-collection',
     retries: 14,
     triggers: [{ event: 'curation/start' as CurationStartEvent['name'] }],
-    concurrency: { key: 'event.data.sessionId', limit: 25 },
+    concurrency: { key: 'event.data.sessionId', limit: 5 },
     cancelOn: [
       {
         event: 'curation/start' as CurationStartEvent['name'],
