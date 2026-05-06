@@ -23,25 +23,21 @@ function CopyIcon() {
   );
 }
 
-export function MakeCopyButton({
-  jazzPublishedId,
-}: {
-  jazzPublishedId: string;
-}) {
-  const cloneHref = `/clone/${jazzPublishedId}`;
+export function MakeCopyButton({ neonId }: { neonId: string }) {
+  const cloneHref = `/clone/${neonId}`;
   return (
     <>
       <SignedIn>
         <Link href={cloneHref} className={styles.headerActionButton}>
           <CopyIcon />
-          <span>Make a copy</span>
+          <span>Save a copy</span>
         </Link>
       </SignedIn>
       <SignedOut>
         <SignUpButton mode="modal" fallbackRedirectUrl={cloneHref}>
           <button type="button" className={styles.headerActionButton}>
             <CopyIcon />
-            <span>Make a copy</span>
+            <span>Save a copy</span>
           </button>
         </SignUpButton>
       </SignedOut>

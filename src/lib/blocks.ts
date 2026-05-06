@@ -503,18 +503,42 @@ export function republishCollection(
   return createdBlocks;
 }
 
+export type CollectionForCloning = {
+  name: string;
+  description: string | null;
+  color: string | null;
+  layout: 'minimal' | 'feature';
+  allowCloning: boolean;
+  topLevelProducts: Array<{
+    title: string | null;
+    url: string | null;
+    description: string | null;
+    price: string | null;
+    imageUrl: string | null;
+    sortOrder: number;
+  }>;
+  slots: Array<{
+    slotName: string | null;
+    sortOrder: number;
+    products: Array<{
+      title: string | null;
+      url: string | null;
+      description: string | null;
+      price: string | null;
+      imageUrl: string | null;
+      sortOrder: number;
+    }>;
+  }>;
+};
+
 /**
- * Duplicate a collection into the current user's account.
- * Used for "Use this list" flows on shared and public pages.
+ * Duplicate a published Neon collection into the current user's Jazz account.
+ * Used by the /clone route when the source data comes from Neon instead of Jazz.
  */
-export function duplicateCollectionToAccount(
-  sourceCollection: LoadedBlock,
+export function duplicateNeonCollectionToAccount(
+  collection: CollectionForCloning,
   owner: Account,
 ): LoadedBlock {
-  if (sourceCollection.type !== 'collection') {
-    throw new Error('Can only duplicate collection blocks');
-  }
-
   const ownerGroup = Group.create({ owner });
   ownerGroup.addMember(owner, 'admin');
 
@@ -523,14 +547,11 @@ export function duplicateCollectionToAccount(
   const duplicatedCollection = Block.create(
     {
       type: 'collection',
-      name: sourceCollection.name,
+      name: collection.name,
       collectionData: {
-        color: sourceCollection.collectionData?.color,
-        description: sourceCollection.collectionData?.description,
-        viewMode: sourceCollection.collectionData?.viewMode,
-        publicLayout:
-          sourceCollection.collectionData?.publicLayout ?? 'minimal',
-        budget: sourceCollection.collectionData?.budget,
+        color: collection.color ?? undefined,
+        description: collection.description ?? undefined,
+        publicLayout: collection.layout,
         sharingGroupId: ownerGroup.$jazz.id,
       },
       children: clonedChildrenList,
@@ -539,65 +560,61 @@ export function duplicateCollectionToAccount(
     { owner: ownerGroup },
   ) as LoadedBlock;
 
-  if (sourceCollection.children?.$isLoaded) {
-    for (const child of sourceCollection.children) {
-      if (!child || !child.$isLoaded) continue;
+  for (const product of collection.topLevelProducts) {
+    const duplicatedProduct = Block.create(
+      {
+        type: 'product',
+        name: product.title ?? 'Untitled',
+        productData: {
+          url: product.url ?? '',
+          description: product.description ?? undefined,
+          price: product.price ?? undefined,
+          imageUrl: product.imageUrl ?? undefined,
+        },
+        sortOrder: product.sortOrder,
+        createdAt: new Date(),
+      },
+      { owner: ownerGroup },
+    ) as LoadedBlock;
 
-      if (child.type === 'slot') {
-        const slotChildrenList = BlockList.create([], { owner: ownerGroup });
+    clonedChildrenList.$jazz.push(duplicatedProduct);
+  }
 
-        const duplicatedSlot = Block.create(
-          {
-            type: 'slot',
-            name: child.name,
-            slotData: child.slotData,
-            children: slotChildrenList,
-            sortOrder: child.sortOrder,
-            createdAt: child.createdAt,
+  for (const slot of collection.slots) {
+    const slotChildrenList = BlockList.create([], { owner: ownerGroup });
+
+    const duplicatedSlot = Block.create(
+      {
+        type: 'slot',
+        name: slot.slotName ?? 'Section',
+        slotData: {},
+        children: slotChildrenList,
+        sortOrder: slot.sortOrder,
+        createdAt: new Date(),
+      },
+      { owner: ownerGroup },
+    ) as LoadedBlock;
+
+    clonedChildrenList.$jazz.push(duplicatedSlot);
+
+    for (const product of slot.products) {
+      const duplicatedProduct = Block.create(
+        {
+          type: 'product',
+          name: product.title ?? 'Untitled',
+          productData: {
+            url: product.url ?? '',
+            description: product.description ?? undefined,
+            price: product.price ?? undefined,
+            imageUrl: product.imageUrl ?? undefined,
           },
-          { owner: ownerGroup },
-        ) as LoadedBlock;
+          sortOrder: product.sortOrder,
+          createdAt: new Date(),
+        },
+        { owner: ownerGroup },
+      ) as LoadedBlock;
 
-        clonedChildrenList.$jazz.push(duplicatedSlot);
-
-        if (child.children?.$isLoaded) {
-          for (const slotChild of child.children) {
-            if (
-              !slotChild ||
-              !slotChild.$isLoaded ||
-              slotChild.type !== 'product'
-            ) {
-              continue;
-            }
-
-            const duplicatedProduct = Block.create(
-              {
-                type: 'product',
-                name: slotChild.name,
-                productData: slotChild.productData,
-                sortOrder: slotChild.sortOrder,
-                createdAt: slotChild.createdAt,
-              },
-              { owner: ownerGroup },
-            ) as LoadedBlock;
-
-            slotChildrenList.$jazz.push(duplicatedProduct);
-          }
-        }
-      } else if (child.type === 'product') {
-        const duplicatedProduct = Block.create(
-          {
-            type: 'product',
-            name: child.name,
-            productData: child.productData,
-            sortOrder: child.sortOrder,
-            createdAt: child.createdAt,
-          },
-          { owner: ownerGroup },
-        ) as LoadedBlock;
-
-        clonedChildrenList.$jazz.push(duplicatedProduct);
-      }
+      slotChildrenList.$jazz.push(duplicatedProduct);
     }
   }
 

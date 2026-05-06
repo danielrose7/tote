@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { PublishedCollectionSummary } from '../../../../lib/publishedCollectionsDb';
 import { getPublishedCollectionsByOwner } from '../../../../lib/publishedCollectionsDb';
+import { PublicFooterCta } from '../../../../components/PublicFooterCta';
 import styles from './page.module.css';
 
 type Params = Promise<{ username: string }>;
@@ -62,10 +63,10 @@ export default async function UserCollectionsPage(props: { params: Params }) {
         ))}
       </main>
       <footer className={styles.footer}>
-        <p>
-          Powered by{' '}
+        <PublicFooterCta />
+        <p className={styles.footerBrand}>
           <a href="/" className={styles.footerLink}>
-            Tote
+            tote
           </a>
         </p>
       </footer>

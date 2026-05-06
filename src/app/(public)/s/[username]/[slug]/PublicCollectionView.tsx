@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { PublishedCollection } from '../../../../../lib/publishedCollectionsDb';
+import { PublicFooterCta } from '../../../../../components/PublicFooterCta';
 import styles from '../../../view/[id]/page.module.css';
 import { MakeCopyButton } from './MakeCopyButton';
 
@@ -66,9 +67,9 @@ export function PublicCollectionView({
                 </p>
               )}
             </div>
-            {collection.allowCloning && collection.jazzPublishedId && (
+            {collection.allowCloning && (
               <div className={styles.headerAction}>
-                <MakeCopyButton jazzPublishedId={collection.jazzPublishedId} />
+                <MakeCopyButton neonId={collection.id} />
               </div>
             )}
           </div>
@@ -124,10 +125,14 @@ export function PublicCollectionView({
       </main>
 
       <footer className={styles.footer}>
-        <p>
-          Powered by{' '}
+        <PublicFooterCta
+          cloneHref={
+            collection.allowCloning ? `/clone/${collection.id}` : undefined
+          }
+        />
+        <p className={styles.footerBrand}>
           <a href="/" className={styles.footerLink}>
-            Tote
+            tote
           </a>
         </p>
       </footer>
