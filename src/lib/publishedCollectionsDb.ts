@@ -1,5 +1,24 @@
 import { sql } from './db';
 
+const PALETTE = [
+  '#6366f1',
+  '#8b5cf6',
+  '#ec4899',
+  '#f59e0b',
+  '#10b981',
+  '#3b82f6',
+  '#ef4444',
+  '#14b8a6',
+];
+
+function pickColor(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return PALETTE[hash % PALETTE.length];
+}
+
 export type PublishedProduct = {
   id: string;
   title: string | null;
@@ -28,6 +47,7 @@ export type PublishedCollection = {
   slug: string;
   name: string;
   description: string | null;
+  color: string | null;
   layout: 'minimal' | 'feature';
   allowCloning: boolean;
   publishedAt: Date;
@@ -43,6 +63,7 @@ export type UpsertPublishedCollectionInput = {
   slug: string;
   name: string;
   description?: string;
+  color?: string;
   layout: string;
   allowCloning: boolean;
   topLevelProducts: Omit<PublishedProduct, 'id'>[];
@@ -57,11 +78,12 @@ export async function upsertPublishedCollection(
   const [row] = await sql`
     INSERT INTO published_collections (
       source_jazz_id, jazz_published_id, owner_clerk_id, slug, name,
-      description, layout, allow_cloning, updated_at
+      description, color, layout, allow_cloning, updated_at
     ) VALUES (
       ${input.sourceJazzId}, ${input.jazzPublishedId ?? null},
       ${input.ownerClerkId}, ${input.slug}, ${input.name},
-      ${input.description ?? null}, ${input.layout}, ${input.allowCloning}, now()
+      ${input.description ?? null}, ${input.color ?? pickColor(input.slug)},
+      ${input.layout}, ${input.allowCloning}, now()
     )
     ON CONFLICT (source_jazz_id) DO UPDATE SET
       jazz_published_id = EXCLUDED.jazz_published_id,
@@ -69,6 +91,7 @@ export async function upsertPublishedCollection(
       slug              = EXCLUDED.slug,
       name              = EXCLUDED.name,
       description       = EXCLUDED.description,
+      color             = EXCLUDED.color,
       layout            = EXCLUDED.layout,
       allow_cloning     = EXCLUDED.allow_cloning,
       updated_at        = now()
@@ -151,8 +174,10 @@ export type PublishedCollectionSummary = {
   slug: string;
   name: string;
   description: string | null;
+  color: string | null;
   layout: 'minimal' | 'feature';
   itemCount: number;
+  coverImages: string[];
   publishedAt: Date;
 };
 
@@ -160,12 +185,25 @@ export async function getPublishedCollectionsByOwner(
   ownerClerkId: string,
 ): Promise<PublishedCollectionSummary[]> {
   const rows = await sql`
-    SELECT pc.id, pc.slug, pc.name, pc.description, pc.layout, pc.published_at,
-           COUNT(pb.id) FILTER (WHERE pb.type = 'product') AS item_count
+    SELECT
+      pc.id, pc.slug, pc.name, pc.description, pc.color, pc.layout, pc.published_at,
+      (
+        SELECT COUNT(*) FROM published_blocks
+        WHERE collection_id = pc.id AND type = 'product'
+      ) AS item_count,
+      (
+        SELECT COALESCE(array_agg(image_url), '{}')
+        FROM (
+          SELECT image_url FROM published_blocks
+          WHERE collection_id = pc.id
+            AND type = 'product'
+            AND image_url IS NOT NULL
+          ORDER BY sort_order
+          LIMIT 3
+        ) imgs
+      ) AS cover_images
     FROM published_collections pc
-    LEFT JOIN published_blocks pb ON pb.collection_id = pc.id
     WHERE pc.owner_clerk_id = ${ownerClerkId}
-    GROUP BY pc.id
     ORDER BY pc.published_at DESC
   `;
   return rows.map((r) => ({
@@ -173,8 +211,10 @@ export async function getPublishedCollectionsByOwner(
     slug: r.slug as string,
     name: r.name as string,
     description: r.description as string | null,
+    color: r.color as string | null,
     layout: r.layout as 'minimal' | 'feature',
     itemCount: Number(r.item_count),
+    coverImages: (r.cover_images as string[]) ?? [],
     publishedAt: r.published_at as Date,
   }));
 }
@@ -252,6 +292,7 @@ async function loadCollectionWithBlocks(
     slug: row.slug as string,
     name: row.name as string,
     description: row.description as string | null,
+    color: row.color as string | null,
     layout: row.layout as 'minimal' | 'feature',
     allowCloning: row.allow_cloning as boolean,
     publishedAt: row.published_at as Date,

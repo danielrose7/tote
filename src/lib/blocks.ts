@@ -314,6 +314,7 @@ export async function syncPublishedCollectionToNeon(
       slug,
       name: collection.name,
       description: collection.collectionData?.description,
+      color: collection.collectionData?.color,
       layout: collection.collectionData?.publicLayout ?? 'minimal',
       allowCloning: collection.collectionData?.allowCloning ?? true,
       topLevelProducts,
