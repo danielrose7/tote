@@ -136,6 +136,11 @@ export const curateCollection = inngest.createFunction(
       message: 'Workflow started — generating Round 1 questions…',
     });
 
+    // Ensure the session row exists before any patchSession (UPDATE) calls
+    await step.run('create-session', () =>
+      createCuratorSession(sessionId, requestedBy, topic),
+    );
+
     // Step 0: Classify the query type (cheap Haiku call, runs in parallel perception)
     const classificationResult = await step.run('classify-query', async () => {
       const response = await llm.generate({
@@ -209,7 +214,6 @@ export const curateCollection = inngest.createFunction(
     await step.run('persist-initial-phase', () =>
       Promise.all([
         patchSession(sessionId, { phase: 'interview-round-1' }),
-        createCuratorSession(sessionId, requestedBy, topic),
         logProgressEvent(sessionId, {
           step: 'interview-round-1-sent',
           message: 'Round 1 questions sent — waiting for your answers.',
