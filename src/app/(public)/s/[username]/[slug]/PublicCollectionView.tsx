@@ -1,0 +1,207 @@
+import { SignedIn, SignedOut, SignUpButton } from '@clerk/nextjs';
+import Link from 'next/link';
+import type { PublishedCollection } from '../../../../../lib/publishedCollectionsDb';
+import styles from '../../../view/[id]/page.module.css';
+
+export function PublicCollectionView({
+  collection,
+  creatorUsername,
+}: {
+  collection: PublishedCollection;
+  creatorUsername?: string;
+}) {
+  const publicLayout = collection.layout;
+  const allProducts = [
+    ...collection.topLevelProducts,
+    ...collection.slots.flatMap((s) => s.products),
+  ];
+  const totalItems = allProducts.length;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: collection.name,
+    ...(collection.description && { description: collection.description }),
+    numberOfItems: totalItems,
+    itemListElement: allProducts.map((product, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Product',
+        name: product.title,
+        ...(product.url && { url: product.url }),
+        ...(product.imageUrl && { image: product.imageUrl }),
+        ...(product.description && { description: product.description }),
+        ...(product.price && {
+          offers: {
+            '@type': 'Offer',
+            price: product.price.replace(/[^0-9.]/g, ''),
+            priceCurrency: 'USD',
+          },
+        }),
+      },
+    })),
+  };
+
+  return (
+    <div className={styles.pageContainer}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <header
+        className={`${styles.header} ${publicLayout === 'feature' ? styles.headerFeature : styles.headerMinimal}`}
+      >
+        <div
+          className={`${styles.headerContent} ${publicLayout === 'feature' ? styles.headerContentFeature : ''}`}
+        >
+          <div className={styles.titleSection}>
+            <div className={styles.titleBlock}>
+              <div className={styles.titleRow}>
+                <h1 className={styles.pageTitle}>{collection.name}</h1>
+              </div>
+              {creatorUsername && (
+                <p className={styles.attribution}>
+                  Created by {creatorUsername}
+                </p>
+              )}
+            </div>
+            {collection.allowCloning && collection.jazzPublishedId && (
+              <div className={styles.headerAction}>
+                <MakeCopyButton jazzPublishedId={collection.jazzPublishedId} />
+              </div>
+            )}
+          </div>
+          {collection.description && (
+            <p
+              className={`${styles.pageDescription} ${publicLayout === 'feature' ? styles.pageDescriptionFeature : ''}`}
+            >
+              {collection.description}
+            </p>
+          )}
+          <div className={styles.pageMeta}>
+            <span>
+              {totalItems} {totalItems === 1 ? 'item' : 'items'}
+            </span>
+            {collection.slots.length > 0 && (
+              <span>{collection.slots.length} sections</span>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className={styles.main}>
+        {collection.slots.length === 0 &&
+        collection.topLevelProducts.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>This collection is empty.</p>
+          </div>
+        ) : (
+          <>
+            {collection.slots.map((slot) =>
+              slot.products.length > 0 ? (
+                <div key={slot.id} className={styles.slotSection}>
+                  <h3 className={styles.slotTitle}>
+                    {slot.slotName || 'Unnamed section'}
+                  </h3>
+                  <div className={styles.productGrid}>
+                    {slot.products.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                </div>
+              ) : null,
+            )}
+            {collection.topLevelProducts.length > 0 && (
+              <div className={styles.productGrid}>
+                {collection.topLevelProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      <footer className={styles.footer}>
+        <p>
+          Powered by{' '}
+          <a href="/" className={styles.footerLink}>
+            Tote
+          </a>
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+function ProductCard({
+  product,
+}: {
+  product: PublishedCollection['topLevelProducts'][number];
+}) {
+  return (
+    <a
+      href={product.url ?? undefined}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={styles.productCard}
+    >
+      {product.imageUrl && (
+        <div className={styles.productImage}>
+          <img src={product.imageUrl} alt={product.title ?? ''} />
+        </div>
+      )}
+      <div className={styles.productInfo}>
+        <h3 className={styles.productName}>{product.title}</h3>
+        {product.price && (
+          <p className={styles.productPrice}>{product.price}</p>
+        )}
+        {product.description && (
+          <p className={styles.productDescription}>{product.description}</p>
+        )}
+      </div>
+    </a>
+  );
+}
+
+function MakeCopyButton({ jazzPublishedId }: { jazzPublishedId: string }) {
+  const cloneHref = `/clone/${jazzPublishedId}`;
+  return (
+    <>
+      <SignedIn>
+        <Link href={cloneHref} className={styles.headerActionButton}>
+          <CopyIcon />
+          <span>Make a copy</span>
+        </Link>
+      </SignedIn>
+      <SignedOut>
+        <SignUpButton mode="modal" fallbackRedirectUrl={cloneHref}>
+          <button type="button" className={styles.headerActionButton}>
+            <CopyIcon />
+            <span>Make a copy</span>
+          </button>
+        </SignUpButton>
+      </SignedOut>
+    </>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}

@@ -1,15 +1,26 @@
-"use client";
+import { getPublishedCollectionById } from '../../../../lib/publishedCollectionsDb';
+import { PublicCollectionView } from '../../../(public)/s/[username]/[slug]/PublicCollectionView';
+import styles from './page.module.css';
 
-import { useParams } from "next/navigation";
-import { PublicCollectionClient } from "../../s/[username]/[slug]/PublicCollectionClient";
+type Params = Promise<{ id: string }>;
 
-/**
- * Public view page — renders a published collection by Jazz ID.
- * Delegates to the shared PublicCollectionClient component.
- */
-export default function PublicViewPage() {
-	const params = useParams();
-	const collectionId = params.id as string;
+export default async function PublicViewPage(props: { params: Params }) {
+  const { id } = await props.params;
+  const collection = await getPublishedCollectionById(id);
 
-	return <PublicCollectionClient collectionId={collectionId} />;
+  if (!collection) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.errorIcon}>!</div>
+          <h1 className={styles.title}>Not Found</h1>
+          <p className={styles.description}>
+            This collection doesn&apos;t exist or is no longer public.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return <PublicCollectionView collection={collection} />;
 }
