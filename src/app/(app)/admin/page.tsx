@@ -1,7 +1,6 @@
 import { clerkClient, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { sql } from '../../../lib/db';
-import { getPublishedCollectionsInfoAction } from './actions';
 import { AdminClient, type Balance, type Grant } from './AdminClient';
 
 export default async function AdminPage() {
@@ -51,13 +50,10 @@ export default async function AdminPage() {
     LIMIT 20
   `;
 
-  const publishedInfo = await getPublishedCollectionsInfoAction();
-
   return (
     <AdminClient
       balances={enrichedBalances as Balance[]}
       recentGrants={recentGrants as Grant[]}
-      publishedCollections={publishedInfo.ok ? publishedInfo.users : []}
     />
   );
 }

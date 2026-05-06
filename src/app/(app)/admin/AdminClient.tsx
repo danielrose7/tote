@@ -1,14 +1,8 @@
 'use client';
 
-import { useAccount } from 'jazz-tools/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import {
-  isPublished,
-  syncPublishedCollectionToNeon,
-} from '../../../lib/blocks';
-import { JazzAccount } from '../../../schema';
-import { type UserPublishedCollections, grantCreditsAction } from './actions';
+import { grantCreditsAction } from './actions';
 import styles from './admin.module.css';
 
 export interface Balance {
@@ -30,18 +24,13 @@ export interface Grant {
 interface AdminClientProps {
   balances: Balance[];
   recentGrants: Grant[];
-  publishedCollections: UserPublishedCollections[];
 }
 
 function formatDollars(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-export function AdminClient({
-  balances,
-  recentGrants,
-  publishedCollections,
-}: AdminClientProps) {
+export function AdminClient({ balances, recentGrants }: AdminClientProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [amount, setAmount] = useState('');
@@ -215,137 +204,7 @@ export function AdminClient({
             </table>
           )}
         </section>
-
-        <section className={styles.section}>
-          <h2 className={styles.sectionHeading}>
-            Public collections in Clerk (
-            {publishedCollections.reduce((n, u) => n + u.collections.length, 0)}{' '}
-            total)
-          </h2>
-          {publishedCollections.length === 0 ? (
-            <p className={styles.empty}>None found.</p>
-          ) : (
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Slug</th>
-                  <th>Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {publishedCollections.flatMap((u) =>
-                  u.collections.map((c) => (
-                    <tr key={`${u.userId}-${c.slug}`}>
-                      <td>
-                        <div>{u.email}</div>
-                        <code>{u.username ?? u.userId}</code>
-                      </td>
-                      <td>
-                        <code>{c.slug}</code>
-                      </td>
-                      <td>{c.name ?? '—'}</td>
-                    </tr>
-                  )),
-                )}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        <MigrateSection />
       </div>
     </main>
-  );
-}
-
-function MigrateSection() {
-  const me = useAccount(JazzAccount, {
-    resolve: {
-      root: {
-        blocks: {
-          $each: {
-            children: {
-              $each: {
-                children: { $each: {} },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const [migrating, setMigrating] = useState(false);
-  const [log, setLog] = useState<string[]>([]);
-
-  async function handleMigrate() {
-    if (!me?.root?.blocks?.$isLoaded) return;
-    setMigrating(true);
-    setLog([]);
-
-    const blocks = me.root.blocks;
-    const toMigrate = [];
-    for (const block of blocks) {
-      if (block?.$isLoaded && isPublished(block)) {
-        toMigrate.push(block);
-      }
-    }
-
-    setLog([`Found ${toMigrate.length} published collection(s). Starting…`]);
-
-    let done = 0;
-    for (const collection of toMigrate) {
-      const slug = collection.collectionData?.slug ?? '(no slug)';
-      const jazzPublishedId = collection.collectionData?.publishedId;
-      try {
-        await syncPublishedCollectionToNeon(
-          collection.$jazz.id,
-          collection.collectionData?.slug ?? '',
-          collection,
-          jazzPublishedId ?? undefined,
-        );
-        done++;
-        setLog((prev) => [...prev, `✓ ${collection.name} (${slug})`]);
-      } catch (err) {
-        setLog((prev) => [
-          ...prev,
-          `✗ ${collection.name} (${slug}): ${err instanceof Error ? err.message : String(err)}`,
-        ]);
-      }
-    }
-
-    setLog((prev) => [...prev, `Done — ${done}/${toMigrate.length} migrated.`]);
-    setMigrating(false);
-  }
-
-  const ready = !!me?.root?.blocks?.$isLoaded;
-
-  return (
-    <section className={styles.section}>
-      <h2 className={styles.sectionHeading}>Migrate to Neon</h2>
-      <p className={styles.empty}>
-        Syncs all your published collections from Jazz into Neon. Safe to run
-        multiple times.
-      </p>
-      <div>
-        <button
-          className={styles.button}
-          onClick={handleMigrate}
-          disabled={migrating || !ready}
-        >
-          {migrating
-            ? 'Migrating…'
-            : ready
-              ? 'Migrate my published collections'
-              : 'Loading Jazz…'}
-        </button>
-      </div>
-      {log.length > 0 && (
-        <pre style={{ fontSize: '0.8rem', margin: 0, whiteSpace: 'pre-wrap' }}>
-          {log.join('\n')}
-        </pre>
-      )}
-    </section>
   );
 }
