@@ -103,7 +103,7 @@ export function CuratePageClient({
 
   const { showToast } = useToast();
   const me = useAccount(JazzAccount, {
-    resolve: { root: { blocks: true, curatorSessions: true } },
+    resolve: { root: { blocks: true } },
   });
 
   const topics = [
@@ -165,41 +165,6 @@ export function CuratePageClient({
       }
     }
   }, [messages, applyRealtimeMessage, queueSectionForExtraction]);
-
-  type JazzSessionHandle = {
-    sessionId?: string;
-    topic?: string;
-    $jazz: {
-      set: (key: string, value: unknown) => void;
-    };
-  };
-
-  // Keep a ref to the active Jazz session so handleImport can link the collection back
-  const jazzSessionRef = useRef<JazzSessionHandle | null>(null);
-
-  function getJazzSession(): JazzSessionHandle | null {
-    if (jazzSessionRef.current) return jazzSessionRef.current;
-    if (!me.$isLoaded || !me.root?.curatorSessions?.$isLoaded || !sessionId)
-      return null;
-    for (const s of me.root.curatorSessions) {
-      const loaded = s as JazzSessionHandle | null;
-      if (loaded?.sessionId === sessionId) {
-        jazzSessionRef.current = s;
-        return s;
-      }
-    }
-    return null;
-  }
-
-  // Load topic from Jazz session when available (Jazz may load after KV sync)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: hydrate topic lazily from Jazz once available
-  useEffect(() => {
-    if (!sessionId || topic) return;
-    const jazzSession = getJazzSession();
-    if (jazzSession?.topic)
-      useCuratorStore.getState().setTopic(jazzSession.topic);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, me.$isLoaded]);
 
   // Auto-scroll progress log
   const progressEndRef = useRef<HTMLDivElement>(null);
@@ -472,9 +437,6 @@ export function CuratePageClient({
       } else if (me.root.blocks.$isLoaded) {
         me.root.blocks.$jazz.push(collectionBlock);
       }
-
-      // Link collection back to this curation session
-      getJazzSession()?.$jazz.set('collectionId', collectionBlock.$jazz.id);
 
       window.location.href = `/collections/${collectionBlock.$jazz.id}`;
     } catch (err) {

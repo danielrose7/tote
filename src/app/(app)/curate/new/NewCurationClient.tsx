@@ -1,13 +1,6 @@
 'use client';
 
-import { Group } from 'jazz-tools';
-import { useAccount } from 'jazz-tools/react';
 import { useState } from 'react';
-import {
-  CuratorSession,
-  CuratorSessionList,
-  JazzAccount,
-} from '../../../../schema';
 import styles from '../curate.module.css';
 
 const QUICK_FILLS = [
@@ -28,10 +21,6 @@ export function NewCurationClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const me = useAccount(JazzAccount, {
-    resolve: { root: { curatorSessions: true } },
-  });
-
   async function handleStart(e: React.FormEvent) {
     e.preventDefault();
     if (!topic.trim()) return;
@@ -51,29 +40,6 @@ export function NewCurationClient() {
     }
 
     const { sessionId } = await res.json();
-
-    // Create Jazz session immediately — before navigating
-    if (me.$isLoaded && me.root) {
-      const group = Group.create({ owner: me });
-      const jazzSession = CuratorSession.create(
-        {
-          sessionId,
-          topic: topic.trim(),
-          phase: 'started',
-          createdAt: new Date(),
-        },
-        group,
-      );
-      if (!me.root.curatorSessions) {
-        me.root.$jazz.set(
-          'curatorSessions',
-          CuratorSessionList.create([jazzSession], group),
-        );
-      } else if (me.root.curatorSessions.$isLoaded) {
-        me.root.curatorSessions.$jazz.push(jazzSession);
-      }
-    }
-
     window.location.href = `/curate/${sessionId}`;
   }
 
