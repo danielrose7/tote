@@ -146,6 +146,39 @@ export async function getPublishedCollectionByOwnerAndSlug(
   return loadCollectionWithBlocks(rows[0]);
 }
 
+export type PublishedCollectionSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  layout: 'minimal' | 'feature';
+  itemCount: number;
+  publishedAt: Date;
+};
+
+export async function getPublishedCollectionsByOwner(
+  ownerClerkId: string,
+): Promise<PublishedCollectionSummary[]> {
+  const rows = await sql`
+    SELECT pc.id, pc.slug, pc.name, pc.description, pc.layout, pc.published_at,
+           COUNT(pb.id) FILTER (WHERE pb.type = 'product') AS item_count
+    FROM published_collections pc
+    LEFT JOIN published_blocks pb ON pb.collection_id = pc.id
+    WHERE pc.owner_clerk_id = ${ownerClerkId}
+    GROUP BY pc.id
+    ORDER BY pc.published_at DESC
+  `;
+  return rows.map((r) => ({
+    id: r.id as string,
+    slug: r.slug as string,
+    name: r.name as string,
+    description: r.description as string | null,
+    layout: r.layout as 'minimal' | 'feature',
+    itemCount: Number(r.item_count),
+    publishedAt: r.published_at as Date,
+  }));
+}
+
 export async function getPublishedCollectionById(
   id: string,
 ): Promise<PublishedCollection | null> {
