@@ -26,14 +26,6 @@ Add a `users (clerk_user_id TEXT PRIMARY KEY, username TEXT, email TEXT, created
 
 ## Curator / Extraction
 
-### Gemini URL Context as tier-2 extraction (replaces Anthropic web_search)
-
-See `docs/EXTRACTION_PIPELINE_RESEARCH.md` for full benchmark results.
-
-**Summary:** `gemini-3-flash-preview` with `tools: [{ url_context: {} }]` succeeded 7/8 URLs (including lululemon which blocks CF and Anthropic crawlers) at ~$0.95/1k URLs — vs ~$10/1k for Anthropic web_search. Single API call, 100% field coverage on products.
-
-**If implemented:** Add between `extractViaCf()` and `extractViaWebSearch()` in `src/inngest/server-extraction.ts`. Auth via `X-goog-api-key` header, parse response with `parseJson()`. Note: incompatible with `responseMimeType: application/json` — parse free-form JSON from response. Wait for a stable (non-preview) `gemini-3-flash` model ID before shipping.
-
 ### Serper.dev as Google-backed alternative to Brave Search
 
 [Serper.dev](https://serper.dev) returns Google search results as JSON — functionally identical to `braveSearch.ts` but backed by Google's index.
