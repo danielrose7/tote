@@ -1,5 +1,5 @@
 .section {
-  padding: var(--spacing-xl) var(--spacing-lg);
+  padding: var(--spacing-xl) var(--spacing-lg) 0;
 }
 
 .card {
