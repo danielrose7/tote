@@ -1,0 +1,22 @@
+.skeleton {
+  background: var(--color-background);
+  border-radius: var(--radius-lg);
+  aspect-ratio: 3 / 4;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.empty {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  grid-column: 1 / -1;
+}

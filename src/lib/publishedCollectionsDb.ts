@@ -251,6 +251,60 @@ export async function getPublishedCollectionById(
   return loadCollectionWithBlocks(rows[0]);
 }
 
+export async function getPublishedCollectionSummariesByUsernameAndSlugs(
+  entries: { username: string; slug: string }[],
+): Promise<
+  (PublishedCollectionSummary & { username: string; slug: string })[]
+> {
+  if (entries.length === 0) return [];
+
+  const results = await Promise.all(
+    entries.map(async ({ username, slug }) => {
+      const rows = await sql`
+        SELECT
+          pc.id, pc.username, pc.slug, pc.name, pc.description, pc.color, pc.layout, pc.published_at,
+          (
+            SELECT COUNT(*) FROM published_blocks
+            WHERE collection_id = pc.id AND type = 'product'
+          ) AS item_count,
+          (
+            SELECT COALESCE(array_agg(image_url), '{}')
+            FROM (
+              SELECT pb.image_url
+              FROM published_blocks pb
+              WHERE pb.collection_id = pc.id
+                AND pb.type = 'product'
+                AND pb.image_url IS NOT NULL
+              ORDER BY pb.sort_order ASC
+              LIMIT 3
+            ) imgs
+          ) AS cover_images
+        FROM published_collections pc
+        WHERE pc.username = ${username} AND pc.slug = ${slug}
+      `;
+      if (!rows[0]) return null;
+      const r = rows[0];
+      return {
+        id: r.id as string,
+        username: r.username as string,
+        slug: r.slug as string,
+        name: r.name as string,
+        description: r.description as string | null,
+        color: r.color as string | null,
+        layout: r.layout as 'minimal' | 'feature',
+        itemCount: Number(r.item_count),
+        coverImages: (r.cover_images as string[]) ?? [],
+        publishedAt: r.published_at as Date,
+      };
+    }),
+  );
+
+  return results.filter(
+    (r): r is PublishedCollectionSummary & { username: string; slug: string } =>
+      r !== null,
+  );
+}
+
 async function loadCollectionWithBlocks(
   row: Record<string, unknown>,
 ): Promise<PublishedCollection> {
