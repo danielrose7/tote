@@ -1,10 +1,9 @@
 .section {
-  background: var(--color-blush);
-  padding: var(--spacing-xl);
+  padding: var(--spacing-xl) var(--spacing-lg);
 }
 
 .card {
-  background: var(--color-surface);
+  background: var(--color-blush);
   border-radius: var(--radius-xl);
   padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 3rem);
   max-width: 860px;
