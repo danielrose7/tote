@@ -5,15 +5,14 @@
 .card {
   background: var(--color-blush);
   border-radius: var(--radius-xl);
-  padding: var(--spacing-lg);
-  max-width: 860px;
+  padding: var(--spacing-lg) var(--spacing-lg) 0;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
 .cardInner {
   background: var(--color-surface);
-  border-radius: calc(var(--radius-xl) - 6px);
-  border-bottom: 3px solid rgba(200, 160, 175, 0.5);
+  border-radius: calc(var(--radius-xl) - 6px) calc(var(--radius-xl) - 6px) 0 0;
   padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 2.5rem);
 }
 
