@@ -1,0 +1,1108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tote — GTM & Discoverability Strategy 2026</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --text: #1a1a1a;
+        --text-secondary: #555;
+        --text-muted: #888;
+        --border: #e5e5e5;
+        --bg: #fff;
+        --bg-subtle: #f8f8f7;
+        --bg-highlight: #f0f0ed;
+        --accent: #4f46e5;
+        --accent-light: #eef2ff;
+        --green: #16a34a;
+        --green-light: #f0fdf4;
+        --amber: #d97706;
+        --amber-light: #fffbeb;
+        --red: #dc2626;
+        --red-light: #fef2f2;
+        --radius: 8px;
+        --max-width: 860px;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
+        padding: 3rem 1.5rem 6rem;
+      }
+
+      .container {
+        max-width: var(--max-width);
+        margin: 0 auto;
+      }
+
+      .doc-header {
+        border-bottom: 2px solid var(--text);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .doc-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+      }
+
+      .doc-title {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+      }
+
+      .doc-meta {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 0.75rem;
+      }
+
+      .callout {
+        border-radius: var(--radius);
+        padding: 1rem 1.25rem;
+        margin: 1.5rem 0;
+        font-size: 0.9375rem;
+      }
+
+      .callout-amber {
+        background: var(--amber-light);
+        border-left: 3px solid var(--amber);
+      }
+      .callout-green {
+        background: var(--green-light);
+        border-left: 3px solid var(--green);
+      }
+      .callout-indigo {
+        background: var(--accent-light);
+        border-left: 3px solid var(--accent);
+      }
+
+      .callout-title {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .section {
+        margin-top: 3rem;
+      }
+
+      .section-number {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+      }
+
+      h2 {
+        font-size: 1.375rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin-bottom: 0.75rem;
+        line-height: 1.3;
+      }
+
+      h3 {
+        font-size: 1.0625rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.4rem;
+      }
+
+      p {
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+      }
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      .priority-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .priority-item {
+        display: grid;
+        grid-template-columns: 2rem 1fr auto;
+        align-items: start;
+        gap: 0.75rem;
+        padding: 0.875rem 1rem;
+        background: var(--bg-subtle);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+      }
+
+      .priority-num {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        padding-top: 0.1rem;
+      }
+
+      .priority-body strong {
+        display: block;
+        font-size: 0.9375rem;
+        color: var(--text);
+        margin-bottom: 0.2rem;
+      }
+      .priority-body span {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        white-space: nowrap;
+        align-self: start;
+        margin-top: 0.1rem;
+      }
+
+      .badge-now {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge-soon {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .badge-later {
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      .pillar-grid {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .pillar {
+        padding: 1.125rem 1.25rem;
+        background: var(--bg-subtle);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+      }
+
+      .pillar-title {
+        font-weight: 700;
+        font-size: 0.9375rem;
+        margin-bottom: 0.35rem;
+      }
+      .pillar p {
+        font-size: 0.9rem;
+        margin: 0;
+      }
+
+      .flywheel {
+        margin: 1.25rem 0;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.25rem 1.5rem;
+      }
+
+      .flywheel-steps {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .flywheel-steps li {
+        font-size: 0.9375rem;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+      }
+
+      .flywheel-steps li::before {
+        content: '→';
+        color: var(--accent);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .flywheel-steps li:first-child::before {
+        content: '★';
+      }
+
+      .timeline {
+        margin-top: 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .timeline-row {
+        display: grid;
+        grid-template-columns: 8rem 1fr;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .timeline-row:last-child {
+        border-bottom: none;
+      }
+
+      .timeline-quarter {
+        padding: 0.875rem 1rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        background: var(--bg-highlight);
+        border-right: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+      }
+
+      .timeline-content {
+        padding: 0.875rem 1rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+      .timeline-content ul {
+        padding-left: 1.1rem;
+        margin: 0;
+      }
+      .timeline-content li {
+        margin-bottom: 0.2rem;
+      }
+
+      .audience-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      @media (max-width: 560px) {
+        .audience-grid {
+          grid-template-columns: 1fr;
+        }
+        .timeline-row {
+          grid-template-columns: 6rem 1fr;
+        }
+        .priority-item {
+          grid-template-columns: 1.5rem 1fr;
+        }
+        .priority-item .badge {
+          display: none;
+        }
+      }
+
+      .audience-card {
+        padding: 1rem 1.125rem;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+
+      .audience-card strong {
+        display: block;
+        font-size: 0.9375rem;
+        margin-bottom: 0.25rem;
+      }
+      .audience-card p {
+        font-size: 0.875rem;
+        margin: 0;
+      }
+
+      hr {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 2.5rem 0;
+      }
+
+      .avoid-list {
+        list-style: none;
+        margin-top: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .avoid-list li {
+        display: flex;
+        gap: 0.6rem;
+        font-size: 0.9375rem;
+        color: var(--text-secondary);
+      }
+      .avoid-list li::before {
+        content: '✕';
+        color: var(--red);
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      /* Competitor landscape */
+      .competitor-grid {
+        display: grid;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .competitor {
+        padding: 1rem 1.25rem;
+        background: var(--bg-subtle);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+
+      .competitor-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.4rem;
+      }
+
+      .competitor-name {
+        font-weight: 700;
+        font-size: 0.9375rem;
+      }
+
+      .competitor-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        background: #f3f4f6;
+        color: #374151;
+        white-space: nowrap;
+      }
+
+      .competitor p {
+        font-size: 0.875rem;
+        margin: 0;
+      }
+
+      .diff-box {
+        margin-top: 1.25rem;
+        padding: 1.25rem;
+        border: 1.5px solid var(--accent);
+        border-radius: var(--radius);
+        background: var(--accent-light);
+      }
+
+      .diff-box-title {
+        font-weight: 700;
+        font-size: 0.9375rem;
+        color: var(--accent);
+        margin-bottom: 0.5rem;
+      }
+      .diff-box p {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+      }
+      .diff-box p:last-child {
+        margin-bottom: 0;
+      }
+
+      .footnote {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.8125rem;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="doc-header">
+        <p class="doc-label">Tote — Internal Strategy</p>
+        <h1 class="doc-title">Discoverability & Go-to-Market 2026</h1>
+        <p class="doc-meta">
+          May 2026 &nbsp;·&nbsp; Pre-launch draft &nbsp;·&nbsp; Updated 6 May
+          2026
+        </p>
+      </header>
+
+      <div class="callout callout-amber">
+        <p class="callout-title">Where we're starting from</p>
+        <p>
+          The product is real and working — Chrome extension, web app, public
+          sharing, AI curator. iOS is built and functional but currently
+          dev-only (not yet on the App Store). Current user count is ~3
+          (internal only). That's not a problem; it's just the honest starting
+          line. The strategy below is sequenced around that reality.
+        </p>
+      </div>
+
+      <!-- Section 1 -->
+      <div class="section">
+        <p class="section-number">01</p>
+        <h2>What the product already has going for it</h2>
+
+        <div class="pillar-grid">
+          <div class="pillar">
+            <p class="pillar-title">A working product across three surfaces</p>
+            <p>
+              Chrome extension, web app, and iOS (dev-only pending App Store
+              launch). Save from anywhere, compare in one place, share a clean
+              public URL. Most tools at this stage are one surface only.
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">
+              Privacy-first positioning that's genuinely differentiated
+            </p>
+            <p>
+              No affiliate model, no tracking, no brand deal requirements.
+              LikeToKnowIt and similar tools are built around monetizing the
+              creator's audience. Tote is the opposite.
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">
+              Public shareable collections — a native viral mechanic
+            </p>
+            <p>
+              Every shared Tote URL is a free ad. When someone sends
+              <code>tote.tools/s/daniel/a-montessori-nursery…</code> to their
+              sibling, the sibling sees a beautiful product board and learns
+              what Tote is organically. The loop is already there.
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">
+              An AI curator that can produce templates at scale
+            </p>
+            <p>
+              The curator was built partly to generate example collections. That
+              makes it a content engine — the thing that feeds the templates
+              library, use case pages, and SEO surface over time.
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">Clear use case density</p>
+            <p>
+              Gift lists, home renovation, style boards, family shopping,
+              professional sourcing. These aren't hypothetical — they're real
+              search-intent categories with people actively looking for help.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2 -->
+      <div class="section">
+        <p class="section-number">02</p>
+        <h2>The core discoverability problem</h2>
+
+        <p>
+          The home page and use case pages are well-crafted marketing. But
+          they're a closed loop — no actual Tote content to browse. Every
+          current entry point assumes someone already knows about Tote.
+        </p>
+
+        <p>
+          The <code>/s/[username]/[slug]</code> URLs are the actual value: real
+          collections with real products, crawlable by Google, shareable by
+          anyone. Right now they're invisible unless someone sends a direct
+          link.
+        </p>
+
+        <div class="callout callout-indigo">
+          <p class="callout-title">The underlying GTM question</p>
+          <p>
+            How do you get more people sharing collections in the first place?
+            Everything else should feed that flywheel.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section 3 -->
+      <div class="section">
+        <p class="section-number">03</p>
+        <h2>Discoverability improvements</h2>
+        <p>
+          Ranked by leverage — the first few have the highest impact per hour of
+          work.
+        </p>
+
+        <div class="priority-grid">
+          <div class="priority-item">
+            <span class="priority-num">1</span>
+            <div class="priority-body">
+              <strong>Better CTA on public collection pages</strong>
+              <span
+                >When someone lands on a shared collection via a link, they
+                should see a prominent, warm call-to-action: "Like this list?
+                Start your own →". This is the highest-leverage change per
+                impression since these pages already get shared.</span
+              >
+            </div>
+            <span class="badge badge-now">Now</span>
+          </div>
+          <div class="priority-item">
+            <span class="priority-num">2</span>
+            <div class="priority-body">
+              <strong>Templates page (<code>/templates</code>)</strong>
+              <span
+                >10–20 pre-made, cloneable collections: "Montessori nursery
+                essentials", "Kitchen renovation under $5k", "Capsule wardrobe
+                starter". High SEO value because titles map directly to real
+                search queries. Clone → signup is a natural conversion funnel.
+                This is where the curator pays off.</span
+              >
+            </div>
+            <span class="badge badge-now">Now</span>
+          </div>
+          <div class="priority-item">
+            <span class="priority-num">3</span>
+            <div class="priority-body">
+              <strong>Sitemap coverage for <code>/s/</code> URLs</strong>
+              <span
+                >A prerequisite for any SEO on public collections. A dynamic
+                sitemap that includes all published collection URLs ensures the
+                content surface gets crawled by Google.</span
+              >
+            </div>
+            <span class="badge badge-now">Now</span>
+          </div>
+          <div class="priority-item">
+            <span class="priority-num">4</span>
+            <div class="priority-body">
+              <strong>Explore / Browse page (<code>/explore</code>)</strong>
+              <span
+                >A curated grid of public collections, optionally filterable by
+                topic. Gives Google pages to crawl with real content. Gives
+                humans a reason to land on Tote without an invite.</span
+              >
+            </div>
+            <span class="badge badge-soon">Soon</span>
+          </div>
+          <div class="priority-item">
+            <span class="priority-num">5</span>
+            <div class="priority-body">
+              <strong>Real example collections on use case pages</strong>
+              <span
+                >Right now <code>/use-cases/home-renovation</code> is 100%
+                marketing text. Linking to 2–3 real public collections at the
+                bottom turns static pages into something that shows rather than
+                tells.</span
+              >
+            </div>
+            <span class="badge badge-soon">Soon</span>
+          </div>
+          <div class="priority-item">
+            <span class="priority-num">6</span>
+            <div class="priority-body">
+              <strong>Featured collections on home page</strong>
+              <span
+                >A "See what people are saving" section with 3–6 curated public
+                collections. Social proof plus a visual hook that shows rather
+                than describes.</span
+              >
+            </div>
+            <span class="badge badge-soon">Soon</span>
+          </div>
+          <div class="priority-item">
+            <span class="priority-num">7</span>
+            <div class="priority-body">
+              <strong>Structured data (JSON-LD) on collection pages</strong>
+              <span
+                >ItemList schema on <code>/s/[username]/[slug]</code> pages
+                helps Google understand these as product lists — potentially
+                eligible for rich results. Low effort, good long-term SEO
+                signal.</span
+              >
+            </div>
+            <span class="badge badge-later">Later</span>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- Section 4: Agentic shopping landscape -->
+      <div class="section">
+        <p class="section-number">04</p>
+        <h2>The agentic shopping landscape — and where Tote fits</h2>
+
+        <p>
+          In late 2025 and into 2026, every major AI platform launched or
+          announced shopping agents. This is relevant context for Tote's
+          positioning — and it's mostly good news.
+        </p>
+
+        <div class="competitor-grid">
+          <div class="competitor">
+            <div class="competitor-header">
+              <span class="competitor-name"
+                >ChatGPT Instant Checkout (OpenAI)</span
+              >
+              <span class="competitor-tag">Pivoting</span>
+            </div>
+            <p>
+              Launched in Sept 2025 with Etsy and Shopify. Powered by the
+              Agentic Commerce Protocol (with Stripe). OpenAI subsequently
+              scaled it back — onboarding merchants was arduous, and checkout
+              was error-prone. Shifting focus to product
+              <em>discovery</em> inside ChatGPT, letting merchants handle their
+              own checkout. ~30 Shopify merchants made it live before the pivot.
+            </p>
+          </div>
+          <div class="competitor">
+            <div class="competitor-header">
+              <span class="competitor-name">Perplexity Agentic Shopping</span>
+              <span class="competitor-tag">Free tier, search-first</span>
+            </div>
+            <p>
+              Launched free to US users with PayPal integration and 5,000+
+              merchants. Search-first architecture means real-time pricing and
+              availability. Zero fees/commissions to merchants (vs. ChatGPT's 4%
+              ACP fee). Deep comparison is their core strength. Abandoned ads
+              entirely in Feb 2026.
+            </p>
+          </div>
+          <div class="competitor">
+            <div class="competitor-header">
+              <span class="competitor-name">Google Shopping AI / UCP</span>
+              <span class="competitor-tag">Platform-scale</span>
+            </div>
+            <p>
+              Google's Universal Commerce Protocol (UCP) lets merchants plug
+              into Google AI mode to create multi-item carts, real-time pricing,
+              and auto-purchase when conditions are met (e.g. price drops).
+              Gemini can instruct a purchase once price targets are hit.
+              Operates at search-engine scale.
+            </p>
+          </div>
+          <div class="competitor">
+            <div class="competitor-header">
+              <span class="competitor-name">Amazon / Rufus</span>
+              <span class="competitor-tag">Closed loop</span>
+            </div>
+            <p>
+              Rufus is Amazon's shopping AI, optimized within the Amazon
+              ecosystem. High capability for Amazon-sold products; no
+              cross-store awareness. Classic closed-loop model.
+            </p>
+          </div>
+        </div>
+
+        <h3>Do any of these compare photos or product specs?</h3>
+        <p>
+          Perplexity does deep spec comparison well — it's research-grade.
+          Google's Gemini can compare products using structured data and images
+          when available. ChatGPT's vision can analyze product images if you
+          paste them, but it's not automated into the shopping flow. None of
+          them do <em>visual similarity across stores</em> in a meaningful way —
+          e.g. "find me this chair but cheaper" from a photo is still weak
+          across the board.
+        </p>
+
+        <div class="diff-box">
+          <p class="diff-box-title">
+            Where Tote is different from all of these
+          </p>
+          <p>
+            Every agentic shopping product above is built for
+            <strong>the transaction moment</strong> — find something, buy it
+            now. They're optimizing for conversion speed on behalf of the
+            merchant.
+          </p>
+          <p>
+            Tote is built for <strong>the consideration phase</strong> — the
+            days or weeks between "I saw something I want" and "I'm ready to
+            decide." That's the messy middle none of the agents are designed
+            for. They help you buy faster; Tote helps you buy better.
+          </p>
+          <p>
+            More importantly: all of the agentic tools are
+            <strong>ephemeral</strong>. The conversation ends, the context is
+            gone. Tote is persistent — your saved links, collections, and
+            shortlists are there when you come back six weeks later.
+          </p>
+          <p>
+            The curator is the closest thing Tote has to an "agent" — AI helping
+            you build a collection — but the output lives in your account, is
+            shareable, and is a curated human-first artifact, not a
+            transactional flow.
+          </p>
+        </div>
+
+        <h3>Risk to watch</h3>
+        <p>
+          As these agents get better at understanding intent and tracking down
+          products, the "discovery" phase of shopping may compress. If ChatGPT
+          can build you a curated list of Montessori nursery items in 30
+          seconds, the motivation to use a dedicated tool is lower — unless
+          Tote's curation, persistence, and shareability create enough
+          additional value. The templates + curator + shareable collections
+          strategy is the right hedge against this.
+        </p>
+      </div>
+
+      <hr />
+
+      <!-- Section 5: GTM -->
+      <div class="section">
+        <p class="section-number">05</p>
+        <h2>Go-to-market strategy</h2>
+
+        <h3>Target audiences (start narrow)</h3>
+        <p>
+          The "anyone who shops online" framing is too broad for early GTM. Pick
+          two to start, both of which have clear sharing behavior and specific
+          search intent:
+        </p>
+
+        <div class="audience-grid">
+          <div class="audience-card">
+            <strong>Gift givers &amp; list makers</strong>
+            <p>
+              Clear seasonal peaks, high sharing behavior, strong search intent
+              ("gift list for toddlers", "holiday gift ideas under $50").
+            </p>
+          </div>
+          <div class="audience-card">
+            <strong>Home renovators &amp; furnishers</strong>
+            <p>
+              High-consideration purchases, strong motivation to compare across
+              stores, natural budget-tracking need, often shared with a partner
+              or contractor.
+            </p>
+          </div>
+          <div class="audience-card">
+            <strong>New parents (nursery, gear)</strong>
+            <p>
+              Extremely high research intensity, passionate community sharing,
+              clear template opportunities, year-round demand.
+            </p>
+          </div>
+          <div class="audience-card">
+            <strong>Interior designers &amp; stylists</strong>
+            <p>
+              Professional use case, highest willingness to pay, natural
+              client-sharing workflow, strong word-of-mouth within industry
+              communities.
+            </p>
+          </div>
+        </div>
+
+        <h3>Strategy pillars</h3>
+
+        <div class="pillar-grid" style="margin-top: 0.75rem">
+          <div class="pillar">
+            <p class="pillar-title">1. Seasonal content marketing</p>
+            <p>
+              Shopping behavior is deeply seasonal. Q4 (holiday gift lists) is
+              the single biggest opportunity. Templates and use case content
+              should be timed around back-to-school (Aug), holiday (Oct–Dec),
+              home refresh (Jan–Feb), and spring projects (Mar–May). Start
+              building Q4 content in late summer.
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">2. The "shoppable link in bio" angle</p>
+            <p>
+              LTK requires affiliate relationships and brand deals. Tote's
+              version: save anything from anywhere, share a clean board — no
+              brand deals required. Interior design creators, mom bloggers, and
+              style accounts who currently send Google Docs links to followers
+              are the target. The pitch isn't "make money" — it's "stop sending
+              messy links."
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">3. Community seeding</p>
+            <p>
+              Before a public launch, get real collections into communities
+              where they naturally fit — not promotional posts, genuinely useful
+              contributions. A "Montessori Nursery Under $800" collection posted
+              to r/BabyBumps with a thoughtful comment will get upvoted and
+              shared. Same for r/InteriorDesign, r/femalefashionadvice,
+              r/HomeImprovement. The Tote branding on the collection does the
+              marketing.
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">4. Product Hunt launch (timed)</p>
+            <p>
+              Not immediately. Do this after the templates page and public
+              collection experience are polished. Goal is ecosystem awareness
+              and a burst of early adopters, not viral growth. Works best when
+              there's a clear "try it in 2 clicks" path.
+            </p>
+          </div>
+          <div class="pillar">
+            <p class="pillar-title">5. Long-tail SEO via templates</p>
+            <p>
+              Searches like "home renovation shopping list tracker", "baby
+              registry checklist with prices", and "capsule wardrobe shopping
+              list" are underserved by useful tooling. A well-structured
+              templates page with real collections and good titles could
+              realistically rank for some of these in 6–12 months.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 6: Curator -->
+      <div class="section">
+        <p class="section-number">06</p>
+        <h2>The curator as content engine &amp; freemium path</h2>
+
+        <p>
+          The AI curator isn't just an internal tool — it's the content engine
+          that makes the templates strategy scalable without a manual curation
+          team.
+        </p>
+
+        <div class="callout callout-green">
+          <p class="callout-title">Curator infrastructure — May 2026</p>
+          <p>
+            Recent work has meaningfully improved the curator's reliability and
+            UX. Session history now reads from Neon (previously Jazz), so
+            session titles — generated by a fast Haiku call early in the
+            workflow — appear in the sidebar as soon as they're ready rather
+            than only at completion. The tab-refocus reconnect ensures the
+            brief-approval step is never missed when switching windows. The
+            curator is ready to run at volume for template generation.
+          </p>
+        </div>
+
+        <div class="flywheel">
+          <ul class="flywheel-steps">
+            <li>Curator generates high-quality template collections</li>
+            <li>Templates page attracts organic search traffic</li>
+            <li>Visitors clone templates → signup conversion</li>
+            <li>Users share their own collections publicly</li>
+            <li>Shared collections attract more visitors</li>
+            <li>
+              Power users (designers, creators) upgrade for curator access
+            </li>
+            <li>Their shared collections drive more discovery</li>
+          </ul>
+        </div>
+
+        <p>
+          The curator-as-upgrade-path is a clean freemium model because the free
+          tier is genuinely useful on its own. The paid upgrade has a clear,
+          demonstrable value: AI-assisted collection building that would
+          otherwise take hours of manual research.
+        </p>
+
+        <h3>Where to draw the freemium line</h3>
+        <p>
+          <strong>Free:</strong> save links, clone templates, basic collections,
+          basic public sharing.
+        </p>
+        <p>
+          <strong>Pro:</strong> curator access, unlimited public collections,
+          advanced budget and shortlist features. Aimed at designers, stylists,
+          content creators, and serious home planners.
+        </p>
+
+        <div class="callout callout-amber">
+          <p class="callout-title">One risk to watch</p>
+          <p>
+            Curator-generated templates could erode the personal curation feel
+            that makes Tote distinct. Templates should be a starting point — the
+            user's own saves and decisions are still the product. Frame
+            collections as "inspiration to clone and make your own," not "here's
+            the answer." This is also the key differentiator from the
+            ChatGPT/Perplexity shopping agents above.
+          </p>
+        </div>
+
+        <p>
+          Aim for 30–50 templates across use cases before the public launch
+          push. Quantity matters for SEO coverage. They don't need to be perfect
+          — they need to be genuinely useful enough that someone would clone
+          them and build from there.
+        </p>
+      </div>
+
+      <hr />
+
+      <!-- Section 7: What to do first -->
+      <div class="section">
+        <p class="section-number">07</p>
+        <h2>What to actually do first</h2>
+
+        <div class="callout callout-green">
+          <p class="callout-title">
+            The most important thing right now isn't discoverability
+          </p>
+          <p>
+            With ~3 users, the viral loop hasn't been tested in the wild yet.
+            Before SEO, templates, or Product Hunt — get 10–20 real strangers
+            using it. You need to know: do people outside the household find it
+            useful? Do they share collections? Do they come back? Those answers
+            should shape everything else.
+          </p>
+        </div>
+
+        <p>
+          The lowest-friction path: direct outreach to people you know who fit
+          the use cases. A friend doing a home renovation. Someone who just had
+          a baby. A designer you know. Not a cold launch — just "I built this,
+          would you try it for your actual project?" Then listen hard.
+        </p>
+
+        <h3>Sequencing</h3>
+
+        <div class="timeline">
+          <div class="timeline-row">
+            <div class="timeline-quarter">Now<br />(May–Jun)</div>
+            <div class="timeline-content">
+              <ul>
+                <li>Get 10–20 real users via direct outreach</li>
+                <li>
+                  <strong>Submit iOS app to App Store</strong> — built and
+                  functional, currently dev-only
+                </li>
+                <li>Improve public collection CTA (the clone/signup hook) ✓</li>
+                <li>Add sitemap coverage for <code>/s/</code> URLs</li>
+                <li>Start curator-generated template collection library</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-row">
+            <div class="timeline-quarter">Q3<br />(Jul–Sep)</div>
+            <div class="timeline-content">
+              <ul>
+                <li>
+                  Launch <code>/templates</code> page with 20–30 real
+                  collections
+                </li>
+                <li>
+                  Community seeding: Reddit, Facebook groups, parenting
+                  communities
+                </li>
+                <li>Back-to-school and nursery prep content push</li>
+                <li>Add real example collections to use case pages</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-row">
+            <div class="timeline-quarter">Q4<br />(Oct–Dec)</div>
+            <div class="timeline-content">
+              <ul>
+                <li>
+                  Holiday gift list push — templates, community posts, creator
+                  outreach
+                </li>
+                <li>Product Hunt launch timed around holiday buzz</li>
+                <li><code>/explore</code> browse page live</li>
+                <li>Featured collections section on home page</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-row">
+            <div class="timeline-quarter">Q1 2027</div>
+            <div class="timeline-content">
+              <ul>
+                <li>Evaluate what worked; double down on it</li>
+                <li>
+                  Niche newsletter and press outreach if numbers support it
+                </li>
+                <li>Consider freemium/pro model if usage patterns are clear</li>
+                <li>
+                  Revisit agentic shopping landscape — it will have shifted
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 8: Avoid -->
+      <div class="section">
+        <p class="section-number">08</p>
+        <h2>What to avoid</h2>
+
+        <ul class="avoid-list">
+          <li>
+            Paid social before organic is working — Instagram/TikTok ads are
+            expensive and signal is poor until you know your actual converting
+            audience.
+          </li>
+          <li>
+            Press outreach too early — TechCrunch doesn't move the needle for
+            consumer tools at this stage; niche communities and newsletters do.
+          </li>
+          <li>
+            Trying to serve everyone — "anyone who shops online" is too broad
+            for early GTM. Pick two audiences and be specific.
+          </li>
+          <li>
+            Gating the freemium model before you understand usage patterns —
+            with a small user base you can't yet tell which features are worth
+            paying for.
+          </li>
+          <li>
+            Treating templates as AI-generated answers — they should be starting
+            points, not finished products, to preserve the personal curation
+            feel.
+          </li>
+          <li>
+            Competing head-on with ChatGPT/Perplexity on "find me a product" —
+            they have more compute and distribution. Tote wins on persistence,
+            curation, and shareability, not speed of discovery.
+          </li>
+        </ul>
+      </div>
+
+      <div class="footnote">
+        <p>
+          Drafted May 2026 · Based on conversation with Claude · Pre-launch,
+          internal only
+        </p>
+        <p style="margin-top: 0.4rem">
+          Agentic shopping research sources:
+          <a href="https://openai.com/index/buy-it-in-chatgpt/"
+            >OpenAI Instant Checkout</a
+          >
+          ·
+          <a
+            href="https://www.cnbc.com/2025/11/19/perplexity-ai-online-shopping-paypal.html"
+            >Perplexity Shopping (CNBC)</a
+          >
+          ·
+          <a
+            href="https://www.cnbc.com/2026/03/20/open-ai-agentic-shopping-etsy-shopify-walmart-amazon.html"
+            >OpenAI pivot (CNBC)</a
+          >
+          ·
+          <a
+            href="https://blog.google/products/ads-commerce/agentic-commerce-ai-tools-protocol-retailers-platforms"
+            >Google UCP</a
+          >
+          ·
+          <a
+            href="https://techcrunch.com/2025/11/25/openai-and-perplexity-are-launching-ai-shopping-assistants-but-competing-startups-arent-sweating-it/"
+            >TechCrunch: competing startups</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
