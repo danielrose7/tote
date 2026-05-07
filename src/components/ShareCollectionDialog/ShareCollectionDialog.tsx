@@ -168,6 +168,7 @@ export function ShareCollectionDialog({
           slug,
           collection,
           pubId,
+          username ?? undefined,
         ).catch(console.error);
       }
 
@@ -230,6 +231,7 @@ export function ShareCollectionDialog({
           slug,
           collection,
           pubId,
+          username ?? undefined,
         ).catch(console.error);
       }
 
@@ -328,6 +330,7 @@ export function ShareCollectionDialog({
         newSlug,
         collection,
         publishedId ?? undefined,
+        username ?? undefined,
       ).catch(console.error);
 
       setSlugInput(newSlug);

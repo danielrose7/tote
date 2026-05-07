@@ -303,6 +303,7 @@ export async function syncPublishedCollectionToNeon(
   slug: string,
   collection: LoadedBlock,
   jazzPublishedId?: string,
+  username?: string,
 ): Promise<void> {
   const { topLevelProducts, slots } = serializeCollectionForNeon(collection);
   await fetch('/api/collections/publish', {
@@ -317,6 +318,7 @@ export async function syncPublishedCollectionToNeon(
       color: collection.collectionData?.color,
       layout: collection.collectionData?.publicLayout ?? 'minimal',
       allowCloning: collection.collectionData?.allowCloning ?? true,
+      username,
       topLevelProducts,
       slots,
     }),

@@ -60,6 +60,7 @@ export type UpsertPublishedCollectionInput = {
   sourceJazzId: string;
   jazzPublishedId?: string;
   ownerClerkId: string;
+  username?: string;
   slug: string;
   name: string;
   description?: string;
@@ -77,17 +78,18 @@ export async function upsertPublishedCollection(
 ): Promise<string> {
   const [row] = await sql`
     INSERT INTO published_collections (
-      source_jazz_id, jazz_published_id, owner_clerk_id, slug, name,
+      source_jazz_id, jazz_published_id, owner_clerk_id, username, slug, name,
       description, color, layout, allow_cloning, updated_at
     ) VALUES (
       ${input.sourceJazzId}, ${input.jazzPublishedId ?? null},
-      ${input.ownerClerkId}, ${input.slug}, ${input.name},
+      ${input.ownerClerkId}, ${input.username ?? null}, ${input.slug}, ${input.name},
       ${input.description ?? null}, ${input.color ?? pickColor(input.slug)},
       ${input.layout}, ${input.allowCloning}, now()
     )
     ON CONFLICT (source_jazz_id) DO UPDATE SET
       jazz_published_id = EXCLUDED.jazz_published_id,
       owner_clerk_id    = EXCLUDED.owner_clerk_id,
+      username          = COALESCE(EXCLUDED.username, published_collections.username),
       slug              = EXCLUDED.slug,
       name              = EXCLUDED.name,
       description       = EXCLUDED.description,
@@ -153,6 +155,22 @@ export async function deletePublishedCollection(
   sourceJazzId: string,
 ): Promise<void> {
   await sql`DELETE FROM published_collections WHERE source_jazz_id = ${sourceJazzId}`;
+}
+
+export async function getAllPublishedCollectionSlugs(): Promise<
+  { username: string; slug: string; updatedAt: Date }[]
+> {
+  const rows = await sql`
+    SELECT username, slug, updated_at
+    FROM published_collections
+    WHERE username IS NOT NULL
+    ORDER BY updated_at DESC
+  `;
+  return rows.map((r) => ({
+    username: r.username as string,
+    slug: r.slug as string,
+    updatedAt: r.updated_at as Date,
+  }));
 }
 
 export async function getPublishedCollectionByOwnerAndSlug(

@@ -22,6 +22,7 @@ export async function POST(request: Request) {
       color,
       layout,
       allowCloning,
+      username,
       topLevelProducts,
       slots,
     } = body;
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
       sourceJazzId,
       jazzPublishedId,
       ownerClerkId: userId,
+      username: typeof username === 'string' ? username : undefined,
       slug,
       name,
       description,
