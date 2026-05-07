@@ -107,7 +107,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const collectionRoutes: MetadataRoute.Sitemap = collections.map((c) => ({
     url: `${baseUrl}/s/${c.username}/${c.slug}`,
     lastModified: c.updatedAt,
-    changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));
 
