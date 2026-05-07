@@ -4,6 +4,18 @@ Unscheduled ideas and deferred work. Not prioritized — just a place to avoid l
 
 ---
 
+## SEO / Public Pages
+
+### Accurate `lastModified` timestamps in sitemap
+
+All static routes in `sitemap.ts` currently use `new Date()`, which claims every page was updated on every build — misleading to search engines.
+
+**Fix:** Each static page file exports a `export const lastModified = new Date('YYYY-MM-DD')` constant. `sitemap.ts` imports and uses it. Dynamic collection routes already pull `updatedAt` from the DB, so they're fine.
+
+**When:** Before SEO becomes a meaningful acquisition channel. Low effort, low urgency.
+
+---
+
 ## Infra
 
 ### Users table via Clerk webhook
