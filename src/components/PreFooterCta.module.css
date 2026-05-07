@@ -4,8 +4,8 @@
 
 .card {
   background: var(--color-blush);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-lg) var(--spacing-lg) 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--spacing-2xl) var(--spacing-2xl) 0;
   max-width: 1200px;
   margin: 0 auto;
 }
