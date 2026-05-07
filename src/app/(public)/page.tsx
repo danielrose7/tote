@@ -277,6 +277,9 @@ export default function HomePage() {
             <a href="#comparison" className={styles.navLink}>
               Why Tote
             </a>
+            <Link href="/templates" className={styles.navLink}>
+              Templates
+            </Link>
             <Link href="/docs" className={styles.navLink}>
               Docs
             </Link>
@@ -311,6 +314,9 @@ export default function HomePage() {
                 <a href="#comparison" className={styles.mobileMenuLink}>
                   Why Tote
                 </a>
+                <Link href="/templates" className={styles.mobileMenuLink}>
+                  Templates
+                </Link>
                 <Link href="/docs" className={styles.mobileMenuLink}>
                   Docs
                 </Link>
