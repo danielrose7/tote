@@ -74,6 +74,18 @@ Home renovation is a core use case — fill it out with specific, searchable tit
 
 ---
 
+## Travel
+
+Trip-specific packing lists — searchable, shareable, cross-store friendly.
+
+| Title                                     | Priority | Notes                                       |
+| ----------------------------------------- | -------- | ------------------------------------------- |
+| Packing for a surf trip                   | Now      | 7–10 day trip, specific enough to rank      |
+| Carry-on only — 10 days in Europe         | Now      | High search volume, strong sharing behavior |
+| Weekend ski trip — what to rent vs. bring | Q4       | Perennial winter search                     |
+
+---
+
 ## Seasonal & Niche
 
 | Title                                     | Priority | Notes                              |

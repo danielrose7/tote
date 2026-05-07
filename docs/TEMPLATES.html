@@ -286,6 +286,85 @@
           grid-template-columns: 1fr;
         }
       }
+
+      /* Curator prompts */
+      .prompt {
+        grid-column: 1 / -1;
+        margin: 0.25rem -1rem -0.75rem;
+        border-top: 1px solid var(--border);
+        border-radius: 0 0 var(--radius) var(--radius);
+        overflow: hidden;
+      }
+
+      .prompt summary {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--accent);
+        cursor: pointer;
+        padding: 0.45rem 1rem;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        user-select: none;
+      }
+
+      .prompt summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .prompt summary::before {
+        content: '›';
+        display: inline-block;
+        transition: transform 0.15s;
+        font-size: 1rem;
+        line-height: 1;
+      }
+
+      details[open].prompt summary::before {
+        transform: rotate(90deg);
+      }
+
+      .prompt-body {
+        padding: 0.75rem 1rem;
+        border-top: 1px solid var(--border);
+        background: var(--bg);
+        position: relative;
+      }
+
+      .prompt-text {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        margin: 0 0 0;
+        padding-right: 4.5rem;
+      }
+
+      .copy-btn {
+        position: absolute;
+        top: 0.75rem;
+        right: 1rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        padding: 0.2rem 0.6rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: white;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+
+      .copy-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .copy-btn.copied {
+        border-color: var(--green);
+        color: var(--green);
+      }
     </style>
   </head>
   <body>
@@ -393,6 +472,23 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Newborn to 12 months — gear that
+                  converts". 12–15 items. Only include gear that earns its keep
+                  across multiple stages — no single-use gadgets. Sections:
+                  "Birth to 3 months", "3–6 months", "6–12 months". Each item
+                  needs a one-sentence note on why it's worth buying and when it
+                  stops being useful. Mix brands across price points. No
+                  formula, diaper brands, or clothing.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -404,6 +500,22 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Baby shower gifts for the parents,
+                  not the baby". 12–15 items. Focus on recovery, comfort, and
+                  sanity for new parents — especially the mom. Think postpartum
+                  care, quality rest gear for adults, things that make the first
+                  6 weeks easier. Exclude anything baby-focused. Each item gets
+                  a one-line note on why it matters. Mix $20–$120 price range.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -444,6 +556,23 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Gifts for a new mom". 12–15 items.
+                  Focus on the mom, not the baby — recovery, self-care, rest,
+                  things she won't buy herself. Sections: "First week
+                  essentials", "Comfort and recovery", "Treats for later". Price
+                  range $25–$150. Avoid anything baby-care focused. Each item
+                  gets one honest line on why it's actually useful, not gift-y
+                  filler.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -454,6 +583,23 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Housewarming gifts worth giving".
+                  12–15 items. Mix of practical and memorable — things people
+                  will actually use and remember where they came from. Skip the
+                  generic candle. Price range $30–$120. Each item gets a short
+                  note on why it lands. Aim for a mix of: kitchen and
+                  entertaining, something for the home itself, one indulgent
+                  item.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -563,6 +709,23 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Home office setup under $1,500".
+                  12–15 items. Total should stay under $1,500 if buying
+                  everything. Sections: "Desk setup", "Seating", "Audio and
+                  video", "Lighting and accessories". Prioritize ergonomics and
+                  longevity over aesthetics. Must include a monitor arm, quality
+                  headset, and a proper chair. Each item gets a one-line note on
+                  the decision rationale.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -575,6 +738,23 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Small apartment living room —
+                  furniture that does two jobs". 10–14 items. Every item must
+                  serve a dual purpose — storage + seating, coffee table + desk,
+                  etc. Sections: "Seating", "Tables and surfaces", "Storage that
+                  doesn't look like storage", "Lighting". Mix price points from
+                  IKEA to mid-range. Avoid bulky or over-decorated pieces. Each
+                  item needs a note on its second job.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -644,6 +824,23 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Capsule wardrobe for working from
+                  home". 12 items. Clothes that look put-together on video calls
+                  but feel comfortable. Elevated basics only — no hoodies, no
+                  full business attire. Sections: "Tops", "Bottoms", "Layers".
+                  Gender-neutral framing where possible. Each item: one line on
+                  why it works on camera and off. Mix $30–$150 per piece,
+                  prioritize widely-available stores.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -654,6 +851,23 @@
               </p>
             </div>
             <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Men's wardrobe basics". 15 items.
+                  The things a guy needs to stop re-buying or borrowing. No
+                  trends. Sections: "Foundation pieces", "Outerwear",
+                  "Footwear", "The extras people forget". Prioritize quality
+                  over brand. Each item gets a note on what to look for — fit,
+                  material, why this category matters. Price range $25–$200.
+                  Stores: UNIQLO, Everlane, Quince, Banana Republic.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
           </div>
           <div class="template-item">
             <div>
@@ -702,6 +916,86 @@
         </div>
       </div>
 
+      <hr />
+
+      <!-- Travel -->
+      <div class="section">
+        <p class="section-number">06</p>
+        <h2>Travel</h2>
+        <p>
+          Trip-specific packing lists are highly searchable and shareable.
+          Cross-store comparison is a genuine advantage — shoes from one place,
+          tech from another.
+        </p>
+        <div class="template-grid">
+          <div class="template-item">
+            <div>
+              <p class="template-title">Packing for a surf trip</p>
+              <p class="template-note">
+                7–10 day trip, daily surfing. Specific enough to rank, shareable
+                in surf communities.
+              </p>
+            </div>
+            <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Packing for a surf trip". 12–15
+                  items covering a 7–10 day trip with daily surfing. Sections:
+                  "In the water", "Out of the water", "Travel essentials". Must
+                  include reef-safe sunscreen, a quality rashguard, and a travel
+                  board bag. Skip tourist-trap gear. Each item gets a note on
+                  why it earns its place in the bag. Mix $15–$200.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
+          </div>
+          <div class="template-item">
+            <div>
+              <p class="template-title">Carry-on only — 10 days in Europe</p>
+              <p class="template-note">
+                No checked bag, no regrets. High search volume, strong sharing
+                behavior among frequent travelers.
+              </p>
+            </div>
+            <span class="badge badge-now">Now</span>
+            <details class="prompt">
+              <summary>Curator prompt</summary>
+              <div class="prompt-body">
+                <p class="prompt-text">
+                  Build a collection called "Carry-on only — 10 days in Europe".
+                  12–15 items that fit in a 40L carry-on. Sections: "The bag",
+                  "Clothing", "Tech and adapters", "Toiletries and travel
+                  essentials". Clothing: 3–4 mix-and-match neutrals. Tech:
+                  compact power bank, universal adapter, noise-canceling
+                  earbuds. Each item: one line on why it made the cut. No
+                  checked bag, no regrets.
+                </p>
+                <button class="copy-btn" onclick="copyPrompt(this)">
+                  Copy
+                </button>
+              </div>
+            </details>
+          </div>
+          <div class="template-item">
+            <div>
+              <p class="template-title">
+                Weekend ski trip — what to actually rent vs. bring
+              </p>
+              <p class="template-note">
+                Perennial winter search. Saves people from over-packing or
+                over-renting.
+              </p>
+            </div>
+            <span class="badge badge-q4">Q4</span>
+          </div>
+        </div>
+      </div>
+
       <div class="callout callout-amber" style="margin-top: 3rem">
         <p class="callout-title">Curation quality matters more than quantity</p>
         <p>
@@ -725,5 +1019,18 @@
         </p>
       </div>
     </div>
+    <script>
+      function copyPrompt(btn) {
+        const text = btn.previousElementSibling.textContent.trim();
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = 'Copy';
+            btn.classList.remove('copied');
+          }, 1500);
+        });
+      }
+    </script>
   </body>
 </html>
