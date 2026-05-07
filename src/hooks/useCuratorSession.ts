@@ -54,16 +54,23 @@ export function useCuratorSession(sessionId: string | null) {
     setTimeout(() => setRealtimeEnabled(true), 100);
   }
 
-  const onOnlineRef = useRef<() => void>(() => {});
-  onOnlineRef.current = () => {
+  const onWakeRef = useRef<() => void>(() => {});
+  onWakeRef.current = () => {
     if (phase === 'complete' || phase === 'error') return;
     handleReconnect();
   };
   useEffect(() => {
     if (!sessionId) return;
-    const handler = () => onOnlineRef.current();
+    const handler = () => onWakeRef.current();
+    const visHandler = () => {
+      if (document.visibilityState === 'visible') onWakeRef.current();
+    };
     window.addEventListener('online', handler);
-    return () => window.removeEventListener('online', handler);
+    document.addEventListener('visibilitychange', visHandler);
+    return () => {
+      window.removeEventListener('online', handler);
+      document.removeEventListener('visibilitychange', visHandler);
+    };
   }, [sessionId]);
 
   function queueSectionForExtraction(_section: SectionToExtract) {
