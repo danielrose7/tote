@@ -24,22 +24,6 @@ Add a `users (clerk_user_id TEXT PRIMARY KEY, username TEXT, email TEXT, created
 
 ---
 
-### Migrate KV (Redis) → Neon for curator session state
-
-Replace Upstash/Redis with a `state JSONB` column on `curator_sessions`. KV is used purely as a JSON blob store — no Redis-specific features needed.
-
-**Why:** One fewer infra dependency, simpler local dev, everything queryable in one place.
-
-**Rough steps:**
-
-1. `ALTER TABLE curator_sessions ADD COLUMN IF NOT EXISTS state JSONB`
-2. Rewrite `src/lib/curatorSession.ts` — swap Redis calls for `SELECT`/`UPDATE ... SET state = state || $patch`
-3. Remove `redis` dep and `KV_REDIS_URL` env var once confirmed working
-
-Callers (`curate-collection.ts`, sync API) stay unchanged — only the `curatorSession.ts` implementation changes.
-
----
-
 ## Curator / Extraction
 
 ### Gemini URL Context as tier-2 extraction (replaces Anthropic web_search)
