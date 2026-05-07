@@ -1,15 +1,20 @@
 .section {
-  background: var(--color-blush);
   padding: var(--spacing-xl) var(--spacing-lg);
 }
 
 .card {
-  background: var(--color-surface);
+  background: var(--color-blush);
   border-radius: var(--radius-xl);
-  border-bottom: 3px solid rgba(200, 160, 175, 0.4);
-  padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 3rem);
+  padding: var(--spacing-lg);
   max-width: 860px;
   margin: 0 auto;
+}
+
+.cardInner {
+  background: var(--color-surface);
+  border-radius: calc(var(--radius-xl) - 6px);
+  border-bottom: 3px solid rgba(200, 160, 175, 0.5);
+  padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 2.5rem);
 }
 
 .headline {
