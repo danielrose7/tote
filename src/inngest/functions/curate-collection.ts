@@ -460,12 +460,25 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
             : 'Category research complete — building curatorial brief.',
         }),
         logProgressEvent(sessionId, {
+          step: 'market-landscape-started',
+          message: 'Scouting source lists and recurring products...',
+          ts: Date.now(),
+        }),
+        logProgressEvent(sessionId, {
+          step: 'market-landscape-complete',
+          message: `Market landscape ready: ${marketLandscape.recurringProducts.length} recurring products, ${marketLandscape.recurringSections.length} section patterns`,
+          detail:
+            marketLandscape.recurringSections.map((s) => s.label).join(', ') ||
+            undefined,
+          ts: Date.now() + 1,
+        }),
+        logProgressEvent(sessionId, {
           step: 'category-research-complete',
           message: research.followUpNeeded
             ? 'Category research complete. A few follow-up questions will sharpen the direction.'
             : 'Category research complete. Building curatorial brief...',
           detail: research.suggestedLenses.join(', ') || undefined,
-          ts: Date.now(),
+          ts: Date.now() + 2,
         }),
       ]),
     );
@@ -1061,8 +1074,20 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     const totalUrlCount = urlSections.reduce((n, s) => n + s.urls.length, 0);
 
     // Step 7: Persist URL data for reconnect, then wait for extractions
-    await step.run('persist-session-urls', () =>
-      Promise.all([
+    await step.run('persist-session-urls', async () => {
+      for (const s of urlSections) {
+        await logProgressEvent(sessionId, {
+          step: `searching-${s.slug}`,
+          message: `Searching for "${s.title}"...`,
+          ts: Date.now(),
+        });
+        await logProgressEvent(sessionId, {
+          step: `found-urls-${s.slug}`,
+          message: `Found ${s.urls.length} URLs for "${s.title}"`,
+          ts: Date.now(),
+        });
+      }
+      await Promise.all([
         patchSession(sessionId, {
           phase: 'extracting',
           urlSections,
@@ -1079,8 +1104,8 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           message: 'Extracting pages with extension...',
           ts: Date.now() + 1,
         }),
-      ]),
-    );
+      ]);
+    });
 
     // Also publish urls topic for reconnect/sync restore in the browser
     await step.realtime.publish('urls-ready', ch.urls, {
@@ -1125,11 +1150,25 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       });
     }
 
-    await step.run('persist-extracted-slugs', () =>
-      patchSession(sessionId, {
+    await step.run('persist-extracted-slugs', async () => {
+      for (const section of urlSections) {
+        await logProgressEvent(sessionId, {
+          step: `extracting-${section.slug}`,
+          message: `Extracting "${section.title}" (${section.urls.length} URLs)...`,
+          ts: Date.now(),
+        });
+      }
+      for (const r of extractionResults) {
+        await logProgressEvent(sessionId, {
+          step: `extracted-${r.slug}`,
+          message: `"${r.title}": ${r.items.length} products extracted`,
+          ts: Date.now(),
+        });
+      }
+      await patchSession(sessionId, {
         extractedSlugs: extractionResults.map((r) => r.slug),
-      }),
-    );
+      });
+    });
 
     for (const r of extractionResults) {
       totalInputTokens += r.usage.inputTokens;
@@ -1554,9 +1593,21 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       );
 
       // Persist gap URL sections so reconnecting clients can re-queue them
-      await step.run(`persist-refinement-urls-${pass}`, () =>
-        patchSession(sessionId, { refinementUrlSections }),
-      );
+      await step.run(`persist-refinement-urls-${pass}`, async () => {
+        for (const s of refinementUrlSections) {
+          await logProgressEvent(sessionId, {
+            step: `searching-${s.slug}`,
+            message: `Finding URLs for gap: "${s.title}"...`,
+            ts: Date.now(),
+          });
+          await logProgressEvent(sessionId, {
+            step: `found-urls-${s.slug}`,
+            message: `Found ${s.urls.length} URLs for gap: "${s.title}"`,
+            ts: Date.now(),
+          });
+        }
+        await patchSession(sessionId, { refinementUrlSections });
+      });
 
       // 7c. Extract gap URLs server-side using 2-tier CF+Gemini strategy
       if (refinementUrlSections.length === 0) break;
@@ -1594,14 +1645,28 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         });
       }
 
-      await step.run(`persist-refined-slugs-${pass}`, () =>
-        patchSession(sessionId, {
+      await step.run(`persist-refined-slugs-${pass}`, async () => {
+        for (const section of refinementUrlSections) {
+          await logProgressEvent(sessionId, {
+            step: `extracting-${section.slug}`,
+            message: `Extracting gap: "${section.title}" (${section.urls.length} URLs)...`,
+            ts: Date.now(),
+          });
+        }
+        for (const r of gapExtractionResults) {
+          await logProgressEvent(sessionId, {
+            step: `extracted-${r.slug}`,
+            message: `"${r.title}": ${r.items.length} products extracted`,
+            ts: Date.now(),
+          });
+        }
+        await patchSession(sessionId, {
           extractedSlugs: [
             ...extractedSections.map((s) => s.slug),
             ...refinedSections.map((s) => s.slug),
           ],
-        }),
-      );
+        });
+      });
 
       for (const r of gapExtractionResults) {
         totalInputTokens += r.usage.inputTokens;

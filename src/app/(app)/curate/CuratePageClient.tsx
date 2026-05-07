@@ -459,7 +459,12 @@ export function CuratePageClient({
       <div className={styles.container}>
         <div className={styles.historyHeader}>
           <h1 className={styles.heading}>
-            {sessionTitle || topic || 'Collection Curator'}
+            {sessionTitle ||
+              (topic
+                ? topic.length > 72
+                  ? `${topic.slice(0, 72).trimEnd()}…`
+                  : topic
+                : 'Collection Curator')}
           </h1>
           <a href="/curate" className={styles.backLink}>
             All sessions
