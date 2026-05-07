@@ -26,25 +26,27 @@ export function StickyCtaBar({ cloneHref }: { cloneHref?: string }) {
         className={`${styles.bar} ${visible ? styles.barVisible : ''}`}
         aria-hidden={!visible}
       >
-        <p className={styles.text}>
-          Save products like these to your own Tote list
-        </p>
-        <SignUpButton
-          mode="modal"
-          fallbackRedirectUrl={cloneHref ?? '/collections'}
-        >
-          <button type="button" className={styles.btn}>
-            Try Tote free
+        <div className={styles.inner}>
+          <p className={styles.text}>
+            Save from any store and come back when you&apos;re ready to decide.
+          </p>
+          <SignUpButton
+            mode="modal"
+            fallbackRedirectUrl={cloneHref ?? '/collections'}
+          >
+            <button type="button" className={styles.btn}>
+              Save your first item
+            </button>
+          </SignUpButton>
+          <button
+            type="button"
+            className={styles.dismiss}
+            onClick={() => setDismissed(true)}
+            aria-label="Dismiss"
+          >
+            ✕
           </button>
-        </SignUpButton>
-        <button
-          type="button"
-          className={styles.dismiss}
-          onClick={() => setDismissed(true)}
-          aria-label="Dismiss"
-        >
-          ✕
-        </button>
+        </div>
       </div>
     </SignedOut>
   );

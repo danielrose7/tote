@@ -4,15 +4,20 @@
   left: 0;
   right: 0;
   z-index: 50;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
   padding: var(--spacing-md) var(--spacing-lg);
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
   box-shadow: var(--shadow-lg);
   transform: translateY(100%);
   transition: transform var(--transition-normal);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  max-width: 680px;
+  margin: 0 auto;
 }
 
 .barVisible {
@@ -70,7 +75,7 @@
 }
 
 @media (max-width: 560px) {
-  .bar {
+  .inner {
     flex-wrap: wrap;
     gap: var(--spacing-sm);
   }
@@ -78,7 +83,7 @@
   .text {
     width: 100%;
     flex: none;
-    padding-right: 28px; /* room for dismiss */
+    padding-right: 28px;
   }
 
   .dismiss {
