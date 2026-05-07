@@ -8,9 +8,9 @@ export function PreFooterCta({ cloneHref }: { cloneHref?: string }) {
     <SignedOut>
       <section className={styles.section}>
         <div className={styles.card}>
-          <h2 className={styles.headline}>Like this list? Start your own.</h2>
+          <h2 className={styles.headline}>Keep your own list like this.</h2>
           <p className={styles.sub}>
-            Try Tote free — it takes about 30 seconds to get started.
+            Save from any store and come back when you&apos;re ready to decide.
           </p>
           <div className={styles.actions}>
             <SignUpButton
@@ -18,7 +18,7 @@ export function PreFooterCta({ cloneHref }: { cloneHref?: string }) {
               fallbackRedirectUrl={cloneHref ?? '/collections'}
             >
               <button type="button" className={styles.primaryBtn}>
-                Start for free
+                Save your first item
               </button>
             </SignUpButton>
             {cloneHref && (
