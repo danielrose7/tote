@@ -3,6 +3,7 @@ import type { PublishedCollection } from '../../../../../lib/publishedCollection
 import { PreFooterCta } from '../../../../../components/PreFooterCta';
 import { PublicFooter } from '../../../../../components/PublicFooter';
 import { StickyCtaBar } from '../../../../../components/StickyCtaBar';
+import { formatPrice } from '../../../../../lib/formatPrice';
 import styles from '../../../view/[id]/page.module.css';
 import { MakeCopyButton } from './MakeCopyButton';
 
@@ -162,7 +163,7 @@ function ProductCard({
       <div className={styles.productInfo}>
         <h3 className={styles.productName}>{product.title}</h3>
         {product.price && (
-          <p className={styles.productPrice}>{product.price}</p>
+          <p className={styles.productPrice}>{formatPrice(product.price)}</p>
         )}
         {product.description && (
           <p className={styles.productDescription}>{product.description}</p>
