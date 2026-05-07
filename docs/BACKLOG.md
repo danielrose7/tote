@@ -6,6 +6,24 @@ Unscheduled ideas and deferred work. Not prioritized — just a place to avoid l
 
 ## Infra
 
+### Users table via Clerk webhook
+
+Add a `users (clerk_user_id TEXT PRIMARY KEY, username TEXT, email TEXT, created_at TIMESTAMPTZ)` table in Neon, populated by a `/api/webhooks/clerk` route handling `user.created` and `user.updated` events.
+
+**Why:** Currently `username` is sent from the client at publish time (Clerk has it on the frontend). That works while it's one user, but as more users publish collections the client-sent approach is fragile. A local users table means username lookups are a fast local JOIN with no Clerk API calls or client trust required.
+
+**When:** Before inviting external users to publish collections.
+
+**Rough steps:**
+
+1. Migration: `CREATE TABLE users (clerk_user_id TEXT PRIMARY KEY, username TEXT, email TEXT, created_at TIMESTAMPTZ DEFAULT now())`
+2. Add `/api/webhooks/clerk` route — verify Svix signature, handle `user.created` / `user.updated`, upsert into `users`
+3. Register webhook in Clerk dashboard
+4. Update publish route to JOIN `users` on `owner_clerk_id` instead of trusting client-sent username
+5. Backfill existing users via Clerk API one-time script
+
+---
+
 ### Migrate KV (Redis) → Neon for curator session state
 
 Replace Upstash/Redis with a `state JSONB` column on `curator_sessions`. KV is used purely as a JSON blob store — no Redis-specific features needed.
