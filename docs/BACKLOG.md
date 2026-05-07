@@ -35,11 +35,3 @@ Add a `users (clerk_user_id TEXT PRIMARY KEY, username TEXT, email TEXT, created
 **Why not urgent:** Brave is working well and the cost difference doesn't matter at current search volume. Worth revisiting if search becomes a meaningful cost line or if Brave has coverage gaps.
 
 **If implemented:** Mirror `src/lib/braveSearch.ts` — same interface, swap endpoint and auth header.
-
-### URL normalization at save time
-
-Strip tracking params (`utm_*`, `gclid`, `gbraid`, `srsltid`, etc.) when saving URLs in the extension, mobile app, and curator pipeline.
-
-**Why:** The same product URL arrives with different tracking params depending on how the user got there, causing duplicates and mismatched corpus entries.
-
-**Reference:** `normalizeUrl()` in `chrome-extension/scripts/benchmark-cf.ts` — extract to a shared util and call it at save time before writing to Jazz/R2.
