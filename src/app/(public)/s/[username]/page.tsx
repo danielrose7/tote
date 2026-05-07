@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { PublishedCollectionSummary } from '../../../../lib/publishedCollectionsDb';
 import { getPublishedCollectionsByOwner } from '../../../../lib/publishedCollectionsDb';
-import { PublicFooterCta } from '../../../../components/PublicFooterCta';
+import { PreFooterCta } from '../../../../components/PreFooterCta';
+import { StickyCtaBar } from '../../../../components/StickyCtaBar';
 import styles from './page.module.css';
 
 type Params = Promise<{ username: string }>;
@@ -62,8 +63,10 @@ export default async function UserCollectionsPage(props: { params: Params }) {
           <CollectionCard key={c.id} collection={c} username={username} />
         ))}
       </main>
+      <PreFooterCta />
+      <StickyCtaBar />
+
       <footer className={styles.footer}>
-        <PublicFooterCta />
         <p className={styles.footerBrand}>
           <a href="/" className={styles.footerLink}>
             tote
