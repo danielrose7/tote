@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { PublishedCollection } from '../../../../../lib/publishedCollectionsDb';
 import { PreFooterCta } from '../../../../../components/PreFooterCta';
+import { PublicFooter } from '../../../../../components/PublicFooter';
 import { StickyCtaBar } from '../../../../../components/StickyCtaBar';
 import styles from '../../../view/[id]/page.module.css';
 import { MakeCopyButton } from './MakeCopyButton';
@@ -136,13 +137,7 @@ export function PublicCollectionView({
         }
       />
 
-      <footer className={styles.footer}>
-        <p className={styles.footerBrand}>
-          <a href="/" className={styles.footerLink}>
-            tote
-          </a>
-        </p>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

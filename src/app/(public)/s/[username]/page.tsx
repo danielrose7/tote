@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { PublishedCollectionSummary } from '../../../../lib/publishedCollectionsDb';
 import { getPublishedCollectionsByOwner } from '../../../../lib/publishedCollectionsDb';
 import { PreFooterCta } from '../../../../components/PreFooterCta';
+import { PublicFooter } from '../../../../components/PublicFooter';
 import { StickyCtaBar } from '../../../../components/StickyCtaBar';
 import styles from './page.module.css';
 
@@ -66,13 +67,7 @@ export default async function UserCollectionsPage(props: { params: Params }) {
       <PreFooterCta />
       <StickyCtaBar />
 
-      <footer className={styles.footer}>
-        <p className={styles.footerBrand}>
-          <a href="/" className={styles.footerLink}>
-            tote
-          </a>
-        </p>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

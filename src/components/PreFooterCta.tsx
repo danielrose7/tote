@@ -7,12 +7,10 @@ export function PreFooterCta({ cloneHref }: { cloneHref?: string }) {
   return (
     <SignedOut>
       <section className={styles.section}>
-        <div className={styles.inner}>
-          <p className={styles.wordmark}>tote</p>
-          <h2 className={styles.headline}>Like this list? Build your own.</h2>
+        <div className={styles.card}>
+          <h2 className={styles.headline}>Like this list? Start your own.</h2>
           <p className={styles.sub}>
-            Save products from any store, compare them side-by-side, and share a
-            clean link — free.
+            Try Tote free — it takes about 30 seconds to get started.
           </p>
           <div className={styles.actions}>
             <SignUpButton
