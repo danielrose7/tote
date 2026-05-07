@@ -301,7 +301,7 @@ export function CuratePageClient({
     const isSearching = progress.some((e) => e.step === 'searching');
 
     // Phase-derived floor: if realtime events are missed, use the store phase
-    // (set from both KV hydration and key transitions) as a minimum status.
+    // (set from both sync hydration and key transitions) as a minimum status.
     // Scope completed by planning phase; Scout active by extracting phase, etc.
     const phaseFloor: Record<string, StepStatus> = {};
     if (

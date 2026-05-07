@@ -104,7 +104,7 @@ interface CuratorState {
   setImporting: (importing: boolean) => void;
   setRealtimeEnabled: (enabled: boolean) => void;
 
-  /** Atomically hydrate from a KV sync response. */
+  /** Atomically hydrate from a session sync response. */
   hydrateFromSync: (snap: Record<string, unknown>) => void;
 
   /** Handle a single realtime topic message — phase transitions + state updates. */

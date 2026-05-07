@@ -15,7 +15,7 @@ export function useCuratorSession(sessionId: string | null) {
 
   const extractedSlugsRef = useRef<Set<string>>(new Set());
 
-  async function syncFromKv(sid: string) {
+  async function syncSessionState(sid: string) {
     try {
       const res = await fetch(`/api/curate/sync/${sid}`);
       if (!res.ok) return;
@@ -34,7 +34,7 @@ export function useCuratorSession(sessionId: string | null) {
   }
 
   const hasSyncedRef = useRef(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: syncFromKv closes over queue helpers intentionally.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: syncSessionState closes over queue helpers intentionally.
   useEffect(() => {
     if (
       !sessionId ||
@@ -44,12 +44,12 @@ export function useCuratorSession(sessionId: string | null) {
     )
       return;
     hasSyncedRef.current = true;
-    syncFromKv(sessionId);
+    syncSessionState(sessionId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, phase]);
 
   async function handleReconnect() {
-    if (sessionId) await syncFromKv(sessionId);
+    if (sessionId) await syncSessionState(sessionId);
     setRealtimeEnabled(false);
     setTimeout(() => setRealtimeEnabled(true), 100);
   }
