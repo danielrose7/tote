@@ -102,27 +102,37 @@ export async function POST(req: Request) {
             .describe('A direct product page URL to extract metadata from'),
         }),
         execute: async ({ url }) => {
-          const result = await extractUrl(url);
+          try {
+            const result = await extractUrl(url);
 
-          if (result.tier === 'cf' || result.tier === 'collection-expanded') {
-            extractionCosts.cfCount++;
-          } else if (result.tier === 'gemini') {
-            extractionCosts.geminiInputTokens += result.usage.inputTokens;
-            extractionCosts.geminiOutputTokens += result.usage.outputTokens;
+            if (result.tier === 'cf' || result.tier === 'collection-expanded') {
+              extractionCosts.cfCount++;
+            } else if (result.tier === 'gemini') {
+              extractionCosts.geminiInputTokens += result.usage.inputTokens;
+              extractionCosts.geminiOutputTokens += result.usage.outputTokens;
+            }
+
+            const item = result.items[0];
+            return {
+              title: item?.title ?? null,
+              url: item?.sourceUrl ?? url,
+              imageUrl: item?.imageUrl ?? null,
+              price: item?.price ?? null,
+              currency: item?.currency ?? null,
+              brand: item?.brand ?? null,
+              description: item?.description ?? null,
+            };
+          } catch {
+            return {
+              title: null,
+              url,
+              imageUrl: null,
+              price: null,
+              currency: null,
+              brand: null,
+              description: null,
+            };
           }
-
-          const item = result.items[0];
-          if (!item) return null;
-
-          return {
-            title: item.title,
-            url: item.sourceUrl,
-            imageUrl: item.imageUrl ?? null,
-            price: item.price ?? null,
-            currency: item.currency ?? null,
-            brand: item.brand ?? null,
-            description: item.description ?? null,
-          };
         },
       }),
     },

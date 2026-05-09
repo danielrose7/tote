@@ -162,6 +162,7 @@ export function CollectionChat({
     handleInputChange,
     handleSubmit,
     sendMessage,
+    stop,
     status,
   } = useChat({
     api: '/api/chat',
@@ -389,17 +390,24 @@ export function CollectionChat({
           onKeyDown={handleKeyDown}
           placeholder="Find me a waterproof jacket under $150…"
           rows={1}
-          disabled={status === 'submitted' || status === 'streaming'}
         />
-        <button
-          type="submit"
-          className={styles.sendButton}
-          disabled={
-            !input?.trim() || status === 'submitted' || status === 'streaming'
-          }
-        >
-          Send
-        </button>
+        {status === 'submitted' || status === 'streaming' ? (
+          <button
+            type="button"
+            className={styles.stopButton}
+            onClick={() => stop()}
+          >
+            Stop
+          </button>
+        ) : (
+          <button
+            type="submit"
+            className={styles.sendButton}
+            disabled={!input?.trim()}
+          >
+            Send
+          </button>
+        )}
       </form>
     </div>
   );
