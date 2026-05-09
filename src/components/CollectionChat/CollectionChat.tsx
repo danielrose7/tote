@@ -99,15 +99,21 @@ export function CollectionChat({
 
   const collectionContext = serializeCollection(collection);
 
-  const { messages, input, handleInputChange, handleSubmit, append, status } =
-    useChat({
-      api: '/api/chat',
-      body: {
-        collectionContext,
-        collectionId: collection?.$jazz?.id,
-        seedContext,
-      },
-    });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    sendMessage,
+    status,
+  } = useChat({
+    api: '/api/chat',
+    body: {
+      collectionContext,
+      collectionId: collection?.$jazz?.id,
+      seedContext,
+    },
+  });
 
   const autoSubmittedRef = useRef<string | null>(null);
 
@@ -122,9 +128,9 @@ export function CollectionChat({
     // Submit the seed as the first user message, but only once per seed value
     if (autoSubmittedRef.current !== seedContext) {
       autoSubmittedRef.current = seedContext;
-      append({ role: 'user', content: seedContext });
+      sendMessage({ text: seedContext });
     }
-  }, [seedContext, append]);
+  }, [seedContext, sendMessage]);
 
   function handleOpen() {
     setOpen(true);
