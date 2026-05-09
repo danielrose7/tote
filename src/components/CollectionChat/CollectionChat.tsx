@@ -133,7 +133,7 @@ export function CollectionChat({
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (input?.trim() && status === 'ready') {
+      if (input?.trim() && status !== 'submitted' && status !== 'streaming') {
         handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
       }
     }
@@ -296,7 +296,9 @@ export function CollectionChat({
         <button
           type="submit"
           className={styles.sendButton}
-          disabled={!input?.trim() || status !== 'ready'}
+          disabled={
+            !input?.trim() || status === 'submitted' || status === 'streaming'
+          }
         >
           Send
         </button>
