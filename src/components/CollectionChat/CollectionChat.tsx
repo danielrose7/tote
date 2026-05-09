@@ -99,26 +99,32 @@ export function CollectionChat({
 
   const collectionContext = serializeCollection(collection);
 
-  const { messages, input, handleInputChange, handleSubmit, status } = useChat({
-    api: '/api/chat',
-    body: {
-      collectionContext,
-      collectionId: collection?.$jazz?.id,
-      seedContext,
-    },
-  });
+  const { messages, input, handleInputChange, handleSubmit, append, status } =
+    useChat({
+      api: '/api/chat',
+      body: {
+        collectionContext,
+        collectionId: collection?.$jazz?.id,
+        seedContext,
+      },
+    });
+
+  const autoSubmittedRef = useRef<string | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Auto-open and focus when seedContext is set (triggered from curator warning)
+  // Auto-open and auto-submit when seedContext arrives
   useEffect(() => {
-    if (seedContext) {
-      setOpen(true);
-      setTimeout(() => inputRef.current?.focus(), 100);
+    if (!seedContext) return;
+    setOpen(true);
+    // Submit the seed as the first user message, but only once per seed value
+    if (autoSubmittedRef.current !== seedContext) {
+      autoSubmittedRef.current = seedContext;
+      append({ role: 'user', content: seedContext });
     }
-  }, [seedContext]);
+  }, [seedContext, append]);
 
   function handleOpen() {
     setOpen(true);
@@ -187,17 +193,7 @@ export function CollectionChat({
         {messages.length === 0 && (
           <div className={styles.empty}>
             <span className={styles.emptyIcon}>🔍</span>
-            <span>
-              {seedContext
-                ? 'Searching for a better option…'
-                : 'Ask me to find products for your collection.'}
-            </span>
-            {seedContext && (
-              <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>
-                {seedContext.slice(0, 120)}
-                {seedContext.length > 120 ? '…' : ''}
-              </span>
-            )}
+            <span>Ask me to find products for your collection.</span>
           </div>
         )}
 
