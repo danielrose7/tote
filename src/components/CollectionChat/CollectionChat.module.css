@@ -218,3 +218,40 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.inlineUrlGroup {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.inlineUrl {
+  color: var(--color-accent);
+  text-decoration: underline;
+  word-break: break-all;
+  font-size: inherit;
+}
+
+.inlineAddButton {
+  flex-shrink: 0;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: opacity 0.1s;
+  vertical-align: middle;
+}
+
+.inlineAddButton:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.inlineAddButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

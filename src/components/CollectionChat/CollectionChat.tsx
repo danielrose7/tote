@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import type { co } from 'jazz-tools';
 import { Group } from 'jazz-tools';
 import { useEffect, useRef, useState } from 'react';
+import { fetchMetadata } from '../../app/utils/metadata';
 import { Block as BlockSchema, BlockList } from '../../schema';
 import type { Block } from '../../schema';
 import { useToast } from '../ToastNotification';
@@ -87,6 +88,62 @@ async function addProductToCollection(
   }
 }
 
+const URL_RE = /https?:\/\/[^\s"')>]+/g;
+
+function TextWithAddButtons({
+  text,
+  collection,
+  onAdd,
+}: {
+  text: string;
+  collection: LoadedBlock | null;
+  onAdd: (url: string) => Promise<void>;
+}) {
+  const [adding, setAdding] = useState<Record<string, boolean>>({});
+
+  const urls = Array.from(new Set(text.match(URL_RE) ?? []));
+  if (!collection || urls.length === 0) {
+    return <span>{text}</span>;
+  }
+
+  async function handleAdd(url: string) {
+    setAdding((p) => ({ ...p, [url]: true }));
+    await onAdd(url);
+  }
+
+  // Split text into segments, inserting an Add button after each URL
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(URL_RE)) {
+    const url = match[0];
+    const start = match.index ?? 0;
+    if (start > last) parts.push(text.slice(last, start));
+    parts.push(
+      <span key={url} className={styles.inlineUrlGroup}>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.inlineUrl}
+        >
+          {url}
+        </a>
+        <button
+          type="button"
+          className={styles.inlineAddButton}
+          disabled={adding[url]}
+          onClick={() => handleAdd(url)}
+        >
+          {adding[url] ? '✓' : '+ Add'}
+        </button>
+      </span>,
+    );
+    last = start + url.length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return <span>{parts}</span>;
+}
+
 export function CollectionChat({
   collection,
   seedContext,
@@ -148,6 +205,33 @@ export function CollectionChat({
       if (input?.trim() && status !== 'submitted' && status !== 'streaming') {
         handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
       }
+    }
+  }
+
+  async function handleAddUrl(url: string) {
+    if (!collection) return;
+    try {
+      const meta = await fetchMetadata(url);
+      const product: SuggestedProduct = {
+        url,
+        title: meta?.title ?? null,
+        imageUrl: meta?.imageUrl ?? null,
+        price: meta?.price ?? null,
+        description: meta?.description ?? null,
+      };
+      await addProductToCollection(product, collection);
+      showToast({
+        title: 'Added to collection',
+        description: product.title ?? url,
+        variant: 'success',
+      });
+    } catch (err) {
+      console.error('[CollectionChat] add url failed', err);
+      showToast({
+        title: 'Could not add product',
+        description: 'Try adding it manually via the + button.',
+        variant: 'error',
+      });
     }
   }
 
@@ -216,7 +300,13 @@ export function CollectionChat({
               if (part.type === 'text' && part.text) {
                 return (
                   <div key={idx} className={styles.messageBubble}>
-                    {part.text}
+                    <TextWithAddButtons
+                      text={part.text}
+                      collection={
+                        message.role === 'assistant' ? collection : null
+                      }
+                      onAdd={handleAddUrl}
+                    />
                   </div>
                 );
               }
