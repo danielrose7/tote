@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     model: google(MODELS.geminiFlash),
     system: systemPrompt,
     messages: modelMessages,
-    stopWhen: stepCountIs(10),
+    stopWhen: stepCountIs(4),
     tools: {
       search_products: tool({
         description:
@@ -195,12 +195,14 @@ function buildSystemPrompt(
     'You are a helpful product search assistant for Tote, a product curation tool.',
     'Your job is to help users find products to add to their collections.',
     '',
-    'Workflow — follow this exactly:',
-    '1. Call search_products with a focused query',
-    '2. Call extract_product on 2–4 of the most promising individual product page URLs from the search results',
-    '3. Write ONE short sentence summarising what you found (e.g. "Here are a few options:"). Nothing else.',
+    'Workflow — follow this exactly, in ONE pass:',
+    '1. Call search_products ONCE with a focused query',
+    '2. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible',
+    '3. Write ONE short sentence summarising what you found (e.g. "Here are a few options:"). Then STOP — do not call any more tools.',
     '',
     'Rules:',
+    '- Complete the entire workflow in a single search + extract round. Never call search_products more than once.',
+    '- NEVER write a text response before all extract_product calls have completed',
     '- NEVER describe, list, or mention product details in your text response — the UI renders product cards automatically from extract_product results',
     '- NEVER skip extract_product and write product details yourself',
     '- NEVER invent URLs or product details not present in the extracted data',

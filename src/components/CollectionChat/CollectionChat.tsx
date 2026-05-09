@@ -180,15 +180,17 @@ export function CollectionChat({
   }, [messages]);
 
   // Auto-open and auto-submit when seedContext arrives
+  const sendMessageRef = useRef(sendMessage);
   useEffect(() => {
-    if (!seedContext) return;
+    sendMessageRef.current = sendMessage;
+  });
+
+  useEffect(() => {
+    if (!seedContext || autoSubmittedRef.current === seedContext) return;
+    autoSubmittedRef.current = seedContext;
     setOpen(true);
-    // Submit the seed as the first user message, but only once per seed value
-    if (autoSubmittedRef.current !== seedContext) {
-      autoSubmittedRef.current = seedContext;
-      sendMessage({ text: seedContext });
-    }
-  }, [seedContext, sendMessage]);
+    sendMessageRef.current({ text: seedContext });
+  }, [seedContext]);
 
   function handleOpen() {
     setOpen(true);
