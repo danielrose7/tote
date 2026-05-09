@@ -278,11 +278,11 @@ export function CollectionChat({
           </div>
         ))}
 
-        {status === 'submitted' && messages.at(-1)?.role === 'user' && (
+        {(status === 'submitted' || status === 'streaming') && (
           <div className={`${styles.message} ${styles.messageAssistant}`}>
             <div className={styles.toolStatus}>
               <span className={styles.spinner} />
-              Thinking…
+              {status === 'submitted' ? 'Thinking…' : 'Working…'}
             </div>
           </div>
         )}

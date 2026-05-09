@@ -63,11 +63,13 @@ export async function POST(req: Request) {
 
   const systemPrompt = buildSystemPrompt(collectionContext, seedContext);
 
+  const modelMessages = await convertToModelMessages(messages);
+
   const result = streamText({
     model: google(MODELS.geminiFlash),
     system: systemPrompt,
-    messages: convertToModelMessages(messages),
-    stopWhen: stepCountIs(4),
+    messages: modelMessages,
+    stopWhen: stepCountIs(10),
     tools: {
       search_products: tool({
         description:
@@ -125,12 +127,16 @@ export async function POST(req: Request) {
       }),
     },
 
+    onError(error) {
+      console.error('[chat] streamText error', error);
+    },
+
     async onFinish({ usage }) {
       try {
         // Chat model (Gemini Flash) tokens
         const chatCents = runCostCents(
-          usage.inputTokens,
-          usage.outputTokens,
+          usage.inputTokens ?? 0,
+          usage.outputTokens ?? 0,
           0,
           MODELS.geminiFlash,
         );
@@ -152,8 +158,8 @@ export async function POST(req: Request) {
           userId,
           totalCents,
           `chat:${collectionId ?? 'search'}`,
-          usage.inputTokens,
-          usage.outputTokens,
+          usage.inputTokens ?? 0,
+          usage.outputTokens ?? 0,
           braveSearchCount,
           'chat',
           {
