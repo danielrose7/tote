@@ -20,6 +20,14 @@ export type SectionExtractionResult = {
   durationMs: number;
 };
 
+// Convert protocol-relative URLs (//example.com/...) to https: before URL validation.
+// Gemini sometimes returns the raw src attribute value rather than a resolved absolute URL.
+const normalizeUrlField = z.preprocess(
+  (val) =>
+    typeof val === 'string' && val.startsWith('//') ? `https:${val}` : val,
+  z.string().url().nullish(),
+);
+
 const CollectionItemSchema = z.object({
   sourceUrl: z.string().url(),
   title: z.string().optional(),
@@ -27,7 +35,7 @@ const CollectionItemSchema = z.object({
   currency: z.string().optional(),
   brand: z.string().optional(),
   description: z.string().optional(),
-  imageUrl: z.string().url().nullish(),
+  imageUrl: normalizeUrlField,
 });
 
 const PageSchema = z.discriminatedUnion('pageType', [
@@ -38,7 +46,7 @@ const PageSchema = z.discriminatedUnion('pageType', [
     currency: z.string(),
     brand: z.string(),
     description: z.string().optional(),
-    imageUrl: z.string().url().nullish(),
+    imageUrl: normalizeUrlField,
     images: z.array(z.string().url()).optional(),
   }),
   z.object({
@@ -79,7 +87,7 @@ No markdown fences, no explanation — just the JSON object.
   - currency: 3-letter ISO code (USD, GBP, EUR, etc.)
   - brand: manufacturer or brand name
   - description: optional 1-2 sentence description
-  - imageUrl: optional direct URL to main product image
+  - imageUrl: optional absolute URL (must start with https://) to main product image — prefer JSON-LD image field over img src attributes
   - images: optional array of additional product photo URLs (no logos/icons)
 
 **collection** — a category, search results, or listing page showing multiple products.

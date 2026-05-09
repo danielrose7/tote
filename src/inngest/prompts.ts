@@ -628,9 +628,10 @@ Writing rules:
 </task>
 
 <warning_format>
-Each warning must name: (1) the section affected, (2) exactly what is missing or wrong, (3) a search query written around product attributes and use case — not specific brands or sites, so real search results surface the best current options.
-Format: "[section]: [problem] — search: [query]"
-Only flag things that more URL discovery could actually fix.
+Each warning is a JSON object: { "text": "...", "url": "..." }
+- text: name the section, describe exactly what is missing or wrong
+- url: include the product's sourceUrl if it is already in the collection and is the subject of the warning; omit the field entirely if the product is missing or the URL is unknown
+Only flag things a human could act on — verification tasks, missing products, or known extraction failures.
 </warning_format>
 
 Return only valid JSON matching the schema in your system prompt.`;
@@ -672,7 +673,7 @@ export function buildGapsPrompt(collection: CollectionOutput): string {
 <collection_title>${collection.title}</collection_title>
 
 <warnings>
-${collection.warnings.map((w, i) => `${i + 1}. ${w}`).join('\n')}
+${collection.warnings.map((w, i) => `${i + 1}. ${w.text}${w.url ? ` (${w.url})` : ''}`).join('\n')}
 </warnings>
 
 <task>

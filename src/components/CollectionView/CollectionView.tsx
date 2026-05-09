@@ -27,6 +27,8 @@ import {
   removeFromSelection,
 } from '../../lib/slotHelpers';
 import type { Block } from '../../schema.ts';
+import { CollectionChat } from '../CollectionChat/CollectionChat';
+import { CollectionNotes } from '../CollectionNotes/CollectionNotes';
 import { ProductCard } from '../ProductCard/ProductCard';
 import { SlotSection } from '../SlotSection/SlotSection';
 import { SortableProductItem } from '../SlotSection/SortableProductItem';
@@ -142,6 +144,7 @@ export function CollectionView({
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [isUngroupedReorderMode, setIsUngroupedReorderMode] = useState(false);
+  const [chatSeedContext, setChatSeedContext] = useState<string | undefined>();
 
   // DnD sensors for slot reordering
   const sensors = useSensors(
@@ -435,6 +438,12 @@ export function CollectionView({
               })}
             </span>
           </div>
+          <CollectionNotes
+            collection={collectionBlock}
+            onResolveWithAI={(seed) => {
+              setChatSeedContext(seed);
+            }}
+          />
           {allProducts.length > 0 && (
             <div className={styles.actions}>
               <button
@@ -672,6 +681,11 @@ export function CollectionView({
           )}
         </>
       )}
+      <CollectionChat
+        collection={collectionBlock}
+        seedContext={chatSeedContext}
+        onClose={() => setChatSeedContext(undefined)}
+      />
     </div>
   );
 }

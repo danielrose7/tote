@@ -189,6 +189,6 @@ export interface CollectionOutput {
   title: string;
   intro: string;
   sections: CollectionSection[];
-  warnings: string[];
+  warnings: { text: string; url?: string }[];
   gaps?: CurationGap[];
 }

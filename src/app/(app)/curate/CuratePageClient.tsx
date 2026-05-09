@@ -66,7 +66,6 @@ export function CuratePageClient({
     sessionId,
     questions,
     questionRound,
-    selections,
     notes,
     progress,
     extractionProgress,
@@ -80,7 +79,6 @@ export function CuratePageClient({
     realtimeEnabled,
     setSessionId,
     setPhase,
-    setSelections,
     setNotes,
     setError,
     setCopied,
@@ -92,6 +90,9 @@ export function CuratePageClient({
   const { queueSectionForExtraction, handleReconnect } =
     useCuratorSession(sessionId);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const [answersComplete, setAnswersComplete] = useState(false);
+
   // Initialize from props on mount; reset store on unmount
   // biome-ignore lint/correctness/useExhaustiveDependencies: initialize store once per page load
   useEffect(() => {
@@ -100,6 +101,11 @@ export function CuratePageClient({
     return () => reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Reset form completion flag when questions change (new round)
+  useEffect(() => {
+    setAnswersComplete(false);
+  }, [questions]);
 
   const { showToast } = useToast();
   const me = useAccount(JazzAccount, {
@@ -370,18 +376,15 @@ export function CuratePageClient({
     });
   }, [progress, phase]);
 
-  const answersComplete = questions.every(
-    (q) => (selections[q.id]?.length ?? 0) > 0,
-  );
-
-  async function handleAnswers(e: React.FormEvent) {
+  async function handleAnswers(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!answersComplete || !questionRound) return;
 
+    const formData = new FormData(e.currentTarget);
     const answers: Answers = Object.fromEntries(
       questions.map((q) => [
         q.id,
-        buildAnswerString(selections[q.id] ?? [], notes[q.id] ?? ''),
+        buildAnswerString(formData.getAll(q.id) as string[], notes[q.id] ?? ''),
       ]),
     );
 
@@ -529,80 +532,61 @@ export function CuratePageClient({
               {(phase === 'interview-round-1' ||
                 phase === 'interview-round-2') &&
                 questions.length > 0 && (
-                  <form onSubmit={handleAnswers} className={styles.form}>
+                  <form
+                    ref={formRef}
+                    key={questionRound}
+                    onSubmit={handleAnswers}
+                    onChange={(e) => {
+                      const fd = new FormData(e.currentTarget);
+                      setAnswersComplete(
+                        questions.every((q) => fd.getAll(q.id).length > 0),
+                      );
+                    }}
+                    className={styles.form}
+                  >
                     <p className={styles.subheading}>
                       {questionRound === 2
                         ? `Round 2 of 2. We've researched ${sessionTitle || topic || 'the category'} — these questions help us dial in the specifics before we build.`
                         : `Round 1 of 2. After you answer, we'll research the category (~30–90s), then come back with a few sharper follow-up questions.`}
                     </p>
 
-                    {questions.map((q) => {
-                      const selected = selections[q.id] ?? [];
-                      return (
-                        <div key={q.id} className={styles.inputGroup}>
-                          <span className={styles.label}>{q.text}</span>
-                          <div className={styles.interviewOptions}>
-                            {q.options.map((opt) => (
-                              <label
-                                key={opt.value}
-                                className={styles.interviewOption}
-                                data-selected={selected.includes(opt.value)}
-                              >
-                                <input
-                                  type={q.multi ? 'checkbox' : 'radio'}
-                                  name={q.id}
-                                  value={opt.value}
-                                  checked={selected.includes(opt.value)}
-                                  onChange={(e) => {
-                                    setSelections((prev) => {
-                                      const cur = prev[q.id] ?? [];
-                                      if (q.multi) {
-                                        if (
-                                          opt.value === 'No constraints' &&
-                                          e.target.checked
-                                        )
-                                          return {
-                                            ...prev,
-                                            [q.id]: ['No constraints'],
-                                          };
-                                        const next = e.target.checked
-                                          ? [
-                                              ...cur.filter(
-                                                (v) => v !== 'No constraints',
-                                              ),
-                                              opt.value,
-                                            ]
-                                          : cur.filter((v) => v !== opt.value);
-                                        return { ...prev, [q.id]: next };
-                                      }
-                                      return { ...prev, [q.id]: [opt.value] };
-                                    });
-                                  }}
-                                />
-                                <span>
-                                  <strong>{opt.value}</strong>
-                                  <span className={styles.optionDescription}>
-                                    {opt.description}
-                                  </span>
+                    {questions.map((q) => (
+                      <div key={q.id} className={styles.inputGroup}>
+                        <span className={styles.label}>{q.text}</span>
+                        <div className={styles.interviewOptions}>
+                          {q.options.map((opt) => (
+                            <label
+                              key={opt.value}
+                              className={styles.interviewOption}
+                            >
+                              <input
+                                type={q.multi ? 'checkbox' : 'radio'}
+                                name={q.id}
+                                value={opt.value}
+                              />
+                              <span>
+                                <strong>{opt.value}</strong>
+                                <span className={styles.optionDescription}>
+                                  {opt.description}
                                 </span>
-                              </label>
-                            ))}
-                          </div>
-                          <input
-                            type="text"
-                            className={styles.input}
-                            value={notes[q.id] ?? ''}
-                            onChange={(e) =>
-                              setNotes((prev) => ({
-                                ...prev,
-                                [q.id]: e.target.value,
-                              }))
-                            }
-                            placeholder="Additional notes (optional)"
-                          />
+                              </span>
+                            </label>
+                          ))}
                         </div>
-                      );
-                    })}
+                        <input
+                          type="text"
+                          className={styles.input}
+                          value={notes[q.id] ?? ''}
+                          onChange={(e) =>
+                            setNotes((prev) => ({
+                              ...prev,
+                              [q.id]: e.target.value,
+                            }))
+                          }
+                          placeholder="Additional notes (optional)"
+                        />
+                      </div>
+                    ))}
 
                     <div className={styles.actions}>
                       <button
@@ -924,9 +908,19 @@ export function CuratePageClient({
                         importPayload.warnings.length > 0 && (
                           <div className={styles.warnings}>
                             {importPayload.warnings.map((w) => (
-                              <p key={w} className={styles.warning}>
-                                {w}
-                              </p>
+                              <div key={w.text} className={styles.warning}>
+                                <p>{w.text}</p>
+                                {w.url && (
+                                  <a
+                                    href={w.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.warningLink}
+                                  >
+                                    ↗
+                                  </a>
+                                )}
+                              </div>
                             ))}
                           </div>
                         )}

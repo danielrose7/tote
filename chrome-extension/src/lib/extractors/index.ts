@@ -669,6 +669,7 @@ const SHOPIFY_SIZE_REGEX =
 // Known gallery container selectors, ordered by specificity
 const GALLERY_SELECTORS = [
   'media-gallery',
+  'product-media',
   'product-media-carousel',
   'scroll-carousel',
   'slider-component',

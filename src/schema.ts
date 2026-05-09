@@ -63,6 +63,9 @@ export const Block = co.map({
   get children() {
     return BlockList.optional();
   },
+  get notes() {
+    return CollectionNoteList.optional();
+  },
   // Legacy flat storage (kept for backwards compatibility)
   parentId: z.string().optional(),
   sortOrder: z.number().optional(),
@@ -71,6 +74,15 @@ export const Block = co.map({
 
 /** List of blocks - defined after Block */
 export const BlockList = co.list(Block);
+
+export const CollectionNote = co.map({
+  text: z.string(),
+  url: z.string().optional(),
+  done: z.boolean().optional(),
+  createdAt: z.date(),
+});
+
+export const CollectionNoteList = co.list(CollectionNote);
 
 // =============================================================================
 // Sharing Schema

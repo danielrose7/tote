@@ -66,9 +66,11 @@ export function useCuratorSession(sessionId: string | null) {
       if (document.visibilityState === 'visible') onWakeRef.current();
     };
     window.addEventListener('online', handler);
+    window.addEventListener('focus', handler);
     document.addEventListener('visibilitychange', visHandler);
     return () => {
       window.removeEventListener('online', handler);
+      window.removeEventListener('focus', handler);
       document.removeEventListener('visibilitychange', visHandler);
     };
   }, [sessionId]);

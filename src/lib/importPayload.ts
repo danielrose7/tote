@@ -1,5 +1,11 @@
 import { Group } from 'jazz-tools';
-import { Block, BlockList, type JazzAccount } from '../schema';
+import {
+  Block,
+  BlockList,
+  CollectionNote,
+  CollectionNoteList,
+  type JazzAccount,
+} from '../schema';
 import { normalizeUrl } from './normalizeUrl';
 
 export interface ImportItem {
@@ -27,7 +33,7 @@ export interface ImportPayload {
   intro?: string;
   tags?: string[];
   sections: ImportSection[];
-  warnings?: string[];
+  warnings?: { text: string; url?: string }[];
   sourceMetadata?: {
     sourceType?: string;
     importedAt?: string;
@@ -113,6 +119,21 @@ export function createCollectionFromPayload(
   const collectionChildren = BlockList.create(sectionBlocks, {
     owner: ownerGroup,
   });
+
+  const noteBlocks =
+    payload.warnings && payload.warnings.length > 0
+      ? payload.warnings.map((w) =>
+          CollectionNote.create(
+            { text: w.text, url: w.url, done: false, createdAt: new Date() },
+            { owner: ownerGroup },
+          ),
+        )
+      : [];
+  const notes =
+    noteBlocks.length > 0
+      ? CollectionNoteList.create(noteBlocks, { owner: ownerGroup })
+      : undefined;
+
   return Block.create(
     {
       type: 'collection',
@@ -126,6 +147,7 @@ export function createCollectionFromPayload(
         sharingGroupId: ownerGroup.$jazz.id,
       },
       children: collectionChildren,
+      notes,
       createdAt: new Date(),
     },
     { owner: ownerGroup },

@@ -99,7 +99,9 @@ Every collection must conform to this exact JSON shape:
       ]
     }
   ],
-  "warnings": ["honest gaps and weak coverage needing human review"]
+  "warnings": [
+    { "text": "honest gap or weak coverage needing human review", "url": "https://product-page-url-if-known-else-omit" }
+  ]
 }
 \`\`\`
 `;
