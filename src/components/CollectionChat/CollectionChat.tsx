@@ -221,40 +221,46 @@ export function CollectionChat({
                 );
               }
 
+              // AI SDK v6: untyped tools come through as 'dynamic-tool' parts
+              if (part.type !== 'dynamic-tool') return null;
+
               if (
-                part.type === 'tool-invocation' &&
-                part.toolInvocation.toolName === 'search_products' &&
-                part.toolInvocation.state === 'call'
+                part.toolName === 'search_products' &&
+                (part.state === 'input-streaming' ||
+                  part.state === 'input-available')
               ) {
+                const query = (part.input as { query?: string })?.query;
                 return (
                   <div key={idx} className={styles.toolStatus}>
                     <span className={styles.spinner} />
-                    Searching for "{part.toolInvocation.args.query}"…
+                    {query ? `Searching for "${query}"…` : 'Searching…'}
                   </div>
                 );
               }
 
               if (
-                part.type === 'tool-invocation' &&
-                part.toolInvocation.toolName === 'extract_product' &&
-                part.toolInvocation.state === 'call'
+                part.toolName === 'extract_product' &&
+                (part.state === 'input-streaming' ||
+                  part.state === 'input-available')
               ) {
-                const url = part.toolInvocation.args.url as string;
+                const url = (part.input as { url?: string })?.url;
+                let hostname = url ?? '';
+                try {
+                  if (url) hostname = new URL(url).hostname;
+                } catch {}
                 return (
                   <div key={idx} className={styles.toolStatus}>
                     <span className={styles.spinner} />
-                    Looking up {new URL(url).hostname}…
+                    Looking up {hostname}…
                   </div>
                 );
               }
 
               if (
-                part.type === 'tool-invocation' &&
-                part.toolInvocation.toolName === 'extract_product' &&
-                part.toolInvocation.state === 'result'
+                part.toolName === 'extract_product' &&
+                part.state === 'output-available'
               ) {
-                const product = part.toolInvocation
-                  .result as SuggestedProduct | null;
+                const product = part.output as SuggestedProduct | null;
                 if (!product?.url) return null;
                 return (
                   <ProductSuggestionCard
