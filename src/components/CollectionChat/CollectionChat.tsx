@@ -312,15 +312,30 @@ export function CollectionChat({
                 );
               }
 
-              // AI SDK v6: untyped tools come through as 'dynamic-tool' parts
-              if (part.type !== 'dynamic-tool') return null;
+              // AI SDK v6: typed server tools come through as 'tool-{name}' parts
+              // (not 'dynamic-tool'). Check by type string directly.
+              const p = part as {
+                type: string;
+                state?: string;
+                input?: unknown;
+                output?: unknown;
+              };
+              const isSearch = p.type === 'tool-search_products';
+              const isExtract = p.type === 'tool-extract_product';
 
               if (
-                part.toolName === 'search_products' &&
-                (part.state === 'input-streaming' ||
-                  part.state === 'input-available')
+                !isSearch &&
+                !isExtract &&
+                p.type !== 'dynamic-tool' &&
+                p.type !== 'step-start'
+              )
+                return null;
+
+              if (
+                isSearch &&
+                (p.state === 'input-streaming' || p.state === 'input-available')
               ) {
-                const query = (part.input as { query?: string })?.query;
+                const query = (p.input as { query?: string })?.query;
                 return (
                   <div key={idx} className={styles.toolStatus}>
                     <span className={styles.spinner} />
@@ -330,11 +345,10 @@ export function CollectionChat({
               }
 
               if (
-                part.toolName === 'extract_product' &&
-                (part.state === 'input-streaming' ||
-                  part.state === 'input-available')
+                isExtract &&
+                (p.state === 'input-streaming' || p.state === 'input-available')
               ) {
-                const url = (part.input as { url?: string })?.url;
+                const url = (p.input as { url?: string })?.url;
                 let hostname = url ?? '';
                 try {
                   if (url) hostname = new URL(url).hostname;
@@ -347,11 +361,8 @@ export function CollectionChat({
                 );
               }
 
-              if (
-                part.toolName === 'extract_product' &&
-                part.state === 'output-available'
-              ) {
-                const product = part.output as SuggestedProduct | null;
+              if (isExtract && p.state === 'output-available') {
+                const product = p.output as SuggestedProduct | null;
                 if (!product?.url) return null;
                 return (
                   <ProductSuggestionCard
