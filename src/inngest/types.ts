@@ -101,6 +101,7 @@ export interface FramingBrief {
   successDefinition: string;
   avoid: string[];
   planningNotes: string[];
+  correctionExample?: string;
 }
 
 export interface CollectionItem {

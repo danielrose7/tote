@@ -645,7 +645,10 @@ export function CuratePageClient({
                       rows={3}
                       value={briefCorrection}
                       onChange={(e) => setBriefCorrection(e.target.value)}
-                      placeholder="e.g. She's in her 70s, not a new mom — please remove baby products from the brief"
+                      placeholder={
+                        framingBrief.correctionExample ??
+                        "e.g. She's in her 70s, not a new mom — please remove baby products from the brief"
+                      }
                     />
                   </div>
                   <div className={styles.actions}>

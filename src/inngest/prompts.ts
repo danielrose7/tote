@@ -99,6 +99,7 @@ export const FramingBriefSchema = z.object({
   successDefinition: z.string(),
   avoid: z.array(z.string()).max(6),
   planningNotes: z.array(z.string()).max(6),
+  correctionExample: z.string().optional(),
 });
 
 const categoryResearchJsonSchema = JSON.stringify(
@@ -393,6 +394,7 @@ Define:
 - what success looks like
 - what to avoid
 - practical planning notes
+- correctionExample: one short sentence a real user might type to correct this brief — a plausible misreading or wrong assumption the model could have made, written in first-person as if from the user (e.g. "She's in her 70s, not a new mom — please remove baby products"). Make it specific to this brief's actual content, not a generic example.
 </task>
 
 Use the market landscape as awareness of the category, but keep the brief centered on the user's scenario and constraints.
