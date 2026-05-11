@@ -102,3 +102,94 @@
 .visitLink:hover {
   color: var(--color-accent);
 }
+
+.collectionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.625rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  width: 100%;
+}
+
+.collectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.collectionLabel {
+  margin: 0 0 0.125rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.collectionProducts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.collectionProduct {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.collectionImage {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+}
+
+.collectionProductBody {
+  min-width: 0;
+}
+
+.collectionProductTitle {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.collectionProductPrice {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary);
+}
+
+.collectionProductActions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.smallAddButton {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 500;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.smallAddButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

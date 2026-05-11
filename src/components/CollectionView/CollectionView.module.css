@@ -142,6 +142,16 @@
 	color: var(--color-text-tertiary);
 }
 
+.curatorLink {
+	font-size: var(--font-size-sm);
+	color: var(--color-accent);
+	text-decoration: none;
+}
+
+.curatorLink:hover {
+	text-decoration: underline;
+}
+
 /* Actions */
 .actions {
 	display: flex;

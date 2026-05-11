@@ -41,6 +41,8 @@ export async function GET(
     extractedSlugs: session?.extractedSlugs ?? null,
     tokenUsage: session?.tokenUsage ?? null,
     refinementUrlSections: session?.refinementUrlSections ?? null,
+    collectionId: session?.collectionId ?? null,
+    collectionImportedAt: session?.collectionImportedAt ?? null,
     progressLog: progressLog.length > 0 ? progressLog : null,
   });
 }

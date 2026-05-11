@@ -16,6 +16,23 @@ import { slugify } from './slugify';
 
 export type LoadedBlock = co.loaded<typeof Block>;
 
+function publicCollectionData(
+  data: LoadedBlock['collectionData'],
+  overrides: Partial<NonNullable<LoadedBlock['collectionData']>> = {},
+): LoadedBlock['collectionData'] {
+  return {
+    color: data?.color,
+    description: data?.description,
+    viewMode: data?.viewMode,
+    publicLayout: data?.publicLayout,
+    budget: data?.budget,
+    allowCloning: data?.allowCloning,
+    childBlockIds: data?.childBlockIds,
+    slug: data?.slug,
+    ...overrides,
+  };
+}
+
 export type ProductStatus = 'considering' | 'selected' | 'ruled-out';
 export type ViewMode = 'grid' | 'table';
 export type BlockType = 'project' | 'collection' | 'slot' | 'product';
@@ -123,15 +140,14 @@ export function publishCollection(
     {
       type: 'collection',
       name: sourceCollection.name,
-      collectionData: {
-        ...sourceCollection.collectionData,
+      collectionData: publicCollectionData(sourceCollection.collectionData, {
         publicLayout:
           sourceCollection.collectionData?.publicLayout ?? 'minimal',
         allowCloning,
         sourceId: sourceCollection.$jazz.id, // Points back to draft
         publishedId: undefined, // Published clone doesn't have its own published version
         publishedAt: new Date(),
-      },
+      }),
       children: publishedChildrenList,
       createdAt: sourceCollection.createdAt,
     },

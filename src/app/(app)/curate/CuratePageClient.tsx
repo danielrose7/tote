@@ -432,13 +432,38 @@ export function CuratePageClient({
     if (!importPayload || !me.$isLoaded || !me.root) return;
     setImporting(true);
     try {
-      const collectionBlock = createCollectionFromPayload(importPayload, me);
+      const collectionBlock = createCollectionFromPayload(importPayload, me, {
+        curatorSessionId: sessionId ?? undefined,
+        curatorTopic: topic || undefined,
+        curatorBriefJson: framingBrief
+          ? JSON.stringify(framingBrief)
+          : undefined,
+        curatorVersion: 1,
+      });
 
       if (!me.root.blocks) {
         const group = Group.create({ owner: me });
         me.root.$jazz.set('blocks', BlockList.create([collectionBlock], group));
       } else if (me.root.blocks.$isLoaded) {
         me.root.blocks.$jazz.push(collectionBlock);
+      }
+
+      if (sessionId) {
+        const linkRes = await fetch('/api/curate/link-collection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            collectionId: collectionBlock.$jazz.id,
+          }),
+        });
+        if (!linkRes.ok) {
+          console.warn('[curate] failed to link collection to session', {
+            sessionId,
+            collectionId: collectionBlock.$jazz.id,
+            status: linkRes.status,
+          });
+        }
       }
 
       window.location.href = `/collections/${collectionBlock.$jazz.id}`;

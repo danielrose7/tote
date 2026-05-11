@@ -130,6 +130,36 @@ function isCfFailureTitle(title?: string): boolean {
   return CF_FAILURE_TITLES.some((t) => lower.includes(t));
 }
 
+function normalizeCfCollectionItems(
+  items: Partial<ExtractedItem>[] | undefined,
+): ExtractedItem[] | undefined {
+  if (!Array.isArray(items)) return undefined;
+
+  return items
+    .map((item) => {
+      const sourceUrl =
+        typeof item.sourceUrl === 'string'
+          ? item.sourceUrl
+          : typeof (item as { url?: unknown }).url === 'string'
+            ? (item as { url: string }).url
+            : undefined;
+      if (!sourceUrl) return null;
+      return {
+        sourceUrl,
+        title: item.title,
+        description: item.description,
+        price: item.price,
+        currency: item.currency,
+        brand: item.brand,
+        availability: item.availability,
+        imageUrl: item.imageUrl,
+        images: item.images,
+        pageType: 'product' as const,
+      };
+    })
+    .filter((item): item is ExtractedItem => item !== null);
+}
+
 /** Call the CF Browser Run worker for metadata extraction. */
 export async function extractViaCf(url: string): Promise<ExtractedItem | null> {
   const workerUrl = process.env.EXTRACTOR_WORKER_URL;
@@ -181,7 +211,7 @@ export async function extractViaCf(url: string): Promise<ExtractedItem | null> {
       availability: d.availability,
       imageUrl: d.imageUrl,
       pageType: d.pageType ?? 'product',
-      collectionItems: d.collectionItems,
+      collectionItems: normalizeCfCollectionItems(d.collectionItems),
     };
   } catch (err) {
     console.warn('[server-extraction] cf:error', { url, error: String(err) });

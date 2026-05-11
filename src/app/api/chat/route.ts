@@ -25,6 +25,10 @@ const google = createGoogleGenerativeAI({
 
 interface CollectionContext {
   title: string;
+  description?: string;
+  curatorSessionId?: string;
+  curatorTopic?: string;
+  curatorBriefJson?: string;
   items: { title: string; url: string; price?: string }[];
 }
 
@@ -112,26 +116,34 @@ export async function POST(req: Request) {
               extractionCosts.geminiOutputTokens += result.usage.outputTokens;
             }
 
-            const item = result.items[0];
-            return {
-              title: item?.title ?? null,
-              url: item?.sourceUrl ?? url,
-              imageUrl: item?.imageUrl ?? null,
-              price: item?.price ?? null,
-              currency: item?.currency ?? null,
-              brand: item?.brand ?? null,
-              description: item?.description ?? null,
-            };
+            const items = result.items
+              .filter((i) => i.title || i.imageUrl || i.price)
+              .slice(0, result.tier === 'collection-expanded' ? 3 : 1)
+              .map((item) => ({
+                title: item.title ?? null,
+                url: item.sourceUrl ?? url,
+                imageUrl: item.imageUrl ?? null,
+                price: item.price ?? null,
+                currency: item.currency ?? null,
+                brand: item.brand ?? null,
+                description: item.description ?? null,
+              }));
+            if (items.length === 0) return null;
+            if (result.tier === 'collection-expanded') {
+              let hostname = url;
+              try {
+                hostname = new URL(url).hostname.replace(/^www\./, '');
+              } catch {}
+              return {
+                type: 'collection',
+                title: `Products from ${hostname}`,
+                url,
+                products: items,
+              };
+            }
+            return items[0];
           } catch {
-            return {
-              title: null,
-              url,
-              imageUrl: null,
-              price: null,
-              currency: null,
-              brand: null,
-              description: null,
-            };
+            return null;
           }
         },
       }),
@@ -198,11 +210,12 @@ function buildSystemPrompt(
     'Workflow — follow this exactly, in ONE pass:',
     '1. Call search_products ONCE with a focused query',
     '2. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible',
-    '3. Write ONE short sentence summarising what you found (e.g. "Here are a few options:"). Then STOP — do not call any more tools.',
+    '3. STOP after extract_product calls complete — do not write a generic text summary because the UI renders product cards automatically.',
     '',
     'Rules:',
     '- Complete the entire workflow in a single search + extract round. Never call search_products more than once.',
     '- NEVER write a text response before all extract_product calls have completed',
+    '- NEVER write generic intro text like "Here are a few options" after tool calls',
     '- NEVER describe, list, or mention product details in your text response — the UI renders product cards automatically from extract_product results',
     '- NEVER skip extract_product and write product details yourself',
     '- NEVER invent URLs or product details not present in the extracted data',
@@ -211,6 +224,20 @@ function buildSystemPrompt(
 
   if (collection) {
     parts.push('', `Current collection: "${collection.title}"`);
+    if (collection.description) {
+      parts.push(`Collection intro: ${collection.description}`);
+    }
+    if (collection.curatorTopic) {
+      parts.push(`Original curator request: ${collection.curatorTopic}`);
+    }
+    if (collection.curatorBriefJson) {
+      parts.push(
+        '',
+        'Original curator framing brief for this collection:',
+        collection.curatorBriefJson,
+        'Use this brief as the strongest source of intent, constraints, taste direction, and avoidances.',
+      );
+    }
     if (collection.items.length > 0) {
       const itemList = collection.items
         .slice(0, 20)

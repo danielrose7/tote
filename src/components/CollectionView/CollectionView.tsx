@@ -437,6 +437,14 @@ export function CollectionView({
                 day: 'numeric',
               })}
             </span>
+            {collectionData?.curatorSessionId && !collectionData.sourceId && (
+              <a
+                href={`/curate/${collectionData.curatorSessionId}`}
+                className={styles.curatorLink}
+              >
+                Created by curator
+              </a>
+            )}
           </div>
           <CollectionNotes
             collection={collectionBlock}

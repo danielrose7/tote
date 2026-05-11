@@ -41,6 +41,13 @@ export interface ImportPayload {
   };
 }
 
+export interface CreateCollectionOptions {
+  curatorSessionId?: string;
+  curatorTopic?: string;
+  curatorBriefJson?: string;
+  curatorVersion?: number;
+}
+
 export function validatePayload(json: unknown): ImportPayload {
   if (!json || typeof json !== 'object' || Array.isArray(json)) {
     throw new Error('Invalid JSON: expected an object');
@@ -77,6 +84,7 @@ export function validatePayload(json: unknown): ImportPayload {
 export function createCollectionFromPayload(
   payload: ImportPayload,
   me: InstanceType<typeof JazzAccount>,
+  options: CreateCollectionOptions = {},
 ): InstanceType<typeof Block> {
   const ownerGroup = Group.create({ owner: me });
   ownerGroup.addMember(me, 'admin');
@@ -145,6 +153,13 @@ export function createCollectionFromPayload(
         publicLayout: 'minimal',
         allowCloning: true,
         sharingGroupId: ownerGroup.$jazz.id,
+        curatorSessionId: options.curatorSessionId,
+        curatorTopic: options.curatorTopic,
+        curatorBriefJson: options.curatorBriefJson,
+        curatorImportedAt: options.curatorSessionId
+          ? new Date().toISOString()
+          : undefined,
+        curatorVersion: options.curatorVersion,
       },
       children: collectionChildren,
       notes,

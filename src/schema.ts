@@ -35,6 +35,13 @@ const CollectionData = z.object({
   publishedAt: z.date().optional(), // When last published
   childBlockIds: z.array(z.string()).optional(), // IDs of child blocks (for public view)
   slug: z.string().optional(), // URL slug for friendly share links
+  // Curator provenance fields. These point back to the private Neon curator
+  // session that produced this editable Jazz collection.
+  curatorSessionId: z.string().optional(),
+  curatorTopic: z.string().optional(),
+  curatorBriefJson: z.string().optional(),
+  curatorImportedAt: z.string().optional(),
+  curatorVersion: z.number().optional(),
 });
 
 const SlotData = z.object({

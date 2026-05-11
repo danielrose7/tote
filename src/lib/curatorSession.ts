@@ -42,6 +42,8 @@ export interface CuratorSessionData {
   refinementUrlSections?: { title: string; slug: string; urls: string[] }[];
   lastProgressMessage?: string;
   queryType?: QueryType;
+  collectionId?: string;
+  collectionImportedAt?: string;
 }
 
 export interface CuratorSessionResult extends CuratorSessionData {

@@ -10,7 +10,9 @@ import type { Block } from '../../schema';
 import { useToast } from '../ToastNotification';
 import styles from './CollectionChat.module.css';
 import {
+  CollectionSuggestionCard,
   ProductSuggestionCard,
+  type SuggestedCollection,
   type SuggestedProduct,
 } from './ProductSuggestionCard';
 
@@ -24,6 +26,10 @@ interface CollectionChatProps {
 
 interface CollectionContext {
   title: string;
+  description?: string;
+  curatorSessionId?: string;
+  curatorTopic?: string;
+  curatorBriefJson?: string;
   items: { title: string; url: string; price?: string }[];
 }
 
@@ -51,7 +57,14 @@ function serializeCollection(
       }
     }
   }
-  return { title: collection.name ?? 'Collection', items };
+  return {
+    title: collection.name ?? 'Collection',
+    description: collection.collectionData?.description ?? undefined,
+    curatorSessionId: collection.collectionData?.curatorSessionId ?? undefined,
+    curatorTopic: collection.collectionData?.curatorTopic ?? undefined,
+    curatorBriefJson: collection.collectionData?.curatorBriefJson ?? undefined,
+    items,
+  };
 }
 
 async function addProductToCollection(
@@ -89,6 +102,58 @@ async function addProductToCollection(
 }
 
 const URL_RE = /https?:\/\/[^\s"')>]+/g;
+
+function isGenericOptionsIntro(text: string): boolean {
+  return /^here (are|is) (a few|some|several|the) (options|option|picks|results):?$/i.test(
+    text.trim(),
+  );
+}
+
+function getSuggestedProducts(output: unknown): SuggestedProduct[] {
+  if (
+    output &&
+    typeof output === 'object' &&
+    (output as { type?: unknown }).type === 'collection'
+  ) {
+    return [];
+  }
+  const products = Array.isArray(output) ? output : [output];
+  return products.filter(
+    (product): product is SuggestedProduct =>
+      Boolean(
+        product &&
+          typeof product === 'object' &&
+          'url' in product &&
+          typeof product.url === 'string',
+      ),
+  );
+}
+
+function getSuggestedCollection(output: unknown): SuggestedCollection | null {
+  if (
+    !output ||
+    typeof output !== 'object' ||
+    (output as { type?: unknown }).type !== 'collection'
+  ) {
+    return null;
+  }
+  const candidate = output as {
+    title?: unknown;
+    url?: unknown;
+    products?: unknown;
+  };
+  if (typeof candidate.url !== 'string' || !Array.isArray(candidate.products)) {
+    return null;
+  }
+  const products = getSuggestedProducts(candidate.products);
+  if (products.length === 0) return null;
+  return {
+    type: 'collection',
+    title: typeof candidate.title === 'string' ? candidate.title : null,
+    url: candidate.url,
+    products,
+  };
+}
 
 function TextWithAddButtons({
   text,
@@ -290,17 +355,36 @@ export function CollectionChat({
           </div>
         )}
 
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`${styles.message} ${
-              message.role === 'user'
-                ? styles.messageUser
-                : styles.messageAssistant
-            }`}
-          >
-            {message.parts.map((part, idx) => {
+        {messages.map((message) => {
+          const hasProductCards = message.parts.some((part) => {
+            const p = part as { type: string; state?: string; output?: unknown };
+            return (
+              p.type === 'tool-extract_product' &&
+              p.state === 'output-available' &&
+              (getSuggestedProducts(p.output).length > 0 ||
+                getSuggestedCollection(p.output) !== null)
+            );
+          });
+
+          return (
+            <div
+              key={message.id}
+              className={`${styles.message} ${
+                message.role === 'user'
+                  ? styles.messageUser
+                  : styles.messageAssistant
+              }`}
+            >
+              {message.parts.map((part, idx) => {
               if (part.type === 'text' && part.text) {
+                if (
+                  message.role === 'assistant' &&
+                  hasProductCards &&
+                  isGenericOptionsIntro(part.text)
+                ) {
+                  return null;
+                }
+
                 return (
                   <div key={idx} className={styles.messageBubble}>
                     <TextWithAddButtons
@@ -364,23 +448,43 @@ export function CollectionChat({
               }
 
               if (isExtract && p.state === 'output-available') {
-                const product = p.output as SuggestedProduct | null;
-                if (!product?.url) return null;
+                const suggestedCollection = getSuggestedCollection(p.output);
+                if (suggestedCollection) {
+                  return (
+                    <CollectionSuggestionCard
+                      key={idx}
+                      collection={suggestedCollection}
+                      onAddProduct={
+                        collection ? handleAddProduct : undefined
+                      }
+                    />
+                  );
+                }
+
+                const products = getSuggestedProducts(p.output);
+                if (products.length === 0) return null;
                 return (
-                  <ProductSuggestionCard
-                    key={idx}
-                    product={product}
-                    onAdd={
-                      collection ? () => handleAddProduct(product) : undefined
-                    }
-                  />
+                  <div key={idx} className={styles.productResults}>
+                    {products.map((product) => (
+                      <ProductSuggestionCard
+                        key={product.url}
+                        product={product}
+                        onAdd={
+                          collection
+                            ? () => handleAddProduct(product)
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
                 );
               }
 
               return null;
             })}
-          </div>
-        ))}
+            </div>
+          );
+        })}
 
         {(status === 'submitted' || status === 'streaming') && (
           <div className={`${styles.message} ${styles.messageAssistant}`}>
