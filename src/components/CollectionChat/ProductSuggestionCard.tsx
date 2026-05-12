@@ -36,6 +36,23 @@ function formatPrice(product: SuggestedProduct): string | null {
     : (product.price ?? null);
 }
 
+function normalizeDisplayUrl(url: string | null, baseUrl?: string): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url, baseUrl).href;
+  } catch {
+    return url.startsWith('//') ? `https:${url}` : url;
+  }
+}
+
+function getHostname(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return 'this store';
+  }
+}
+
 export function ProductSuggestionCard({
   product,
   onAdd,
@@ -48,16 +65,27 @@ export function ProductSuggestionCard({
   }
 
   const displayPrice = formatPrice(product);
+  const imageUrl = normalizeDisplayUrl(product.imageUrl, product.url);
+  const productUrl = normalizeDisplayUrl(product.url) ?? product.url;
 
   return (
     <div className={styles.card}>
-      {product.imageUrl && (
-        <img
-          src={product.imageUrl}
-          alt={product.title ?? ''}
-          className={styles.image}
-          loading="lazy"
-        />
+      {imageUrl && (
+        <a
+          href={productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.imageLink}
+          aria-label={`Open ${product.title ?? 'product'}`}
+        >
+          <img
+            src={imageUrl}
+            alt={product.title ?? ''}
+            className={styles.image}
+            loading="lazy"
+          />
+          <span className={styles.imageOverlay} aria-hidden="true" />
+        </a>
       )}
       <div className={styles.body}>
         <p className={styles.title}>{product.title ?? 'Untitled product'}</p>
@@ -82,7 +110,7 @@ export function ProductSuggestionCard({
             </button>
           )}
           <a
-            href={product.url}
+            href={productUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.visitLink}
@@ -104,6 +132,8 @@ function CollectionProductRow({
 }) {
   const [added, setAdded] = useState(false);
   const displayPrice = formatPrice(product);
+  const imageUrl = normalizeDisplayUrl(product.imageUrl, product.url);
+  const productUrl = normalizeDisplayUrl(product.url) ?? product.url;
 
   function handleAdd() {
     onAdd?.();
@@ -112,13 +142,22 @@ function CollectionProductRow({
 
   return (
     <div className={styles.collectionProduct}>
-      {product.imageUrl && (
-        <img
-          src={product.imageUrl}
-          alt={product.title ?? ''}
-          className={styles.collectionImage}
-          loading="lazy"
-        />
+      {imageUrl && (
+        <a
+          href={productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.collectionImageLink}
+          aria-label={`Open ${product.title ?? 'product'}`}
+        >
+          <img
+            src={imageUrl}
+            alt={product.title ?? ''}
+            className={styles.collectionImage}
+            loading="lazy"
+          />
+          <span className={styles.imageOverlay} aria-hidden="true" />
+        </a>
       )}
       <div className={styles.collectionProductBody}>
         <p className={styles.collectionProductTitle}>
@@ -142,7 +181,7 @@ function CollectionProductRow({
           </button>
         )}
         <a
-          href={product.url}
+          href={productUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={styles.visitLink}
@@ -158,17 +197,20 @@ export function CollectionSuggestionCard({
   collection,
   onAddProduct,
 }: CollectionSuggestionCardProps) {
+  const collectionUrl = normalizeDisplayUrl(collection.url) ?? collection.url;
+  const host = getHostname(collectionUrl);
+  const count = collection.products.length;
   return (
     <div className={styles.collectionCard}>
       <div className={styles.collectionHeader}>
         <div>
-          <p className={styles.collectionLabel}>Collection page</p>
+          <p className={styles.collectionSource}>From {host}</p>
           <p className={styles.title}>
-            {collection.title ?? 'Products from this page'}
+            {count} {count === 1 ? 'option' : 'options'} from this store
           </p>
         </div>
         <a
-          href={collection.url}
+          href={collectionUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={styles.visitLink}

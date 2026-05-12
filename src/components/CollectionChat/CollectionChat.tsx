@@ -71,6 +71,8 @@ async function addProductToCollection(
   product: SuggestedProduct,
   collection: LoadedBlock,
 ): Promise<void> {
+  const productUrl = normalizeProductUrl(product.url);
+  const imageUrl = normalizeProductUrl(product.imageUrl, productUrl);
   const sharingGroupId = collection.collectionData?.sharingGroupId;
   const ownerGroup = sharingGroupId
     ? await Group.load(sharingGroupId as `co_z${string}`, {})
@@ -83,8 +85,8 @@ async function addProductToCollection(
       type: 'product',
       name: product.title ?? 'Untitled',
       productData: {
-        url: product.url,
-        imageUrl: product.imageUrl ?? undefined,
+        url: productUrl,
+        imageUrl: imageUrl ?? undefined,
         price: product.price ?? undefined,
         description: product.description ?? undefined,
       },
@@ -98,6 +100,18 @@ async function addProductToCollection(
   } else {
     const list = BlockList.create([newBlock], { owner: group });
     collection.$jazz.set('children', list);
+  }
+}
+
+function normalizeProductUrl(
+  url: string | null | undefined,
+  baseUrl?: string,
+): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url, baseUrl).href;
+  } catch {
+    return url.startsWith('//') ? `https:${url}` : url;
   }
 }
 
