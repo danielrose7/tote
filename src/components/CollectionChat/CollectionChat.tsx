@@ -217,6 +217,7 @@ export function CollectionChat({
   const [open, setOpen] = useState(false);
   const { showToast } = useToast();
   const [chatError, setChatError] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -236,9 +237,6 @@ export function CollectionChat({
 
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit,
     sendMessage,
     stop,
     status,
@@ -284,10 +282,16 @@ export function CollectionChat({
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (input?.trim() && status !== 'submitted' && status !== 'streaming') {
-        handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
-      }
+      submitDraft();
     }
+  }
+
+  function submitDraft(e?: React.FormEvent<HTMLFormElement>) {
+    e?.preventDefault();
+    const text = draft.trim();
+    if (!text || status === 'submitted' || status === 'streaming') return;
+    setDraft('');
+    sendMessage({ text });
   }
 
   async function handleAddUrl(url: string) {
@@ -518,12 +522,12 @@ export function CollectionChat({
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className={styles.inputArea}>
+      <form onSubmit={submitDraft} className={styles.inputArea}>
         <textarea
           ref={inputRef}
           className={styles.input}
-          value={input}
-          onChange={handleInputChange}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Find me a waterproof jacket under $150…"
           rows={1}
@@ -540,7 +544,7 @@ export function CollectionChat({
           <button
             type="submit"
             className={styles.sendButton}
-            disabled={!input?.trim()}
+            disabled={!draft.trim()}
           >
             Send
           </button>

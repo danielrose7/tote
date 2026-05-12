@@ -43,6 +43,11 @@ const TEMPLATES: { username: string; slug: string; category: string }[] = [
   },
   {
     username: 'daniel',
+    slug: 'wood-and-open-shelves-awesome-screen-free-toys',
+    category: 'Baby & Nursery',
+  },
+  {
+    username: 'daniel',
     slug: 'practical-gifts-for-a-grandmother-who-visits-the-baby',
     category: 'Gifts',
   },

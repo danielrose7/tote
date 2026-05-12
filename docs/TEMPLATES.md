@@ -24,7 +24,7 @@ Existing collections at `/s/daniel` already provide strong coverage here.
 | Newborn to 12 months — gear that converts       | Now      | "baby registry essentials" is high-intent |
 | Baby shower gifts for the parents, not the baby | Now      | Underserved — recovery/postpartum angle   |
 | Toddler outdoor toys that hold up               | Jun–Jul  | Seasonal + holiday crossover              |
-| Screen-free toys for 2–4 year olds              | Now      | Perennial search query                    |
+| Screen-free toys for 2–4 year olds              | ✓ exists | `/s/daniel/wood-and-open-shelves-awesome-screen-free-toys` |
 
 ---
 
