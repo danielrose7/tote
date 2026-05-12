@@ -22,7 +22,7 @@ Existing collections at `/s/daniel` already provide strong coverage here.
 | Baby gear that earns its floor space            | ✓ exists | `/s/daniel`                               |
 | Floor play for 3–6 months                       | ✓ exists | `/s/daniel`                               |
 | Newborn to 12 months — gear that converts       | Now      | "baby registry essentials" is high-intent |
-| Baby shower gifts for the parents, not the baby | Now      | Underserved — recovery/postpartum angle   |
+| Baby shower gifts for the person actually having the baby | ✓ exists | `/s/daniel/baby-shower-gifts-for-the-person-actually-having-the-baby` |
 | Toddler outdoor toys that hold up               | Jun–Jul  | Seasonal + holiday crossover              |
 | Screen-free toys for 2–4 year olds              | ✓ exists | `/s/daniel/wood-and-open-shelves-awesome-screen-free-toys` |
 

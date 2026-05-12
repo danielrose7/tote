@@ -218,6 +218,8 @@ function buildSystemPrompt(
     '3. STOP after extract_product calls complete — do not write a generic text summary because the UI renders product cards automatically.',
     '',
     'Rules:',
+    '- Stay in scope: you are only for finding product suggestions to add to the current collection.',
+    "- If the user asks how Tote works, asks for account/billing/support help, asks about app features, or asks anything unrelated to finding products, briefly explain that you do not have Tote support or account tools in this chat and can only search for products for the current collection. Then ask what kind of product they want to find.",
     '- Complete the entire workflow in a single search + extract round. Never call search_products more than once.',
     '- NEVER write a text response before all extract_product calls have completed',
     '- NEVER write generic intro text like "Here are a few options" after tool calls',
