@@ -1,4 +1,4 @@
-import { filterImageUrl } from "./image";
+import { filterImageUrl, resolveImageUrl } from "./image";
 import type { ExtractionResult } from "./types";
 
 function getMetaContent(html: string, names: string[]): string | undefined {
@@ -43,7 +43,10 @@ function getTitle(html: string): string | undefined {
 	return titleMatch?.[1]?.trim();
 }
 
-export function extractOpenGraph(html: string): ExtractionResult | null {
+export function extractOpenGraph(
+	html: string,
+	pageUrl?: string,
+): ExtractionResult | null {
 	const extractedFields: string[] = [];
 
 	const title =
@@ -54,7 +57,14 @@ export function extractOpenGraph(html: string): ExtractionResult | null {
 		"description",
 	]);
 	const imageUrl = filterImageUrl(
-		getMetaContent(html, ["og:image", "twitter:image"]),
+		resolveImageUrl(
+			getMetaContent(html, [
+				"og:image",
+				"og:image:secure_url",
+				"twitter:image",
+			]),
+			pageUrl || "",
+		),
 	);
 	const price = getMetaContent(html, [
 		"product:price:amount",

@@ -1,3 +1,4 @@
+import { extractImageFromHtml } from "./image";
 import { extractJsonLd } from "./json-ld";
 import { extractOpenGraph } from "./open-graph";
 import { extractPrice } from "./price";
@@ -116,7 +117,7 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
 		}
 
 		html = await response.text();
-	} catch (error) {
+	} catch {
 		return {
 			url,
 			sources: [],
@@ -137,8 +138,8 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
 
 	// Run HTML-based extractors in parallel
 	const [jsonLdResult, ogResult] = await Promise.all([
-		Promise.resolve(extractJsonLd(html)),
-		Promise.resolve(extractOpenGraph(html)),
+		Promise.resolve(extractJsonLd(html, url)),
+		Promise.resolve(extractOpenGraph(html, url)),
 	]);
 
 	results.push(jsonLdResult);
@@ -159,6 +160,20 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
 					"price",
 					...(priceResult.currency ? ["currency"] : []),
 				],
+			});
+		}
+	}
+
+	const hasImage = results.some((r) => r?.imageUrl);
+	if (!hasImage) {
+		const imageUrl = extractImageFromHtml(html, url);
+		if (imageUrl) {
+			results.push({
+				url,
+				imageUrl,
+				source: "html-fallback",
+				confidence: 0.3,
+				extractedFields: ["imageUrl"],
 			});
 		}
 	}

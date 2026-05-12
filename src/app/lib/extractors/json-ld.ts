@@ -1,11 +1,11 @@
-import { filterImageUrl } from "./image";
+import { filterImageUrl, resolveImageUrl } from "./image";
 import type { ExtractedMetadata, ExtractionResult } from "./types";
 
 interface JsonLdProduct {
 	"@type": string;
 	name?: string;
 	description?: string;
-	image?: string | string[] | { url: string }[];
+	image?: string | string[] | { url?: string; image?: string }[];
 	brand?: { name?: string; "@type"?: string } | string;
 	offers?:
 		| {
@@ -61,14 +61,22 @@ function findProductInData(data: unknown): JsonLdProduct | null {
 }
 
 function extractImage(
-	image: string | string[] | { url: string }[] | undefined,
+	image:
+		| string
+		| string[]
+		| { url?: string; image?: string }
+		| { url?: string; image?: string }[]
+		| undefined,
 ): string | undefined {
 	if (!image) return undefined;
 	if (typeof image === "string") return image;
 	if (Array.isArray(image)) {
 		const first = image[0];
 		if (typeof first === "string") return first;
-		if (first && typeof first === "object" && "url" in first) return first.url;
+		if (first && typeof first === "object") return first.url || first.image;
+	}
+	if (typeof image === "object") {
+		return image.url || image.image;
 	}
 	return undefined;
 }
@@ -97,13 +105,16 @@ function extractBrand(brand: JsonLdProduct["brand"]): string | undefined {
 	return undefined;
 }
 
-export function extractJsonLd(html: string): ExtractionResult | null {
+export function extractJsonLd(
+	html: string,
+	pageUrl?: string,
+): ExtractionResult | null {
 	const scriptRegex =
 		/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
 	const extractedFields: string[] = [];
 
-	let match;
-	while ((match = scriptRegex.exec(html)) !== null) {
+	let match = scriptRegex.exec(html);
+	while (match !== null) {
 		try {
 			const jsonContent = match[1].trim();
 			const data = JSON.parse(jsonContent);
@@ -111,7 +122,11 @@ export function extractJsonLd(html: string): ExtractionResult | null {
 
 			if (product) {
 				const { price, currency, availability } = extractPrice(product.offers);
-				const imageUrl = filterImageUrl(extractImage(product.image));
+				const imageUrl = filterImageUrl(
+					pageUrl
+						? resolveImageUrl(extractImage(product.image), pageUrl)
+						: extractImage(product.image),
+				);
 				const brand = extractBrand(product.brand);
 
 				const result: ExtractedMetadata = {
@@ -143,6 +158,7 @@ export function extractJsonLd(html: string): ExtractionResult | null {
 		} catch {
 			// Invalid JSON, continue to next script
 		}
+		match = scriptRegex.exec(html);
 	}
 
 	return null;
