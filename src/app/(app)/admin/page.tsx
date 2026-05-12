@@ -49,11 +49,28 @@ export default async function AdminPage() {
     ORDER BY created_at DESC
     LIMIT 20
   `;
+  const recentGrantUsers = recentGrants.length
+    ? (
+        await clerk.users.getUserList({
+          userId: recentGrants.map((g) => g.clerk_user_id as string),
+        })
+      ).data
+    : [];
+  const recentGrantUserById = Object.fromEntries(
+    recentGrantUsers.map((u) => [u.id, u]),
+  );
+  const enrichedRecentGrants = recentGrants.map((g) => {
+    const cu = recentGrantUserById[g.clerk_user_id as string];
+    return {
+      ...g,
+      email: cu?.emailAddresses[0]?.emailAddress ?? '—',
+    };
+  });
 
   return (
     <AdminClient
       balances={enrichedBalances as Balance[]}
-      recentGrants={recentGrants as Grant[]}
+      recentGrants={enrichedRecentGrants as Grant[]}
     />
   );
 }

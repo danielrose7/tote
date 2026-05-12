@@ -17,7 +17,9 @@ export interface Balance {
 
 export interface Grant {
   clerk_user_id: string;
+  email: string;
   amount_cents: number;
+  type: string;
   created_at: string;
 }
 
@@ -65,7 +67,7 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
     setLoading(true);
     setStatus(null);
     try {
-      const result = await grantCreditsAction(email, parseFloat(amount));
+      const result = await grantCreditsAction(email.trim(), parseFloat(amount));
       if (result.ok) {
         setStatus({
           ok: true,
@@ -82,6 +84,10 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function prepareGrant(targetEmail: string) {
+    setEmail(targetEmail);
   }
 
   return (
@@ -135,6 +141,7 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                   <th>Total spent</th>
                   <th>Runs</th>
                   <th>Curator</th>
+                  <th>Credit</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,6 +176,14 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                           {curatorToggles[b.clerk_user_id] ? 'On' : 'Off'}
                         </button>
                       </td>
+                      <td>
+                        <button
+                          className={styles.secondaryButton}
+                          onClick={() => prepareGrant(b.email)}
+                        >
+                          Top up
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -187,6 +202,7 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                 <tr>
                   <th>User ID</th>
                   <th>Amount</th>
+                  <th>Type</th>
                   <th>Date</th>
                 </tr>
               </thead>
@@ -194,9 +210,11 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                 {recentGrants.map((g, i) => (
                   <tr key={i}>
                     <td>
+                      <div>{g.email}</div>
                       <code>{g.clerk_user_id}</code>
                     </td>
                     <td>{formatDollars(g.amount_cents)}</td>
+                    <td>{g.type}</td>
                     <td>{new Date(g.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))}

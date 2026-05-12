@@ -128,6 +128,7 @@ function runCostCents(inputTokens: number, outputTokens: number, webSearchReques
 
 - [ ] Track `web_search_requests` from `response.usage.server_tool_use` in the Inngest function
 - [ ] Run 10–20 real curator sessions and log actual total costs to calibrate
+- [ ] Add `/admin` cross-user usage view for curator sessions, chat turns, cost averages, outliers, balances, and grants/purchases/spend
 - [ ] Set `MARGIN_MULTIPLIER` based on real data
 - [ ] Reprice Stripe packs to reflect true cost + margin
 - [ ] Remove `ensureFreeCredits()` call from `POST /api/curate/start` (no free tier)

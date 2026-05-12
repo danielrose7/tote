@@ -51,11 +51,12 @@ export async function POST(request: Request) {
 
 	const session = await stripe.checkout.sessions.create({
 		customer: stripeCustomerId,
+		client_reference_id: userId!,
 		mode: "payment",
 		line_items: [{ price: priceId, quantity: 1 }],
-		success_url: `${origin}/curate?credits=added`,
+		success_url: `${origin}/curate?credits=added&session_id={CHECKOUT_SESSION_ID}`,
 		cancel_url: `${origin}/curate`,
-		metadata: { clerkUserId: userId! },
+		metadata: { clerkUserId: userId!, creditPriceId: priceId },
 	});
 
 	return NextResponse.json({ url: session.url });

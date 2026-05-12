@@ -38,6 +38,22 @@ Add a `users (clerk_user_id TEXT PRIMARY KEY, username TEXT, email TEXT, created
 
 ## Curator / Extraction
 
+### Admin cross-user AI cost and balance dashboard
+
+Expand `/admin` from per-user balances into a lightweight cross-user view of AI usage:
+recent curator sessions, chat turns, average/median cost, outliers, current balances,
+and total grants/purchases/spend by user.
+
+**Why:** Pricing and credit packs need real usage visibility. The current ledger has the
+raw data in `credit_transactions`, but answering "what did the last five curator runs
+cost?" still requires ad hoc SQL.
+
+**POC scope:** Add aggregate cards and a recent sessions table to `/admin`; keep Clerk
+email enrichment best-effort. No full analytics product, no complex admin adjustment
+workflow.
+
+**When:** Before broad beta or before changing credit pack prices.
+
 ### Serper.dev as Google-backed alternative to Brave Search
 
 [Serper.dev](https://serper.dev) returns Google search results as JSON — functionally identical to `braveSearch.ts` but backed by Google's index.

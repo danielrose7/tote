@@ -12,6 +12,7 @@ import { braveSearch } from '../../../lib/braveSearch';
 import {
   CF_PUPPETEER_COST_CENTS,
   deductCredits,
+  hasPositiveCreditBalance,
   runCostCents,
 } from '../../../lib/credits';
 import { MODELS } from '../../../lib/models';
@@ -43,6 +44,10 @@ export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) {
     return new Response('Unauthorized', { status: 401 });
+  }
+
+  if (!(await hasPositiveCreditBalance(userId))) {
+    return Response.json({ error: 'Insufficient credits' }, { status: 402 });
   }
 
   const body = await req.json();

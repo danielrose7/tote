@@ -82,26 +82,41 @@ export async function getCreditBalance(userId: string): Promise<number> {
   return (rows[0]?.balance_cents as number | undefined) ?? 0;
 }
 
+export async function hasPositiveCreditBalance(userId: string): Promise<boolean> {
+  return (await getCreditBalance(userId)) > 0;
+}
+
 export async function addCredits(
   userId: string,
   cents: number,
   stripeSessionId: string,
 ): Promise<number> {
   const rows = await sql`
-    INSERT INTO user_credits (clerk_user_id, balance_cents, updated_at)
-    VALUES (${userId}, ${cents}, now())
-    ON CONFLICT (clerk_user_id) DO UPDATE
-      SET balance_cents = user_credits.balance_cents + ${cents},
-          updated_at    = now()
-    RETURNING balance_cents
+    WITH inserted_tx AS (
+      INSERT INTO credit_transactions (clerk_user_id, amount_cents, type, stripe_session_id)
+      VALUES (${userId}, ${cents}, 'purchase', ${stripeSessionId})
+      ON CONFLICT (stripe_session_id) WHERE stripe_session_id IS NOT NULL DO NOTHING
+      RETURNING amount_cents
+    ),
+    updated_balance AS (
+      INSERT INTO user_credits (clerk_user_id, balance_cents, updated_at)
+      SELECT ${userId}, amount_cents, now()
+      FROM inserted_tx
+      ON CONFLICT (clerk_user_id) DO UPDATE
+        SET balance_cents = user_credits.balance_cents + EXCLUDED.balance_cents,
+            updated_at    = now()
+      RETURNING balance_cents
+    )
+    SELECT balance_cents FROM updated_balance
+    UNION ALL
+    SELECT balance_cents
+    FROM user_credits
+    WHERE clerk_user_id = ${userId}
+      AND NOT EXISTS (SELECT 1 FROM updated_balance)
+    LIMIT 1
   `;
 
-  await sql`
-    INSERT INTO credit_transactions (clerk_user_id, amount_cents, type, stripe_session_id)
-    VALUES (${userId}, ${cents}, 'purchase', ${stripeSessionId})
-  `;
-
-  return rows[0].balance_cents as number;
+  return (rows[0]?.balance_cents as number | undefined) ?? 0;
 }
 
 export type DeductExtras = {

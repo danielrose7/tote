@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { inngest } from "../../../../inngest/client";
 import { isCurator } from "../../../../inngest/curator-auth";
-import { getCreditBalance } from "../../../../lib/credits";
+import { hasPositiveCreditBalance } from "../../../../lib/credits";
 
 export async function POST(request: Request) {
 	if (!(await isCurator())) {
@@ -16,8 +16,7 @@ export async function POST(request: Request) {
 
 	const { userId } = await auth();
 
-	const balance = await getCreditBalance(userId!);
-	if (balance <= 0) {
+	if (!(await hasPositiveCreditBalance(userId!))) {
 		return NextResponse.json(
 			{ error: "Insufficient credits" },
 			{ status: 402 },

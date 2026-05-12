@@ -35,7 +35,8 @@ export async function POST(request: Request) {
 
 	if (event.type === "checkout.session.completed") {
 		const session = event.data.object as Stripe.Checkout.Session;
-		const clerkUserId = session.metadata?.clerkUserId;
+		const clerkUserId =
+			session.metadata?.clerkUserId ?? session.client_reference_id ?? undefined;
 
 		if (!clerkUserId) {
 			console.error(
@@ -50,8 +51,17 @@ export async function POST(request: Request) {
 			);
 		}
 
+		if (session.payment_status !== "paid") {
+			console.warn("[billing/webhook] checkout.session.completed unpaid", {
+				sessionId: session.id,
+				paymentStatus: session.payment_status,
+			});
+			return NextResponse.json({ received: true });
+		}
+
 		const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-		const priceId = lineItems.data[0]?.price?.id;
+		const priceId =
+			session.metadata?.creditPriceId ?? lineItems.data[0]?.price?.id;
 		const credits = priceId ? (PRICE_CREDITS[priceId] ?? 0) : 0;
 
 		if (credits > 0) {

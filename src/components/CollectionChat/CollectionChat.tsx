@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import type { co } from 'jazz-tools';
 import { Group } from 'jazz-tools';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { fetchMetadata } from '../../app/utils/metadata';
 import { Block as BlockSchema, BlockList } from '../../schema';
 import type { Block } from '../../schema';
@@ -216,10 +216,23 @@ export function CollectionChat({
 }: CollectionChatProps) {
   const [open, setOpen] = useState(false);
   const { showToast } = useToast();
+  const [chatError, setChatError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const collectionContext = serializeCollection(collection);
+
+  const chatFetch = useCallback<typeof fetch>(async (input, init) => {
+    const res = await fetch(input, init);
+    if (res.status === 402) {
+      setChatError('Add credits to keep using AI chat.');
+    } else if (!res.ok) {
+      setChatError('Chat request failed. Try again in a minute.');
+    } else {
+      setChatError(null);
+    }
+    return res;
+  }, []);
 
   const {
     messages,
@@ -231,6 +244,7 @@ export function CollectionChat({
     status,
   } = useChat({
     api: '/api/chat',
+    fetch: chatFetch,
     body: {
       collectionContext,
       collectionId: collection?.$jazz?.id,
@@ -492,6 +506,12 @@ export function CollectionChat({
               <span className={styles.spinner} />
               {status === 'submitted' ? 'Thinking…' : 'Working…'}
             </div>
+          </div>
+        )}
+
+        {chatError && (
+          <div className={`${styles.message} ${styles.messageAssistant}`}>
+            <div className={styles.errorBubble}>{chatError}</div>
           </div>
         )}
 

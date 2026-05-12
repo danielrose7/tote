@@ -4,11 +4,6 @@ import { clerkClient, currentUser } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 import { grantCredits } from '../../../lib/credits';
 
-async function isAdmin(): Promise<boolean> {
-  const user = await currentUser();
-  return user?.publicMetadata?.admin === true;
-}
-
 export async function grantCreditsAction(
   email: string,
   amountDollars: number,
@@ -16,7 +11,9 @@ export async function grantCreditsAction(
   | { ok: true; granted: number; newBalance: number; email: string }
   | { ok: false; error: string }
 > {
-  if (!(await isAdmin())) return { ok: false, error: 'Forbidden' };
+  const admin = await currentUser();
+  if (admin?.publicMetadata?.admin !== true)
+    return { ok: false, error: 'Forbidden' };
   if (!email || amountDollars <= 0)
     return { ok: false, error: 'email and amountDollars required' };
 
@@ -27,6 +24,7 @@ export async function grantCreditsAction(
 
   const cents = Math.round(amountDollars * 100);
   const newBalance = await grantCredits(target.id, cents);
+  revalidatePath('/admin');
 
   return { ok: true, granted: cents, newBalance, email };
 }
