@@ -3,7 +3,9 @@
 import { SignedIn, SignedOut, SignOutButton, UserProfile } from "@clerk/nextjs";
 import { useAccount } from "jazz-tools/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { AiCreditsPanel } from "../../../components/Billing/AiCreditsPanel";
 import { Header } from "../../../components/Header/Header";
 import { JazzAccount } from "../../../schema";
 import styles from "./settings.module.css";
@@ -12,6 +14,7 @@ export default function SettingsPage() {
 	const [syncStatus, setSyncStatus] = useState<"loading" | "synced" | "error">(
 		"loading",
 	);
+	const searchParams = useSearchParams();
 
 	const me = useAccount(JazzAccount, {
 		resolve: {
@@ -19,14 +22,7 @@ export default function SettingsPage() {
 		},
 	});
 
-	// Auto-sync metadata on page load
-	useEffect(() => {
-		if (me.$jazz?.id) {
-			syncMetadata();
-		}
-	}, [me.$jazz?.id]);
-
-	const syncMetadata = async () => {
+	const syncMetadata = useCallback(async () => {
 		setSyncStatus("loading");
 		try {
 			// Check current metadata
@@ -55,7 +51,20 @@ export default function SettingsPage() {
 			console.error("Error syncing metadata:", error);
 			setSyncStatus("error");
 		}
-	};
+	}, [me.$jazz?.id]);
+
+	// Auto-sync metadata on page load
+	useEffect(() => {
+		if (me.$jazz?.id) {
+			syncMetadata();
+		}
+	}, [me.$jazz?.id, syncMetadata]);
+
+	useEffect(() => {
+		if (searchParams.get("credits") === "added") {
+			window.history.replaceState({}, "", "/settings");
+		}
+	}, [searchParams]);
 
 	return (
 		<div className={styles.container}>
@@ -87,14 +96,24 @@ export default function SettingsPage() {
 								{syncStatus === "loading" && "Syncing..."}
 							</span>
 							{syncStatus === "error" && (
-								<button onClick={syncMetadata} className={styles.retryButton}>
+								<button
+									type="button"
+									onClick={syncMetadata}
+									className={styles.retryButton}
+								>
 									Retry
 								</button>
 							)}
 						</div>
 						<SignOutButton>
-							<button className={styles.logoutButton}>Log out</button>
+							<button type="button" className={styles.logoutButton}>
+								Log out
+							</button>
 						</SignOutButton>
+					</div>
+
+					<div className={styles.billingWrapper}>
+						<AiCreditsPanel returnPath="/settings" />
 					</div>
 
 					<div className={styles.profileWrapper}>

@@ -92,6 +92,10 @@
 	justify-content: center;
 }
 
+.billingWrapper {
+	margin-bottom: 1.5rem;
+}
+
 .clerkRootBox {
 	width: 100%;
 }
