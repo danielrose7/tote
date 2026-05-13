@@ -78,6 +78,7 @@ export type CreditTransaction = {
 	provider: string | null;
 	model: string | null;
 	balanceAfterCents: number | null;
+	metadataJson: Record<string, unknown> | null;
 	createdAt: string;
 };
 
@@ -119,6 +120,7 @@ export async function getCreditTransactions(
       provider,
       model,
       balance_after_cents,
+      metadata_json,
       created_at
     FROM credit_transactions
     WHERE clerk_user_id = ${userId}
@@ -146,6 +148,7 @@ export async function getCreditTransactions(
 		provider: (row.provider as string | null) ?? null,
 		model: (row.model as string | null) ?? null,
 		balanceAfterCents: (row.balance_after_cents as number | null) ?? null,
+		metadataJson: (row.metadata_json as Record<string, unknown> | null) ?? null,
 		createdAt: serializeCreatedAt(row.created_at),
 	}));
 }

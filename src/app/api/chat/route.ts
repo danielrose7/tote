@@ -202,6 +202,8 @@ export async function POST(req: Request) {
 							searchCents,
 							cfCents,
 							extractionCents,
+							collectionId: collectionId ?? null,
+							curatorSessionId: collectionContext?.curatorSessionId ?? null,
 						},
 					},
 				);

@@ -44,7 +44,17 @@ type CreditTransaction = {
 	provider: string | null;
 	model: string | null;
 	balanceAfterCents: number | null;
+	metadataJson: Record<string, unknown> | null;
 	createdAt: string;
+};
+
+type TransactionGroup = {
+	key: string;
+	title: string;
+	subtitle: string | null;
+	totalCents: number;
+	latestCreatedAt: string;
+	transactions: CreditTransaction[];
 };
 
 interface AiCreditsPanelProps {
@@ -67,6 +77,99 @@ function transactionTitle(transaction: CreditTransaction): string {
 	if (transaction.type === "free_grant") return "Credit grant";
 	if (transaction.feature === "chat") return "Chat";
 	return "Curator";
+}
+
+function shortId(value: string | null | undefined): string | null {
+	if (!value) return null;
+	return value.length > 14 ? `${value.slice(0, 10)}...` : value;
+}
+
+function metadataString(
+	transaction: CreditTransaction,
+	key: string,
+): string | null {
+	const value = transaction.metadataJson?.[key];
+	return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function groupKey(transaction: CreditTransaction): string {
+	if (transaction.type !== "deduction") return `tx:${transaction.id}`;
+	const curatorSessionId = metadataString(transaction, "curatorSessionId");
+	if (transaction.feature === "curator" && transaction.referenceId) {
+		return `curator:${transaction.referenceId}`;
+	}
+	if (transaction.feature === "chat") {
+		if (curatorSessionId) return `curator-chat:${curatorSessionId}`;
+		if (transaction.referenceId) return `chat:${transaction.referenceId}`;
+	}
+	return `${transaction.feature}:${transaction.referenceId ?? transaction.id}`;
+}
+
+function groupTitle(transaction: CreditTransaction): string {
+	if (transaction.type === "purchase") return "Credit purchases";
+	if (transaction.type === "free_grant") return "Credit grants";
+
+	const curatorSessionId =
+		transaction.feature === "curator"
+			? transaction.referenceId
+			: metadataString(transaction, "curatorSessionId");
+	if (curatorSessionId) {
+		return `Curation ${shortId(curatorSessionId)}`;
+	}
+
+	if (transaction.feature === "chat") {
+		return `Collection chat ${shortId(transaction.referenceId) ?? ""}`.trim();
+	}
+
+	return transactionTitle(transaction);
+}
+
+function groupSubtitle(transaction: CreditTransaction): string | null {
+	if (transaction.type !== "deduction") return null;
+	const collectionId =
+		transaction.feature === "chat"
+			? (metadataString(transaction, "collectionId") ?? transaction.referenceId)
+			: null;
+	if (collectionId) return `Collection ${shortId(collectionId)}`;
+	if (transaction.referenceId)
+		return `Session ${shortId(transaction.referenceId)}`;
+	return null;
+}
+
+function groupTransactions(
+	transactions: CreditTransaction[],
+): TransactionGroup[] {
+	const groups = new Map<string, TransactionGroup>();
+	for (const transaction of transactions) {
+		const key = groupKey(transaction);
+		const existing = groups.get(key);
+		if (existing) {
+			existing.transactions.push(transaction);
+			existing.totalCents += transaction.amountCents;
+			if (
+				new Date(transaction.createdAt).getTime() >
+				new Date(existing.latestCreatedAt).getTime()
+			) {
+				existing.latestCreatedAt = transaction.createdAt;
+			}
+			continue;
+		}
+
+		groups.set(key, {
+			key,
+			title: groupTitle(transaction),
+			subtitle: groupSubtitle(transaction),
+			totalCents: transaction.amountCents,
+			latestCreatedAt: transaction.createdAt,
+			transactions: [transaction],
+		});
+	}
+
+	return Array.from(groups.values()).sort(
+		(a, b) =>
+			new Date(b.latestCreatedAt).getTime() -
+			new Date(a.latestCreatedAt).getTime(),
+	);
 }
 
 function transactionDetails(transaction: CreditTransaction): string {
@@ -118,7 +221,7 @@ export function AiCreditsPanel({
 	const fetchTransactions = useCallback(async () => {
 		if (!showTransactions) return;
 		try {
-			const res = await fetch("/api/billing/transactions?limit=12");
+			const res = await fetch("/api/billing/transactions?limit=50");
 			if (!res.ok) return;
 			const { transactions: nextTransactions } = await res.json();
 			setTransactions(nextTransactions);
@@ -153,6 +256,9 @@ export function AiCreditsPanel({
 
 	const isLow = balanceCents !== null && balanceCents < 50;
 	const isEmpty = balanceCents !== null && balanceCents <= 0;
+	const transactionGroups = transactions
+		? groupTransactions(transactions)
+		: null;
 
 	return (
 		<section className={styles.panel} aria-label="AI credits">
@@ -221,36 +327,58 @@ export function AiCreditsPanel({
 
 					{transactions === null ? (
 						<p className={styles.emptyState}>Loading activity...</p>
-					) : transactions.length === 0 ? (
+					) : transactionGroups?.length === 0 ? (
 						<p className={styles.emptyState}>No credit activity yet.</p>
 					) : (
 						<ul className={styles.transactionList}>
-							{transactions.map((transaction) => {
-								const details = transactionDetails(transaction);
+							{transactionGroups?.map((group) => {
 								return (
-									<li key={transaction.id} className={styles.transactionItem}>
-										<div className={styles.transactionMain}>
-											<span className={styles.transactionTitle}>
-												{transactionTitle(transaction)}
-											</span>
-											<span className={styles.transactionDate}>
-												{new Date(transaction.createdAt).toLocaleString()}
-											</span>
-											{details && (
-												<span className={styles.transactionDetails}>
-													{details}
+									<li key={group.key} className={styles.transactionGroup}>
+										<div className={styles.transactionGroupHeader}>
+											<div className={styles.transactionMain}>
+												<span className={styles.transactionTitle}>
+													{group.title}
 												</span>
-											)}
+												<span className={styles.transactionDate}>
+													{new Date(group.latestCreatedAt).toLocaleString()}
+													{group.subtitle ? ` / ${group.subtitle}` : ""}
+												</span>
+											</div>
+											<span
+												className={
+													group.totalCents < 0
+														? styles.transactionNegative
+														: styles.transactionPositive
+												}
+											>
+												{formatSignedCurrency(group.totalCents)}
+											</span>
 										</div>
-										<span
-											className={
-												transaction.amountCents < 0
-													? styles.transactionNegative
-													: styles.transactionPositive
-											}
-										>
-											{formatSignedCurrency(transaction.amountCents)}
-										</span>
+										<ul className={styles.transactionRows}>
+											{group.transactions.map((transaction) => {
+												const details = transactionDetails(transaction);
+												return (
+													<li
+														key={transaction.id}
+														className={styles.transactionItem}
+													>
+														<span className={styles.transactionDetails}>
+															{transactionTitle(transaction)}
+															{details ? ` / ${details}` : ""}
+														</span>
+														<span
+															className={
+																transaction.amountCents < 0
+																	? styles.transactionNegative
+																	: styles.transactionPositive
+															}
+														>
+															{formatSignedCurrency(transaction.amountCents)}
+														</span>
+													</li>
+												);
+											})}
+										</ul>
 									</li>
 								);
 							})}
