@@ -40,6 +40,53 @@ type ExtractionCosts = {
 	geminiOutputTokens: number;
 };
 
+const INFORMATIONAL_SEARCH_TERMS = [
+	"blog",
+	"blogs",
+	"care guide",
+	"care information",
+	"guide",
+	"guides",
+	"how to",
+	"information",
+	"resource",
+	"resources",
+	"routine",
+	"tips",
+];
+
+function buildProductSearchQuery(
+	query: string,
+	collection: CollectionContext | null,
+): string {
+	const lowerQuery = query.toLowerCase();
+	const additions: string[] = [];
+
+	if (!/\b(buy|shop|product|products|gift|gifts|for sale)\b/i.test(query)) {
+		additions.push("buy", "shop");
+	}
+
+	if (
+		collection?.title &&
+		/\b(gift|gifts|giving|present|presents)\b/i.test(collection.title) &&
+		!/\b(gift|gifts|giving|present|presents)\b/i.test(query)
+	) {
+		additions.push("gift");
+	}
+
+	for (const term of INFORMATIONAL_SEARCH_TERMS) {
+		const excludedTerm = term.includes(" ") ? `-"${term}"` : `-${term}`;
+		if (
+			!lowerQuery.includes(`-${term}`) &&
+			!lowerQuery.includes(`-"${term}"`)
+		) {
+			additions.push(excludedTerm);
+		}
+	}
+
+	return [query.trim(), ...additions].filter(Boolean).join(" ");
+}
+
 export async function POST(req: Request) {
 	const { userId } = await auth();
 	if (!userId) {
@@ -82,17 +129,21 @@ export async function POST(req: Request) {
 		tools: {
 			search_products: tool({
 				description:
-					"Search the web for products matching a query. Use this to find candidate product URLs.",
+					"Search the web for purchasable products matching a query. Use this to find candidate product URLs, not articles, guides, care resources, or inspiration pages.",
 				inputSchema: z.object({
 					query: z
 						.string()
 						.describe(
-							"Specific product search query — focus on attributes, use case, and price range rather than brand names",
+							"Specific shopping query for purchasable products — focus on attributes, use case, price range, and product category. Include shopping intent such as buy/shop/gift/product, and avoid informational words like guide, routine, blog, resources, or how-to.",
 						),
 				}),
 				execute: async ({ query }) => {
 					braveSearchCount++;
-					const results = await braveSearch({ query, count: 10 });
+					const productQuery = buildProductSearchQuery(
+						query,
+						collectionContext,
+					);
+					const results = await braveSearch({ query: productQuery, count: 10 });
 					return results.map((r) => ({
 						title: r.title,
 						url: r.url,
@@ -225,9 +276,17 @@ function buildSystemPrompt(
 		"Your job is to help users find products to add to their collections.",
 		"",
 		"Workflow — follow this exactly, in ONE pass:",
-		"1. Call search_products ONCE with a focused query",
+		"1. Translate the user's request into a shopping query for purchasable products, then call search_products ONCE with that focused query",
 		"2. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible",
 		"3. STOP after extract_product calls complete — do not write a generic text summary because the UI renders product cards automatically.",
+		"",
+		"Search strategy:",
+		"- Treat phrases like missing, gap, need more, or options as a request for products that fill a collection gap.",
+		"- Search for objects someone can buy, not content about the topic. Use product-category nouns and shopping intent words such as buy, shop, gift, product, kit, tool, planter, garden, or countertop when relevant.",
+		"- Avoid informational query terms such as guide, resources, routine, care information, blog, tips, how to, ideas, or inspiration unless the user explicitly asks for reading material.",
+		'- If the user asks for a broad adjacent category, infer giftable product forms that fit the collection instead of searching the literal wording. Example: for a kitchen-gift collection and "house plant care options," search for giftable indoor growing products such as countertop herb gardens, indoor hydroponic gardens, seed sprouters, self-watering planters, grow light planters, plant-care kits, or moisture meters.',
+		"- Prefer brand-direct, maker, and specialty retailer product pages over editorial roundups, marketplace search pages, category pages, or care guides.",
+		"- From search results, extract only URLs that look like individual purchasable product pages. Skip results whose titles or snippets are mainly guides, resources, routines, blogs, category navigation, or general advice.",
 		"",
 		"Rules:",
 		"- Stay in scope: you are only for finding product suggestions to add to the current collection.",
