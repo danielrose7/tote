@@ -38,6 +38,7 @@ Highest SEO value — titles map directly to search queries people actually type
 | ★ Holiday gift guide for the person who has everything | Q4       | Build Oct                      |
 | ★ Gifts for a new mom                                  | Now      | Not the baby — for her         |
 | ★ Housewarming gifts worth giving                      | Now      | Year-round, high search volume |
+| Kitchen gifts worth giving a regular home cook         | ✓ exists | `/s/daniel/kitchen-gifts-worth-giving-a-regular-home-cook` |
 | Graduation gifts for high school seniors               | Jun–Jul  | Peaks May–Jun                  |
 | Graduation gifts for college grads                     | Jun–Jul  | Peaks May–Jun                  |
 | Gifts for dads who hate being asked                    | Jun–Jul  | Father's Day peak              |
