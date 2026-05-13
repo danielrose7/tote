@@ -33,7 +33,16 @@ interface CollectionContext {
 	curatorSessionId?: string;
 	curatorTopic?: string;
 	curatorBriefJson?: string;
-	items: { title: string; url: string; price?: string }[];
+	items: {
+		id?: string;
+		title: string;
+		url: string;
+		price?: string;
+		description?: string;
+		slotId?: string;
+		slotName?: string;
+	}[];
+	slots?: { id: string; name: string; productIds: string[] }[];
 }
 
 // Accumulated extraction costs tracked across tool calls in one request
@@ -177,6 +186,53 @@ export async function POST(req: Request) {
 		},
 		stopWhen: stepCountIs(4),
 		tools: {
+			organize_collection: tool({
+				description:
+					"Propose a slot organization for the current collection's existing products. Use this when the user asks to organize, tidy, group, clean up, make slots, make sections, restructure, or sort the current collection. Never use this for finding new products.",
+				inputSchema: z.object({
+					summary: z
+						.string()
+						.describe(
+							"One concise sentence describing the proposed organization.",
+						),
+					slots: z
+						.array(
+							z.object({
+								name: z.string().describe("Proposed slot name."),
+								rationale: z
+									.string()
+									.describe("Short reason these products belong together."),
+								existingSlotId: z
+									.string()
+									.optional()
+									.describe(
+										"Existing slot ID to reuse/rename. Omit for a new slot.",
+									),
+								productIds: z
+									.array(z.string())
+									.describe("Existing product IDs to move into this slot."),
+							}),
+						)
+						.describe("Final proposed slots and product memberships."),
+					removeSlotIds: z
+						.array(z.string())
+						.optional()
+						.describe(
+							"Existing slot IDs to remove after moving products. Only include slots made empty by this plan or clearly redundant empty slots.",
+						),
+					ungroupedProductIds: z
+						.array(z.string())
+						.optional()
+						.describe(
+							"Product IDs that should stay directly in the collection because they are ambiguous or do not fit the proposed slots.",
+						),
+				}),
+				execute: async (proposal) => ({
+					type: "organization_proposal",
+					...proposal,
+				}),
+			}),
+
 			clarify_search_direction: tool({
 				description:
 					"Ask one short natural-language clarification question when the user request is too broad to search well. Use this instead of search_products when there is no seed context/contextual URL and the user gave only a theme, vibe, or broad direction.",
@@ -363,11 +419,25 @@ function buildSystemPrompt(
 		"",
 		"<workflow>",
 		"1. Decide whether the user's request is concrete enough to search now.",
-		"2. If the request needs direction first, call clarify_search_direction ONCE and stop.",
-		"3. If the request is concrete enough, translate it into a shopping query for purchasable products, then call search_products ONCE with that focused query.",
-		"4. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible.",
-		"5. Stop after extract_product calls complete. The UI renders product cards automatically.",
+		"2. If the user asks to organize, tidy, group, clean up, make slots, make sections, restructure, or sort CURRENT items, call organize_collection ONCE and stop.",
+		"3. If the request needs product-search direction first, call clarify_search_direction ONCE and stop.",
+		"4. If the request is concrete enough, translate it into a shopping query for purchasable products, then call search_products ONCE with that focused query.",
+		"5. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible.",
+		"6. Stop after extract_product calls complete. The UI renders product cards automatically.",
 		"</workflow>",
+		"",
+		"<organize_current_items>",
+		"- The collection_context below is authoritative. It already contains the current products and IDs available to organize.",
+		"- If Items already in collection are listed, do not ask the user to provide item names or IDs.",
+		"- If no current products are listed in collection_context, say the collection items are not loaded and ask the user to refresh before organizing.",
+		"- Use organize_collection only for existing products already listed in collection_context.",
+		"- Never suggest or search for new products in organize_collection.",
+		"- Use product IDs exactly as provided. Do not invent product IDs.",
+		"- Prefer a soft tidy by default: respect useful existing slots, add stray products where they belong, and remove only empty/redundant slots.",
+		"- If the user says redo everything, start over, or full tidy, you may propose a new slot structure for all products.",
+		'- Slot names should describe decision criteria or utility, not generic buckets. Good: "Used daily", "Worth the counter space", "Consumables and refills". Weak: "Miscellaneous", "Other", "Products".',
+		"- Leave ambiguous products ungrouped instead of forcing them into a bad slot.",
+		"</organize_current_items>",
 		"",
 		"<clarification>",
 		"- Use clarify_search_direction when the user gives only a broad theme, vibe, or collection direction and there is no seed_context or contextual URL.",
@@ -434,11 +504,33 @@ function buildSystemPrompt(
 		}
 		if (collection.items.length > 0) {
 			const itemList = collection.items
-				.slice(0, 20)
-				.map((i) => `  - ${i.title}${i.price ? ` (${i.price})` : ""}`)
+				.map((i) => {
+					const details = [
+						i.id ? `id: ${i.id}` : null,
+						i.price ? `price: ${i.price}` : null,
+						i.slotName ? `slot: ${i.slotName}` : "slot: none",
+						i.description
+							? `description: ${i.description.slice(0, 160)}`
+							: null,
+					]
+						.filter(Boolean)
+						.join("; ");
+					return `  - ${i.title}${details ? ` (${details})` : ""}`;
+				})
 				.join("\n");
 			parts.push(`Items already in collection:\n${itemList}`);
 			parts.push("Avoid suggesting products already in the collection.");
+		} else {
+			parts.push("Items already in collection: none loaded");
+		}
+		if (collection.slots && collection.slots.length > 0) {
+			const slotList = collection.slots
+				.map(
+					(slot) =>
+						`  - ${slot.name} (id: ${slot.id}; products: ${slot.productIds.join(", ") || "none"})`,
+				)
+				.join("\n");
+			parts.push(`Existing slots:\n${slotList}`);
 		}
 		parts.push("</collection_context>");
 	}

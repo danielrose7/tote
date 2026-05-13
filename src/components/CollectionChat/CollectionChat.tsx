@@ -5,6 +5,7 @@ import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchMetadata } from "../../app/utils/metadata";
+import { removeFromSelection } from "../../lib/slotHelpers";
 import type { Block } from "../../schema";
 import { BlockList, Block as BlockSchema } from "../../schema";
 import { useToast } from "../ToastNotification";
@@ -30,7 +31,31 @@ interface CollectionContext {
 	curatorSessionId?: string;
 	curatorTopic?: string;
 	curatorBriefJson?: string;
-	items: { title: string; url: string; price?: string }[];
+	items: {
+		id: string;
+		title: string;
+		url: string;
+		price?: string;
+		description?: string;
+		slotId?: string;
+		slotName?: string;
+	}[];
+	slots: { id: string; name: string; productIds: string[] }[];
+}
+
+interface OrganizationSlotProposal {
+	name: string;
+	rationale: string;
+	existingSlotId?: string;
+	productIds: string[];
+}
+
+interface OrganizationProposal {
+	type: "organization_proposal";
+	summary: string;
+	slots: OrganizationSlotProposal[];
+	removeSlotIds?: string[];
+	ungroupedProductIds?: string[];
 }
 
 function serializeCollection(
@@ -38,23 +63,37 @@ function serializeCollection(
 ): CollectionContext | null {
 	if (!collection) return null;
 	const items: CollectionContext["items"] = [];
+	const slots: CollectionContext["slots"] = [];
 	for (const child of collection.children ?? []) {
 		if (!child?.$isLoaded) continue;
 		if (child.type === "product" && child.productData?.url) {
 			items.push({
+				id: child.$jazz.id,
 				title: child.name ?? "",
 				url: child.productData.url,
 				price: child.productData.price ?? undefined,
+				description: child.productData.description ?? undefined,
 			});
 		} else if (child.type === "slot") {
+			const productIds: string[] = [];
 			for (const product of child.children ?? []) {
 				if (!product?.$isLoaded || !product.productData?.url) continue;
+				productIds.push(product.$jazz.id);
 				items.push({
+					id: product.$jazz.id,
 					title: product.name ?? "",
 					url: product.productData.url,
 					price: product.productData.price ?? undefined,
+					description: product.productData.description ?? undefined,
+					slotId: child.$jazz.id,
+					slotName: child.name,
 				});
 			}
+			slots.push({
+				id: child.$jazz.id,
+				name: child.name,
+				productIds,
+			});
 		}
 	}
 	return {
@@ -64,6 +103,7 @@ function serializeCollection(
 		curatorTopic: collection.collectionData?.curatorTopic ?? undefined,
 		curatorBriefJson: collection.collectionData?.curatorBriefJson ?? undefined,
 		items,
+		slots,
 	};
 }
 
@@ -103,6 +143,131 @@ async function addProductToCollection(
 	}
 }
 
+async function applyOrganizationProposal(
+	proposal: OrganizationProposal,
+	collection: LoadedBlock,
+): Promise<void> {
+	const collectionChildren = collection.children;
+	if (!collectionChildren?.$isLoaded) {
+		throw new Error("Collection children are not loaded");
+	}
+
+	let ownerGroup: Group | null = null;
+	const sharingGroupId = collection.collectionData?.sharingGroupId;
+	if (sharingGroupId) {
+		ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
+	}
+	const owner = ownerGroup ?? Group.create({ owner: undefined as never });
+
+	const productById = new Map<string, LoadedBlock>();
+	const slotById = new Map<string, LoadedBlock>();
+
+	for (const child of collectionChildren) {
+		if (!child?.$isLoaded) continue;
+		if (child.type === "product") {
+			productById.set(child.$jazz.id, child);
+		} else if (child.type === "slot") {
+			slotById.set(child.$jazz.id, child);
+			if (child.children?.$isLoaded) {
+				for (const product of child.children) {
+					if (product?.$isLoaded && product.type === "product") {
+						productById.set(product.$jazz.id, product);
+					}
+				}
+			}
+		}
+	}
+
+	const removeFromCurrentParent = (productId: string) => {
+		for (let i = collectionChildren.length - 1; i >= 0; i--) {
+			const child = collectionChildren[i];
+			if (!child?.$isLoaded) continue;
+			if (child.type === "product" && child.$jazz.id === productId) {
+				collectionChildren.$jazz.splice(i, 1);
+				return;
+			}
+			if (child.type === "slot" && child.children?.$isLoaded) {
+				for (let j = child.children.length - 1; j >= 0; j--) {
+					const product = child.children[j];
+					if (product?.$isLoaded && product.$jazz.id === productId) {
+						removeFromSelection(productId, child);
+						child.children.$jazz.splice(j, 1);
+						return;
+					}
+				}
+			}
+		}
+	};
+
+	const ensureSlot = (slotProposal: OrganizationSlotProposal): LoadedBlock => {
+		const existingSlot = slotProposal.existingSlotId
+			? slotById.get(slotProposal.existingSlotId)
+			: null;
+		if (existingSlot) {
+			if (existingSlot.name !== slotProposal.name) {
+				existingSlot.$jazz.set("name", slotProposal.name);
+			}
+			if (!existingSlot.children?.$isLoaded) {
+				const children = BlockList.create([], { owner });
+				existingSlot.$jazz.set("children", children);
+			}
+			return existingSlot;
+		}
+
+		const slotChildren = BlockList.create([], { owner });
+		const slot = BlockSchema.create(
+			{
+				type: "slot",
+				name: slotProposal.name,
+				slotData: {},
+				children: slotChildren,
+				createdAt: new Date(),
+			},
+			owner,
+		) as LoadedBlock;
+		collectionChildren.$jazz.push(slot);
+		slotById.set(slot.$jazz.id, slot);
+		return slot;
+	};
+
+	const assignedIds = new Set<string>();
+	for (const slotProposal of proposal.slots) {
+		const slot = ensureSlot(slotProposal);
+		if (!slot.children?.$isLoaded) continue;
+
+		for (const productId of slotProposal.productIds) {
+			const product = productById.get(productId);
+			if (!product || assignedIds.has(productId)) continue;
+			removeFromCurrentParent(productId);
+			slot.children.$jazz.push(product);
+			assignedIds.add(productId);
+		}
+	}
+
+	for (const productId of proposal.ungroupedProductIds ?? []) {
+		const product = productById.get(productId);
+		if (!product || assignedIds.has(productId)) continue;
+		removeFromCurrentParent(productId);
+		collectionChildren.$jazz.push(product);
+		assignedIds.add(productId);
+	}
+
+	for (const slotId of proposal.removeSlotIds ?? []) {
+		const slot = slotById.get(slotId);
+		if (!slot) continue;
+		const hasProducts =
+			slot.children?.$isLoaded &&
+			Array.from(slot.children).some(
+				(child) => child?.$isLoaded && child.type === "product",
+			);
+		if (hasProducts) continue;
+		const index = collectionChildren.findIndex(
+			(child) => child?.$isLoaded && child.$jazz.id === slotId,
+		);
+		if (index !== -1) collectionChildren.$jazz.splice(index, 1);
+	}
+}
+
 function normalizeProductUrl(
 	url: string | null | undefined,
 	baseUrl?: string,
@@ -120,6 +285,15 @@ const URL_RE = /https?:\/\/[^\s"')>]+/g;
 function isGenericOptionsIntro(text: string): boolean {
 	return /^here (are|is) (a few|some|several|the) (options|option|picks|results):?$/i.test(
 		text.trim(),
+	);
+}
+
+function isOrganizeSeed(seedContext?: string): boolean {
+	return Boolean(
+		seedContext &&
+			/\b(organize|tidy|group|slots?|sections?|restructure|sort)\b/i.test(
+				seedContext,
+			),
 	);
 }
 
@@ -165,6 +339,73 @@ function getSuggestedCollection(output: unknown): SuggestedCollection | null {
 		title: typeof candidate.title === "string" ? candidate.title : null,
 		url: candidate.url,
 		products,
+	};
+}
+
+function getOrganizationProposal(output: unknown): OrganizationProposal | null {
+	if (
+		!output ||
+		typeof output !== "object" ||
+		(output as { type?: unknown }).type !== "organization_proposal"
+	) {
+		return null;
+	}
+	const candidate = output as {
+		summary?: unknown;
+		slots?: unknown;
+		removeSlotIds?: unknown;
+		ungroupedProductIds?: unknown;
+	};
+	if (
+		typeof candidate.summary !== "string" ||
+		!Array.isArray(candidate.slots)
+	) {
+		return null;
+	}
+
+	const slots = candidate.slots
+		.map((slot): OrganizationSlotProposal | null => {
+			if (!slot || typeof slot !== "object") return null;
+			const s = slot as {
+				name?: unknown;
+				rationale?: unknown;
+				existingSlotId?: unknown;
+				productIds?: unknown;
+			};
+			if (
+				typeof s.name !== "string" ||
+				typeof s.rationale !== "string" ||
+				!Array.isArray(s.productIds)
+			) {
+				return null;
+			}
+			const productIds = s.productIds.filter(
+				(id): id is string => typeof id === "string",
+			);
+			return {
+				name: s.name,
+				rationale: s.rationale,
+				existingSlotId:
+					typeof s.existingSlotId === "string" ? s.existingSlotId : undefined,
+				productIds,
+			};
+		})
+		.filter((slot): slot is OrganizationSlotProposal => slot !== null);
+
+	return {
+		type: "organization_proposal",
+		summary: candidate.summary,
+		slots,
+		removeSlotIds: Array.isArray(candidate.removeSlotIds)
+			? candidate.removeSlotIds.filter(
+					(id): id is string => typeof id === "string",
+				)
+			: undefined,
+		ungroupedProductIds: Array.isArray(candidate.ungroupedProductIds)
+			? candidate.ungroupedProductIds.filter(
+					(id): id is string => typeof id === "string",
+				)
+			: undefined,
 	};
 }
 
@@ -216,6 +457,107 @@ function getPartKey(messageId: string, part: unknown): string {
 	return `${messageId}-${p.type ?? "part"}-${p.state ?? "state"}-${hashString(
 		`${p.text ?? ""}:${input}:${output}`,
 	)}`;
+}
+
+function OrganizationProposalCard({
+	proposal,
+	collectionContext,
+	onApply,
+}: {
+	proposal: OrganizationProposal;
+	collectionContext: CollectionContext | null;
+	onApply?: () => Promise<void>;
+}) {
+	const [status, setStatus] = useState<"idle" | "applying" | "applied">("idle");
+	const [error, setError] = useState<string | null>(null);
+	const productTitleById = new Map(
+		(collectionContext?.items ?? []).map((item) => [item.id, item.title]),
+	);
+
+	async function handleApply() {
+		if (!onApply || status !== "idle") return;
+		setStatus("applying");
+		setError(null);
+		try {
+			await onApply();
+			setStatus("applied");
+		} catch {
+			setStatus("idle");
+			setError("Could not apply this organization. Try refreshing first.");
+		}
+	}
+
+	const moveCount = proposal.slots.reduce(
+		(total, slot) => total + slot.productIds.length,
+		0,
+	);
+	const removeCount = proposal.removeSlotIds?.length ?? 0;
+
+	return (
+		<div className={styles.organizeCard}>
+			<div className={styles.organizeHeader}>
+				<div>
+					<span className={styles.clarificationLabel}>Organize</span>
+					<p className={styles.organizeTitle}>{proposal.summary}</p>
+				</div>
+				<span className={styles.organizeStats}>
+					{proposal.slots.length} slots · {moveCount} moves
+				</span>
+			</div>
+
+			<div className={styles.organizeSlots}>
+				{proposal.slots.map((slot) => (
+					<div
+						key={`${slot.existingSlotId ?? slot.name}-${slot.productIds.join("-")}`}
+						className={styles.organizeSlot}
+					>
+						<div className={styles.organizeSlotHeader}>
+							<span className={styles.organizeSlotName}>{slot.name}</span>
+							<span className={styles.organizeSlotCount}>
+								{slot.productIds.length}
+							</span>
+						</div>
+						<p className={styles.organizeRationale}>{slot.rationale}</p>
+						<div className={styles.organizeProducts}>
+							{slot.productIds.slice(0, 4).map((productId) => (
+								<span key={productId} className={styles.organizeProduct}>
+									{productTitleById.get(productId) ?? "Product"}
+								</span>
+							))}
+							{slot.productIds.length > 4 && (
+								<span className={styles.organizeProduct}>
+									+{slot.productIds.length - 4} more
+								</span>
+							)}
+						</div>
+					</div>
+				))}
+			</div>
+
+			{removeCount > 0 && (
+				<p className={styles.organizeNote}>
+					Also removes {removeCount} empty or redundant{" "}
+					{removeCount === 1 ? "slot" : "slots"}.
+				</p>
+			)}
+			{error && <p className={styles.organizeError}>{error}</p>}
+
+			<div className={styles.organizeActions}>
+				<button
+					type="button"
+					className={styles.organizeApplyButton}
+					onClick={handleApply}
+					disabled={!onApply || status !== "idle"}
+				>
+					{status === "applied"
+						? "Applied"
+						: status === "applying"
+							? "Applying..."
+							: "Apply organization"}
+				</button>
+			</div>
+		</div>
+	);
 }
 
 function TextWithAddButtons({
@@ -286,6 +628,12 @@ export function CollectionChat({
 	const inputRef = useRef<HTMLTextAreaElement>(null);
 
 	const collectionContext = serializeCollection(collection);
+	const organizeMode = isOrganizeSeed(seedContext);
+	const chatRequestBody = {
+		collectionContext,
+		collectionId: collection?.$jazz?.id,
+		seedContext,
+	};
 
 	const fetchBalance = useCallback(async () => {
 		try {
@@ -317,11 +665,6 @@ export function CollectionChat({
 	const { messages, sendMessage, stop, status } = useChat({
 		api: "/api/chat",
 		fetch: chatFetch,
-		body: {
-			collectionContext,
-			collectionId: collection?.$jazz?.id,
-			seedContext,
-		},
 	});
 
 	const autoSubmittedRef = useRef<string | null>(null);
@@ -356,11 +699,30 @@ export function CollectionChat({
 	});
 
 	useEffect(() => {
-		if (!seedContext || autoSubmittedRef.current === seedContext) return;
+		if (!seedContext) {
+			autoSubmittedRef.current = null;
+			return;
+		}
+		if (
+			isOrganizeSeed(seedContext) &&
+			(!collectionContext || collectionContext.items.length === 0)
+		) {
+			return;
+		}
+		if (autoSubmittedRef.current === seedContext) return;
 		autoSubmittedRef.current = seedContext;
 		setOpen(true);
-		sendMessageRef.current({ text: seedContext });
-	}, [seedContext]);
+		sendMessageRef.current(
+			{ text: seedContext },
+			{
+				body: {
+					collectionContext,
+					collectionId: collection?.$jazz?.id,
+					seedContext,
+				},
+			},
+		);
+	}, [collection, collectionContext, seedContext]);
 
 	function handleOpen() {
 		setOpen(true);
@@ -384,7 +746,7 @@ export function CollectionChat({
 		const text = draft.trim();
 		if (!text || status === "submitted" || status === "streaming") return;
 		setDraft("");
-		sendMessage({ text });
+		sendMessage({ text }, { body: chatRequestBody });
 	}
 
 	async function handleAddUrl(url: string) {
@@ -447,7 +809,11 @@ export function CollectionChat({
 			<div className={styles.panelHeader}>
 				<div className={styles.panelHeading}>
 					<span className={styles.panelTitle}>
-						{seedContext ? "Find better option" : "Find products"}
+						{organizeMode
+							? "Organize collection"
+							: seedContext
+								? "Find better option"
+								: "Find products"}
 					</span>
 					<a href="/settings" className={styles.creditLink}>
 						{formatCreditBalance(balanceCents)}
@@ -531,10 +897,12 @@ export function CollectionChat({
 								};
 								const isClarification =
 									p.type === "tool-clarify_search_direction";
+								const isOrganize = p.type === "tool-organize_collection";
 								const isSearch = p.type === "tool-search_products";
 								const isExtract = p.type === "tool-extract_product";
 
 								if (
+									!isOrganize &&
 									!isClarification &&
 									!isSearch &&
 									!isExtract &&
@@ -542,6 +910,47 @@ export function CollectionChat({
 									p.type !== "step-start"
 								)
 									return null;
+
+								if (
+									isOrganize &&
+									(p.state === "input-streaming" ||
+										p.state === "input-available")
+								) {
+									return (
+										<div key={partKey} className={styles.toolStatus}>
+											<span className={styles.spinner} />
+											Planning slots…
+										</div>
+									);
+								}
+
+								if (isOrganize && p.state === "output-available") {
+									const proposal = getOrganizationProposal(p.output);
+									if (!proposal) return null;
+									return (
+										<OrganizationProposalCard
+											key={partKey}
+											proposal={proposal}
+											collectionContext={collectionContext}
+											onApply={
+												collection
+													? () =>
+															applyOrganizationProposal(
+																proposal,
+																collection,
+															).then(() => {
+																showToast({
+																	title: "Collection organized",
+																	description:
+																		"Slots and product placement were updated.",
+																	variant: "success",
+																});
+															})
+													: undefined
+											}
+										/>
+									);
+								}
 
 								if (
 									isClarification &&

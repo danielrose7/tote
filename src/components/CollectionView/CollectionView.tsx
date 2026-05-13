@@ -38,6 +38,8 @@ import { TableView } from './TableView';
 import { type ViewMode, ViewModeToggle } from './ViewModeToggle';
 
 const VIEW_MODE_STORAGE_KEY = 'tote:viewMode';
+const ORGANIZE_COLLECTION_SEED =
+  'Organize the current collection items into useful slots. Work only with current items; do not search for or add new products.';
 
 type LoadedBlock = co.loaded<typeof Block>;
 
@@ -169,6 +171,11 @@ export function CollectionView({
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+  };
+
+  const handleOrganizeWithAi = () => {
+    setChatSeedContext(undefined);
+    window.setTimeout(() => setChatSeedContext(ORGANIZE_COLLECTION_SEED), 0);
   };
 
   // Check if extension is available on mount
@@ -501,6 +508,15 @@ export function CollectionView({
                 )}
               </button>
               <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
+              {allProducts.length > 1 && viewMode === 'grid' && (
+                <button
+                  type="button"
+                  onClick={handleOrganizeWithAi}
+                  className={styles.reorderButton}
+                >
+                  Organize
+                </button>
+              )}
               {slots.length > 1 && viewMode === 'grid' && (
                 <button
                   type="button"
