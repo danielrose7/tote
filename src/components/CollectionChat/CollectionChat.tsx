@@ -168,6 +168,18 @@ function getSuggestedCollection(output: unknown): SuggestedCollection | null {
 	};
 }
 
+function getClarificationQuestion(output: unknown): string | null {
+	if (
+		!output ||
+		typeof output !== "object" ||
+		(output as { type?: unknown }).type !== "clarification"
+	) {
+		return null;
+	}
+	const question = (output as { question?: unknown }).question;
+	return typeof question === "string" && question.trim() ? question : null;
+}
+
 function formatCreditBalance(cents: number | null): string {
 	if (cents === null) return "Credits";
 	return `$${(cents / 100).toFixed(2)}`;
@@ -455,7 +467,9 @@ export function CollectionChat({
 				{messages.length === 0 && (
 					<div className={styles.empty}>
 						<span className={styles.emptyIcon}>🔍</span>
-						<span>Ask me to find products for your collection.</span>
+						<span>
+							Ask me to find products, or start broad and I’ll help narrow it.
+						</span>
 					</div>
 				)}
 
@@ -515,16 +529,49 @@ export function CollectionChat({
 									input?: unknown;
 									output?: unknown;
 								};
+								const isClarification =
+									p.type === "tool-clarify_search_direction";
 								const isSearch = p.type === "tool-search_products";
 								const isExtract = p.type === "tool-extract_product";
 
 								if (
+									!isClarification &&
 									!isSearch &&
 									!isExtract &&
 									p.type !== "dynamic-tool" &&
 									p.type !== "step-start"
 								)
 									return null;
+
+								if (
+									isClarification &&
+									(p.state === "input-streaming" ||
+										p.state === "input-available")
+								) {
+									return (
+										<div key={partKey} className={styles.toolStatus}>
+											<span className={styles.spinner} />
+											Choosing a useful direction…
+										</div>
+									);
+								}
+
+								if (isClarification && p.state === "output-available") {
+									const question = getClarificationQuestion(p.output);
+									if (!question) return null;
+									return (
+										<div key={partKey} className={styles.clarificationBubble}>
+											<span className={styles.clarificationLabel}>
+												Direction
+											</span>
+											<TextWithAddButtons
+												text={question}
+												collection={null}
+												onAdd={handleAddUrl}
+											/>
+										</div>
+									);
+								}
 
 								if (
 									isSearch &&
@@ -625,7 +672,7 @@ export function CollectionChat({
 					value={draft}
 					onChange={(e) => setDraft(e.target.value)}
 					onKeyDown={handleKeyDown}
-					placeholder="Find me a waterproof jacket under $150…"
+					placeholder="Find a giftable indoor garden, or ask for ideas…"
 					rows={1}
 				/>
 				{status === "submitted" || status === "streaming" ? (

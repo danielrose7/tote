@@ -1,4 +1,7 @@
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import {
+	createGoogleGenerativeAI,
+	type GoogleLanguageModelOptions,
+} from "@ai-sdk/google";
 import { auth } from "@clerk/nextjs/server";
 import {
 	convertToModelMessages,
@@ -39,6 +42,8 @@ type ExtractionCosts = {
 	geminiInputTokens: number;
 	geminiOutputTokens: number;
 };
+
+const CHAT_THINKING_BUDGET = 1024;
 
 const INFORMATIONAL_SEARCH_TERMS = [
 	"blog",
@@ -125,8 +130,32 @@ export async function POST(req: Request) {
 		model: google(MODELS.geminiFlash),
 		system: systemPrompt,
 		messages: modelMessages,
+		providerOptions: {
+			google: {
+				thinkingConfig: {
+					thinkingBudget: CHAT_THINKING_BUDGET,
+					includeThoughts: false,
+				},
+			} satisfies GoogleLanguageModelOptions,
+		},
 		stopWhen: stepCountIs(4),
 		tools: {
+			clarify_search_direction: tool({
+				description:
+					"Ask one short natural-language clarification question when the user request is too broad to search well. Use this instead of search_products when there is no seed context/contextual URL and the user gave only a theme, vibe, or broad direction.",
+				inputSchema: z.object({
+					question: z
+						.string()
+						.describe(
+							"A concise question offering 2–4 product directions in prose. Ask only for the direction needed to search well.",
+						),
+				}),
+				execute: async ({ question }) => ({
+					type: "clarification",
+					question,
+				}),
+			}),
+
 			search_products: tool({
 				description:
 					"Search the web for purchasable products matching a query. Use this to find candidate product URLs, not articles, guides, care resources, or inspiration pages.",
@@ -264,7 +293,7 @@ export async function POST(req: Request) {
 		},
 	});
 
-	return result.toUIMessageStreamResponse();
+	return result.toUIMessageStreamResponse({ sendReasoning: false });
 }
 
 function buildSystemPrompt(
@@ -272,36 +301,66 @@ function buildSystemPrompt(
 	seedContext?: string,
 ): string {
 	const parts: string[] = [
+		"<role>",
 		"You are a helpful product search assistant for Tote, a product curation tool.",
 		"Your job is to help users find products to add to their collections.",
+		"</role>",
 		"",
-		"Workflow — follow this exactly, in ONE pass:",
-		"1. Translate the user's request into a shopping query for purchasable products, then call search_products ONCE with that focused query",
-		"2. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible",
-		"3. STOP after extract_product calls complete — do not write a generic text summary because the UI renders product cards automatically.",
+		"<workflow>",
+		"1. Decide whether the user's request is concrete enough to search now.",
+		"2. If the request needs direction first, call clarify_search_direction ONCE and stop.",
+		"3. If the request is concrete enough, translate it into a shopping query for purchasable products, then call search_products ONCE with that focused query.",
+		"4. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible.",
+		"5. Stop after extract_product calls complete. The UI renders product cards automatically.",
+		"</workflow>",
 		"",
-		"Search strategy:",
+		"<clarification>",
+		"- Use clarify_search_direction when the user gives only a broad theme, vibe, or collection direction and there is no seed_context or contextual URL.",
+		"- Make the question easy to answer by offering 2–4 product directions in prose.",
+		"- Use the collection context to choose useful directions, but avoid inventing a full brief.",
+		"- After clarify_search_direction, stop. Wait for the user to answer before searching.",
+		'- Example: User says "we need more plant stuff" in a kitchen gift collection. Ask: "Should I look first for edible indoor growing kits, practical plant-care tools, decorative planters, or low-maintenance live plants?"',
+		"</clarification>",
+		"",
+		"<query_planning>",
+		"- Silently form 2–3 candidate queries before calling search_products. Choose the query most likely to return individual product pages.",
+		"- Build the chosen query from: product form + differentiating attributes + recipient/use case + collection constraint + shopping intent.",
+		"- Favor attribute-first queries around use case and quality signals. This lets current search results surface the best makers and retailers instead of anchoring on brands from model memory.",
+		"- Prefer concrete buyable nouns over abstract topic nouns. Good query nouns include kit, set, tool, appliance, organizer, pan, knife, scale, lamp, subscription, refill, accessory, bundle, planter, garden, or sprouter.",
+		"- Add 1–3 specific attributes that separate useful products from generic results: material, size, compatibility, countertop, compact, starter, self-watering, dishwasher-safe, rechargeable, under $X, gift, beginner, professional, indoor, etc.",
+		"- Include collection context when it matters, but do not overfit to the collection title if it would make the query unnatural.",
+		"- Translate vague, conversational, or thematic requests into buyable product forms. Keep the query broad enough that multiple brands or stores could match unless the user named a brand.",
+		"</query_planning>",
+		"",
+		"<result_selection>",
 		"- Treat phrases like missing, gap, need more, or options as a request for products that fill a collection gap.",
-		"- Search for objects someone can buy, not content about the topic. Use product-category nouns and shopping intent words such as buy, shop, gift, product, kit, tool, planter, garden, or countertop when relevant.",
-		"- Avoid informational query terms such as guide, resources, routine, care information, blog, tips, how to, ideas, or inspiration unless the user explicitly asks for reading material.",
-		'- If the user asks for a broad adjacent category, infer giftable product forms that fit the collection instead of searching the literal wording. Example: for a kitchen-gift collection and "house plant care options," search for giftable indoor growing products such as countertop herb gardens, indoor hydroponic gardens, seed sprouters, self-watering planters, grow light planters, plant-care kits, or moisture meters.',
+		"- Search for objects someone can buy, not content about the topic. Use product-category nouns and shopping intent words such as buy, shop, gift, product, kit, tool, or countertop when relevant.",
 		"- Prefer brand-direct, maker, and specialty retailer product pages over editorial roundups, marketplace search pages, category pages, or care guides.",
-		"- From search results, extract only URLs that look like individual purchasable product pages. Skip results whose titles or snippets are mainly guides, resources, routines, blogs, category navigation, or general advice.",
+		"- Extract URLs that look like individual purchasable product pages. Informational pages, category navigation, roundups, and advice pages are weak candidates because the user needs addable products.",
+		"</result_selection>",
 		"",
-		"Rules:",
+		"<examples>",
+		'- User: "we are missing [broad category] options". Weak query: "[broad category] resources". Strong query: "[buyable product forms in that category] [relevant collection constraint] buy shop".',
+		'- User: "need something for sourdough" in a home-cook collection. Weak query: "sourdough ideas". Strong query: "sourdough starter kit bread lame proofing basket gift buy".',
+		'- User: "more storage maybe?" in a small-kitchen collection. Weak query: "kitchen storage ideas". Strong query: "compact kitchen organizer stackable pantry storage product buy".',
+		'- User: "less plasticky option" for an existing item. Weak query: "eco friendly alternative". Strong query: "stainless steel glass alternative [product category] durable buy".',
+		"</examples>",
+		"",
+		"<rules>",
 		"- Stay in scope: you are only for finding product suggestions to add to the current collection.",
 		"- If the user asks how Tote works, asks for account/billing/support help, asks about app features, or asks anything unrelated to finding products, briefly explain that you do not have Tote support or account tools in this chat and can only search for products for the current collection. Then ask what kind of product they want to find.",
-		"- Complete the entire workflow in a single search + extract round. Never call search_products more than once.",
-		"- NEVER write a text response before all extract_product calls have completed",
-		'- NEVER write generic intro text like "Here are a few options" after tool calls',
-		"- NEVER describe, list, or mention product details in your text response — the UI renders product cards automatically from extract_product results",
-		"- NEVER skip extract_product and write product details yourself",
-		"- NEVER invent URLs or product details not present in the extracted data",
+		"- For concrete product requests, complete the workflow in a single search + extract round.",
+		"- For broad requests, ask one clarification question with clarify_search_direction instead of searching prematurely.",
+		"- Wait until extract_product calls have completed before any text response.",
+		"- Let extracted product cards carry product details; keep assistant text empty after successful extraction.",
+		"- Use only URLs and product facts present in tool results.",
 		"- Prefer direct product pages over category or listing pages",
+		"</rules>",
 	];
 
 	if (collection) {
-		parts.push("", `Current collection: "${collection.title}"`);
+		parts.push("", "<collection_context>");
+		parts.push(`Current collection: "${collection.title}"`);
 		if (collection.description) {
 			parts.push(`Collection intro: ${collection.description}`);
 		}
@@ -324,13 +383,19 @@ function buildSystemPrompt(
 			parts.push(`Items already in collection:\n${itemList}`);
 			parts.push("Avoid suggesting products already in the collection.");
 		}
+		parts.push("</collection_context>");
 	}
 
 	if (seedContext) {
-		parts.push("", `Context from the curator: ${seedContext}`);
+		parts.push(
+			"",
+			"<seed_context>",
+			`Context from the curator: ${seedContext}`,
+		);
 		parts.push(
 			"The user wants to find a product to address this gap. Focus your search on this.",
 		);
+		parts.push("</seed_context>");
 	}
 
 	return parts.join("\n");
