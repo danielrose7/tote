@@ -60,6 +60,35 @@ const INFORMATIONAL_SEARCH_TERMS = [
 	"tips",
 ];
 
+const MARKETPLACE_SEARCH_EXCLUSIONS = [
+	"site:amazon.com",
+	"site:walmart.com",
+	"site:ebay.com",
+	"site:aliexpress.com",
+	"site:temu.com",
+];
+
+const MARKETPLACE_HOST_PATTERNS = [
+	/(^|\.)amazon\./i,
+	/(^|\.)walmart\.com$/i,
+	/(^|\.)ebay\.com$/i,
+	/(^|\.)aliexpress\.com$/i,
+	/(^|\.)temu\.com$/i,
+];
+
+function userExplicitlyRequestedMarketplace(query: string): boolean {
+	return /\b(amazon|walmart|ebay|aliexpress|temu)\b/i.test(query);
+}
+
+function isGenericMarketplaceUrl(url: string): boolean {
+	try {
+		const hostname = new URL(url).hostname;
+		return MARKETPLACE_HOST_PATTERNS.some((pattern) => pattern.test(hostname));
+	} catch {
+		return false;
+	}
+}
+
 function buildProductSearchQuery(
 	query: string,
 	collection: CollectionContext | null,
@@ -86,6 +115,14 @@ function buildProductSearchQuery(
 			!lowerQuery.includes(`-"${term}"`)
 		) {
 			additions.push(excludedTerm);
+		}
+	}
+
+	if (!userExplicitlyRequestedMarketplace(query)) {
+		for (const exclusion of MARKETPLACE_SEARCH_EXCLUSIONS) {
+			if (!lowerQuery.includes(`-${exclusion}`)) {
+				additions.push(`-${exclusion}`);
+			}
 		}
 	}
 
@@ -158,12 +195,12 @@ export async function POST(req: Request) {
 
 			search_products: tool({
 				description:
-					"Search the web for purchasable products matching a query. Use this to find candidate product URLs, not articles, guides, care resources, or inspiration pages.",
+					"Search the web for purchasable products matching a query. Use this to find candidate product URLs on brand-direct and specialty retailer sites, not Amazon, generic marketplaces, articles, guides, care resources, or inspiration pages.",
 				inputSchema: z.object({
 					query: z
 						.string()
 						.describe(
-							"Specific shopping query for purchasable products — focus on attributes, use case, price range, and product category. Include shopping intent such as buy/shop/gift/product, and avoid informational words like guide, routine, blog, resources, or how-to.",
+							"Specific shopping query for purchasable products — focus on attributes, use case, price range, and product category. Include shopping intent such as buy/shop/gift/product. Avoid Amazon/generic marketplaces and informational words like guide, routine, blog, resources, or how-to.",
 						),
 				}),
 				execute: async ({ query }) => {
@@ -188,10 +225,28 @@ export async function POST(req: Request) {
 					url: z
 						.string()
 						.url()
-						.describe("A direct product page URL to extract metadata from"),
+						.describe(
+							"A direct product page URL to extract metadata from. Prefer brand-direct and specialty retailer URLs; avoid Amazon and generic marketplaces unless the user explicitly requested that marketplace.",
+						),
 				}),
 				execute: async ({ url }) => {
 					try {
+						if (
+							isGenericMarketplaceUrl(url) &&
+							!modelMessages.some(
+								(message) =>
+									message.role === "user" &&
+									Array.isArray(message.content) &&
+									message.content.some(
+										(part) =>
+											part.type === "text" &&
+											userExplicitlyRequestedMarketplace(part.text),
+									),
+							)
+						) {
+							return null;
+						}
+
 						const result = await extractUrl(url);
 
 						if (result.tier === "cf" || result.tier === "collection-expanded") {
@@ -335,7 +390,8 @@ function buildSystemPrompt(
 		"<result_selection>",
 		"- Treat phrases like missing, gap, need more, or options as a request for products that fill a collection gap.",
 		"- Search for objects someone can buy, not content about the topic. Use product-category nouns and shopping intent words such as buy, shop, gift, product, kit, tool, or countertop when relevant.",
-		"- Prefer brand-direct, maker, and specialty retailer product pages over editorial roundups, marketplace search pages, category pages, or care guides.",
+		"- Prefer brand-direct, maker, independent retailer, and specialty retailer product pages.",
+		"- Avoid Amazon and generic marketplaces unless the user explicitly asks for one. They are weak candidates for Tote curation because the collection should point to specific makers, brands, and specialty stores when possible.",
 		"- Extract URLs that look like individual purchasable product pages. Informational pages, category navigation, roundups, and advice pages are weak candidates because the user needs addable products.",
 		"</result_selection>",
 		"",
@@ -354,7 +410,8 @@ function buildSystemPrompt(
 		"- Wait until extract_product calls have completed before any text response.",
 		"- Let extracted product cards carry product details; keep assistant text empty after successful extraction.",
 		"- Use only URLs and product facts present in tool results.",
-		"- Prefer direct product pages over category or listing pages",
+		"- Prefer direct product pages over category or listing pages.",
+		"- Do not extract Amazon or generic marketplace URLs unless the user explicitly requested that marketplace.",
 		"</rules>",
 	];
 
