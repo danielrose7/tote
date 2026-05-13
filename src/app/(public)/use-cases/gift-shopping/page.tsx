@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
+import { PublicCollectionLinks } from "../PublicCollectionLinks";
 
 export const metadata: Metadata = {
 	title: "Gift Wishlist App for Birthdays, Holidays, and Registries",
@@ -106,6 +107,31 @@ export default function GiftShoppingPage() {
 					"Save gift ideas from any store as you browse",
 					"Compare options and keep a shortlist moving in one place",
 					"Share the list when family asks what to get",
+				]}
+			/>
+
+			<PublicCollectionLinks
+				title="Gift lists you can browse"
+				intro="Start with a real public collection, then copy the structure for your own occasion."
+				collections={[
+					{
+						title: "Baby shower gifts for the person actually having the baby",
+						href: "/s/daniel/baby-shower-gifts-for-the-person-actually-having-the-baby",
+						description:
+							"A practical gift list focused on the parent, not just the newborn registry.",
+					},
+					{
+						title: "Kitchen gifts worth giving a regular home cook",
+						href: "/s/daniel/kitchen-gifts-worth-giving-a-regular-home-cook",
+						description:
+							"Gift ideas for someone who cooks often enough to care, without turning the list into specialty gear theater.",
+					},
+					{
+						title: "Practical gifts for a grandmother who visits the baby",
+						href: "/s/daniel/practical-gifts-for-a-grandmother-who-visits-the-baby",
+						description:
+							"A focused family gift list built around a real relationship and a real use case.",
+					},
 				]}
 			/>
 

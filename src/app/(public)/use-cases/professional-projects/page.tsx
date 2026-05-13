@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
+import { PublicCollectionLinks } from "../PublicCollectionLinks";
 
 export const metadata: Metadata = {
 	title: "Interior Design Sourcing Board for Client Projects",
@@ -85,6 +86,31 @@ export default function ProfessionalProjectsPage() {
 					"Save products from suppliers, retailers, and trade sites",
 					"Compare options and keep the shortlist moving",
 					"Share one board with your client for review",
+				]}
+			/>
+
+			<PublicCollectionLinks
+				title="Sourcing boards you can browse"
+				intro="These public collections show the shape of a client-ready board: narrow brief, curated options, and one link to review."
+				collections={[
+					{
+						title: "A Montessori nursery for the first three months",
+						href: "/s/daniel/a-montessori-nursery-for-the-first-three-months",
+						description:
+							"A room-specific sourcing board with a clear audience, constraints, and product point of view.",
+					},
+					{
+						title: "The considered gardener's kit",
+						href: "/s/daniel/the-considered-gardeners-kit",
+						description:
+							"A curated kit that shows how Tote can present a polished shortlist around a specific project.",
+					},
+					{
+						title: "Kitchen gifts worth giving a regular home cook",
+						href: "/s/daniel/kitchen-gifts-worth-giving-a-regular-home-cook",
+						description:
+							"A compact example of product sourcing where the final board is useful enough to share directly.",
+					},
 				]}
 			/>
 

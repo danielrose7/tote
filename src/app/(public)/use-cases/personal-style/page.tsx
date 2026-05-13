@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
+import { PublicCollectionLinks } from "../PublicCollectionLinks";
 
 export const metadata: Metadata = {
 	title: "Wardrobe Planner and Style Board for Capsule Outfits",
@@ -76,6 +77,19 @@ export default function PersonalStylePage() {
 					"Save clothes and accessories from any store",
 					"Compare pieces and keep the shortlist focused",
 					"Refresh prices and buy when you&apos;re ready",
+				]}
+			/>
+
+			<PublicCollectionLinks
+				title="Style boards you can browse"
+				intro="Use a public collection as a starting point for how a cross-store wardrobe board can be organized."
+				collections={[
+					{
+						title: "US-made everyday rotation, supply-chain honest",
+						href: "/s/daniel/us-made-everyday-rotation-supply-chain-honest",
+						description:
+							"A focused wardrobe board for everyday pieces where origin, quality, and repeat wear matter.",
+					},
 				]}
 			/>
 

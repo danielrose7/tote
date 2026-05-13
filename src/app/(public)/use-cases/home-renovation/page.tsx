@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
+import { PublicCollectionLinks } from "../PublicCollectionLinks";
 
 export const metadata: Metadata = {
 	title: "Home Renovation Organizer for Furniture, Materials, and Budgets",
@@ -86,6 +87,31 @@ export default function HomeRenovationPage() {
 					"Save furniture, fixtures, and materials from any store",
 					"Compare options and keep the project moving room by room",
 					"Share the board with your partner or contractor",
+				]}
+			/>
+
+			<PublicCollectionLinks
+				title="Related public collections"
+				intro="These are not full renovation boards yet, but they show the same pattern: specific decisions, saved across stores, organized into one browsable list."
+				collections={[
+					{
+						title: "The considered gardener's kit",
+						href: "/s/daniel/the-considered-gardeners-kit",
+						description:
+							"A home-adjacent project list with practical gear grouped around one clear outdoor use case.",
+					},
+					{
+						title: "A Montessori nursery for the first three months",
+						href: "/s/daniel/a-montessori-nursery-for-the-first-three-months",
+						description:
+							"A room-focused nursery collection that works like a small furnishing board.",
+					},
+					{
+						title: "Baby gear that earns its floor space",
+						href: "/s/daniel/baby-gear-that-earns-its-floor-space",
+						description:
+							"A useful example of comparing home objects when space, budget, and daily use all matter.",
+					},
 				]}
 			/>
 

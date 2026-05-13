@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "../../docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
+import { PublicCollectionLinks } from "../PublicCollectionLinks";
 
 export const metadata: Metadata = {
 	title: "Shared Shopping List App for Couples and Families",
@@ -73,6 +74,31 @@ export default function FamilyShoppingPage() {
 					"Everyone saves products from any store",
 					"Compare options and pick favorites together",
 					"Buy from the same shortlist instead of guessing",
+				]}
+			/>
+
+			<PublicCollectionLinks
+				title="Family lists you can browse"
+				intro="These public collections show how a shared board can stay focused around one household decision."
+				collections={[
+					{
+						title: "A starter registry built to last past the newborn stage",
+						href: "/s/daniel/a-starter-registry-built-to-last-past-the-newborn-stage",
+						description:
+							"A baby registry structure for families who want fewer throwaway purchases and more useful gear.",
+					},
+					{
+						title: "Baby gear that earns its floor space",
+						href: "/s/daniel/baby-gear-that-earns-its-floor-space",
+						description:
+							"A compact family gear list where every item has to justify the space it takes up.",
+					},
+					{
+						title: "Wood and open shelves: screen-free toys",
+						href: "/s/daniel/wood-and-open-shelves-awesome-screen-free-toys",
+						description:
+							"A shareable toy list for family members who want to buy something useful without asking for another link.",
+					},
 				]}
 			/>
 
