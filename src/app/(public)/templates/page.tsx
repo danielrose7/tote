@@ -58,6 +58,11 @@ const TEMPLATES: { username: string; slug: string; category: string }[] = [
 	},
 	{
 		username: "daniel",
+		slug: "kitchen-gifts-worth-giving-a-regular-home-cook",
+		category: "Gifts",
+	},
+	{
+		username: "daniel",
 		slug: "the-considered-gardeners-kit",
 		category: "Garden",
 	},
