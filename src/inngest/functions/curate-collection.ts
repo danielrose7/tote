@@ -1,17 +1,20 @@
 import { deductCredits, runCostCents } from '../../lib/credits';
-import { MODELS } from '../../lib/models';
-import { extractSection } from '../server-extraction';
-import { patchSession, writeSession } from '../../lib/curatorSession';
+import {
+  patchSession,
+  readSession,
+  writeSession,
+} from '../../lib/curatorSession';
 import {
   completeCuratorSession,
   createCuratorSession,
   failCuratorSession,
 } from '../../lib/curatorSessionsDb';
 import { logProgressEvent, logStep } from '../../lib/curatorStepLog';
+import { MODELS } from '../../lib/models';
 import { curationChannel } from '../channels';
 import { inngest } from '../client';
-import { createLLMClient } from '../llm';
 import { parseJson } from '../lib/parseJson';
+import { createLLMClient } from '../llm';
 import {
   buildCategoryResearchPrompt,
   buildCuratePrompt,
@@ -37,15 +40,16 @@ import {
   InterviewQuestionsSchema,
   MarketLandscapeSchema,
 } from '../prompts';
+import { extractSection } from '../server-extraction';
 import type {
   CollectionOutput,
   CurationAnswersEvent,
   CurationBriefApprovedEvent,
-  CurationExtractionsEvent,
   CurationGap,
   CurationStartEvent,
   ExtractedSection,
   InterviewQuestion,
+  InterviewRound,
   QueryClassification,
   QueryType,
   SectionPlan,
@@ -55,6 +59,14 @@ import type {
 const llm = createLLMClient();
 
 type UrlDiscoveryPayload = { urls: string[] };
+
+async function readPersistedAnswers(
+  sessionId: string,
+  round: InterviewRound,
+): Promise<Record<string, string> | null> {
+  const session = await readSession(sessionId);
+  return session?.answerRounds?.[round] ?? null;
+}
 
 function parameterize(title: string): string {
   return title
@@ -273,26 +285,35 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       ),
     );
 
-    // Step 2: Wait for Round 1 answers
-    const round1AnswersEvent = await step.waitForEvent('wait-for-answers-r1', {
-      event: 'curation/answers' as CurationAnswersEvent['name'],
-      timeout: '15m',
-      if: `async.data.sessionId == "${sessionId}" && async.data.round == 1`,
-    });
-
-    if (!round1AnswersEvent) {
-      await step.realtime.publish('timed-out', ch.progress, {
-        step: 'error',
-        message:
-          'Timed out waiting for answers. Start a new session to try again.',
+    // Step 2: Wait for Round 1 answers. Answer submissions are also persisted
+    // by the API so a fast submit cannot outrun this wait step.
+    const persistedRound1Answers = await step.run(
+      'read-persisted-answers-r1',
+      () => readPersistedAnswers(sessionId, 1),
+    );
+    let round1Answers = persistedRound1Answers;
+    if (!round1Answers) {
+      const round1AnswersEvent = await step.waitForEvent('wait-for-answers-r1', {
+        event: 'curation/answers' as CurationAnswersEvent['name'],
+        timeout: '15m',
+        if: `async.data.sessionId == "${sessionId}" && async.data.round == 1`,
       });
-      await step.run('persist-error-phase', () =>
-        patchSession(sessionId, { phase: 'error' }),
-      );
-      return;
+
+      if (!round1AnswersEvent) {
+        await step.realtime.publish('timed-out', ch.progress, {
+          step: 'error',
+          message:
+            'Timed out waiting for answers. Start a new session to try again.',
+        });
+        await step.run('persist-error-phase', () =>
+          patchSession(sessionId, { phase: 'error' }),
+        );
+        return;
+      }
+
+      round1Answers = round1AnswersEvent.data.answers;
     }
 
-    const round1Answers = round1AnswersEvent.data.answers;
     console.log('[curate-collection] answers-round-1-received', {
       at: nowIso(),
       sessionId,
@@ -578,28 +599,33 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         message: 'Round 2 questions sent — waiting for your answers.',
       });
 
-      const round2AnswersEvent = await step.waitForEvent(
-        'wait-for-answers-r2',
-        {
+      const persistedRound2Answers = await step.run(
+        'read-persisted-answers-r2',
+        () => readPersistedAnswers(sessionId, 2),
+      );
+      if (persistedRound2Answers) {
+        round2Answers = persistedRound2Answers;
+      } else {
+        const round2AnswersEvent = await step.waitForEvent('wait-for-answers-r2', {
           event: 'curation/answers' as CurationAnswersEvent['name'],
           timeout: '15m',
           if: `async.data.sessionId == "${sessionId}" && async.data.round == 2`,
-        },
-      );
-
-      if (!round2AnswersEvent) {
-        await step.realtime.publish('timed-out-r2', ch.progress, {
-          step: 'error',
-          message:
-            'Timed out waiting for follow-up answers. Start a new session to try again.',
         });
-        await step.run('persist-error-phase-r2', () =>
-          patchSession(sessionId, { phase: 'error' }),
-        );
-        return;
-      }
 
-      round2Answers = round2AnswersEvent.data.answers;
+        if (!round2AnswersEvent) {
+          await step.realtime.publish('timed-out-r2', ch.progress, {
+            step: 'error',
+            message:
+              'Timed out waiting for follow-up answers. Start a new session to try again.',
+          });
+          await step.run('persist-error-phase-r2', () =>
+            patchSession(sessionId, { phase: 'error' }),
+          );
+          return;
+        }
+
+        round2Answers = round2AnswersEvent.data.answers;
+      }
 
       await step.realtime.publish('answers-round-2-received', ch.progress, {
         step: 'answers-round-2-received',
@@ -1432,11 +1458,11 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           patchSession(sessionId, {
             phase: 'refining',
             refinementPass: pass,
-            lastProgressMessage: `Refinement pass ${pass}: analysing warnings...`,
+            lastProgressMessage: `Refinement pass ${pass}: analyzing warnings...`,
           }),
           logProgressEvent(sessionId, {
             step: `refining-${pass}`,
-            message: `Refinement pass ${pass}: analysing ${currentCollection.warnings.length} warnings...`,
+            message: `Refinement pass ${pass}: analyzing ${currentCollection.warnings.length} warnings...`,
             ts: Date.now(),
           }),
         ]),
@@ -1444,7 +1470,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
 
       await step.realtime.publish(`refining-${pass}`, ch.progress, {
         step: `refining-${pass}`,
-        message: `Refinement pass ${pass}: analysing ${currentCollection.warnings.length} warnings...`,
+        message: `Refinement pass ${pass}: analyzing ${currentCollection.warnings.length} warnings...`,
       });
 
       // 7a. Parse gaps from warnings
@@ -1499,8 +1525,13 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           const gapSlug = `gap-${pass}-${gi}`;
 
           await step.realtime.publish(`searching-${gapSlug}`, ch.progress, {
-            step: 'searching',
+            step: `searching-${gapSlug}`,
             message: `Finding URLs for gap: "${gap.description}"`,
+          });
+          await logProgressEvent(sessionId, {
+            step: `searching-${gapSlug}`,
+            message: `Finding URLs for gap: "${gap.description}"`,
+            ts: Date.now(),
           });
 
           const foundGap = await step.run(`find-urls-${gapSlug}`, async () => {
@@ -1555,13 +1586,25 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
           );
 
           await step.realtime.publish(`found-urls-${gapSlug}`, ch.progress, {
-            step: foundGap.parseFailed ? 'search-parse-failed' : 'found-urls',
+            step: foundGap.parseFailed
+              ? `search-parse-failed-${gapSlug}`
+              : `found-urls-${gapSlug}`,
             message: foundGap.parseFailed
               ? `Search returned an unreadable response for gap: "${gap.description}"`
               : `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
             detail: foundGap.parseFailed
               ? 'No URLs could be extracted from the model output. This is likely a parsing or formatting issue.'
               : undefined,
+          });
+          await logProgressEvent(sessionId, {
+            step: `found-urls-${gapSlug}`,
+            message: foundGap.parseFailed
+              ? `Search returned an unreadable response for gap: "${gap.description}"`
+              : `Found ${foundGap.urls.length} URLs for gap: "${gap.description}"`,
+            detail: foundGap.parseFailed
+              ? 'No URLs could be extracted from the model output. This is likely a parsing or formatting issue.'
+              : undefined,
+            ts: Date.now(),
           });
 
           return {
@@ -1594,72 +1637,55 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
 
       // Persist gap URL sections so reconnecting clients can re-queue them
       await step.run(`persist-refinement-urls-${pass}`, async () => {
-        for (const s of refinementUrlSections) {
-          await logProgressEvent(sessionId, {
-            step: `searching-${s.slug}`,
-            message: `Finding URLs for gap: "${s.title}"...`,
-            ts: Date.now(),
-          });
-          await logProgressEvent(sessionId, {
-            step: `found-urls-${s.slug}`,
-            message: `Found ${s.urls.length} URLs for gap: "${s.title}"`,
-            ts: Date.now(),
-          });
-        }
         await patchSession(sessionId, { refinementUrlSections });
       });
 
       // 7c. Extract gap URLs server-side using 2-tier CF+Gemini strategy
       if (refinementUrlSections.length === 0) break;
 
-      for (const section of refinementUrlSections) {
-        await step.realtime.publish(`extracting-${section.slug}`, ch.progress, {
-          step: 'extracting',
-          message: `Extracting gap: "${section.title}" (${section.urls.length} URLs)...`,
-        });
-      }
-
       const gapExtractionResults = await Promise.all(
-        refinementUrlSections.map((section) =>
-          step.run(`extract-section-${section.slug}`, () =>
-            extractSection(section),
-          ),
-        ),
-      );
-
-      const refinedSections: ExtractedSection[] = gapExtractionResults;
-
-      for (const r of gapExtractionResults) {
-        const tierDetail = [
-          r.cfCount > 0 && `${r.cfCount} via CF`,
-          r.geminiCount > 0 && `${r.geminiCount} via Gemini`,
-          r.failedCount > 0 && `${r.failedCount} failed`,
-        ]
-          .filter(Boolean)
-          .join(', ');
-
-        await step.realtime.publish(`extracted-${r.slug}`, ch.progress, {
-          step: 'extracted',
-          message: `"${r.title}": ${r.items.length} products extracted`,
-          detail: tierDetail || undefined,
-        });
-      }
-
-      await step.run(`persist-refined-slugs-${pass}`, async () => {
-        for (const section of refinementUrlSections) {
+        refinementUrlSections.map(async (section) => {
+          await step.realtime.publish(`extracting-${section.slug}`, ch.progress, {
+            step: `extracting-${section.slug}`,
+            message: `Extracting gap: "${section.title}" (${section.urls.length} URLs)...`,
+          });
           await logProgressEvent(sessionId, {
             step: `extracting-${section.slug}`,
             message: `Extracting gap: "${section.title}" (${section.urls.length} URLs)...`,
             ts: Date.now(),
           });
-        }
-        for (const r of gapExtractionResults) {
+
+          const result = await step.run(`extract-section-${section.slug}`, () =>
+            extractSection(section),
+          );
+
+          const tierDetail = [
+            result.cfCount > 0 && `${result.cfCount} via CF`,
+            result.geminiCount > 0 && `${result.geminiCount} via Gemini`,
+            result.failedCount > 0 && `${result.failedCount} failed`,
+          ]
+            .filter(Boolean)
+            .join(', ');
+
+          await step.realtime.publish(`extracted-${result.slug}`, ch.progress, {
+            step: `extracted-${result.slug}`,
+            message: `"${result.title}": ${result.items.length} products extracted`,
+            detail: tierDetail || undefined,
+          });
           await logProgressEvent(sessionId, {
-            step: `extracted-${r.slug}`,
-            message: `"${r.title}": ${r.items.length} products extracted`,
+            step: `extracted-${result.slug}`,
+            message: `"${result.title}": ${result.items.length} products extracted`,
+            detail: tierDetail || undefined,
             ts: Date.now(),
           });
-        }
+
+          return result;
+        }),
+      );
+
+      const refinedSections: ExtractedSection[] = gapExtractionResults;
+
+      await step.run(`persist-refined-slugs-${pass}`, async () => {
         await patchSession(sessionId, {
           extractedSlugs: [
             ...extractedSections.map((s) => s.slug),

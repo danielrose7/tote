@@ -33,6 +33,7 @@ export interface CuratorSessionData {
   questions?: InterviewQuestion[];
   questionRound?: InterviewRound;
   answers?: Record<string, string>;
+  answerRounds?: Partial<Record<InterviewRound, Record<string, string>>>;
   researchBriefJson?: string;
   marketLandscapeJson?: string;
   framingBriefJson?: string;
@@ -73,6 +74,30 @@ export async function patchSession(
     SET state = COALESCE(state, '{}'::jsonb) || ${JSON.stringify(patch)}::jsonb
     WHERE session_id = ${sessionId}
   `;
+}
+
+export async function persistSubmittedAnswers(
+  sessionId: string,
+  round: InterviewRound,
+  answers: Record<string, string>,
+): Promise<void> {
+  const session = await readSession(sessionId);
+  const answerRounds = {
+    ...(session?.answerRounds ?? {}),
+    [round]: answers,
+  };
+  const mergedAnswers =
+    round === 1 ? answers : { ...(session?.answers ?? {}), ...answers };
+
+  await patchSession(sessionId, {
+    answerRounds,
+    answers: mergedAnswers,
+    phase: round === 1 ? 'researching' : 'framing',
+    lastProgressMessage:
+      round === 1
+        ? 'Round 1 answers received. Researching the category...'
+        : 'Round 2 answers received. Building curatorial brief...',
+  });
 }
 
 export async function writeSession(

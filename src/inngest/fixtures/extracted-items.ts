@@ -68,7 +68,7 @@ export const MOCK_EXTRACTED_ITEMS: Record<
 	"https://tubbytodd.com/collections/bath-products": {
 		title: "Tubby Todd All Over Ointment",
 		description:
-			"Multi-purpose skin protectant for sensitive and eczema-prone baby skin. Pediatrician tested, fragrance-free, and formulated without common irritants. A cult favourite for dry, rashy skin.",
+			"Multi-purpose skin protectant for sensitive and eczema-prone baby skin. Pediatrician tested, fragrance-free, and formulated without common irritants. A cult favorite for dry, rashy skin.",
 		price: "$22.00",
 		brand: "Tubby Todd",
 		availability: "in stock",

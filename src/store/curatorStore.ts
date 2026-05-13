@@ -170,6 +170,17 @@ function tryParsePayload(json: string): ImportPayload | null {
 // caused by store updates won't re-process the same message.
 const _lastSeen: Record<string, unknown> = {};
 
+function progressKey(entry: Pick<ProgressEntry, "step" | "message">): string {
+	return `${entry.step}\n${entry.message}`;
+}
+
+function normalizeProgressEntry(entry: ProgressEntry): ProgressEntry {
+	return {
+		...entry,
+		message: entry.message.replaceAll("analysing", "analyzing"),
+	};
+}
+
 export const useCuratorStore = create<CuratorState>((set, get) => ({
 	...initialState,
 
@@ -189,10 +200,16 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 		})),
 	appendProgress: (entry) =>
 		set((s) => {
+			const normalized = normalizeProgressEntry(entry);
 			const last = s.progress[s.progress.length - 1];
-			if (last?.step === entry.step && last?.message === entry.message)
+			if (
+				last?.step === normalized.step &&
+				last?.message === normalized.message
+			)
 				return s;
-			return { progress: [...s.progress, entry] };
+			if (s.progress.some((e) => progressKey(e) === progressKey(normalized)))
+				return s;
+			return { progress: [...s.progress, normalized] };
 		}),
 	setExtractionProgress: (update) =>
 		set((s) => ({
@@ -247,18 +264,22 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 			// Use the real progress log from the DB when available; fall back to
 			// synthesizing from phase for sessions that predate progress logging.
 			if (Array.isArray(snap.progressLog) && snap.progressLog.length > 0) {
-				// Deduplicate by step name in case of Inngest retries writing duplicates.
+				// Deduplicate by step + message in case websocket events and DB sync
+				// report the same progress entry under different transport IDs.
 				// Merge with local realtime entries so sync can fill in missed terminal
 				// messages without erasing newer client-side state.
 				const seen = new Set<string>();
 				patch.progress = [
 					...s.progress,
 					...(snap.progressLog as ProgressEntry[]),
-				].filter((e) => {
-					if (seen.has(e.step)) return false;
-					seen.add(e.step);
-					return true;
-				});
+				]
+					.map(normalizeProgressEntry)
+					.filter((e) => {
+						const key = progressKey(e);
+						if (seen.has(key)) return false;
+						seen.add(key);
+						return true;
+					});
 			} else if (s.progress.length === 0 && snap.phase) {
 				const phase = snap.phase as string;
 				const milestoneOrder = [
@@ -353,7 +374,7 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 					for (let p = 1; p <= pass; p++) {
 						synthesized.push({
 							step: `refining-${p}`,
-							message: `Refinement pass ${p}: analysing warnings...`,
+							message: `Refinement pass ${p}: analyzing warnings...`,
 							ts: ts++,
 						});
 						synthesized.push({
@@ -419,7 +440,9 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 					detail?: string;
 					framingBriefJson?: string;
 				};
-				const { step, message, detail } = d;
+				const step = d.step;
+				const message = d.message.replaceAll("analysing", "analyzing");
+				const detail = d.detail;
 
 				if (
 					(step === "brief-review-ready" || step === "framing-complete") &&
@@ -444,11 +467,12 @@ export const useCuratorStore = create<CuratorState>((set, get) => ({
 
 				// Deduplicate progress entries
 				const last = prev.progress[prev.progress.length - 1];
-				if (!(last?.step === step && last?.message === message)) {
-					patch.progress = [
-						...prev.progress,
-						{ step, message, detail, ts: Date.now() },
-					];
+				const entry = { step, message, detail, ts: Date.now() };
+				if (
+					!(last?.step === step && last?.message === message) &&
+					!prev.progress.some((e) => progressKey(e) === progressKey(entry))
+				) {
+					patch.progress = [...prev.progress, entry];
 				}
 			}
 

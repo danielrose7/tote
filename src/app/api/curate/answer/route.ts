@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { inngest } from "../../../../inngest/client";
 import { isCurator } from "../../../../inngest/curator-auth";
+import { persistSubmittedAnswers } from "../../../../lib/curatorSession";
 
 export async function POST(request: Request) {
 	if (!(await isCurator())) {
@@ -20,10 +21,17 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
 	}
 
-	await inngest.send({
-		name: "curation/answers",
-		data: { sessionId, round, questions, answers, mode: "normal" },
-	});
+	await Promise.all([
+		persistSubmittedAnswers(
+			sessionId,
+			round,
+			answers as Record<string, string>,
+		),
+		inngest.send({
+			name: "curation/answers",
+			data: { sessionId, round, questions, answers, mode: "normal" },
+		}),
+	]);
 
 	return NextResponse.json({ ok: true });
 }
