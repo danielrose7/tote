@@ -51,6 +51,13 @@ export function AddLinkDialog({
 		sharedCollections: collection ? [collection] : [],
 	});
 
+	const findSelectedCollection = (id: string): LoadedBlock | undefined => {
+		if (collection?.$isLoaded && collection.$jazz.id === id) {
+			return collection;
+		}
+		return findCollection(id);
+	};
+
 	// Default to the provided collection ID, or the account's default block
 	const defaultCollectionId =
 		collectionId ||
@@ -81,7 +88,7 @@ export function AddLinkDialog({
 				const metadata = await fetchMetadata(values.url);
 
 				// Find the collection block to get its name and sharing group
-				const collectionBlock = findCollection(values.collectionId);
+				const collectionBlock = findSelectedCollection(values.collectionId);
 
 				if (!collectionBlock) {
 					throw new Error("Collection not found");
@@ -162,7 +169,7 @@ export function AddLinkDialog({
 		if (!formik.values.collectionId) return [];
 
 		// Get slots from the collection's children (works for both owned and shared)
-		const collectionBlock = findCollection(formik.values.collectionId);
+		const collectionBlock = findSelectedCollection(formik.values.collectionId);
 		const existingSlots: LoadedBlock[] = [];
 		if (collectionBlock?.children?.$isLoaded) {
 			for (const child of collectionBlock.children) {
@@ -181,7 +188,7 @@ export function AddLinkDialog({
 	// Create a new slot in the selected collection
 	const handleCreateSlot = async (name: string): Promise<string> => {
 		// Find the collection to get its sharing group
-		const collectionBlock = findCollection(formik.values.collectionId);
+		const collectionBlock = findSelectedCollection(formik.values.collectionId);
 
 		if (!collectionBlock?.children?.$isLoaded) {
 			throw new Error("Collection children not loaded");

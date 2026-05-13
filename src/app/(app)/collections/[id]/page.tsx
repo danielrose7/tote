@@ -99,14 +99,15 @@ export default function CollectionDetailPage() {
 
 	// Find the collection block - check owned blocks first, then use direct load for shared
 	const collectionBlock = useMemo(() => {
-		// First check owned blocks
-		const ownedBlock = allBlocks.find((b) => b.$jazz.id === collectionId);
-		if (ownedBlock) return ownedBlock;
-
-		// For shared collections, use the directly loaded collection
+		// Prefer the direct collection load for this page. It is resolved with
+		// nested children and receives the freshest updates for current-item tools.
 		if (directCollection && directCollection.type === "collection") {
 			return directCollection as LoadedBlock;
 		}
+
+		// First check owned blocks
+		const ownedBlock = allBlocks.find((b) => b.$jazz.id === collectionId);
+		if (ownedBlock) return ownedBlock;
 
 		return null;
 	}, [allBlocks, collectionId, directCollection]);
