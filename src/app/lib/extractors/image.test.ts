@@ -26,6 +26,31 @@ describe("extractor image handling", () => {
 		);
 	});
 
+	it("resolves Cuckoo product media with custom lazy-image elements", () => {
+		const html = `
+			<div class="product__media card media media--adapt_first mobile:media--adapt_first flex w-full flex-auto relative overflow-hidden" data-media-type="image" data-media-id="35054680768765">
+				<img
+					src="//cuckooamerica.com/cdn/shop/files/CR-0605F_88bada74-4e2e-4208-af14-7e672a4c0f53.jpg?v=1744215150&amp;width=2200"
+					alt="6-Cup Micom Rice Cooker (CR-0605F)"
+					srcset="//cuckooamerica.com/cdn/shop/files/CR-0605F_88bada74-4e2e-4208-af14-7e672a4c0f53.jpg?v=1744215150&amp;width=200 200w, //cuckooamerica.com/cdn/shop/files/CR-0605F_88bada74-4e2e-4208-af14-7e672a4c0f53.jpg?v=1744215150&amp;width=2200 2200w"
+					width="2200"
+					height="2200"
+					loading="eager"
+					fetchpriority="high"
+					class="w-full"
+					is="lazy-image"
+				>
+				<button type="button" is="media-lightbox-button" aria-label="Open media 1 in modal"></button>
+			</div>
+		`;
+
+		expect(
+			extractImageFromHtml(html, "https://cuckooamerica.com/products/cr-0605f"),
+		).toBe(
+			"https://cuckooamerica.com/cdn/shop/files/CR-0605F_88bada74-4e2e-4208-af14-7e672a4c0f53.jpg?v=1744215150&width=2200",
+		);
+	});
+
 	it("extracts JSON-LD single ImageObject urls", () => {
 		const html = `
 			<script type="application/ld+json">
