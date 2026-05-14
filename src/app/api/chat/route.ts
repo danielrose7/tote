@@ -52,6 +52,32 @@ type ExtractionCosts = {
 	geminiOutputTokens: number;
 };
 
+type ExtractProductOutput =
+	| {
+			title: string | null;
+			url: string;
+			imageUrl: string | null;
+			price: string | null;
+			currency: string | null;
+			brand: string | null;
+			description: string | null;
+	  }
+	| {
+			type: "collection";
+			title: string;
+			url: string;
+			products: {
+				title: string | null;
+				url: string;
+				imageUrl: string | null;
+				price: string | null;
+				currency: string | null;
+				brand: string | null;
+				description: string | null;
+			}[];
+	  }
+	| null;
+
 const CHAT_THINKING_BUDGET = 1024;
 
 const INFORMATIONAL_SEARCH_TERMS = [
@@ -95,6 +121,25 @@ function isGenericMarketplaceUrl(url: string): boolean {
 		return MARKETPLACE_HOST_PATTERNS.some((pattern) => pattern.test(hostname));
 	} catch {
 		return false;
+	}
+}
+
+function canonicalProductUrl(url: string): string {
+	try {
+		const parsed = new URL(url);
+		parsed.hash = "";
+		for (const param of [...parsed.searchParams.keys()]) {
+			if (
+				/^utm_/i.test(param) ||
+				["fbclid", "gclid", "gbraid", "wbraid"].includes(param.toLowerCase())
+			) {
+				parsed.searchParams.delete(param);
+			}
+		}
+		parsed.searchParams.sort();
+		return parsed.href.replace(/\/$/, "").toLowerCase();
+	} catch {
+		return url.replace(/\/$/, "").toLowerCase();
 	}
 }
 
@@ -166,6 +211,10 @@ export async function POST(req: Request) {
 		geminiInputTokens: 0,
 		geminiOutputTokens: 0,
 	};
+	const extractedProductCache = new Map<
+		string,
+		Promise<ExtractProductOutput>
+	>();
 	let braveSearchCount = 0;
 
 	const systemPrompt = buildSystemPrompt(collectionContext, seedContext);
@@ -286,61 +335,73 @@ export async function POST(req: Request) {
 						),
 				}),
 				execute: async ({ url }) => {
-					try {
-						if (
-							isGenericMarketplaceUrl(url) &&
-							!modelMessages.some(
-								(message) =>
-									message.role === "user" &&
-									Array.isArray(message.content) &&
-									message.content.some(
-										(part) =>
-											part.type === "text" &&
-											userExplicitlyRequestedMarketplace(part.text),
-									),
-							)
-						) {
+					const cacheKey = canonicalProductUrl(url);
+					const cached = extractedProductCache.get(cacheKey);
+					if (cached) return cached;
+
+					const extraction = (async (): Promise<ExtractProductOutput> => {
+						try {
+							if (
+								isGenericMarketplaceUrl(url) &&
+								!modelMessages.some(
+									(message) =>
+										message.role === "user" &&
+										Array.isArray(message.content) &&
+										message.content.some(
+											(part) =>
+												part.type === "text" &&
+												userExplicitlyRequestedMarketplace(part.text),
+										),
+								)
+							) {
+								return null;
+							}
+
+							const result = await extractUrl(url);
+
+							if (
+								result.tier === "cf" ||
+								result.tier === "collection-expanded"
+							) {
+								extractionCosts.cfCount++;
+							} else if (result.tier === "gemini") {
+								extractionCosts.geminiInputTokens += result.usage.inputTokens;
+								extractionCosts.geminiOutputTokens += result.usage.outputTokens;
+							}
+
+							const items = result.items
+								.filter((i) => i.title || i.imageUrl || i.price)
+								.slice(0, result.tier === "collection-expanded" ? 3 : 1)
+								.map((item) => ({
+									title: item.title ?? null,
+									url: item.sourceUrl ?? url,
+									imageUrl: item.imageUrl ?? null,
+									price: item.price ?? null,
+									currency: item.currency ?? null,
+									brand: item.brand ?? null,
+									description: item.description ?? null,
+								}));
+							if (items.length === 0) return null;
+							if (result.tier === "collection-expanded") {
+								let hostname = url;
+								try {
+									hostname = new URL(url).hostname.replace(/^www\./, "");
+								} catch {}
+								return {
+									type: "collection",
+									title: `Products from ${hostname}`,
+									url,
+									products: items,
+								};
+							}
+							return items[0];
+						} catch {
 							return null;
 						}
+					})();
 
-						const result = await extractUrl(url);
-
-						if (result.tier === "cf" || result.tier === "collection-expanded") {
-							extractionCosts.cfCount++;
-						} else if (result.tier === "gemini") {
-							extractionCosts.geminiInputTokens += result.usage.inputTokens;
-							extractionCosts.geminiOutputTokens += result.usage.outputTokens;
-						}
-
-						const items = result.items
-							.filter((i) => i.title || i.imageUrl || i.price)
-							.slice(0, result.tier === "collection-expanded" ? 3 : 1)
-							.map((item) => ({
-								title: item.title ?? null,
-								url: item.sourceUrl ?? url,
-								imageUrl: item.imageUrl ?? null,
-								price: item.price ?? null,
-								currency: item.currency ?? null,
-								brand: item.brand ?? null,
-								description: item.description ?? null,
-							}));
-						if (items.length === 0) return null;
-						if (result.tier === "collection-expanded") {
-							let hostname = url;
-							try {
-								hostname = new URL(url).hostname.replace(/^www\./, "");
-							} catch {}
-							return {
-								type: "collection",
-								title: `Products from ${hostname}`,
-								url,
-								products: items,
-							};
-						}
-						return items[0];
-					} catch {
-						return null;
-					}
+					extractedProductCache.set(cacheKey, extraction);
+					return extraction;
 				},
 			}),
 		},
@@ -422,7 +483,7 @@ function buildSystemPrompt(
 		"2. If the user asks to organize, tidy, group, clean up, make slots, make sections, restructure, or sort CURRENT items, call organize_collection ONCE and stop.",
 		"3. If the request needs product-search direction first, call clarify_search_direction ONCE and stop.",
 		"4. If the request is concrete enough, translate it into a shopping query for purchasable products, then call search_products ONCE with that focused query.",
-		"5. Call extract_product on 2–4 of the most promising individual product page URLs from the search results — call them in parallel if possible.",
+		"5. Call extract_product on 2–4 distinct, most promising individual product page URLs from the search results — call them in parallel if possible.",
 		"6. Stop after extract_product calls complete. The UI renders product cards automatically.",
 		"</workflow>",
 		"",
@@ -463,6 +524,7 @@ function buildSystemPrompt(
 		"- Prefer brand-direct, maker, independent retailer, and specialty retailer product pages.",
 		"- Avoid Amazon and generic marketplaces unless the user explicitly asks for one. They are weak candidates for Tote curation because the collection should point to specific makers, brands, and specialty stores when possible.",
 		"- Extract URLs that look like individual purchasable product pages. Informational pages, category navigation, roundups, and advice pages are weak candidates because the user needs addable products.",
+		"- Deduplicate before extraction: never call extract_product twice for the same URL, same canonical product page, or same product model.",
 		"</result_selection>",
 		"",
 		"<examples>",
@@ -481,6 +543,7 @@ function buildSystemPrompt(
 		"- Let extracted product cards carry product details; keep assistant text empty after successful extraction.",
 		"- Use only URLs and product facts present in tool results.",
 		"- Prefer direct product pages over category or listing pages.",
+		"- Do not show or extract duplicate products. If two search results point to the same product, keep the stronger direct product page and discard the duplicate.",
 		"- Do not extract Amazon or generic marketplace URLs unless the user explicitly requested that marketplace.",
 		"</rules>",
 	];

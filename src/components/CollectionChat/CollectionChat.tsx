@@ -280,6 +280,21 @@ function normalizeProductUrl(
 	}
 }
 
+function productIdentity(product: Pick<SuggestedProduct, "url" | "title">): string {
+	const url = normalizeProductUrl(product.url);
+	if (url) {
+		try {
+			const parsed = new URL(url);
+			parsed.hash = "";
+			parsed.searchParams.sort();
+			return parsed.href.replace(/\/$/, "").toLowerCase();
+		} catch {
+			return url.replace(/\/$/, "").toLowerCase();
+		}
+	}
+	return (product.title ?? "").trim().toLowerCase();
+}
+
 const URL_RE = /https?:\/\/[^\s"')>]+/g;
 
 function isGenericOptionsIntro(text: string): boolean {
@@ -306,14 +321,23 @@ function getSuggestedProducts(output: unknown): SuggestedProduct[] {
 		return [];
 	}
 	const products = Array.isArray(output) ? output : [output];
-	return products.filter((product): product is SuggestedProduct =>
-		Boolean(
-			product &&
+	const seen = new Set<string>();
+	return products.filter((product): product is SuggestedProduct => {
+		if (
+			!(
+				product &&
 				typeof product === "object" &&
 				"url" in product &&
-				typeof product.url === "string",
-		),
-	);
+				typeof product.url === "string"
+			)
+		) {
+			return false;
+		}
+		const key = productIdentity(product as SuggestedProduct);
+		if (seen.has(key)) return false;
+		seen.add(key);
+		return true;
+	});
 }
 
 function getSuggestedCollection(output: unknown): SuggestedCollection | null {
@@ -840,6 +864,7 @@ export function CollectionChat({
 				)}
 
 				{messages.map((message) => {
+					const renderedProducts = new Set<string>();
 					const hasProductCards = message.parts.some((part) => {
 						const p = part as {
 							type: string;
@@ -1027,12 +1052,18 @@ export function CollectionChat({
 									}
 
 									const products = getSuggestedProducts(p.output);
-									if (products.length === 0) return null;
+									const uniqueProducts = products.filter((product) => {
+										const key = productIdentity(product);
+										if (renderedProducts.has(key)) return false;
+										renderedProducts.add(key);
+										return true;
+									});
+									if (uniqueProducts.length === 0) return null;
 									return (
 										<div key={partKey} className={styles.productResults}>
-											{products.map((product) => (
+											{uniqueProducts.map((product) => (
 												<ProductSuggestionCard
-													key={product.url}
+													key={productIdentity(product)}
 													product={product}
 													onAdd={
 														collection
