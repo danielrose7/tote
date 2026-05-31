@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/clerk/clerk-ios.git",
       "state" : {
-        "revision" : "e48685b5d739f8cf3db5a93176bc79a4bef587c3",
-        "version" : "1.0.0"
+        "revision" : "5f9567a1ef4cd47ac4cfe9b1d4c0d400af62202b",
+        "version" : "1.1.3"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/marmelroy/PhoneNumberKit",
       "state" : {
-        "revision" : "54f678c2fb115e68bb173face494954c1de9df10",
-        "version" : "4.2.8"
+        "revision" : "169ab10234347fb19b37441f2867ace896a284b0",
+        "version" : "4.3.0"
       }
     }
   ],

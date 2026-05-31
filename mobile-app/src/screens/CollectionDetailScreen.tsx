@@ -1020,6 +1020,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   }
 
   const children = collection.children ?? [];
+  // null items mean Jazz is still streaming coValues — don't show empty state yet
+  const childrenLoading = children.some((c) => c === null);
   const directProducts = children.filter(
     (b): b is ProductItem => b?.type === 'product',
   );
@@ -1423,10 +1425,19 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      {totalItems === 0 ? (
+      {totalItems === 0 && !childrenLoading ? (
         <View style={styles.emptyStateContainer}>
           {pageHeader}
           <Text style={styles.empty}>No items yet</Text>
+        </View>
+      ) : totalItems === 0 && childrenLoading ? (
+        <View style={styles.emptyStateContainer}>
+          {pageHeader}
+          <ActivityIndicator
+            size="large"
+            color="#6366f1"
+            style={{ marginTop: 40 }}
+          />
         </View>
       ) : isReorderMode ? (
         <View style={styles.reorderModeContainer}>

@@ -120,6 +120,10 @@ target 'Tote' do
           config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
         end
       end
+
+      target.build_configurations.each do |config|
+        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      end
     end
 # @generated end post-install-build-settings
     installer.pods_project.save
