@@ -127,7 +127,12 @@ function SignInScreen() {
         await setActiveSignIn({ session: createdSessionId });
       }
     } catch (err) {
-      console.error('OAuth error:', err);
+      const msg = formatClerkError(err);
+      // Clerk throws "already signed in" when a session exists but Clerk hasn't
+      // propagated isSignedIn yet — AuthScreen will redirect automatically.
+      if (!msg.toLowerCase().includes('already signed in')) {
+        Alert.alert('Sign in failed', msg);
+      }
     } finally {
       setOauthLoading(false);
     }
