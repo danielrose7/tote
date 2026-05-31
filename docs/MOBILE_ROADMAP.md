@@ -5,7 +5,8 @@ See [MOBILE_FEATURE_PARITY.md](./MOBILE_FEATURE_PARITY.md) for the full feature 
 ## Up Next
 
 ### 1. Reorder items/slots/collections
-*High effort*
+
+_High effort_
 
 - Add drag-and-drop affordances for collections, slots, and products
 - Persist ordering in Jazz so mobile and web stay in sync
@@ -13,7 +14,7 @@ See [MOBILE_FEATURE_PARITY.md](./MOBILE_FEATURE_PARITY.md) for the full feature 
 
 ## Pending deployment steps
 
-- **Universal Links (invite flow):** Replace `XXXXXXXXXX` in `src/app/.well-known/apple-app-site-association/route.ts` with the Apple Developer Team ID (found at developer.apple.com → Account → Membership), then deploy the web app and run `pnpm ios` to rebuild with the `associatedDomains` entitlement. Until then, `tote://invite/...` (custom scheme) links work but `https://tote.tools/invite/...` links open in Safari.
+- **Universal Links (invite flow):** Team ID set to `8RCZXVFHYN`. Deploy the web app and run `pnpm ios` to rebuild with the `associatedDomains` entitlement. Until then, `tote://invite/...` (custom scheme) links work but `https://tote.tools/invite/...` links open in Safari.
 
 ## Shipped
 

@@ -4,6 +4,8 @@ Curated collections to build for the `/templates` page. These serve dual purpose
 
 See [GTM_2026.html](./GTM_2026.html) for strategic context.
 
+Primary persona and current GTM lens: [Practical Tastemaker GTM](./PRACTICAL_TASTEMAKER_GTM.md).
+
 ## Build order
 
 **Now (May–Jun)** — year-round demand, curator can build immediately  

@@ -25,6 +25,11 @@ export default function ExtensionPage() {
 				right-click. It works on Chrome, Edge, Brave, Arc, and any
 				Chromium-based browser.
 			</p>
+			<p>
+				Looking for the short version? Visit the{" "}
+				<a href="/chrome-extension">Tote Chrome extension landing page</a> for
+				the install link, supported browsers, and a quick product overview.
+			</p>
 
 			<AnchorHeading as="h2" id="installing-the-extension">
 				Installing the Extension
@@ -137,6 +142,39 @@ export default function ExtensionPage() {
 				</li>
 			</ul>
 
+			<AnchorHeading as="h2" id="permissions-and-privacy">
+				Permissions and Privacy
+			</AnchorHeading>
+			<p>
+				The extension asks for browser permissions so it can read the active
+				product page, open the popup, store your extension session, and offer
+				the right-click save action. Tote uses those permissions to save
+				products to your account. Tote does not sell your shopping behavior or
+				run an ad network.
+			</p>
+			<ul>
+				<li>
+					<strong>activeTab and tabs</strong> — identify the page you are trying
+					to save
+				</li>
+				<li>
+					<strong>storage</strong> — remember extension state, like the last
+					collection you used
+				</li>
+				<li>
+					<strong>cookies</strong> — keep your Tote sign-in connected through
+					Clerk
+				</li>
+				<li>
+					<strong>contextMenus</strong> — show the "Save to Tote" right-click
+					action
+				</li>
+				<li>
+					<strong>scripting and host access</strong> — read product metadata
+					from the page you are saving
+				</li>
+			</ul>
+
 			<AnchorHeading as="h2" id="supported-stores">
 				Supported Stores
 			</AnchorHeading>
@@ -145,6 +183,17 @@ export default function ExtensionPage() {
 				identify the product name, image, and price. Most stores provide enough
 				information for a complete save, but even a basic product page will
 				capture the title, image, and URL.
+			</p>
+
+			<AnchorHeading as="h2" id="updates">
+				Updates
+			</AnchorHeading>
+			<p>
+				Chrome and other Chromium browsers update extensions automatically from
+				the Chrome Web Store. If you think you are not on the latest version,
+				open your browser's Extensions page, enable developer mode, and click
+				"Update". You can check the installed Tote version from the extension
+				details page.
 			</p>
 
 			<AnchorHeading as="h2" id="troubleshooting">
@@ -159,12 +208,31 @@ export default function ExtensionPage() {
 				focus.
 			</p>
 
+			<AnchorHeading as="h3" id="missing-price-or-image">
+				Missing price, image, or brand
+			</AnchorHeading>
+			<p>
+				Some stores hide product data, render it after a delay, or use unusual
+				page markup. Save the item anyway if the title, image, or URL is enough
+				to recognize it later. You can edit the saved product in Tote, or try
+				refreshing the product page and saving again.
+			</p>
+
 			<AnchorHeading as="h3" id="not-signed-in">
 				Not signed in
 			</AnchorHeading>
 			<p>
 				If your saved products aren't syncing, open the extension popup and
 				check that you're signed in. Click "Sign in" if needed.
+			</p>
+
+			<AnchorHeading as="h3" id="right-click-save-wrong-collection">
+				Right-click save used the wrong collection
+			</AnchorHeading>
+			<p>
+				The right-click action saves to your most recently used collection. Open
+				the popup, choose the collection you want, and save once from the popup.
+				After that, right-click saves will use that collection.
 			</p>
 
 			<AnchorHeading as="h2" id="related-guides">

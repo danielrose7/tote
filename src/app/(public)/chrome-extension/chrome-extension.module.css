@@ -1,0 +1,361 @@
+.page {
+	min-height: 100vh;
+	background:
+		radial-gradient(
+			circle at 14% 8%,
+			rgba(245, 198, 213, 0.55),
+			transparent 30%
+		),
+		radial-gradient(
+			circle at 92% 18%,
+			rgba(200, 217, 230, 0.7),
+			transparent 34%
+		), linear-gradient(180deg, #fffdf9 0%, #ffffff 36%, #f8f7fb 100%);
+	color: var(--color-text-primary);
+}
+
+.header {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	padding: var(--spacing-lg) var(--spacing-lg) 0;
+}
+
+.nav {
+	width: min(1160px, 100%);
+	margin: 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-md);
+	padding: 0.9rem 1rem 0.9rem 1.35rem;
+	border: 1px solid rgba(45, 49, 66, 0.08);
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.84);
+	backdrop-filter: blur(20px);
+	box-shadow: 0 18px 50px rgba(45, 49, 66, 0.08);
+}
+
+.wordmark {
+	color: var(--color-text-primary);
+	text-decoration: none;
+	font-size: 1.65rem;
+	font-weight: 700;
+	letter-spacing: -0.05em;
+}
+
+.navLinks {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.navLinks a {
+	color: var(--color-text-secondary);
+	text-decoration: none;
+	font-size: var(--font-size-sm);
+	font-weight: 600;
+	padding: 0.75rem 1rem;
+	border-radius: 999px;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.navLinks a:hover {
+	color: var(--color-text-primary);
+	background: rgba(45, 49, 66, 0.05);
+}
+
+.hero,
+.captureSection,
+.workflowSection,
+.docsCta,
+.finalCta {
+	width: min(1160px, calc(100% - 2rem));
+	margin: 0 auto;
+}
+
+.hero {
+	display: grid;
+	grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+	gap: clamp(2rem, 5vw, 5rem);
+	align-items: center;
+	padding: clamp(4.5rem, 8vw, 7rem) 0 clamp(3rem, 6vw, 5rem);
+}
+
+.heroCopy {
+	max-width: 620px;
+}
+
+.eyebrow {
+	margin: 0 0 0.9rem;
+	font-size: 0.76rem;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	color: var(--color-text-tertiary);
+	font-weight: 700;
+}
+
+.hero h1 {
+	margin: 0;
+	font-size: clamp(3.1rem, 7vw, 5.4rem);
+	line-height: 0.96;
+	letter-spacing: -0.06em;
+	max-width: 10ch;
+}
+
+.lead,
+.captureSection p,
+.docsCta p {
+	margin: 1.35rem 0 0;
+	color: var(--color-text-secondary);
+	font-size: clamp(1.05rem, 2vw, 1.22rem);
+	line-height: 1.65;
+	max-width: 62ch;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--spacing-md);
+	margin-top: 2rem;
+}
+
+.primaryButton,
+.secondaryButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: var(--spacing-sm) var(--spacing-lg);
+	border-radius: 999px;
+	text-decoration: none;
+	font-size: var(--font-size-sm);
+	font-weight: 700;
+	transition:
+		transform var(--transition-fast),
+		border-color var(--transition-fast),
+		background-color var(--transition-fast);
+}
+
+.primaryButton {
+	background: var(--color-text-primary);
+	color: var(--color-white);
+	box-shadow: 0 14px 30px rgba(45, 49, 66, 0.18);
+}
+
+.secondaryButton {
+	border: 1px solid rgba(45, 49, 66, 0.12);
+	background: rgba(255, 255, 255, 0.82);
+	color: var(--color-text-primary);
+	box-shadow: var(--shadow-sm);
+}
+
+.primaryButton:hover,
+.secondaryButton:hover {
+	transform: translateY(-1px);
+}
+
+.secondaryButton:hover {
+	border-color: rgba(45, 49, 66, 0.2);
+	background: #ffffff;
+}
+
+.browserList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.65rem;
+	margin-top: 1.25rem;
+	margin-bottom: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.browserList li {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2.3rem;
+	padding: 0.5rem 0.8rem;
+	border-radius: 999px;
+	border: 1px solid rgba(45, 49, 66, 0.08);
+	background: rgba(255, 255, 255, 0.74);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+	font-weight: 700;
+}
+
+.heroVisual {
+	padding: 1rem;
+	border-radius: 30px;
+	background: linear-gradient(
+		180deg,
+		rgba(255, 255, 255, 0.96),
+		rgba(255, 255, 255, 0.8)
+	);
+	border: 1px solid rgba(45, 49, 66, 0.08);
+	box-shadow: 0 30px 70px rgba(45, 49, 66, 0.16);
+}
+
+.heroImage {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: 22px;
+}
+
+.captureSection,
+.docsCta {
+	display: grid;
+	grid-template-columns: minmax(0, 0.8fr) minmax(320px, 1fr);
+	gap: clamp(2rem, 5vw, 4rem);
+	align-items: center;
+	padding: clamp(3rem, 6vw, 5rem) 0;
+}
+
+.captureSection h2,
+.workflowSection h2,
+.docsCta h2,
+.finalCta h2 {
+	margin: 0;
+	font-size: clamp(2.05rem, 4vw, 3.2rem);
+	line-height: 1.05;
+	letter-spacing: -0.05em;
+}
+
+.captureList {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.captureList li,
+.workflowCard,
+.docsCta {
+	border: 1px solid rgba(45, 49, 66, 0.08);
+	background: rgba(255, 255, 255, 0.84);
+	box-shadow: 0 18px 40px rgba(45, 49, 66, 0.06);
+}
+
+.captureList li {
+	min-height: 130px;
+	padding: 1.25rem;
+	border-radius: 24px;
+	color: var(--color-text-primary);
+	font-weight: 700;
+	line-height: 1.45;
+}
+
+.workflowSection {
+	padding: clamp(3rem, 6vw, 5rem) 0;
+}
+
+.sectionHeader {
+	max-width: 760px;
+}
+
+.workflowGrid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+	margin-top: 2rem;
+}
+
+.workflowCard {
+	border-radius: 24px;
+	padding: 1.5rem;
+}
+
+.workflowCard h3 {
+	margin: 0 0 0.8rem;
+	font-size: 1.35rem;
+	line-height: 1.15;
+	letter-spacing: -0.03em;
+}
+
+.workflowCard p {
+	margin: 0;
+	color: var(--color-text-secondary);
+	line-height: 1.7;
+}
+
+.docsCta {
+	border-radius: 28px;
+	padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.docsCta .secondaryButton {
+	justify-self: end;
+}
+
+.finalCta {
+	text-align: center;
+	padding: clamp(3rem, 6vw, 5rem) 0 clamp(4rem, 8vw, 6rem);
+}
+
+.finalCta h2 {
+	max-width: 760px;
+	margin: 0 auto;
+}
+
+.finalCta .actions {
+	justify-content: center;
+}
+
+@media (max-width: 920px) {
+	.hero,
+	.captureSection,
+	.docsCta {
+		grid-template-columns: 1fr;
+	}
+
+	.hero h1 {
+		max-width: 100%;
+	}
+
+	.docsCta .secondaryButton {
+		justify-self: start;
+	}
+
+	.workflowGrid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 640px) {
+	.header {
+		padding: 1rem 1rem 0;
+	}
+
+	.nav {
+		border-radius: 28px;
+		flex-wrap: wrap;
+	}
+
+	.navLinks {
+		width: 100%;
+		justify-content: space-between;
+	}
+
+	.navLinks a {
+		padding: 0.7rem 0.75rem;
+	}
+
+	.hero,
+	.captureSection,
+	.workflowSection,
+	.docsCta,
+	.finalCta {
+		width: min(1160px, calc(100% - 1.25rem));
+	}
+
+	.captureList {
+		grid-template-columns: 1fr;
+	}
+}

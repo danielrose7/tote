@@ -6,6 +6,34 @@ Unscheduled ideas and deferred work. Not prioritized — just a place to avoid l
 
 ## SEO / Public Pages
 
+### Privacy-conscious public GTM event tracking
+
+Add lightweight analytics for the public growth loop: public collection views, template views, use-case-to-collection clicks, copy/clone starts, signup starts from public pages, and extension-install CTA clicks.
+
+**Current state:** No Vercel Analytics package or custom event tracking is wired into the app. There are no `@vercel/analytics` imports, root `<Analytics />` component, or `track(...)` event calls.
+
+**Why:** The practical tastemaker GTM depends on knowing which public lists people actually open, share, and copy. Without event tracking, it will be hard to tell whether templates are driving real pull or just existing as SEO pages.
+
+**Privacy guardrails:**
+
+- Track aggregate product events, not behavioral profiles
+- Do not track product URLs saved by private users
+- Do not track private collection contents
+- Avoid ad pixels and cross-site retargeting
+- Keep event names tied to public GTM actions
+
+**Initial events:**
+
+1. `public_collection_view`
+2. `template_view`
+3. `template_card_click`
+4. `use_case_public_collection_click`
+5. `copy_collection_click`
+6. `signup_cta_click`
+7. `extension_cta_click`
+
+**When:** Before the next practical tastemaker distribution sprint, so public-list traffic can be measured from the start.
+
 ### Accurate `lastModified` timestamps in sitemap
 
 All static routes in `sitemap.ts` currently use `new Date()`, which claims every page was updated on every build — misleading to search engines.

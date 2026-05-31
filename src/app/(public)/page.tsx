@@ -280,6 +280,9 @@ export default function HomePage() {
             <Link href="/templates" className={styles.navLink}>
               Templates
             </Link>
+            <Link href="/chrome-extension" className={styles.navLink}>
+              Extension
+            </Link>
             <Link href="/docs" className={styles.navLink}>
               Docs
             </Link>
@@ -316,6 +319,9 @@ export default function HomePage() {
                 </a>
                 <Link href="/templates" className={styles.mobileMenuLink}>
                   Templates
+                </Link>
+                <Link href="/chrome-extension" className={styles.mobileMenuLink}>
+                  Extension
                 </Link>
                 <Link href="/docs" className={styles.mobileMenuLink}>
                   Docs

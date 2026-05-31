@@ -26,10 +26,11 @@ const footerGroups = [
     title: 'Product',
     links: [
       { href: '/templates', label: 'Templates' },
+      { href: '/chrome-extension', label: 'Chrome extension' },
       { href: '/docs', label: 'Help docs' },
       { href: '/docs/getting-started', label: 'Getting started' },
       { href: '/privacy', label: 'Privacy' },
-      { href: CHROME_WEB_STORE_URL, label: 'Chrome extension', external: true },
+      { href: CHROME_WEB_STORE_URL, label: 'Chrome Web Store', external: true },
     ],
   },
 ];

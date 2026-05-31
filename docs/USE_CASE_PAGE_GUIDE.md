@@ -12,6 +12,7 @@ They should also feel editorially cohesive: one clear scenario, one voice, one t
 
 ## Working Docs
 
+- Persona / GTM: [PRACTICAL_TASTEMAKER_GTM.md](./PRACTICAL_TASTEMAKER_GTM.md)
 - Rubric: [USE_CASE_PAGE_RUBRIC.md](./USE_CASE_PAGE_RUBRIC.md)
 - Benchmark sheet: [USE_CASE_PAGE_BENCHMARK.md](./USE_CASE_PAGE_BENCHMARK.md)
 
