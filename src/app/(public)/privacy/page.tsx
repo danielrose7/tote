@@ -72,9 +72,9 @@ export default function PrivacyPage() {
               Jazz
             </a>
             , a local-first sync engine. Your data is stored locally on your
-            device first, then synced peer-to-peer with end-to-end encryption.
-            This means your saved products live on your devices &mdash; not on a
-            central server we control.
+            device first, then synced with end-to-end encryption through
+            Jazz&rsquo;s relay infrastructure. The relay cannot read your data
+            &mdash; only your devices hold the decryption keys.
           </p>
           <p>All data is transmitted over HTTPS.</p>
         </div>
@@ -191,6 +191,35 @@ export default function PrivacyPage() {
               </a>
               .
             </li>
+            <li>
+              <strong>Anthropic</strong> &mdash; Powers the AI chat feature.
+              When you use the chat assistant, your query and relevant product
+              and collection data are sent to Anthropic&rsquo;s API to generate
+              a response. This only occurs when you actively use the chat
+              feature.{' '}
+              <a
+                href="https://www.anthropic.com/legal/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Anthropic Privacy Policy
+              </a>
+              .
+            </li>
+            <li>
+              <strong>Brave Search</strong> &mdash; The AI chat feature may
+              query Brave Search to look up current product information on your
+              behalf. Search queries contain only product-related terms, not
+              personal information.{' '}
+              <a
+                href="https://search.brave.com/help/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Brave Search Privacy Policy
+              </a>
+              .
+            </li>
           </ul>
         </div>
 
@@ -199,8 +228,8 @@ export default function PrivacyPage() {
           <p>
             You can delete any saved product or collection at any time from
             within Tote. To delete your entire account and all associated data,
-            go to <strong>Settings &rarr; Delete Account</strong> in the app, or
-            contact us at{' '}
+            go to <strong>Settings</strong> on the web or in the iOS app and use
+            the <strong>Delete Account</strong> option, or contact us at{' '}
             <a href="mailto:support@gobloom.io">support@gobloom.io</a>.
           </p>
         </div>
