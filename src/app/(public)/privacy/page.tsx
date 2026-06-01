@@ -122,6 +122,24 @@ export default function PrivacyPage() {
         </div>
 
         <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Public collections</h2>
+          <p>
+            Tote lets you optionally share a collection as a public link. This
+            is entirely opt-in &mdash; collections are private by default.
+          </p>
+          <p>
+            When you publish a collection, the product metadata it contains
+            (titles, descriptions, images, prices, and URLs) becomes publicly
+            accessible to anyone with the link. Published collections may also
+            be indexed by search engines.
+          </p>
+          <p>
+            You can unpublish a collection at any time, which removes the public
+            copy. You remain in control of what you share and when.
+          </p>
+        </div>
+
+        <div className={styles.section}>
           <h2 className={styles.sectionTitle}>What we don&rsquo;t do</h2>
           <ul>
             <li>No analytics or tracking scripts</li>
