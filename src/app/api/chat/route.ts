@@ -13,6 +13,7 @@ import {
 import { z } from "zod";
 import { extractUrl } from "../../../inngest/server-extraction";
 import { braveSearch } from "../../../lib/braveSearch";
+import { canUseChat } from "../../../lib/chatAuth";
 import {
 	CF_PUPPETEER_COST_CENTS,
 	deductCredits,
@@ -187,6 +188,10 @@ export async function POST(req: Request) {
 	const { userId } = await auth();
 	if (!userId) {
 		return new Response("Unauthorized", { status: 401 });
+	}
+
+	if (!(await canUseChat())) {
+		return Response.json({ error: "Forbidden" }, { status: 403 });
 	}
 
 	if (!(await hasPositiveCreditBalance(userId))) {

@@ -29,6 +29,7 @@ export default function CollectionDetailPage() {
 	const collectionId = params.id as string;
 	const { user } = useUser();
 	const enableSaveTabs = user?.publicMetadata?.enableSaveTabs === true;
+	const canUseChat = user?.publicMetadata?.chatEnabled === true;
 
 	const me = useAccount(JazzAccount, {
 		resolve: {
@@ -252,6 +253,7 @@ export default function CollectionDetailPage() {
 				<CollectionView
 					collectionBlock={collectionBlock}
 					allBlocks={allBlocks}
+					canUseChat={canUseChat}
 					onEditBlock={handleEditBlock}
 					onDeleteBlock={handleDeleteBlock}
 					onEditCollection={() => setIsEditCollectionDialogOpen(true)}

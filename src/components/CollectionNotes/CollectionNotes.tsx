@@ -11,7 +11,7 @@ type LoadedNote = co.loaded<typeof CollectionNote>;
 
 interface CollectionNotesProps {
   collection: LoadedBlock;
-  onResolveWithAI: (seedContext: string) => void;
+  onResolveWithAI?: (seedContext: string) => void;
 }
 
 export function CollectionNotes({
@@ -98,6 +98,8 @@ export function CollectionNotes({
   }
 
   function handleResolve(note: LoadedNote) {
+    if (!onResolveWithAI) return;
+
     const context = note.url
       ? `${note.text} (reference: ${note.url})`
       : note.text;
@@ -207,14 +209,16 @@ export function CollectionNotes({
 
               {editingId !== note.$jazz.id && (
                 <div className={styles.noteActions}>
-                  <button
-                    type="button"
-                    className={styles.resolveButton}
-                    onClick={() => handleResolve(note)}
-                    title="Find products with AI"
-                  >
-                    Find with AI
-                  </button>
+                  {onResolveWithAI && (
+                    <button
+                      type="button"
+                      className={styles.resolveButton}
+                      onClick={() => handleResolve(note)}
+                      title="Find products with AI"
+                    >
+                      Find with AI
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={styles.iconButton}

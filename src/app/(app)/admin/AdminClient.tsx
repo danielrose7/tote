@@ -9,6 +9,7 @@ export interface Balance {
   clerk_user_id: string;
   email: string;
   curator: boolean;
+  chatEnabled: boolean;
   balance_cents: number;
   updated_at: string;
   run_count: number;
@@ -43,11 +44,18 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
   const [curatorToggles, setCuratorToggles] = useState<Record<string, boolean>>(
     Object.fromEntries(balances.map((b) => [b.clerk_user_id, b.curator])),
   );
-  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [chatEnabledToggles, setChatEnabledToggles] = useState<
+    Record<string, boolean>
+  >(
+    Object.fromEntries(
+      balances.map((b) => [b.clerk_user_id, b.chatEnabled]),
+    ),
+  );
+  const [togglingFeature, setTogglingFeature] = useState<string | null>(null);
 
   async function handleCuratorToggle(userId: string) {
     const current = curatorToggles[userId];
-    setTogglingId(userId);
+    setTogglingFeature(`curator:${userId}`);
     try {
       const res = await fetch('/api/admin/curator', {
         method: 'POST',
@@ -58,7 +66,24 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
         setCuratorToggles((prev) => ({ ...prev, [userId]: !current }));
       }
     } finally {
-      setTogglingId(null);
+      setTogglingFeature(null);
+    }
+  }
+
+  async function handleChatToggle(userId: string) {
+    const current = chatEnabledToggles[userId];
+    setTogglingFeature(`chat:${userId}`);
+    try {
+      const res = await fetch('/api/admin/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, chatEnabled: !current }),
+      });
+      if (res.ok) {
+        setChatEnabledToggles((prev) => ({ ...prev, [userId]: !current }));
+      }
+    } finally {
+      setTogglingFeature(null);
     }
   }
 
@@ -141,6 +166,7 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                   <th>Total spent</th>
                   <th>Runs</th>
                   <th>Curator</th>
+                  <th>Chat</th>
                   <th>Credit</th>
                 </tr>
               </thead>
@@ -162,6 +188,7 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                       <td>{String(b.run_count)}</td>
                       <td>
                         <button
+                          type="button"
                           className={styles.button}
                           style={{
                             padding: '0.25rem 0.625rem',
@@ -170,7 +197,9 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                               ? '#065f46'
                               : undefined,
                           }}
-                          disabled={togglingId === b.clerk_user_id}
+                          disabled={
+                            togglingFeature === `curator:${b.clerk_user_id}`
+                          }
                           onClick={() => handleCuratorToggle(b.clerk_user_id)}
                         >
                           {curatorToggles[b.clerk_user_id] ? 'On' : 'Off'}
@@ -178,6 +207,26 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
                       </td>
                       <td>
                         <button
+                          type="button"
+                          className={styles.button}
+                          style={{
+                            padding: '0.25rem 0.625rem',
+                            fontSize: '0.8rem',
+                            background: chatEnabledToggles[b.clerk_user_id]
+                              ? '#065f46'
+                              : undefined,
+                          }}
+                          disabled={
+                            togglingFeature === `chat:${b.clerk_user_id}`
+                          }
+                          onClick={() => handleChatToggle(b.clerk_user_id)}
+                        >
+                          {chatEnabledToggles[b.clerk_user_id] ? 'On' : 'Off'}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
                           className={styles.secondaryButton}
                           onClick={() => prepareGrant(b.email)}
                         >

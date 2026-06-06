@@ -21,7 +21,7 @@ export default async function AdminPage() {
     ORDER BY u.updated_at DESC
   `;
 
-  // Enrich with Clerk user data (email + curator status)
+  // Enrich with Clerk user data and feature access.
   const clerk = await clerkClient();
   const clerkUsers = balances.length
     ? (
@@ -39,6 +39,7 @@ export default async function AdminPage() {
       ...b,
       email: cu?.emailAddresses[0]?.emailAddress ?? '—',
       curator: cu?.publicMetadata?.curator === true,
+      chatEnabled: cu?.publicMetadata?.chatEnabled === true,
     };
   });
 

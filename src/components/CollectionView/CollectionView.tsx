@@ -118,6 +118,7 @@ async function refreshBlockMetadata(
 interface CollectionViewProps {
   collectionBlock: LoadedBlock;
   allBlocks: LoadedBlock[]; // All blocks to find children by parentId
+  canUseChat?: boolean;
   onEditBlock?: (block: LoadedBlock) => void;
   onDeleteBlock?: (block: LoadedBlock) => void;
   onEditCollection?: (block: LoadedBlock) => void;
@@ -128,6 +129,7 @@ interface CollectionViewProps {
 export function CollectionView({
   collectionBlock,
   allBlocks,
+  canUseChat = false,
   onEditBlock,
   onDeleteBlock,
   onEditCollection,
@@ -455,9 +457,13 @@ export function CollectionView({
           </div>
           <CollectionNotes
             collection={collectionBlock}
-            onResolveWithAI={(seed) => {
-              setChatSeedContext(seed);
-            }}
+            onResolveWithAI={
+              canUseChat
+                ? (seed) => {
+                    setChatSeedContext(seed);
+                  }
+                : undefined
+            }
           />
           {allProducts.length > 0 && (
             <div className={styles.actions}>
@@ -508,7 +514,7 @@ export function CollectionView({
                 )}
               </button>
               <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />
-              {allProducts.length > 1 && viewMode === 'grid' && (
+              {canUseChat && allProducts.length > 1 && viewMode === 'grid' && (
                 <button
                   type="button"
                   onClick={handleOrganizeWithAi}
@@ -705,11 +711,13 @@ export function CollectionView({
           )}
         </>
       )}
-      <CollectionChat
-        collection={collectionBlock}
-        seedContext={chatSeedContext}
-        onClose={() => setChatSeedContext(undefined)}
-      />
+      {canUseChat && (
+        <CollectionChat
+          collection={collectionBlock}
+          seedContext={chatSeedContext}
+          onClose={() => setChatSeedContext(undefined)}
+        />
+      )}
     </div>
   );
 }
