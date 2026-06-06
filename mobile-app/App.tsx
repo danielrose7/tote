@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/expo';
+import { useSignInWithApple } from '@clerk/expo';
 import { useSignIn, useSignUp } from '@clerk/expo/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
@@ -61,7 +62,9 @@ function SignInScreen() {
   const [password, setPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [awaitingVerification, setAwaitingVerification] = useState(false);
+  const { startAppleAuthenticationFlow } = useSignInWithApple();
   const [oauthLoading, setOauthLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const emailActionLabel = awaitingVerification
     ? 'Verify email'
@@ -135,6 +138,25 @@ function SignInScreen() {
       }
     } finally {
       setOauthLoading(false);
+    }
+  }
+
+  async function handleAppleSignIn() {
+    if (appleLoading) return;
+    setAppleLoading(true);
+    try {
+      const { createdSessionId, setActive } =
+        await startAppleAuthenticationFlow();
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+      }
+    } catch (err) {
+      const msg = formatClerkError(err);
+      if (!msg.toLowerCase().includes('already signed in')) {
+        Alert.alert('Sign in failed', msg);
+      }
+    } finally {
+      setAppleLoading(false);
     }
   }
 
@@ -237,10 +259,10 @@ function SignInScreen() {
               style={[
                 styles.button,
                 styles.buttonApple,
-                oauthLoading && styles.buttonDisabled,
+                appleLoading && styles.buttonDisabled,
               ]}
-              onPress={() => handleSignIn('oauth_apple')}
-              disabled={oauthLoading}
+              onPress={handleAppleSignIn}
+              disabled={appleLoading}
             >
               <Text style={styles.buttonText}>Continue with Apple</Text>
             </TouchableOpacity>
@@ -641,7 +663,7 @@ function AuthScreen() {
   }
 
   return (
-    <JazzProviders>
+    <JazzProviders key={userId}>
       <JazzAppShell />
     </JazzProviders>
   );
