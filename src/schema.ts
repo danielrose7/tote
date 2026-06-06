@@ -3,7 +3,7 @@
  * https://jazz.tools/docs/react/schemas/covalues
  */
 
-import { co, Group, z } from 'jazz-tools';
+import { co, z } from 'jazz-tools';
 
 // =============================================================================
 // Block-Based Schema (New)
@@ -132,41 +132,11 @@ export const JazzAccount = co
      *  You can use it to set up the account root and any other initial CoValues you need.
      */
     if (!account.$jazz.has('root')) {
-      // Create a Group for the default collection to enable sharing
-      const ownerGroup = Group.create({ owner: account });
-      ownerGroup.addMember(account, 'admin');
-
-      // Create empty children list owned by the group
-      const childrenList = BlockList.create([], { owner: ownerGroup });
-
-      // Create default "My Links" collection block owned by the group
-      const defaultCollection = Block.create(
-        {
-          type: 'collection',
-          name: 'My Links',
-          collectionData: {
-            color: '#6366f1',
-            description: 'Your personal collection of product links',
-            viewMode: 'grid',
-            publicLayout: 'minimal',
-            allowCloning: true,
-            sharingGroupId: ownerGroup.$jazz.id,
-          },
-          children: childrenList,
-          createdAt: new Date(),
-        },
-        { owner: ownerGroup },
-      );
-
-      // Create the blocks list with the default collection
-      const blocksList = BlockList.create([defaultCollection], {
-        owner: ownerGroup,
-      });
-
-      account.$jazz.set('root', {
-        blocks: blocksList,
-        defaultBlockId: defaultCollection.$jazz.id,
-      });
+      // Start with an empty blocks list. Group.create requires Account.getMe()
+      // which isn't available inside withNewlyCreatedAccount, so we avoid it here.
+      // Collections with sharing groups are created by the user via the app UI.
+      const blocksList = BlockList.create([], account);
+      account.$jazz.set('root', { blocks: blocksList });
     } else {
       // Ensure blocks exists for existing accounts
       const root = account.root;
@@ -174,14 +144,8 @@ export const JazzAccount = co
         const hasBlocks =
           root.blocks && root.blocks.$isLoaded && root.blocks.length > 0;
         if (!hasBlocks) {
-          // Create a Group for the default collection to enable sharing
-          const ownerGroup = Group.create({ owner: account });
-          ownerGroup.addMember(account, 'admin');
+          const childrenList = BlockList.create([], account);
 
-          // Create empty children list owned by the group
-          const childrenList = BlockList.create([], { owner: ownerGroup });
-
-          // Create default collection block if none exists, owned by the group
           const defaultCollection = Block.create(
             {
               type: 'collection',
@@ -192,17 +156,14 @@ export const JazzAccount = co
                 viewMode: 'grid',
                 publicLayout: 'minimal',
                 allowCloning: true,
-                sharingGroupId: ownerGroup.$jazz.id,
               },
               children: childrenList,
               createdAt: new Date(),
             },
-            { owner: ownerGroup },
+            account,
           );
 
-          const blocksList = BlockList.create([defaultCollection], {
-            owner: ownerGroup,
-          });
+          const blocksList = BlockList.create([defaultCollection], account);
           root.$jazz.set('blocks', blocksList);
           root.$jazz.set('defaultBlockId', defaultCollection.$jazz.id);
         }
@@ -210,9 +171,6 @@ export const JazzAccount = co
     }
 
     if (!account.$jazz.has('profile')) {
-      const group = Group.create();
-      group.addMember('everyone', 'reader'); // The profile info is visible to everyone
-
       account.$jazz.set(
         'profile',
         JazzProfile.create(
@@ -220,7 +178,7 @@ export const JazzAccount = co
             name: 'Anonymous user',
             firstName: '',
           },
-          group,
+          account,
         ),
       );
     }

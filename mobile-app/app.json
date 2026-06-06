@@ -2,7 +2,7 @@
   "expo": {
     "name": "Tote",
     "slug": "tote",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,8 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "tools.tote.app",
-      "associatedDomains": ["applinks:tote.tools"]
+      "associatedDomains": ["applinks:tote.tools"],
+      "buildNumber": "1"
     },
     "plugins": [
       "@clerk/expo",

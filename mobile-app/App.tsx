@@ -1,10 +1,11 @@
 import { useAuth, useUser } from '@clerk/expo';
-import { useSignInWithApple } from '@clerk/expo';
+import { useSignInWithApple } from '@clerk/expo/apple';
 import { useSignIn, useSignUp } from '@clerk/expo/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { type Block, JazzAccount } from '@tote/schema';
+import { Block, BlockList, JazzAccount } from '@tote/schema';
+import { Group } from 'jazz-tools';
 import * as AuthSession from 'expo-auth-session';
 import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
@@ -17,6 +18,7 @@ import {
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   RefreshControl,
   ScrollView,
@@ -36,7 +38,7 @@ import { useInviteLink } from './src/hooks/useInviteLink';
 import { usePendingUrl } from './src/hooks/usePendingUrl';
 import { cleanupPublishedClonesFromRoot } from './src/lib/shareCollection';
 import type { RootStackParamList } from './src/navigation/types';
-import { JazzProviders, Providers } from './src/providers';
+import { Providers } from './src/providers';
 import { AccountSettingsScreen } from './src/screens/AccountSettingsScreen';
 import { CollectionDetailScreen } from './src/screens/CollectionDetailScreen';
 
@@ -243,9 +245,7 @@ function SignInScreen() {
         <View style={styles.authStack}>
           <View style={styles.authHero}>
             <Text style={styles.title}>Tote</Text>
-            <Text style={styles.subtitle}>
-              Your personal product collection
-            </Text>
+            <Text style={styles.subtitle}>Save products from any store</Text>
           </View>
           <View style={styles.authButtons}>
             <TouchableOpacity
@@ -465,6 +465,104 @@ function CollectionSkeleton() {
   );
 }
 
+const COLLECTION_COLORS = [
+  '#6366f1',
+  '#8b5cf6',
+  '#ec4899',
+  '#f43f5e',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#14b8a6',
+  '#3b82f6',
+  '#06b6d4',
+];
+
+function AddCollectionModal({
+  visible,
+  onClose,
+  onSave,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (name: string, color: string) => void;
+}) {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState(COLLECTION_COLORS[0]);
+
+  function handleSave() {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    onSave(trimmed, color);
+    setName('');
+    setColor(COLLECTION_COLORS[0]);
+    onClose();
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Add Collection</Text>
+
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Collection name"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleSave}
+          />
+
+          <Text style={styles.fieldLabel}>Color</Text>
+          <View style={styles.swatches}>
+            {COLLECTION_COLORS.map((c) => (
+              <TouchableOpacity
+                key={c}
+                style={[
+                  styles.swatch,
+                  { backgroundColor: c },
+                  color === c && styles.swatchSelected,
+                ]}
+                onPress={() => setColor(c)}
+              >
+                {color === c && (
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
+              <Text style={styles.modalSaveText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
 function CollectionListContent({
   navigation,
   refreshing,
@@ -482,6 +580,7 @@ function CollectionListContent({
     },
   });
   const { user } = useUser();
+  const [showAddCollection, setShowAddCollection] = useState(false);
 
   useEffect(() => {
     if (!me) return;
@@ -510,6 +609,32 @@ function CollectionListContent({
     if (idx !== -1) list.$jazz.splice(idx, 1);
   }
 
+  function handleAddCollection(name: string, color: string) {
+    if (!me?.root) return;
+    const ownerGroup = Group.create({ owner: me });
+    ownerGroup.addMember(me, 'admin');
+    const childrenList = BlockList.create([], { owner: ownerGroup });
+    const collection = Block.create(
+      {
+        type: 'collection',
+        name,
+        collectionData: {
+          color,
+          viewMode: 'grid',
+          sharingGroupId: ownerGroup.$jazz.id,
+        },
+        children: childrenList,
+        createdAt: new Date(),
+      },
+      { owner: ownerGroup },
+    );
+    me.root.blocks?.$jazz.push(collection);
+    navigation.navigate('CollectionDetail', {
+      collectionId: collection.$jazz.id,
+      collectionName: name,
+    });
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -525,8 +650,6 @@ function CollectionListContent({
           )}
         </TouchableOpacity>
       </View>
-
-      <Text style={styles.greeting}>Hi, {user?.firstName ?? 'there'}</Text>
 
       <FlatList
         data={collections}
@@ -558,9 +681,32 @@ function CollectionListContent({
               <CollectionSkeleton />
             </>
           ) : (
-            <Text style={styles.empty}>No collections yet</Text>
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No collections yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Add a collection to start saving products
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => setShowAddCollection(true)}
+              >
+                <Text style={styles.emptyButtonText}>Add Collection</Text>
+              </TouchableOpacity>
+            </View>
           )
         }
+      />
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowAddCollection(true)}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={28} color="#fff" />
+      </TouchableOpacity>
+      <AddCollectionModal
+        visible={showAddCollection}
+        onClose={() => setShowAddCollection(false)}
+        onSave={handleAddCollection}
       />
       <StatusBar style="auto" />
     </View>
@@ -649,8 +795,9 @@ function JazzAppShell() {
 
 function AuthScreen() {
   const { isLoaded, userId } = useAuth();
+  const { user } = useUser();
 
-  if (!isLoaded) {
+  if (!isLoaded || (userId && !user)) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#6366f1" />
@@ -662,11 +809,7 @@ function AuthScreen() {
     return <SignInScreen />;
   }
 
-  return (
-    <JazzProviders key={userId}>
-      <JazzAppShell />
-    </JazzProviders>
-  );
+  return <JazzAppShell />;
 }
 
 export default function App() {
@@ -699,6 +842,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 32,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
   },
   title: {
     fontSize: 28,
@@ -734,11 +893,6 @@ const styles = StyleSheet.create({
   },
   authButtons: {
     marginBottom: 4,
-  },
-  greeting: {
-    fontSize: 16,
-    color: '#6b7280',
-    marginBottom: 20,
   },
   button: {
     backgroundColor: '#6366f1',
@@ -866,6 +1020,34 @@ const styles = StyleSheet.create({
     marginTop: 40,
     fontSize: 15,
   },
+  emptyState: {
+    alignItems: 'center',
+    marginTop: 60,
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+  },
+  emptyButton: {
+    marginTop: 16,
+    backgroundColor: '#6366f1',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+  },
   skeletonCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -903,4 +1085,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteActionText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    paddingBottom: 36,
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: { fontSize: 17, fontWeight: '700', marginBottom: 4 },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+    marginTop: 16,
+  },
+  fieldInput: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#111',
+  },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 24 },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+  },
+  modalCancelText: { fontSize: 15, color: '#6b7280', fontWeight: '600' },
+  modalSave: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+  },
+  modalSaveText: { fontSize: 15, color: '#fff', fontWeight: '600' },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
+  swatch: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swatchSelected: { borderWidth: 2.5, borderColor: 'rgba(0,0,0,0.2)' },
 });
