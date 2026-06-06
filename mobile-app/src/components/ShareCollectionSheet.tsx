@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { type Block, JazzAccount } from '@tote/schema';
 import * as Clipboard from 'expo-clipboard';
 import { useAccount } from 'jazz-tools/expo';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
@@ -659,15 +659,21 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  overlay: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  overlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '45%',
+  },
   sheet: {
+    flex: 1,
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingTop: 16,
     paddingHorizontal: 20,
     paddingBottom: 8,
-    maxHeight: '85%',
   },
   handle: {
     width: 36,
@@ -699,7 +705,7 @@ const styles = StyleSheet.create({
   tabLabelActive: { color: '#6366f1', fontWeight: '700' },
 
   // Panel
-  panelScroll: { flexGrow: 0 },
+  panelScroll: { flex: 1 },
   panelContent: { paddingBottom: 8 },
 
   section: { gap: 12 },
