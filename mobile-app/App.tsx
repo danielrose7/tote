@@ -2,6 +2,7 @@ import { useAuth, useUser } from '@clerk/expo';
 import { useSignInWithApple } from '@clerk/expo/apple';
 import { useSignIn, useSignUp } from '@clerk/expo/legacy';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Block, BlockList, JazzAccount } from '@tote/schema';
@@ -46,6 +47,96 @@ WebBrowser.maybeCompleteAuthSession();
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const HOME_COLLECTION_CARD_HEIGHT = 80;
+
+const onboardingKey = (userId: string) => `tote_onboarding_complete_${userId}`;
+
+const ONBOARDING_SCREENS = [
+  {
+    icon: 'share-outline' as const,
+    title: 'Save from any store',
+    body: 'Open any product in Safari or any app, tap the Share button, then select Tote.',
+    tip: 'Tip: Tote may be hidden — tap "More" in the share sheet, then turn on Tote and drag it to the top to keep it handy.',
+  },
+  {
+    icon: 'folder-outline' as const,
+    title: 'Organize into collections',
+    body: 'Tap + to create collections for different projects, trips, or moods. Tap any collection to browse and manage your saves.',
+    tip: null,
+  },
+];
+
+function OnboardingScreen({
+  userId,
+  onDone,
+}: {
+  userId: string;
+  onDone: (autoAdd: boolean) => void;
+}) {
+  const [step, setStep] = useState(0);
+  const screen = ONBOARDING_SCREENS[step];
+  const isLast = step === ONBOARDING_SCREENS.length - 1;
+
+  async function finish(autoAdd: boolean) {
+    await AsyncStorage.setItem(onboardingKey(userId), 'true');
+    onDone(autoAdd);
+  }
+
+  function next() {
+    if (isLast) {
+      finish(true);
+    } else {
+      setStep((s) => s + 1);
+    }
+  }
+
+  return (
+    <View style={styles.onboardingContainer}>
+      <TouchableOpacity
+        style={styles.onboardingSkip}
+        onPress={() => finish(false)}
+      >
+        <Text style={styles.onboardingSkipText}>Skip</Text>
+      </TouchableOpacity>
+
+      <View style={styles.onboardingContent}>
+        <View style={styles.onboardingIconWrap}>
+          <Ionicons name={screen.icon} size={48} color="#6366f1" />
+        </View>
+        <Text style={styles.onboardingTitle}>{screen.title}</Text>
+        <Text style={styles.onboardingBody}>{screen.body}</Text>
+        {screen.tip && (
+          <View style={styles.onboardingTip}>
+            <Ionicons
+              name="information-circle-outline"
+              size={16}
+              color="#6366f1"
+            />
+            <Text style={styles.onboardingTipText}>{screen.tip}</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.onboardingFooter}>
+        <View style={styles.onboardingDots}>
+          {ONBOARDING_SCREENS.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.onboardingDot,
+                i === step && styles.onboardingDotActive,
+              ]}
+            />
+          ))}
+        </View>
+        <TouchableOpacity style={styles.onboardingButton} onPress={next}>
+          <Text style={styles.onboardingButtonText}>
+            {isLast ? 'Get started' : 'Next'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
 
 function SignInScreen() {
   const {
@@ -567,10 +658,12 @@ function CollectionListContent({
   navigation,
   refreshing,
   onRefresh,
+  autoAdd,
 }: {
   navigation: any;
   refreshing: boolean;
   onRefresh: () => void;
+  autoAdd: boolean;
 }) {
   const me = useAccount(JazzAccount, {
     resolve: {
@@ -586,6 +679,21 @@ function CollectionListContent({
     if (!me) return;
     cleanupPublishedClonesFromRoot(me.root?.blocks);
   }, [me, me?.root?.blocks]);
+
+  const autoAddTriggered = useRef(false);
+  useEffect(() => {
+    if (!autoAdd || autoAddTriggered.current) return;
+    if (!me?.root?.blocks) return;
+    const collections =
+      me.root.blocks.filter(
+        (b: typeof Block.prototype | null) =>
+          b?.type === 'collection' && !b?.collectionData?.sourceId,
+      ) ?? [];
+    if (collections.length === 0) {
+      autoAddTriggered.current = true;
+      setShowAddCollection(true);
+    }
+  }, [autoAdd, me?.root?.blocks]);
 
   if (!me) {
     return (
@@ -713,7 +821,7 @@ function CollectionListContent({
   );
 }
 
-function CollectionListScreen({ navigation }: any) {
+function CollectionListScreen({ navigation, route }: any) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -731,11 +839,12 @@ function CollectionListScreen({ navigation }: any) {
       navigation={navigation}
       refreshing={refreshing}
       onRefresh={handleRefresh}
+      autoAdd={route.params?.autoAdd ?? false}
     />
   );
 }
 
-function AppScreens() {
+function AppScreens({ autoAdd }: { autoAdd: boolean }) {
   const { pendingUrl, clearPendingUrl, queueLength } = usePendingUrl();
   const { invite, clearInvite } = useInviteLink();
   const [defaultQueuedCollectionId, setDefaultQueuedCollectionId] = useState<
@@ -755,6 +864,7 @@ function AppScreens() {
         <Stack.Screen
           name="CollectionList"
           component={CollectionListScreen}
+          initialParams={autoAdd ? { autoAdd: true } : undefined}
           options={{ headerShown: false }}
         />
         <Stack.Screen
@@ -789,15 +899,24 @@ function AppScreens() {
   );
 }
 
-function JazzAppShell() {
-  return <AppScreens />;
+function JazzAppShell({ autoAdd }: { autoAdd: boolean }) {
+  return <AppScreens autoAdd={autoAdd} />;
 }
 
 function AuthScreen() {
   const { isLoaded, userId } = useAuth();
   const { user } = useUser();
+  const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+  const [autoAdd, setAutoAdd] = useState(false);
 
-  if (!isLoaded || (userId && !user)) {
+  useEffect(() => {
+    if (!userId) return;
+    AsyncStorage.getItem(onboardingKey(userId)).then((val) => {
+      setOnboardingDone(val === 'true');
+    });
+  }, [userId]);
+
+  if (!isLoaded || (userId && !user) || (userId && onboardingDone === null)) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color="#6366f1" />
@@ -809,7 +928,19 @@ function AuthScreen() {
     return <SignInScreen />;
   }
 
-  return <JazzAppShell />;
+  if (!onboardingDone) {
+    return (
+      <OnboardingScreen
+        userId={userId}
+        onDone={(shouldAutoAdd) => {
+          setAutoAdd(shouldAutoAdd);
+          setOnboardingDone(true);
+        }}
+      />
+    );
+  }
+
+  return <JazzAppShell autoAdd={autoAdd} />;
 }
 
 export default function App() {
@@ -835,6 +966,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
+    justifyContent: 'center',
     padding: 20,
   },
   header: {
@@ -1151,4 +1283,91 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   swatchSelected: { borderWidth: 2.5, borderColor: 'rgba(0,0,0,0.2)' },
+  onboardingContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    paddingTop: 60,
+    paddingHorizontal: 32,
+    paddingBottom: 48,
+  },
+  onboardingSkip: {
+    alignSelf: 'flex-end',
+  },
+  onboardingSkipText: {
+    fontSize: 15,
+    color: '#9ca3af',
+  },
+  onboardingContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  onboardingIconWrap: {
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    backgroundColor: '#ede9fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  onboardingTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+  },
+  onboardingBody: {
+    fontSize: 16,
+    color: '#4b5563',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  onboardingTip: {
+    flexDirection: 'row',
+    gap: 8,
+    backgroundColor: '#ede9fe',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'flex-start',
+    marginTop: 8,
+  },
+  onboardingTipText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#4338ca',
+    lineHeight: 18,
+  },
+  onboardingFooter: {
+    alignItems: 'center',
+    gap: 24,
+  },
+  onboardingDots: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  onboardingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#e5e7eb',
+  },
+  onboardingDotActive: {
+    backgroundColor: '#6366f1',
+    width: 18,
+  },
+  onboardingButton: {
+    backgroundColor: '#6366f1',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 48,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+  },
+  onboardingButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
