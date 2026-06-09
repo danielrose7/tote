@@ -3,6 +3,7 @@ import {
 	canUseNeonCollections,
 	collectionIdSchema,
 	createCollectionInputSchema,
+	createCollectionInviteInputSchema,
 	createCollectionNodeInputSchema,
 	updateCollectionInputSchema,
 	updateCollectionNodeInputSchema,
@@ -134,4 +135,36 @@ describe("canUseNeonCollections", () => {
 			expect(canUseNeonCollections(dataSource)).toBe(false);
 		},
 	);
+});
+
+describe("collection team schemas", () => {
+	it("normalizes invite metadata", () => {
+		expect(
+			createCollectionInviteInputSchema.parse({
+				role: "viewer",
+				recipientHint: "  person@example.com  ",
+				expiresAt: "2026-06-15T12:00:00Z",
+				maxUses: 1,
+			}),
+		).toEqual({
+			role: "viewer",
+			recipientHint: "person@example.com",
+			expiresAt: new Date("2026-06-15T12:00:00Z"),
+			maxUses: 1,
+		});
+	});
+
+	it("rejects owner invites and invalid usage limits", () => {
+		expect(
+			createCollectionInviteInputSchema.safeParse({
+				role: "owner",
+			}).success,
+		).toBe(false);
+		expect(
+			createCollectionInviteInputSchema.safeParse({
+				role: "viewer",
+				maxUses: 0,
+			}).success,
+		).toBe(false);
+	});
 });

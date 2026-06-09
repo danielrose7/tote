@@ -121,6 +121,23 @@ export const deleteCollectionNodeInputSchema = z.object({
 	mutationId: mutationIdSchema.optional(),
 });
 
+export const createCollectionInviteInputSchema = z.object({
+	role: z.enum(["editor", "viewer"]),
+	recipientHint: z.string().trim().min(1).max(320).optional(),
+	expiresAt: z
+		.string()
+		.datetime({ offset: true })
+		.transform((value) => new Date(value))
+		.optional(),
+	maxUses: z.number().int().positive().optional(),
+});
+
+export const updateCollectionMemberInputSchema = z.object({
+	role: z.enum(["admin", "editor", "viewer"]),
+});
+
+export const collectionMemberUserIdSchema = z.string().trim().min(1).max(200);
+
 export function neonCollectionsApiEnabled(): boolean {
 	return process.env.NEON_COLLECTIONS_API_ENABLED === "true";
 }
