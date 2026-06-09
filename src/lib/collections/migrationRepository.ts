@@ -479,3 +479,36 @@ export async function confirmCollectionMigration(
 	if (!updated) return { status: "not_ready" };
 	return { status: "ok", value: { cutoverAt, rollbackExpiresAt } };
 }
+
+export type RollbackCollectionMigrationResult =
+	| { status: "ok" }
+	| { status: "not_available" };
+
+export async function rollbackCollectionMigration(
+	actorUserId: string,
+	database: CollectionDatabase,
+	now = new Date(),
+): Promise<RollbackCollectionMigrationResult> {
+	const status = await getCollectionMigrationStatus(actorUserId, database);
+	if (
+		status.dataSource !== "neon" ||
+		!status.rollbackExpiresAt ||
+		status.rollbackExpiresAt <= now
+	) {
+		return { status: "not_available" };
+	}
+	const [updated] = await database
+		.update(accountDataSources)
+		.set({
+			dataSource: "classic_jazz",
+			updatedAt: now,
+		})
+		.where(
+			and(
+				eq(accountDataSources.userId, actorUserId),
+				eq(accountDataSources.dataSource, "neon"),
+			),
+		)
+		.returning({ userId: accountDataSources.userId });
+	return updated ? { status: "ok" } : { status: "not_available" };
+}

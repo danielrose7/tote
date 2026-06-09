@@ -38,6 +38,17 @@ export function ClassicMigrationCoordinator({
 		setPhase("importing");
 
 		const run = async () => {
+			const statusResponse = await fetch("/api/v2/migration/status");
+			if (statusResponse.ok) {
+				const status = (await statusResponse.json()) as {
+					dataSource: string;
+					cutoverAt: string | null;
+				};
+				if (status.dataSource === "classic_jazz" && status.cutoverAt) {
+					setPhase("hidden");
+					return;
+				}
+			}
 			const collections = exportClassicCollections(rootBlocks);
 			const sourceFingerprint =
 				await fingerprintClassicMigrationCollectionsInBrowser(collections);

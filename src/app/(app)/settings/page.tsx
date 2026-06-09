@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AiCreditsPanel } from '../../../components/Billing/AiCreditsPanel';
 import { Header } from '../../../components/Header/Header';
 import { JazzAccount } from '../../../schema';
+import { MigrationRollbackCard } from './MigrationRollbackCard';
 import styles from './settings.module.css';
 
 type SettingsTab = 'account' | 'billing';
@@ -152,6 +153,7 @@ export default function SettingsPage() {
 
           {activeTab === 'account' && (
             <>
+              <MigrationRollbackCard />
               <div className={styles.syncStatus}>
                 <span className={styles.syncLabel}>Extension sync:</span>
                 <span

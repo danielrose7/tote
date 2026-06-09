@@ -5,6 +5,7 @@ import {
 	getCollectionMigrationStatus,
 	type ImportClassicCollectionsInput,
 	importClassicCollections,
+	rollbackCollectionMigration,
 } from "../../lib/collections/migrationRepository";
 import {
 	accountCollectionMigrations,
@@ -274,3 +275,58 @@ dbTest(
 		});
 	},
 );
+
+dbTest(
+	"rolls a confirmed migration back to Classic Jazz during the rollback window",
+	async ({ db }) => {
+		const input = migrationInput();
+		await importClassicCollections("rollback_owner", input, db);
+		const confirmed = await confirmCollectionMigration("rollback_owner", db);
+		expect(confirmed.status).toBe("ok");
+		if (confirmed.status !== "ok") throw new Error("Expected cutover");
+
+		expect(
+			await rollbackCollectionMigration(
+				"rollback_owner",
+				db,
+				new Date(
+					confirmed.value.cutoverAt.getTime() + 7 * 24 * 60 * 60 * 1_000,
+				),
+			),
+		).toEqual({ status: "ok" });
+		expect(
+			await getCollectionMigrationStatus("rollback_owner", db),
+		).toMatchObject({
+			dataSource: "classic_jazz",
+			status: "completed",
+			cutoverAt: confirmed.value.cutoverAt,
+			rollbackExpiresAt: confirmed.value.rollbackExpiresAt,
+		});
+	},
+);
+
+dbTest("rejects rollback after the rollback window expires", async ({ db }) => {
+	const input = migrationInput();
+	await importClassicCollections("expired_rollback_owner", input, db);
+	const confirmed = await confirmCollectionMigration(
+		"expired_rollback_owner",
+		db,
+	);
+	expect(confirmed.status).toBe("ok");
+	if (confirmed.status !== "ok") throw new Error("Expected cutover");
+
+	expect(
+		await rollbackCollectionMigration(
+			"expired_rollback_owner",
+			db,
+			new Date(confirmed.value.rollbackExpiresAt.getTime() + 1),
+		),
+	).toEqual({ status: "not_available" });
+	expect(
+		await getCollectionMigrationStatus("expired_rollback_owner", db),
+	).toMatchObject({
+		dataSource: "neon",
+		cutoverAt: confirmed.value.cutoverAt,
+		rollbackExpiresAt: confirmed.value.rollbackExpiresAt,
+	});
+});
