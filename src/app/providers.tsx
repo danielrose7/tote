@@ -1,24 +1,39 @@
 "use client";
 
 import { ClerkProvider, useAuth, useClerk } from "@clerk/nextjs";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+	defaultShouldDehydrateMutation,
+	QueryClient,
+	QueryClientProvider,
+} from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { JazzInspector } from "jazz-tools/inspector";
 import { JazzReactProviderWithClerk } from "jazz-tools/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiKey } from "../apiKey";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ToastProvider } from "../components/ToastNotification";
+import {
+	collectionQueryCacheBuster,
+	collectionQueryCacheMaxAge,
+	createCollectionQueryPersister,
+	removeCollectionQueryCache,
+} from "../lib/collections/queryPersistence";
 import { JazzAccount } from "../schema";
 
-const queryCacheDuration = 24 * 60 * 60 * 1_000;
-
-function AccountQueryProvider({ children }: { children: React.ReactNode }) {
+function AccountQueryProvider({
+	children,
+	userId,
+}: {
+	children: React.ReactNode;
+	userId: string | null;
+}) {
 	const [queryClient] = useState(
 		() =>
 			new QueryClient({
 				defaultOptions: {
 					queries: {
-						gcTime: queryCacheDuration,
+						gcTime: collectionQueryCacheMaxAge,
 						staleTime: 30_000,
 					},
 					mutations: {
@@ -27,16 +42,48 @@ function AccountQueryProvider({ children }: { children: React.ReactNode }) {
 				},
 			}),
 	);
+	const [persister] = useState(() =>
+		userId ? createCollectionQueryPersister(userId) : null,
+	);
 
+	if (!persister) {
+		return (
+			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+		);
+	}
 	return (
-		<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+		<PersistQueryClientProvider
+			client={queryClient}
+			persistOptions={{
+				persister,
+				buster: collectionQueryCacheBuster,
+				maxAge: collectionQueryCacheMaxAge,
+				dehydrateOptions: {
+					shouldDehydrateMutation: defaultShouldDehydrateMutation,
+					shouldDehydrateQuery: (query) => query.queryKey[0] === "collections",
+				},
+			}}
+			onSuccess={() => queryClient.resumePausedMutations()}
+		>
+			{children}
+		</PersistQueryClientProvider>
 	);
 }
 
 function CollectionQueryProvider({ children }: { children: React.ReactNode }) {
 	const { userId } = useAuth();
+	const previousUserId = useRef<string | null>(null);
+
+	useEffect(() => {
+		const previous = previousUserId.current;
+		previousUserId.current = userId;
+		if (previous && previous !== userId) {
+			void removeCollectionQueryCache(previous);
+		}
+	}, [userId]);
+
 	return (
-		<AccountQueryProvider key={userId ?? "unauthenticated"}>
+		<AccountQueryProvider key={userId ?? "unauthenticated"} userId={userId}>
 			{children}
 		</AccountQueryProvider>
 	);
