@@ -498,3 +498,141 @@ export async function removeCollectionMember(
 			}
 		: { status: "version_conflict" };
 }
+
+export async function acceptCollectionInvite(
+	actorUserId: string,
+	token: string,
+	database: CollectionDatabase = productionDb,
+): Promise<
+	MutationResult<{
+		collectionId: string;
+		inviteId: string;
+		role: CollectionRole;
+	}>
+> {
+	const tokenHash = hashInviteToken(token);
+	const result = (await database.execute<{
+		collectionId: string;
+		inviteId: string;
+		role: CollectionRole;
+	}>(sql`
+		WITH valid_invite AS (
+			SELECT
+				invite.id,
+				invite.collection_id,
+				invite.created_by_user_id,
+				invite.role,
+				member.role AS previous_role,
+				member.revoked_at AS previous_revoked_at
+			FROM collection_invites invite
+			INNER JOIN collections collection
+				ON collection.id = invite.collection_id
+				AND collection.deleted_at IS NULL
+			LEFT JOIN collection_members member
+				ON member.collection_id = invite.collection_id
+				AND member.user_id = ${actorUserId}
+			WHERE invite.token_hash = ${tokenHash}
+				AND invite.revoked_at IS NULL
+				AND (invite.expires_at IS NULL OR invite.expires_at > now())
+				AND (invite.max_uses IS NULL OR invite.use_count < invite.max_uses)
+			FOR UPDATE OF invite
+		),
+		upserted_member AS (
+			INSERT INTO collection_members (
+				collection_id,
+				user_id,
+				role,
+				invited_by_user_id
+			)
+			SELECT
+				collection_id,
+				${actorUserId},
+				role,
+				created_by_user_id
+			FROM valid_invite
+			ON CONFLICT (collection_id, user_id)
+			DO UPDATE SET
+				role = CASE
+					WHEN collection_members.revoked_at IS NOT NULL
+						THEN EXCLUDED.role
+					WHEN (
+						CASE collection_members.role
+							WHEN 'owner' THEN 4
+							WHEN 'admin' THEN 3
+							WHEN 'editor' THEN 2
+							WHEN 'viewer' THEN 1
+						END
+					) >= (
+						CASE EXCLUDED.role
+							WHEN 'owner' THEN 4
+							WHEN 'admin' THEN 3
+							WHEN 'editor' THEN 2
+							WHEN 'viewer' THEN 1
+						END
+					)
+						THEN collection_members.role
+					ELSE EXCLUDED.role
+				END,
+				invited_by_user_id = CASE
+					WHEN collection_members.revoked_at IS NULL
+						THEN collection_members.invited_by_user_id
+					ELSE EXCLUDED.invited_by_user_id
+				END,
+				revoked_at = NULL,
+				updated_at = now()
+			RETURNING collection_id, role
+		),
+		used_invite AS (
+			UPDATE collection_invites invite
+			SET use_count = invite.use_count + 1,
+				updated_at = now()
+			FROM valid_invite valid, upserted_member member
+			WHERE invite.id = valid.id
+				AND member.collection_id = valid.collection_id
+			RETURNING invite.id, invite.collection_id
+		),
+		inserted_event AS (
+			INSERT INTO collection_membership_events (
+				collection_id,
+				actor_user_id,
+				subject_user_id,
+				invite_id,
+				action,
+				previous_role,
+				next_role,
+				metadata
+			)
+			SELECT
+				used.collection_id,
+				${actorUserId},
+				${actorUserId},
+				used.id,
+				'invite_accepted',
+				valid.previous_role,
+				member.role,
+				jsonb_build_object(
+					'reactivated',
+					valid.previous_revoked_at IS NOT NULL
+				)
+			FROM used_invite used
+			INNER JOIN valid_invite valid ON valid.id = used.id
+			INNER JOIN upserted_member member
+				ON member.collection_id = used.collection_id
+			RETURNING collection_id, invite_id, next_role
+		)
+		SELECT
+			collection_id AS "collectionId",
+			invite_id AS "inviteId",
+			next_role AS role
+		FROM inserted_event
+	`)) as {
+		rows: Array<{
+			collectionId: string;
+			inviteId: string;
+			role: CollectionRole;
+		}>;
+	};
+
+	const accepted = result.rows[0];
+	return accepted ? { status: "ok", value: accepted } : { status: "not_found" };
+}

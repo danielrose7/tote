@@ -1,5 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm";
+import { hashInviteToken } from "../../lib/collections/inviteToken";
 import {
+	acceptCollectionInvite,
 	changeCollectionMemberRole,
 	createCollectionInvite,
 	getCollectionTeam,
@@ -245,6 +247,92 @@ dbTest(
 		]);
 	},
 );
+
+dbTest(
+	"accepts valid invites atomically and enforces use limits",
+	async ({ db }) => {
+		const collection = await createTeamCollection("accept_owner");
+		const created = await createCollectionInvite(
+			"accept_owner",
+			collection.id,
+			{ role: "editor", maxUses: 1 },
+			db,
+		);
+		if (created.status !== "ok") {
+			throw new Error("Expected invite creation to succeed");
+		}
+
+		expect(
+			await acceptCollectionInvite("accept_member", created.value.token, db),
+		).toEqual({
+			status: "ok",
+			value: {
+				collectionId: collection.id,
+				inviteId: created.value.id,
+				role: "editor",
+			},
+		});
+		expect(
+			await acceptCollectionInvite("second_member", created.value.token, db),
+		).toEqual({ status: "not_found" });
+
+		const [member] = await db
+			.select()
+			.from(collectionMembers)
+			.where(
+				and(
+					eq(collectionMembers.collectionId, collection.id),
+					eq(collectionMembers.userId, "accept_member"),
+				),
+			);
+		const [invite] = await db
+			.select()
+			.from(collectionInvites)
+			.where(eq(collectionInvites.id, created.value.id));
+
+		expect(member).toMatchObject({
+			role: "editor",
+			invitedByUserId: "accept_owner",
+			revokedAt: null,
+		});
+		expect(invite.useCount).toBe(1);
+	},
+);
+
+dbTest("rejects expired and revoked invite tokens", async ({ db }) => {
+	const collection = await createTeamCollection("invalid_invite_owner");
+	await db.insert(collectionInvites).values([
+		{
+			collectionId: collection.id,
+			createdByUserId: "invalid_invite_owner",
+			role: "viewer",
+			tokenHash: hashInviteToken("expired-token-value-that-is-long-enough"),
+			expiresAt: new Date("2020-01-01T00:00:00Z"),
+		},
+		{
+			collectionId: collection.id,
+			createdByUserId: "invalid_invite_owner",
+			role: "viewer",
+			tokenHash: hashInviteToken("revoked-token-value-that-is-long-enough"),
+			revokedAt: new Date(),
+		},
+	]);
+
+	expect(
+		await acceptCollectionInvite(
+			"invalid_member",
+			"expired-token-value-that-is-long-enough",
+			db,
+		),
+	).toEqual({ status: "not_found" });
+	expect(
+		await acceptCollectionInvite(
+			"invalid_member",
+			"revoked-token-value-that-is-long-enough",
+			db,
+		),
+	).toEqual({ status: "not_found" });
+});
 
 dbTest("removes collaborators according to the role matrix", async ({ db }) => {
 	const collection = await createTeamCollection("remove_owner");

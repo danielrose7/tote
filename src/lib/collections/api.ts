@@ -138,6 +138,10 @@ export const updateCollectionMemberInputSchema = z.object({
 
 export const collectionMemberUserIdSchema = z.string().trim().min(1).max(200);
 
+export const acceptCollectionInviteInputSchema = z.object({
+	token: z.string().trim().min(20).max(500),
+});
+
 export function neonCollectionsApiEnabled(): boolean {
 	return process.env.NEON_COLLECTIONS_API_ENABLED === "true";
 }
