@@ -58,6 +58,21 @@
 	text-transform: capitalize;
 }
 
+.editButton {
+	padding: 0.35rem 0.75rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-background);
+	color: var(--color-text-primary);
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.editButton:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent);
+}
+
 .section {
 	margin-bottom: 2.5rem;
 }
