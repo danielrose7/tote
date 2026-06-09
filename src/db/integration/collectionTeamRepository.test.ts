@@ -1,10 +1,16 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import {
+	changeCollectionMemberRole,
 	createCollectionInvite,
 	getCollectionTeam,
+	removeCollectionMember,
 	revokeCollectionInvite,
 } from "../../lib/collections/teamRepository";
-import { collectionInvites, collectionMembershipEvents } from "../schema";
+import {
+	collectionInvites,
+	collectionMembers,
+	collectionMembershipEvents,
+} from "../schema";
 import {
 	collectionFactory,
 	collectionMemberFactory,
@@ -161,4 +167,153 @@ dbTest("prevents editors from creating invites", async ({ db }) => {
 		.from(collectionInvites)
 		.where(eq(collectionInvites.collectionId, collection.id));
 	expect(invites).toEqual([]);
+});
+
+dbTest(
+	"enforces owner and admin role-management boundaries",
+	async ({ db }) => {
+		const collection = await createTeamCollection("roles_owner");
+		await collectionMemberFactory.create({
+			collectionId: collection.id,
+			userId: "roles_admin",
+			role: "admin",
+		});
+		await collectionMemberFactory.create({
+			collectionId: collection.id,
+			userId: "roles_editor",
+			role: "editor",
+		});
+		await collectionMemberFactory.create({
+			collectionId: collection.id,
+			userId: "roles_viewer",
+			role: "viewer",
+		});
+
+		expect(
+			await changeCollectionMemberRole(
+				"roles_admin",
+				collection.id,
+				"roles_viewer",
+				"editor",
+				db,
+			),
+		).toEqual({ status: "ok", value: { role: "editor" } });
+		expect(
+			await changeCollectionMemberRole(
+				"roles_admin",
+				collection.id,
+				"roles_editor",
+				"admin",
+				db,
+			),
+		).toEqual({ status: "forbidden" });
+		expect(
+			await changeCollectionMemberRole(
+				"roles_admin",
+				collection.id,
+				"roles_admin",
+				"viewer",
+				db,
+			),
+		).toEqual({ status: "forbidden" });
+		expect(
+			await changeCollectionMemberRole(
+				"roles_owner",
+				collection.id,
+				"roles_editor",
+				"admin",
+				db,
+			),
+		).toEqual({ status: "ok", value: { role: "admin" } });
+		expect(
+			await changeCollectionMemberRole(
+				"roles_owner",
+				collection.id,
+				"roles_owner",
+				"viewer",
+				db,
+			),
+		).toEqual({ status: "forbidden" });
+
+		const events = await db
+			.select()
+			.from(collectionMembershipEvents)
+			.where(eq(collectionMembershipEvents.collectionId, collection.id));
+		expect(events.map((event) => event.action)).toEqual([
+			"role_changed",
+			"role_changed",
+		]);
+	},
+);
+
+dbTest("removes collaborators according to the role matrix", async ({ db }) => {
+	const collection = await createTeamCollection("remove_owner");
+	await collectionMemberFactory.create({
+		collectionId: collection.id,
+		userId: "remove_admin",
+		role: "admin",
+	});
+	await collectionMemberFactory.create({
+		collectionId: collection.id,
+		userId: "remove_editor",
+		role: "editor",
+	});
+	await collectionMemberFactory.create({
+		collectionId: collection.id,
+		userId: "remove_viewer",
+		role: "viewer",
+	});
+
+	expect(
+		await removeCollectionMember(
+			"remove_admin",
+			collection.id,
+			"remove_editor",
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: { revokedAt: expect.any(Date) },
+	});
+	expect(
+		await removeCollectionMember(
+			"remove_admin",
+			collection.id,
+			"remove_admin",
+			db,
+		),
+	).toEqual({ status: "forbidden" });
+	expect(
+		await removeCollectionMember(
+			"remove_admin",
+			collection.id,
+			"remove_owner",
+			db,
+		),
+	).toEqual({ status: "forbidden" });
+	expect(
+		await removeCollectionMember(
+			"remove_owner",
+			collection.id,
+			"remove_admin",
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: { revokedAt: expect.any(Date) },
+	});
+
+	const activeMembers = await db
+		.select()
+		.from(collectionMembers)
+		.where(
+			and(
+				eq(collectionMembers.collectionId, collection.id),
+				isNull(collectionMembers.revokedAt),
+			),
+		);
+	expect(activeMembers.map((member) => member.userId).sort()).toEqual([
+		"remove_owner",
+		"remove_viewer",
+	]);
 });

@@ -293,3 +293,208 @@ export async function revokeCollectionInvite(
 			}
 		: { status: "not_found" };
 }
+
+async function getActiveMemberRole(
+	collectionId: string,
+	userId: string,
+	database: CollectionDatabase,
+): Promise<CollectionRole | null> {
+	const [member] = await database
+		.select({ role: collectionMembers.role })
+		.from(collectionMembers)
+		.where(
+			and(
+				eq(collectionMembers.collectionId, collectionId),
+				eq(collectionMembers.userId, userId),
+				isNull(collectionMembers.revokedAt),
+			),
+		)
+		.limit(1);
+
+	return member?.role ?? null;
+}
+
+function canManageMember(
+	actorUserId: string,
+	actorRole: CollectionRole,
+	targetUserId: string,
+	targetRole: CollectionRole,
+	nextRole?: Exclude<CollectionRole, "owner">,
+): boolean {
+	if (targetRole === "owner" || actorUserId === targetUserId) {
+		return false;
+	}
+	if (actorRole === "owner") {
+		return true;
+	}
+	if (actorRole !== "admin" || targetRole === "admin") {
+		return false;
+	}
+	return nextRole !== "admin";
+}
+
+export async function changeCollectionMemberRole(
+	actorUserId: string,
+	collectionId: string,
+	targetUserId: string,
+	nextRole: Exclude<CollectionRole, "owner">,
+	database: CollectionDatabase = productionDb,
+): Promise<MutationResult<{ role: Exclude<CollectionRole, "owner"> }>> {
+	const actorRole = await getTeamManagerRole(
+		actorUserId,
+		collectionId,
+		database,
+	);
+	if (!actorRole) {
+		return { status: "not_found" };
+	}
+	if (!roleCan(actorRole, "manage_members")) {
+		return { status: "forbidden" };
+	}
+
+	const targetRole = await getActiveMemberRole(
+		collectionId,
+		targetUserId,
+		database,
+	);
+	if (!targetRole) {
+		return { status: "not_found" };
+	}
+	if (
+		!canManageMember(actorUserId, actorRole, targetUserId, targetRole, nextRole)
+	) {
+		return { status: "forbidden" };
+	}
+	if (targetRole === nextRole) {
+		return { status: "ok", value: { role: nextRole } };
+	}
+
+	const result = (await database.execute<{ role: typeof nextRole }>(sql`
+		WITH updated_member AS (
+			UPDATE collection_members
+			SET role = ${nextRole},
+				updated_at = now()
+			WHERE collection_id = ${collectionId}
+				AND user_id = ${targetUserId}
+				AND role = ${targetRole}
+				AND revoked_at IS NULL
+				AND EXISTS (
+					SELECT 1
+					FROM collection_members actor
+					WHERE actor.collection_id = ${collectionId}
+						AND actor.user_id = ${actorUserId}
+						AND actor.role = ${actorRole}
+						AND actor.revoked_at IS NULL
+				)
+			RETURNING role
+		),
+		inserted_event AS (
+			INSERT INTO collection_membership_events (
+				collection_id,
+				actor_user_id,
+				subject_user_id,
+				action,
+				previous_role,
+				next_role
+			)
+			SELECT
+				${collectionId},
+				${actorUserId},
+				${targetUserId},
+				'role_changed',
+				${targetRole},
+				role
+			FROM updated_member
+			RETURNING next_role
+		)
+		SELECT member.role
+		FROM updated_member member
+		INNER JOIN inserted_event event ON event.next_role = member.role
+	`)) as { rows: Array<{ role: typeof nextRole }> };
+
+	const updated = result.rows[0];
+	return updated
+		? { status: "ok", value: updated }
+		: { status: "version_conflict" };
+}
+
+export async function removeCollectionMember(
+	actorUserId: string,
+	collectionId: string,
+	targetUserId: string,
+	database: CollectionDatabase = productionDb,
+): Promise<MutationResult<{ revokedAt: Date }>> {
+	const actorRole = await getTeamManagerRole(
+		actorUserId,
+		collectionId,
+		database,
+	);
+	if (!actorRole) {
+		return { status: "not_found" };
+	}
+	if (!roleCan(actorRole, "manage_members")) {
+		return { status: "forbidden" };
+	}
+
+	const targetRole = await getActiveMemberRole(
+		collectionId,
+		targetUserId,
+		database,
+	);
+	if (!targetRole) {
+		return { status: "not_found" };
+	}
+	if (!canManageMember(actorUserId, actorRole, targetUserId, targetRole)) {
+		return { status: "forbidden" };
+	}
+
+	const result = (await database.execute<{ revokedAt: Date }>(sql`
+		WITH revoked_member AS (
+			UPDATE collection_members
+			SET revoked_at = now(),
+				updated_at = now()
+			WHERE collection_id = ${collectionId}
+				AND user_id = ${targetUserId}
+				AND role = ${targetRole}
+				AND revoked_at IS NULL
+				AND EXISTS (
+					SELECT 1
+					FROM collection_members actor
+					WHERE actor.collection_id = ${collectionId}
+						AND actor.user_id = ${actorUserId}
+						AND actor.role = ${actorRole}
+						AND actor.revoked_at IS NULL
+				)
+			RETURNING revoked_at
+		),
+		inserted_event AS (
+			INSERT INTO collection_membership_events (
+				collection_id,
+				actor_user_id,
+				subject_user_id,
+				action,
+				previous_role
+			)
+			SELECT
+				${collectionId},
+				${actorUserId},
+				${targetUserId},
+				'member_removed',
+				${targetRole}
+			FROM revoked_member
+			RETURNING subject_user_id
+		)
+		SELECT member.revoked_at AS "revokedAt"
+		FROM revoked_member member
+		INNER JOIN inserted_event event
+			ON event.subject_user_id = ${targetUserId}
+	`)) as { rows: Array<{ revokedAt: Date }> };
+
+	const removed = result.rows[0];
+	return removed
+		? {
+				status: "ok",
+				value: { revokedAt: new Date(removed.revokedAt) },
+			}
+		: { status: "version_conflict" };
+}
