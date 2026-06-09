@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import {
 	createCollection,
 	createCollectionNode,
@@ -10,6 +10,7 @@ import {
 	updateCollectionNode,
 } from "../../lib/collections/repository";
 import {
+	ablyOutbox,
 	collectionMembers,
 	collectionMutationReceipts,
 	collectionNodes,
@@ -93,9 +94,24 @@ dbTest(
 			.select()
 			.from(collectionMutationReceipts)
 			.where(eq(collectionMutationReceipts.mutationId, input.mutationId));
+		const events = await db
+			.select()
+			.from(ablyOutbox)
+			.where(eq(ablyOutbox.mutationId, input.mutationId));
 
 		expect(createdCollections).toHaveLength(1);
 		expect(receipts).toHaveLength(1);
+		expect(events).toHaveLength(2);
+		expect(events.map(({ channel, name }) => ({ channel, name }))).toEqual([
+			{
+				channel: `collection:${input.id}`,
+				name: "collection.created",
+			},
+			{
+				channel: "user:retry_owner:collections",
+				name: "collection.index.updated",
+			},
+		]);
 	},
 );
 
@@ -291,6 +307,37 @@ dbTest("replays collection updates and deletions", async ({ db }) => {
 		value: { version: deletedCollection.version + 1 },
 		replayed: true,
 	});
+
+	const events = await db
+		.select({
+			mutationId: ablyOutbox.mutationId,
+			channel: ablyOutbox.channel,
+			name: ablyOutbox.name,
+		})
+		.from(ablyOutbox)
+		.where(
+			sql`${ablyOutbox.mutationId} IN (${updateInput.mutationId}, ${deleteInput.mutationId})`,
+		);
+
+	expect(events).toHaveLength(4);
+	expect(events.filter((event) => event.name === "collection.updated")).toEqual(
+		[
+			{
+				mutationId: updateInput.mutationId,
+				channel: `collection:${updatedCollection.id}`,
+				name: "collection.updated",
+			},
+		],
+	);
+	expect(events.filter((event) => event.name === "collection.deleted")).toEqual(
+		[
+			{
+				mutationId: deleteInput.mutationId,
+				channel: `collection:${deletedCollection.id}`,
+				name: "collection.deleted",
+			},
+		],
+	);
 });
 
 dbTest("detects stale collection and node versions", async ({ db }) => {
@@ -512,6 +559,54 @@ dbTest("replays idempotent node mutations", async ({ db }) => {
 		},
 		replayed: true,
 	});
+
+	const events = await db
+		.select({
+			mutationId: ablyOutbox.mutationId,
+			channel: ablyOutbox.channel,
+			name: ablyOutbox.name,
+			data: ablyOutbox.data,
+		})
+		.from(ablyOutbox)
+		.where(
+			sql`${ablyOutbox.mutationId} IN (
+				${createInput.mutationId},
+				${updateInput.mutationId},
+				${deleteInput.mutationId}
+			)`,
+		);
+
+	expect(events).toHaveLength(6);
+	expect(
+		events
+			.filter((event) => event.channel === `collection:${collection.id}`)
+			.map(({ name, data }) => ({ name, data })),
+	).toEqual([
+		{
+			name: "collection.node.created",
+			data: {
+				collectionId: collection.id,
+				nodeId: createInput.id,
+				version: 1,
+			},
+		},
+		{
+			name: "collection.node.updated",
+			data: {
+				collectionId: collection.id,
+				nodeId: createInput.id,
+				version: 2,
+			},
+		},
+		{
+			name: "collection.node.deleted",
+			data: {
+				collectionId: collection.id,
+				nodeId: createInput.id,
+				deletedNodeCount: 1,
+			},
+		},
+	]);
 });
 
 dbTest(
