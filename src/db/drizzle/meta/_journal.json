@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1780955509338,
+      "tag": "0000_neon_collections_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780958541331,
+      "tag": "0001_migration_tracking",
+      "breakpoints": true
+    }
+  ]
+}
