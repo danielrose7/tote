@@ -27,7 +27,9 @@ export default function CloneCollectionPage() {
   const [neonCollection, setNeonCollection] =
     useState<CollectionForCloning | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const hasStartedRef = useRef(false);
+  const [useJazzFallback, setUseJazzFallback] = useState(false);
+  const neonCopyStartedRef = useRef(false);
+  const jazzCopyStartedRef = useRef(false);
 
   const me = useAccount(JazzAccount, {
     resolve: {
@@ -37,9 +39,44 @@ export default function CloneCollectionPage() {
     },
   });
 
-  // Fetch collection data from Neon once signed in
+  // Neon accounts copy the public snapshot directly into Postgres.
   useEffect(() => {
-    if (!isUserLoaded || !isSignedIn) return;
+    if (!isUserLoaded || !isSignedIn || neonCopyStartedRef.current) return;
+
+    neonCopyStartedRef.current = true;
+    fetch(`/api/v2/publications/${collectionId}/copy`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ mutationId: crypto.randomUUID() }),
+    })
+      .then(async (response) => {
+        if (response.status === 404 || response.status === 409) {
+          setUseJazzFallback(true);
+          return null;
+        }
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          throw new Error(body?.error || 'Failed to copy this collection.');
+        }
+        return response.json() as Promise<{ id: string }>;
+      })
+      .then((result) => {
+        if (result) router.replace(`/collections/${result.id}`);
+      })
+      .catch((error) => {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'Failed to copy this collection.',
+        );
+      });
+  }, [isUserLoaded, isSignedIn, collectionId, router]);
+
+  // Accounts still on classic Jazz retain the transition clone path.
+  useEffect(() => {
+    if (!isUserLoaded || !isSignedIn || !useJazzFallback) return;
 
     fetch(`/api/collections/${collectionId}`)
       .then((r) => {
@@ -56,14 +93,14 @@ export default function CloneCollectionPage() {
       .catch(() => {
         setErrorMessage('This collection is not available for copying.');
       });
-  }, [isUserLoaded, isSignedIn, collectionId]);
+  }, [isUserLoaded, isSignedIn, collectionId, useJazzFallback]);
 
   // Clone once collection data and Jazz account are both ready
   useEffect(() => {
-    if (!neonCollection || hasStartedRef.current) return;
+    if (!neonCollection || jazzCopyStartedRef.current) return;
     if (!me.$isLoaded || !me.root?.$isLoaded) return;
 
-    hasStartedRef.current = true;
+    jazzCopyStartedRef.current = true;
 
     const run = async () => {
       try {
