@@ -11,12 +11,11 @@ import * as AuthSession from 'expo-auth-session';
 import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from 'expo-web-browser';
 import { useAccount } from 'jazz-tools/expo';
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
-  FlatList,
+  Dimensions,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -29,10 +28,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {
-  GestureHandlerRootView,
-  Swipeable,
-} from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AcceptInviteSheet } from './src/components/AcceptInviteSheet';
 import { SaveProductSheet } from './src/components/SaveProductSheet';
 import { useInviteLink } from './src/hooks/useInviteLink';
@@ -46,8 +42,6 @@ import { CollectionDetailScreen } from './src/screens/CollectionDetailScreen';
 WebBrowser.maybeCompleteAuthSession();
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const HOME_COLLECTION_CARD_HEIGHT = 80;
-
 const onboardingKey = (userId: string) => `tote_onboarding_complete_${userId}`;
 
 const ONBOARDING_SCREENS = [
@@ -490,68 +484,109 @@ function SignInScreen() {
 
 function CollectionCard({
   item,
+  columnWidth,
   onPress,
-  onDelete,
 }: {
   item: typeof Block.prototype;
+  columnWidth: number;
   onPress: () => void;
-  onDelete: () => void;
 }) {
-  const swipeRef = useRef<Swipeable>(null);
+  const { imageUrl, itemCount } = getCollectionPreview(item);
+  const [imageHeight, setImageHeight] = useState(
+    Math.round(columnWidth * 0.82),
+  );
+
+  useEffect(() => {
+    if (!imageUrl) return;
+    Image.getSize(
+      imageUrl,
+      (width, height) => {
+        if (width > 0) {
+          setImageHeight(Math.round((columnWidth * height) / width));
+        }
+      },
+      () => {},
+    );
+  }, [columnWidth, imageUrl]);
 
   return (
-    <Swipeable
-      ref={swipeRef}
-      renderRightActions={(progress) => {
-        const translateX = progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [80, 0],
-          extrapolate: 'clamp',
-        });
-        return (
-          <Animated.View
-            style={[styles.deleteAction, { transform: [{ translateX }] }]}
-          >
-            <TouchableOpacity
-              style={styles.deleteActionInner}
-              onPress={onDelete}
-            >
-              <Text style={styles.deleteActionText}>Delete</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        );
-      }}
-      rightThreshold={40}
-      overshootRight={false}
+    <TouchableOpacity
+      style={styles.collectionCard}
+      onPress={onPress}
+      activeOpacity={0.75}
     >
-      <TouchableOpacity
-        style={styles.collectionCard}
-        onPress={onPress}
-        activeOpacity={0.7}
-      >
+      <View style={[styles.collectionPreview, { height: imageHeight }]}>
+        {imageUrl ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={styles.collectionPreviewImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View
+            style={[
+              styles.collectionPreviewPlaceholder,
+              {
+                backgroundColor:
+                  item.collectionData?.color ?? 'rgba(99, 102, 241, 0.16)',
+              },
+            ]}
+          >
+            <Ionicons name="albums-outline" size={30} color="#fff" />
+          </View>
+        )}
+        <View style={styles.collectionCount}>
+          <Text style={styles.collectionCountText}>
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.collectionCardInfo}>
         <View
           style={[
-            styles.colorDot,
-            { backgroundColor: item?.collectionData?.color ?? '#6366f1' },
+            styles.collectionColorDot,
+            { backgroundColor: item.collectionData?.color ?? '#6366f1' },
           ]}
         />
-        <View style={styles.collectionInfo}>
-          <Text style={styles.collectionName}>{item?.name}</Text>
-        </View>
-        <Text style={styles.chevron}>›</Text>
-      </TouchableOpacity>
-    </Swipeable>
+        <Text style={styles.collectionName} numberOfLines={2}>
+          {item?.name}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
-function CollectionSkeleton() {
+function getCollectionPreview(collection: typeof Block.prototype) {
+  let itemCount = 0;
+  let imageUrl: string | undefined;
+
+  if (collection.children?.$isLoaded) {
+    for (const child of collection.children) {
+      if (!child?.$isLoaded) continue;
+      if (child.type === 'product') {
+        itemCount += 1;
+        imageUrl ??= child.productData?.imageUrl;
+      } else if (child.type === 'slot' && child.children?.$isLoaded) {
+        for (const product of child.children) {
+          if (product?.$isLoaded && product.type === 'product') {
+            itemCount += 1;
+            imageUrl ??= product.productData?.imageUrl;
+          }
+        }
+      }
+    }
+  }
+
+  return { imageUrl, itemCount };
+}
+
+function CollectionSkeleton({ height }: { height: number }) {
   return (
     <View style={styles.skeletonCard}>
-      <View style={styles.skeletonDot} />
+      <View style={[styles.skeletonPreview, { height }]} />
       <View style={styles.skeletonInfo}>
         <View style={styles.skeletonName} />
       </View>
-      <View style={styles.skeletonChevron} />
     </View>
   );
 }
@@ -668,12 +703,17 @@ function CollectionListContent({
   const me = useAccount(JazzAccount, {
     resolve: {
       root: {
-        blocks: { $each: true },
+        blocks: {
+          $each: {
+            children: { $each: { children: { $each: true } } },
+          },
+        },
       },
     },
   });
   const { user } = useUser();
   const [showAddCollection, setShowAddCollection] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!me) return;
@@ -704,18 +744,25 @@ function CollectionListContent({
   }
 
   const blocksLoaded = me.root?.blocks != null;
-  const collections =
-    me?.root?.blocks?.filter(
-      (b: typeof Block.prototype | null) =>
-        b?.type === 'collection' && !b?.collectionData?.sourceId,
-    ) ?? [];
-
-  function deleteCollection(item: typeof Block.prototype) {
-    const list = me?.root?.blocks;
-    if (!list) return;
-    const idx = list.findIndex((b) => b?.$jazz?.id === item.$jazz.id);
-    if (idx !== -1) list.$jazz.splice(idx, 1);
-  }
+  const collections = (me?.root?.blocks?.filter(
+    (b: typeof Block.prototype | null) =>
+      b?.type === 'collection' && !b?.collectionData?.sourceId,
+  ) ?? []) as (typeof Block.prototype)[];
+  const normalizedSearch = searchQuery.trim().toLocaleLowerCase();
+  const filteredCollections = normalizedSearch
+    ? collections.filter((collection: typeof Block.prototype | null) =>
+        (collection?.name ?? '').toLocaleLowerCase().includes(normalizedSearch),
+      )
+    : collections;
+  const collectionColumnWidth = Math.floor(
+    (Dimensions.get('window').width - 52) / 2,
+  );
+  const leftCollections = filteredCollections.filter(
+    (_collection, index) => index % 2 === 0,
+  );
+  const rightCollections = filteredCollections.filter(
+    (_collection, index) => index % 2 === 1,
+  );
 
   function handleAddCollection(name: string, color: string) {
     if (!me?.root) return;
@@ -759,9 +806,10 @@ function CollectionListContent({
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={collections}
-        keyExtractor={(item) => item?.$jazz?.id ?? ''}
+      <ScrollView
+        contentContainerStyle={styles.collectionGrid}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -769,48 +817,95 @@ function CollectionListContent({
             tintColor="#6366f1"
           />
         }
-        renderItem={({ item }) => (
-          <CollectionCard
-            item={item}
-            onPress={() =>
-              navigation.navigate('CollectionDetail', {
-                collectionId: item.$jazz.id,
-                collectionName: item.name ?? 'Collection',
-              })
-            }
-            onDelete={() => deleteCollection(item)}
-          />
-        )}
-        ListEmptyComponent={
-          !blocksLoaded ? (
-            <>
-              <CollectionSkeleton />
-              <CollectionSkeleton />
-              <CollectionSkeleton />
-            </>
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No collections yet</Text>
-              <Text style={styles.emptySubtitle}>
-                Add a collection to start saving products
-              </Text>
-              <TouchableOpacity
-                style={styles.emptyButton}
-                onPress={() => setShowAddCollection(true)}
-              >
-                <Text style={styles.emptyButtonText}>Add Collection</Text>
-              </TouchableOpacity>
-            </View>
-          )
-        }
-      />
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowAddCollection(true)}
-        activeOpacity={0.85}
       >
-        <Ionicons name="add" size={28} color="#fff" />
-      </TouchableOpacity>
+        {!blocksLoaded ? (
+          <View style={styles.masonryColumns}>
+            <View style={{ width: collectionColumnWidth }}>
+              <CollectionSkeleton height={190} />
+              <CollectionSkeleton height={140} />
+            </View>
+            <View style={{ width: collectionColumnWidth }}>
+              <CollectionSkeleton height={145} />
+              <CollectionSkeleton height={205} />
+            </View>
+          </View>
+        ) : filteredCollections.length > 0 ? (
+          <View style={styles.masonryColumns}>
+            {[leftCollections, rightCollections].map(
+              (columnCollections, columnIndex) => (
+                <View
+                  key={columnIndex === 0 ? 'left' : 'right'}
+                  style={{ width: collectionColumnWidth }}
+                >
+                  {columnCollections.map((item) => (
+                    <CollectionCard
+                      key={item.$jazz.id}
+                      item={item}
+                      columnWidth={collectionColumnWidth}
+                      onPress={() =>
+                        navigation.navigate('CollectionDetail', {
+                          collectionId: item.$jazz.id,
+                          collectionName: item.name ?? 'Collection',
+                        })
+                      }
+                    />
+                  ))}
+                </View>
+              ),
+            )}
+          </View>
+        ) : normalizedSearch ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>No matching collections</Text>
+            <Text style={styles.emptySubtitle}>
+              Try a different search term
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>No collections yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Add a collection to start saving products
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => setShowAddCollection(true)}
+            >
+              <Text style={styles.emptyButtonText}>Add Collection</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+      <View style={styles.collectionDock}>
+        <View style={styles.collectionSearch}>
+          <Ionicons name="search" size={19} color="#9ca3af" />
+          <TextInput
+            style={styles.collectionSearchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search collections"
+            placeholderTextColor="#9ca3af"
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-circle" size={18} color="#9ca3af" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setShowAddCollection(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
       <AddCollectionModal
         visible={showAddCollection}
         onClose={() => setShowAddCollection(false)}
@@ -975,13 +1070,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  fab: {
+  collectionDock: {
     position: 'absolute',
-    bottom: 32,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    left: 20,
+    right: 20,
+    bottom: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  collectionSearch: {
+    flex: 1,
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    shadowColor: '#111827',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  collectionSearchInput: {
+    flex: 1,
+    paddingVertical: 0,
+    fontSize: 15,
+    color: '#111827',
+  },
+  fab: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
     backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1115,32 +1239,64 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   collectionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: HOME_COLLECTION_CARD_HEIGHT,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
     backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    marginBottom: 10,
-    gap: 12,
+    borderRadius: 14,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  collectionPreview: {
+    width: '100%',
+    backgroundColor: '#e5e7eb',
+    overflow: 'hidden',
   },
-  collectionInfo: {
+  collectionPreviewImage: {
+    width: '100%',
+    height: '100%',
+  },
+  collectionPreviewPlaceholder: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  collectionCount: {
+    position: 'absolute',
+    left: 10,
+    bottom: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: 'rgba(17,24,39,0.78)',
+  },
+  collectionCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  collectionCardInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    padding: 10,
+    paddingBottom: 12,
+  },
+  collectionColorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginTop: 5,
   },
   collectionName: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 19,
     fontWeight: '600',
+    color: '#111827',
   },
-  chevron: {
-    fontSize: 20,
-    color: '#d1d5db',
+  collectionGrid: {
+    flexGrow: 1,
+    paddingBottom: 100,
   },
+  masonryColumns: { flexDirection: 'row', gap: 12 },
   avatar: {
     width: 28,
     height: 28,
@@ -1181,42 +1337,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   skeletonCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: HOME_COLLECTION_CARD_HEIGHT,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
     backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    marginBottom: 10,
-    gap: 12,
+    borderRadius: 14,
+    marginBottom: 12,
+    overflow: 'hidden',
   },
-  skeletonDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  skeletonPreview: {
+    width: '100%',
     backgroundColor: '#e5e7eb',
   },
-  skeletonInfo: { flex: 1 },
+  skeletonInfo: { padding: 10, paddingBottom: 12 },
   skeletonName: {
-    height: 16,
+    height: 14,
     borderRadius: 5,
     backgroundColor: '#e5e7eb',
-    width: '50%',
+    width: '70%',
   },
-  skeletonChevron: {
-    width: 12,
-    height: 16,
-    borderRadius: 4,
-    backgroundColor: '#f3f4f6',
-  },
-  deleteAction: { width: 80, backgroundColor: '#ef4444' },
-  deleteActionInner: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  deleteActionText: { color: '#fff', fontSize: 14, fontWeight: '600' },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',

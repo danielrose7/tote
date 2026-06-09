@@ -16,6 +16,23 @@ _High effort_
 
 - **Universal Links (invite flow):** Team ID set to `8RCZXVFHYN`. Deploy the web app and run `pnpm ios` to rebuild with the `associatedDomains` entitlement. Until then, `tote://invite/...` (custom scheme) links work but `https://tote.tools/invite/...` links open in Safari.
 
+## Later
+
+### Responsive iPad layouts
+
+_Moderate effort: 1–2 days for core polish; 3–5 days for a full tablet pass_
+
+The app supports iPad technically, but most screens currently stretch the phone
+layout across the full window.
+
+- Add a shared responsive layout hook using live window dimensions
+- Center primary content with sensible maximum widths
+- Increase grid column counts at tablet breakpoints
+- Support iPad split view and window resizing
+- Cap sheet/modal widths instead of using full-width phone proportions
+- Audit collection home, collection detail, save/share sheets, auth, and account settings
+- Evaluate landscape and tablet-specific navigation as a follow-up
+
 ## Shipped
 
 - Collection list
@@ -34,6 +51,6 @@ _High effort_
 - Accept invite to shared collection (deep link parsing)
 - Grid / list view toggle (persisted to AsyncStorage)
 - Edit collection name + color
-- Delete collection (swipe on list)
+- Delete collection (detail screen action menu)
 - Delete slot (from slot settings)
 - Account settings (edit name, username)

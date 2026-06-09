@@ -10,6 +10,7 @@ android/
 web-build/
 .env
 .env.local
+.env.bak
 
 # iOS: keep source/project files visible to git, ignore generated artifacts
 ios/*

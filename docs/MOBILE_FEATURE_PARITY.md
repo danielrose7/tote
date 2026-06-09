@@ -18,7 +18,7 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 | List all collections       | ✅  | ✅                       |
 | Create collection          | ✅  | ✅ (via save sheet)      |
 | Edit collection name/color | ✅  | ✅ (from detail screen)  |
-| Delete collection          | ✅  | ✅ (swipe on list)       |
+| Delete collection          | ✅  | ✅ (detail action menu)  |
 | View collection detail     | ✅  | ✅                       |
 | Grid / list view modes     | ✅  | ✅                       |
 | Reorder collections        | ✅  | ❌ (products + slots ✅) |

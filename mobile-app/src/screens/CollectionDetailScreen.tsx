@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Block } from '@tote/schema';
+import { Block, JazzAccount } from '@tote/schema';
 import * as WebBrowser from 'expo-web-browser';
-import { useCoState } from 'jazz-tools/expo';
+import { useAccount, useCoState } from 'jazz-tools/expo';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActionSheetIOS,
   ActivityIndicator,
+  Alert,
   Animated,
   Dimensions,
   Image,
@@ -939,7 +940,7 @@ function MasonryGrid({
 }
 
 export function CollectionDetailScreen({ route, navigation }: Props) {
-  const { collectionId } = route.params;
+  const { collectionId, collectionName } = route.params;
   const insets = useSafeAreaInsets();
   const [addingProduct, setAddingProduct] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
@@ -955,10 +956,54 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
   const { viewMode, setViewMode } = useViewMode();
   const scrollY = useRef(new Animated.Value(0)).current;
+  const me = useAccount(JazzAccount, {
+    resolve: { root: { blocks: true } },
+  });
 
   const collection = useCoState(Block, collectionId, {
     resolve: { children: { $each: { children: { $each: true } } } },
   });
+
+  function confirmDeleteCollection() {
+    Alert.alert(
+      'Delete collection?',
+      `"${collectionName}" and its contents will be removed from Tote.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            try {
+              const blocks = me?.root?.blocks;
+              if (!blocks) {
+                throw new Error('Collections are still loading.');
+              }
+
+              const index = blocks.findIndex(
+                (block: { $jazz?: { id?: string } } | null) =>
+                  block?.$jazz?.id === collectionId,
+              );
+              if (index === -1) {
+                throw new Error('Collection was not found.');
+              }
+
+              blocks.$jazz.splice(index, 1);
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'CollectionList' }],
+              });
+            } catch (error) {
+              Alert.alert(
+                'Could not delete collection',
+                error instanceof Error ? error.message : 'Please try again.',
+              );
+            }
+          },
+        },
+      ],
+    );
+  }
 
   function openReorderItemTargetPicker() {
     const options = [
@@ -994,8 +1039,10 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           'Share collection',
           nextViewModeLabel,
           'Reorder items',
+          'Delete collection',
         ],
         cancelButtonIndex: 0,
+        destructiveButtonIndex: 5,
       },
       (buttonIndex) => {
         if (buttonIndex === 1) {
@@ -1006,6 +1053,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           setViewMode((mode) => (mode === 'list' ? 'grid' : 'list'));
         } else if (buttonIndex === 4) {
           setIsReorderMode(true);
+        } else if (buttonIndex === 5) {
+          confirmDeleteCollection();
         }
       },
     );
