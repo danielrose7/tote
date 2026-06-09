@@ -9,29 +9,13 @@ import {
 } from "../../db/schema";
 import { withTransactionalDb } from "../transactionalDb";
 import { fingerprintMutationRequest } from "./idempotency";
+import {
+	type ClassicMigrationCollection,
+	normalizeClassicMigrationCollections,
+} from "./migrationPayload";
 import type { CollectionDatabase } from "./repository";
 
-export type ClassicMigrationNode = {
-	legacyJazzId: string;
-	parentLegacyJazzId: string | null;
-	type: "section" | "product" | "link" | "photo" | "note" | "text";
-	title: string | null;
-	properties: Record<string, unknown>;
-	positionKey: string;
-};
-
-export type ClassicMigrationCollection = {
-	legacyJazzId: string;
-	name: string;
-	description: string | null;
-	color: string | null;
-	budgetCents: number | null;
-	defaultViewMode: "grid" | "table" | null;
-	publicLayout: "minimal" | "feature";
-	copyPolicy: "disabled" | "members" | "public";
-	positionKey: string;
-	nodes: ClassicMigrationNode[];
-};
+export type { ClassicMigrationCollection } from "./migrationPayload";
 
 export type ImportClassicCollectionsInput = {
 	migrationVersion: 1;
@@ -53,40 +37,11 @@ export type ImportClassicCollectionsResult =
 	| { status: "migration_conflict" }
 	| { status: "invalid_source"; reason: string };
 
-function normalizeMigrationCollections(
-	collectionsToNormalize: ClassicMigrationCollection[],
-) {
-	return collectionsToNormalize
-		.map((collection) => ({
-			...collection,
-			nodes: [...collection.nodes].sort((left, right) => {
-				if (left.parentLegacyJazzId === null && right.parentLegacyJazzId) {
-					return -1;
-				}
-				if (left.parentLegacyJazzId && right.parentLegacyJazzId === null) {
-					return 1;
-				}
-				return (
-					(left.parentLegacyJazzId ?? "").localeCompare(
-						right.parentLegacyJazzId ?? "",
-					) ||
-					left.positionKey.localeCompare(right.positionKey) ||
-					left.legacyJazzId.localeCompare(right.legacyJazzId)
-				);
-			}),
-		}))
-		.sort(
-			(left, right) =>
-				left.positionKey.localeCompare(right.positionKey) ||
-				left.legacyJazzId.localeCompare(right.legacyJazzId),
-		);
-}
-
 export function fingerprintClassicMigrationCollections(
 	collectionsToFingerprint: ClassicMigrationCollection[],
 ) {
 	return fingerprintMutationRequest(
-		normalizeMigrationCollections(collectionsToFingerprint),
+		normalizeClassicMigrationCollections(collectionsToFingerprint),
 	);
 }
 
