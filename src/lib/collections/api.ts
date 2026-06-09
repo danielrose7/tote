@@ -194,6 +194,11 @@ const migrationNodeSchema = z.object({
 	positionKey: z.string().trim().min(1).max(200),
 });
 
+const migrationMemberSchema = z.object({
+	userId: collectionMemberUserIdSchema,
+	role: z.enum(["admin", "editor", "viewer"]),
+});
+
 export const importClassicCollectionsInputSchema = z.object({
 	migrationVersion: z.literal(1),
 	sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
@@ -209,6 +214,7 @@ export const importClassicCollectionsInputSchema = z.object({
 				publicLayout: z.enum(["minimal", "feature"]),
 				copyPolicy: z.enum(["disabled", "members", "public"]),
 				positionKey: z.string().trim().min(1).max(200),
+				members: z.array(migrationMemberSchema).max(1_000).optional(),
 				nodes: z.array(migrationNodeSchema).max(10_000),
 			}),
 		)

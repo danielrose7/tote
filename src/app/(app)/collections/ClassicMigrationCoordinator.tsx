@@ -3,8 +3,9 @@
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { exportClassicCollections } from "../../../lib/collections/classicMigrationExport";
+import { exportClassicCollectionsWithMembers } from "../../../lib/collections/classicMigrationExport";
 import { fingerprintClassicMigrationCollectionsInBrowser } from "../../../lib/collections/migrationPayload";
+import { JazzAccount } from "../../../schema";
 import styles from "./ClassicMigrationCoordinator.module.css";
 
 type ReadySummary = {
@@ -59,7 +60,18 @@ export function ClassicMigrationCoordinator({
 					return;
 				}
 			}
-			const collections = exportClassicCollections(rootBlocks);
+			const collections = await exportClassicCollectionsWithMembers(
+				rootBlocks,
+				user.id,
+				async (jazzAccountId) => {
+					const account = await JazzAccount.load(
+						jazzAccountId as `co_z${string}`,
+						{ resolve: { root: true } },
+					);
+					if (!account.$isLoaded || !account.root?.$isLoaded) return null;
+					return account.root.clerkUserId ?? null;
+				},
+			);
 			const sourceFingerprint =
 				await fingerprintClassicMigrationCollectionsInBrowser(collections);
 			const response = await fetch("/api/v2/migration/import", {

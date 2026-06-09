@@ -61,13 +61,27 @@ function countItems(collectionsToImport: ClassicMigrationCollection[]) {
 	);
 }
 
-function validateSource(collectionsToImport: ClassicMigrationCollection[]) {
+function validateSource(
+	actorUserId: string,
+	collectionsToImport: ClassicMigrationCollection[],
+) {
 	const collectionIds = new Set<string>();
 	for (const collection of collectionsToImport) {
 		if (collectionIds.has(collection.legacyJazzId)) {
 			return `Duplicate collection legacy id: ${collection.legacyJazzId}`;
 		}
 		collectionIds.add(collection.legacyJazzId);
+
+		const memberIds = new Set<string>();
+		for (const member of collection.members ?? []) {
+			if (member.userId === actorUserId) {
+				return `Collection ${collection.legacyJazzId} includes its owner as a collaborator`;
+			}
+			if (memberIds.has(member.userId)) {
+				return `Duplicate member ${member.userId} in ${collection.legacyJazzId}`;
+			}
+			memberIds.add(member.userId);
+		}
 
 		const nodeIds = new Set(collection.nodes.map((node) => node.legacyJazzId));
 		if (nodeIds.size !== collection.nodes.length) {
@@ -129,7 +143,7 @@ async function importClassicCollectionsWithDatabase(
 	if (computedSourceFingerprint !== input.sourceFingerprint) {
 		return { status: "fingerprint_mismatch" };
 	}
-	const invalidReason = validateSource(input.collections);
+	const invalidReason = validateSource(actorUserId, input.collections);
 	if (invalidReason) {
 		return { status: "invalid_source", reason: invalidReason };
 	}
@@ -236,6 +250,16 @@ async function importClassicCollectionsWithDatabase(
 			userId: actorUserId,
 			role: "owner",
 		});
+		if (collection.members && collection.members.length > 0) {
+			await database.insert(collectionMembers).values(
+				collection.members.map((member) => ({
+					collectionId,
+					userId: member.userId,
+					role: member.role,
+					invitedByUserId: actorUserId,
+				})),
+			);
+		}
 
 		const nodeIds = new Map(
 			collection.nodes.map((node) => [node.legacyJazzId, randomUUID()]),
@@ -298,9 +322,29 @@ async function importClassicCollectionsWithDatabase(
 						asc(collectionNodes.parentId),
 						asc(collectionNodes.positionKey),
 					);
+	const importedMembers =
+		importedCollections.length === 0
+			? []
+			: await database
+					.select()
+					.from(collectionMembers)
+					.where(
+						inArray(
+							collectionMembers.collectionId,
+							importedCollections.map((collection) => collection.id),
+						),
+					)
+					.orderBy(
+						asc(collectionMembers.collectionId),
+						asc(collectionMembers.userId),
+					);
 	const importedNodesByCollectionId = Map.groupBy(
 		importedNodes,
 		(node) => node.collectionId,
+	);
+	const importedMembersByCollectionId = Map.groupBy(
+		importedMembers,
+		(member) => member.collectionId,
 	);
 	const importedSemanticCollections: ClassicMigrationCollection[] =
 		importedCollections.map((collection) => ({
@@ -313,6 +357,12 @@ async function importClassicCollectionsWithDatabase(
 			publicLayout: collection.publicLayout,
 			copyPolicy: collection.copyPolicy,
 			positionKey: collection.positionKey,
+			members: (importedMembersByCollectionId.get(collection.id) ?? [])
+				.filter((member) => member.role !== "owner")
+				.map((member) => ({
+					userId: member.userId,
+					role: member.role,
+				})),
 			nodes: (importedNodesByCollectionId.get(collection.id) ?? []).map(
 				(node) => ({
 					legacyJazzId: nodeLegacyIdsByDatabaseId.get(node.id) ?? "",

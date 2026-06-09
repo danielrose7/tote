@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { exportClassicCollections } from "./classicMigrationExport";
+import {
+	exportClassicCollections,
+	exportClassicCollectionsWithMembers,
+} from "./classicMigrationExport";
 import { fingerprintMutationRequest } from "./idempotency";
 import {
 	fingerprintClassicMigrationCollectionsInBrowser,
@@ -115,6 +118,41 @@ describe("exportClassicCollections", () => {
 				{ $isLoaded: false },
 			]),
 		).toEqual([]);
+	});
+
+	it("exports resolved direct group members with Neon roles", async () => {
+		const collection = jazzValue("co_zCollection", {
+			type: "collection",
+			name: "Shared collection",
+			collectionData: {},
+			children: [],
+		});
+		collection.$jazz.owner = {
+			getDirectMembers: () => [
+				{ id: "co_zOwner", role: "admin" },
+				{ id: "co_zAdmin", role: "admin" },
+				{ id: "co_zWriter", role: "writer" },
+				{ id: "co_zReader", role: "reader" },
+				{ id: "co_zUnresolved", role: "reader" },
+			],
+		};
+		const clerkIds = new Map([
+			["co_zOwner", "owner_user"],
+			["co_zAdmin", "admin_user"],
+			["co_zWriter", "editor_user"],
+			["co_zReader", "viewer_user"],
+		]);
+
+		const [exported] = await exportClassicCollectionsWithMembers(
+			[collection],
+			"owner_user",
+			async (accountId) => clerkIds.get(accountId) ?? null,
+		);
+		expect(exported.members).toEqual([
+			{ userId: "admin_user", role: "admin" },
+			{ userId: "editor_user", role: "editor" },
+			{ userId: "viewer_user", role: "viewer" },
+		]);
 	});
 });
 

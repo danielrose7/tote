@@ -29,6 +29,11 @@ function migrationInput(): ImportClassicCollectionsInput {
 			publicLayout: "feature" as const,
 			copyPolicy: "public" as const,
 			positionKey: "a0",
+			members: [
+				{ userId: "migration_admin", role: "admin" as const },
+				{ userId: "migration_editor", role: "editor" as const },
+				{ userId: "migration_viewer", role: "viewer" as const },
+			],
 			nodes: [
 				{
 					legacyJazzId: "co_zProductOne",
@@ -94,14 +99,40 @@ dbTest(
 			originType: "import",
 			itemCount: 1,
 		});
-		const [membership] = await db
+		const memberships = await db
 			.select()
 			.from(collectionMembers)
 			.where(eq(collectionMembers.collectionId, collection.id));
-		expect(membership).toMatchObject({
-			userId: "migration_owner",
-			role: "owner",
-		});
+		expect(
+			memberships
+				.map(({ userId, role, invitedByUserId }) => ({
+					userId,
+					role,
+					invitedByUserId,
+				}))
+				.sort((left, right) => left.userId.localeCompare(right.userId)),
+		).toEqual([
+			{
+				userId: "migration_admin",
+				role: "admin",
+				invitedByUserId: "migration_owner",
+			},
+			{
+				userId: "migration_editor",
+				role: "editor",
+				invitedByUserId: "migration_owner",
+			},
+			{
+				userId: "migration_owner",
+				role: "owner",
+				invitedByUserId: null,
+			},
+			{
+				userId: "migration_viewer",
+				role: "viewer",
+				invitedByUserId: "migration_owner",
+			},
+		]);
 		const nodes = await db
 			.select()
 			.from(collectionNodes)
@@ -237,6 +268,60 @@ dbTest(
 				.from(collections)
 				.where(eq(collections.ownerUserId, "invalid_graph_owner")),
 		).toEqual([]);
+	},
+);
+
+dbTest(
+	"rejects duplicate and self-referential migrated memberships",
+	async ({ db }) => {
+		const input = migrationInput();
+		const collection = input.collections[0];
+		const duplicateMembers = [
+			...(collection.members ?? []),
+			{ userId: "migration_admin", role: "viewer" as const },
+		];
+		const duplicateCollections = [{ ...collection, members: duplicateMembers }];
+		expect(
+			await importClassicCollections(
+				"membership_validation_owner",
+				{
+					...input,
+					collections: duplicateCollections,
+					sourceFingerprint:
+						fingerprintClassicMigrationCollections(duplicateCollections),
+				},
+				db,
+			),
+		).toEqual({
+			status: "invalid_source",
+			reason: "Duplicate member migration_admin in co_zCollectionOne",
+		});
+
+		const selfCollections = [
+			{
+				...collection,
+				members: [
+					...(collection.members ?? []),
+					{ userId: "membership_validation_owner", role: "admin" as const },
+				],
+			},
+		];
+		expect(
+			await importClassicCollections(
+				"membership_validation_owner",
+				{
+					...input,
+					collections: selfCollections,
+					sourceFingerprint:
+						fingerprintClassicMigrationCollections(selfCollections),
+				},
+				db,
+			),
+		).toEqual({
+			status: "invalid_source",
+			reason:
+				"Collection co_zCollectionOne includes its owner as a collaborator",
+		});
 	},
 );
 

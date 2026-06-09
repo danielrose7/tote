@@ -1,13 +1,26 @@
 import type {
 	ClassicMigrationCollection,
+	ClassicMigrationMember,
 	ClassicMigrationNode,
 } from "./migrationPayload";
 
 type JazzValue = {
 	$isLoaded?: boolean;
-	$jazz?: { id?: string };
+	$jazz?: {
+		id?: string;
+		owner?: {
+			getDirectMembers?: () => Array<{
+				id?: string;
+				role?: string;
+			}>;
+		};
+	};
 	[key: string]: unknown;
 };
+
+export type ClassicMemberClerkIdResolver = (
+	jazzAccountId: string,
+) => Promise<string | null>;
 
 function loadedValues(value: unknown): JazzValue[] {
 	if (!value || typeof value !== "object") return [];
@@ -35,6 +48,13 @@ function numberValue(value: unknown): number | undefined {
 
 function positionKey(index: number) {
 	return `m${String(index).padStart(8, "0")}`;
+}
+
+function migrationRole(role: string): ClassicMigrationMember["role"] | null {
+	if (role === "admin" || role === "manager") return "admin";
+	if (role === "writer" || role === "writeOnly") return "editor";
+	if (role === "reader") return "viewer";
+	return null;
 }
 
 function productNode(
@@ -175,4 +195,48 @@ export function exportClassicCollections(
 	}
 
 	return collectionsToExport;
+}
+
+export async function exportClassicCollectionsWithMembers(
+	rootBlocks: unknown,
+	actorUserId: string,
+	resolveClerkUserId: ClassicMemberClerkIdResolver,
+): Promise<ClassicMigrationCollection[]> {
+	const exported = exportClassicCollections(rootBlocks);
+	const blocksById = new Map(
+		loadedValues(rootBlocks).flatMap((block) => {
+			const id = stringValue(block.$jazz?.id);
+			return id ? [[id, block] as const] : [];
+		}),
+	);
+
+	return Promise.all(
+		exported.map(async (collection) => {
+			const sourceBlock = blocksById.get(collection.legacyJazzId);
+			const directMembers =
+				sourceBlock?.$jazz?.owner?.getDirectMembers?.() ?? [];
+			const members = (
+				await Promise.all(
+					directMembers.map(async (member) => {
+						const jazzAccountId = stringValue(member.id);
+						const role =
+							typeof member.role === "string"
+								? migrationRole(member.role)
+								: null;
+						if (!jazzAccountId || !role) return null;
+						const userId = await resolveClerkUserId(jazzAccountId);
+						if (!userId || userId === actorUserId) return null;
+						return { userId, role };
+					}),
+				)
+			).filter((member): member is ClassicMigrationMember => member !== null);
+
+			return {
+				...collection,
+				members: Array.from(
+					new Map(members.map((member) => [member.userId, member])).values(),
+				),
+			};
+		}),
+	);
 }

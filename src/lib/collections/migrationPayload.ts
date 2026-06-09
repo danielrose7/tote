@@ -7,6 +7,11 @@ export type ClassicMigrationNode = {
 	positionKey: string;
 };
 
+export type ClassicMigrationMember = {
+	userId: string;
+	role: "admin" | "editor" | "viewer";
+};
+
 export type ClassicMigrationCollection = {
 	legacyJazzId: string;
 	name: string;
@@ -17,6 +22,7 @@ export type ClassicMigrationCollection = {
 	publicLayout: "minimal" | "feature";
 	copyPolicy: "disabled" | "members" | "public";
 	positionKey: string;
+	members?: ClassicMigrationMember[];
 	nodes: ClassicMigrationNode[];
 };
 
@@ -38,6 +44,11 @@ export function normalizeClassicMigrationCollections(
 	return collectionsToNormalize
 		.map((collection) => ({
 			...collection,
+			members: [...(collection.members ?? [])].sort(
+				(left, right) =>
+					left.userId.localeCompare(right.userId) ||
+					left.role.localeCompare(right.role),
+			),
 			nodes: [...collection.nodes].sort((left, right) => {
 				if (left.parentLegacyJazzId === null && right.parentLegacyJazzId) {
 					return -1;
