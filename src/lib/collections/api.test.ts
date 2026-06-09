@@ -6,6 +6,7 @@ import {
 	createCollectionInputSchema,
 	createCollectionInviteInputSchema,
 	createCollectionNodeInputSchema,
+	importClassicCollectionsInputSchema,
 	publishCollectionInputSchema,
 	reorderCollectionNodesInputSchema,
 	updateCollectionInputSchema,
@@ -241,5 +242,37 @@ describe("publishCollectionInputSchema", () => {
 		expect(publishCollectionInputSchema.safeParse({ slug: "" }).success).toBe(
 			false,
 		);
+	});
+});
+
+describe("importClassicCollectionsInputSchema", () => {
+	it("accepts a versioned migration graph and rejects invalid fingerprints", () => {
+		const payload = {
+			migrationVersion: 1,
+			sourceFingerprint: "a".repeat(64),
+			collections: [
+				{
+					legacyJazzId: "co_zCollection",
+					name: "Imported",
+					description: null,
+					color: null,
+					budgetCents: null,
+					defaultViewMode: "grid",
+					publicLayout: "minimal",
+					copyPolicy: "disabled",
+					positionKey: "a0",
+					nodes: [],
+				},
+			],
+		};
+		expect(importClassicCollectionsInputSchema.safeParse(payload).success).toBe(
+			true,
+		);
+		expect(
+			importClassicCollectionsInputSchema.safeParse({
+				...payload,
+				sourceFingerprint: "not-a-fingerprint",
+			}).success,
+		).toBe(false);
 	});
 });

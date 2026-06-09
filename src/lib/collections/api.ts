@@ -185,6 +185,36 @@ export const publishCollectionInputSchema = z.object({
 	allowCloning: z.boolean().default(true),
 });
 
+const migrationNodeSchema = z.object({
+	legacyJazzId: z.string().trim().min(1).max(500),
+	parentLegacyJazzId: z.string().trim().min(1).max(500).nullable(),
+	type: collectionNodeTypeSchema,
+	title: z.string().max(500).nullable(),
+	properties: collectionNodePropertiesSchema,
+	positionKey: z.string().trim().min(1).max(200),
+});
+
+export const importClassicCollectionsInputSchema = z.object({
+	migrationVersion: z.literal(1),
+	sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+	collections: z
+		.array(
+			z.object({
+				legacyJazzId: z.string().trim().min(1).max(500),
+				name: z.string().trim().min(1).max(200),
+				description: z.string().max(2_000).nullable(),
+				color: z.string().trim().min(1).max(100).nullable(),
+				budgetCents: z.number().int().nonnegative().nullable(),
+				defaultViewMode: z.enum(["grid", "table"]).nullable(),
+				publicLayout: z.enum(["minimal", "feature"]),
+				copyPolicy: z.enum(["disabled", "members", "public"]),
+				positionKey: z.string().trim().min(1).max(200),
+				nodes: z.array(migrationNodeSchema).max(10_000),
+			}),
+		)
+		.max(1_000),
+});
+
 export function neonCollectionsApiEnabled(): boolean {
 	return process.env.NEON_COLLECTIONS_API_ENABLED === "true";
 }
