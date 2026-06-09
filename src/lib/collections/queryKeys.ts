@@ -3,6 +3,8 @@ export const collectionQueryKeys = {
 	detail: (collectionId: string) => ["collections", collectionId] as const,
 	team: (collectionId: string) =>
 		["collections", collectionId, "team"] as const,
+	publication: (collectionId: string) =>
+		["collections", collectionId, "publication"] as const,
 };
 
 export const collectionMutationKeys = {
@@ -18,4 +20,6 @@ export const collectionMutationKeys = {
 	updateMember: ["collections", "team", "members", "update"] as const,
 	removeMember: ["collections", "team", "members", "remove"] as const,
 	transferOwnership: ["collections", "team", "transfer-ownership"] as const,
+	publish: ["collections", "publication", "publish"] as const,
+	unpublish: ["collections", "publication", "unpublish"] as const,
 };

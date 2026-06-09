@@ -550,6 +550,14 @@ queries. The WebSocket exists only for the duration of the Vercel request; this
 does not conflict with Vercel's inability to host persistent client realtime
 connections.
 
+Tote therefore uses two Drizzle clients:
+
+- `neon-http` for ordinary reads and writes.
+- `neon-serverless` with a request-scoped `Pool` for callback transactions.
+
+The transactional helper must close its pool before the request completes.
+Publication snapshot replacement is the first operation using this path.
+
 Most collection mutations should be expressible as one database transaction:
 
 ```text
@@ -1040,6 +1048,14 @@ source visibility:
 Keep publication as an explicit snapshot, rather than exposing live private
 tables directly.
 
+This is not a draft or staged-change model. There are two independent copies:
+
+- The private collection is the live working copy.
+- The publication is the last explicitly published snapshot.
+- Editing the private copy creates unpublished changes.
+- Publish or republish replaces the public snapshot from the current private
+  copy in one transaction.
+
 Recommended evolution of the existing model:
 
 ```text
@@ -1071,8 +1087,9 @@ Benefits:
 - Unpublishing removes the application-controlled public copy.
 - Published data can be optimized independently from the editing model.
 
-The current `published_collections` and `published_blocks` tables can be migrated
-instead of replaced wholesale.
+The current `published_collections` and `published_blocks` tables can evolve in
+place while preserving public URLs. Tote does not need to migrate or preserve
+Jazz publication clones; the existing Postgres snapshot is the public record.
 
 ## Ordering
 
@@ -1711,27 +1728,12 @@ Recommended first policy:
 
 ### Published collections
 
-Published snapshots already in Neon should be linked to the new source
-collection UUID during migration using `source_jazz_id`.
-
-This is also a versioned data migration for the existing
-`published_collections` and `published_blocks` rows:
-
-1. Keep the existing publication ID, username, slug, timestamps, and public URL.
-2. Resolve `published_collections.source_jazz_id` to the migrated
-   `collections.legacy_jazz_id`.
-3. Backfill the new `source_collection_id`.
-4. Convert `slot` blocks to publication sections and `product` blocks to
-   publication items while preserving order and parent relationships.
-5. Record a publication schema version and migration status so the conversion
-   is idempotent and auditable.
-6. Verify collection metadata, block counts, parent relationships, and a
-   deterministic snapshot fingerprint before marking the publication migrated.
-
-The current publication tables must remain readable throughout the conversion;
-public links should not depend on the owner's private-account cutover being
-complete. Publications that cannot yet resolve a source collection continue
-serving their existing snapshot and are retried later.
+Published snapshots already in Postgres remain valid public records. When a
+migrated collection is first republished from Neon, Tote may match
+`published_collections.source_jazz_id` to `collections.legacy_jazz_id`, attach
+the new `source_collection_id`, and replace the snapshot in place. This keeps
+the publication ID, username, slug, timestamps, and public URL without
+preserving the Jazz publication clone or adding a separate conversion job.
 
 Do not republish automatically from the newly migrated private collection.
 Preserve the exact current public snapshot and let the next explicit publish
@@ -1786,10 +1788,10 @@ instead of maintaining a long-lived global branch.
      rejected-mutation notices in IndexedDB until dismissed.
    - Exit: offline edits survive restart and reconcile across two browsers.
 6. **Publication v2**
-   - Add independent publication snapshot tables, explicit publish/republish,
-     and the legacy publication conversion job.
+   - Evolve the existing independent Postgres snapshot tables and add explicit
+     publish/republish from Neon collections.
    - Exit: public URLs remain stable, private unpublished edits stay private,
-     and converted snapshots match fingerprints.
+     and republishing atomically replaces the public snapshot.
 7. **Sharing and copies**
    - Collection team screen for owners/admins, member listing, pending invite
      tracking, role changes, removal, invite revocation, and ownership transfer.

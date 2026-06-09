@@ -36,6 +36,13 @@
       "when": 1781015063948,
       "tag": "0004_collection_realtime_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781024135480,
+      "tag": "0005_collection_publications",
+      "breakpoints": true
     }
   ]
 }

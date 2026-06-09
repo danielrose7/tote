@@ -169,6 +169,17 @@ export const transferCollectionOwnershipInputSchema = z.object({
 	targetUserId: collectionMemberUserIdSchema,
 });
 
+export const publishCollectionInputSchema = z.object({
+	slug: z
+		.string()
+		.trim()
+		.min(1)
+		.max(120)
+		.regex(/^[a-z0-9](?:[a-z0-9._~-]{0,118}[a-z0-9])?$/),
+	layout: z.enum(["minimal", "feature"]).default("minimal"),
+	allowCloning: z.boolean().default(true),
+});
+
 export function neonCollectionsApiEnabled(): boolean {
 	return process.env.NEON_COLLECTIONS_API_ENABLED === "true";
 }

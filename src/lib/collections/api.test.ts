@@ -5,6 +5,7 @@ import {
 	createCollectionInputSchema,
 	createCollectionInviteInputSchema,
 	createCollectionNodeInputSchema,
+	publishCollectionInputSchema,
 	reorderCollectionNodesInputSchema,
 	updateCollectionInputSchema,
 	updateCollectionNodeInputSchema,
@@ -201,5 +202,30 @@ describe("collection team schemas", () => {
 				maxUses: 0,
 			}).success,
 		).toBe(false);
+	});
+});
+
+describe("publishCollectionInputSchema", () => {
+	it("accepts URL-safe snapshot settings", () => {
+		expect(
+			publishCollectionInputSchema.parse({
+				slug: "lighting-ideas.v2",
+				layout: "feature",
+				allowCloning: false,
+			}),
+		).toEqual({
+			slug: "lighting-ideas.v2",
+			layout: "feature",
+			allowCloning: false,
+		});
+	});
+
+	it("rejects slashes and empty slugs", () => {
+		expect(
+			publishCollectionInputSchema.safeParse({ slug: "not/a/slug" }).success,
+		).toBe(false);
+		expect(publishCollectionInputSchema.safeParse({ slug: "" }).success).toBe(
+			false,
+		);
 	});
 });

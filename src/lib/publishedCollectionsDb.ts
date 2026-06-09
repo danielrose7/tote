@@ -1,24 +1,5 @@
 import { sql } from './db';
 
-const PALETTE = [
-  '#6366f1',
-  '#8b5cf6',
-  '#ec4899',
-  '#f59e0b',
-  '#10b981',
-  '#3b82f6',
-  '#ef4444',
-  '#14b8a6',
-];
-
-function pickColor(seed: string): string {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return PALETTE[hash % PALETTE.length];
-}
-
 export type PublishedProduct = {
   id: string;
   title: string | null;
@@ -41,7 +22,9 @@ export type PublishedSlot = {
 
 export type PublishedCollection = {
   id: string;
-  sourceJazzId: string;
+  sourceJazzId: string | null;
+  sourceCollectionId: string | null;
+  sourceVersion: number | null;
   jazzPublishedId: string | null;
   ownerClerkId: string;
   slug: string;
@@ -55,107 +38,6 @@ export type PublishedCollection = {
   topLevelProducts: PublishedProduct[];
   slots: PublishedSlot[];
 };
-
-export type UpsertPublishedCollectionInput = {
-  sourceJazzId: string;
-  jazzPublishedId?: string;
-  ownerClerkId: string;
-  username?: string;
-  slug: string;
-  name: string;
-  description?: string;
-  color?: string;
-  layout: string;
-  allowCloning: boolean;
-  topLevelProducts: Omit<PublishedProduct, 'id'>[];
-  slots: (Omit<PublishedSlot, 'id' | 'products'> & {
-    products: Omit<PublishedProduct, 'id'>[];
-  })[];
-};
-
-export async function upsertPublishedCollection(
-  input: UpsertPublishedCollectionInput,
-): Promise<string> {
-  const [row] = await sql`
-    INSERT INTO published_collections (
-      source_jazz_id, jazz_published_id, owner_clerk_id, username, slug, name,
-      description, color, layout, allow_cloning, updated_at
-    ) VALUES (
-      ${input.sourceJazzId}, ${input.jazzPublishedId ?? null},
-      ${input.ownerClerkId}, ${input.username ?? null}, ${input.slug}, ${input.name},
-      ${input.description ?? null}, ${input.color ?? pickColor(input.slug)},
-      ${input.layout}, ${input.allowCloning}, now()
-    )
-    ON CONFLICT (source_jazz_id) DO UPDATE SET
-      jazz_published_id = EXCLUDED.jazz_published_id,
-      owner_clerk_id    = EXCLUDED.owner_clerk_id,
-      username          = COALESCE(EXCLUDED.username, published_collections.username),
-      slug              = EXCLUDED.slug,
-      name              = EXCLUDED.name,
-      description       = EXCLUDED.description,
-      color             = EXCLUDED.color,
-      layout            = EXCLUDED.layout,
-      allow_cloning     = EXCLUDED.allow_cloning,
-      updated_at        = now()
-    RETURNING id
-  `;
-
-  const collectionId = row.id as string;
-
-  await sql`DELETE FROM published_blocks WHERE collection_id = ${collectionId}`;
-
-  for (const product of input.topLevelProducts) {
-    await sql`
-      INSERT INTO published_blocks (
-        collection_id, type, sort_order,
-        title, url, description, price, image_url, brand, merchant
-      ) VALUES (
-        ${collectionId}, 'product', ${product.sortOrder},
-        ${product.title ?? null}, ${product.url ?? null},
-        ${product.description ?? null}, ${product.price ?? null},
-        ${product.imageUrl ?? null}, ${product.brand ?? null},
-        ${product.merchant ?? null}
-      )
-    `;
-  }
-
-  for (const slot of input.slots) {
-    const [slotRow] = await sql`
-      INSERT INTO published_blocks (
-        collection_id, type, sort_order, slot_name, slot_description
-      ) VALUES (
-        ${collectionId}, 'slot', ${slot.sortOrder},
-        ${slot.slotName ?? null}, ${slot.slotDescription ?? null}
-      )
-      RETURNING id
-    `;
-
-    const slotId = slotRow.id as string;
-
-    for (const product of slot.products) {
-      await sql`
-        INSERT INTO published_blocks (
-          collection_id, parent_block_id, type, sort_order,
-          title, url, description, price, image_url, brand, merchant
-        ) VALUES (
-          ${collectionId}, ${slotId}, 'product', ${product.sortOrder},
-          ${product.title ?? null}, ${product.url ?? null},
-          ${product.description ?? null}, ${product.price ?? null},
-          ${product.imageUrl ?? null}, ${product.brand ?? null},
-          ${product.merchant ?? null}
-        )
-      `;
-    }
-  }
-
-  return collectionId;
-}
-
-export async function deletePublishedCollection(
-  sourceJazzId: string,
-): Promise<void> {
-  await sql`DELETE FROM published_collections WHERE source_jazz_id = ${sourceJazzId}`;
-}
 
 export async function getAllPublishedCollectionSlugs(): Promise<
   { username: string; slug: string; updatedAt: Date }[]
@@ -179,7 +61,8 @@ export async function getPublishedCollectionByOwnerAndSlug(
 ): Promise<PublishedCollection | null> {
   const rows = await sql`
     SELECT id, source_jazz_id, jazz_published_id, owner_clerk_id, slug, name,
-           description, layout, allow_cloning, published_at, updated_at
+           source_collection_id, source_version,
+           description, color, layout, allow_cloning, published_at, updated_at
     FROM published_collections
     WHERE owner_clerk_id = ${ownerClerkId} AND slug = ${slug}
   `;
@@ -242,7 +125,8 @@ export async function getPublishedCollectionById(
 ): Promise<PublishedCollection | null> {
   const rows = await sql`
     SELECT id, source_jazz_id, jazz_published_id, owner_clerk_id, slug, name,
-           description, layout, allow_cloning, published_at, updated_at
+           source_collection_id, source_version,
+           description, color, layout, allow_cloning, published_at, updated_at
     FROM published_collections
     WHERE id = ${id}::uuid
        OR jazz_published_id = ${id}
@@ -311,7 +195,7 @@ async function loadCollectionWithBlocks(
   const blocks = await sql`
     SELECT id, parent_block_id, type, sort_order,
            slot_name, slot_description,
-           title, url, description, price, image_url, brand, merchant
+           title, url, description, price, image_url, brand, merchant, properties
     FROM published_blocks
     WHERE collection_id = ${row.id as string}
     ORDER BY sort_order ASC
@@ -322,7 +206,7 @@ async function loadCollectionWithBlocks(
   const topLevelProducts: PublishedProduct[] = [];
 
   for (const b of blocks) {
-    if (b.type === 'slot') {
+    if (b.type === 'slot' || b.type === 'section') {
       const slot: PublishedSlot = {
         id: b.id as string,
         slotName: b.slot_name as string | null,
@@ -336,7 +220,7 @@ async function loadCollectionWithBlocks(
   }
 
   for (const b of blocks) {
-    if (b.type !== 'product') continue;
+    if (b.type === 'slot' || b.type === 'section') continue;
     const product: PublishedProduct = {
       id: b.id as string,
       title: b.title as string | null,
@@ -358,7 +242,12 @@ async function loadCollectionWithBlocks(
 
   return {
     id: row.id as string,
-    sourceJazzId: row.source_jazz_id as string,
+    sourceJazzId: row.source_jazz_id as string | null,
+    sourceCollectionId: row.source_collection_id as string | null,
+    sourceVersion:
+      row.source_version === null || row.source_version === undefined
+        ? null
+        : Number(row.source_version),
     jazzPublishedId: row.jazz_published_id as string | null,
     ownerClerkId: row.owner_clerk_id as string,
     slug: row.slug as string,

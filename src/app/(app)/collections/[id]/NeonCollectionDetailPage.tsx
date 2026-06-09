@@ -37,6 +37,7 @@ import styles from "./NeonCollectionDetailPage.module.css";
 import { NeonCreateNodeDialog } from "./NeonCreateNodeDialog";
 import { NeonEditCollectionDialog } from "./NeonEditCollectionDialog";
 import { NeonEditNodeDialog } from "./NeonEditNodeDialog";
+import { NeonPublicationDialog } from "./NeonPublicationDialog";
 import { NeonTeamDialog } from "./NeonTeamDialog";
 
 type NodeProperties = {
@@ -160,6 +161,7 @@ export function NeonCollectionDetailPage({
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
 	const [isTeamOpen, setIsTeamOpen] = useState(false);
+	const [isPublicationOpen, setIsPublicationOpen] = useState(false);
 	const [selectedNode, setSelectedNode] = useState<CollectionNode | null>(null);
 	const queryClient = useQueryClient();
 	const { showToast } = useToast();
@@ -323,6 +325,15 @@ export function NeonCollectionDetailPage({
 									onClick={() => setIsTeamOpen(true)}
 								>
 									Team
+								</button>
+							)}
+							{roleCan(role, "publish") && (
+								<button
+									type="button"
+									className={styles.editButton}
+									onClick={() => setIsPublicationOpen(true)}
+								>
+									Publish
 								</button>
 							)}
 						</div>
@@ -505,6 +516,13 @@ export function NeonCollectionDetailPage({
 					actorRole={role}
 					open={isTeamOpen}
 					onOpenChange={setIsTeamOpen}
+				/>
+			)}
+			{roleCan(role, "publish") && (
+				<NeonPublicationDialog
+					detail={detail}
+					open={isPublicationOpen}
+					onOpenChange={setIsPublicationOpen}
 				/>
 			)}
 		</>

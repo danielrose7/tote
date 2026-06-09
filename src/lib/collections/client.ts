@@ -1,3 +1,4 @@
+import type { CollectionPublicationStatus } from "./publicationRepository";
 import type {
 	CollectionDetail,
 	CollectionSummary,
@@ -346,4 +347,61 @@ export async function transferCollectionOwnershipMutation({
 			body: JSON.stringify({ targetUserId }),
 		},
 	);
+}
+
+function hydratePublicationStatus(
+	status: CollectionPublicationStatus | null,
+): CollectionPublicationStatus | null {
+	return status
+		? {
+				...status,
+				publishedAt: new Date(status.publishedAt),
+				updatedAt: new Date(status.updatedAt),
+			}
+		: null;
+}
+
+export async function fetchCollectionPublication(
+	collectionId: string,
+): Promise<CollectionPublicationStatus | null> {
+	const status = await fetchJson<CollectionPublicationStatus | null>(
+		`/api/v2/collections/${collectionId}/publication`,
+	);
+	return hydratePublicationStatus(status);
+}
+
+export type PublishCollectionMutation = {
+	collectionId: string;
+	input: {
+		slug: string;
+		layout: "minimal" | "feature";
+		allowCloning: boolean;
+	};
+};
+
+export async function publishCollectionMutation({
+	collectionId,
+	input,
+}: PublishCollectionMutation): Promise<CollectionPublicationStatus> {
+	const status = await fetchJson<CollectionPublicationStatus>(
+		`/api/v2/collections/${collectionId}/publication`,
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify(input),
+		},
+	);
+	return hydratePublicationStatus(status) as CollectionPublicationStatus;
+}
+
+export type UnpublishCollectionMutation = {
+	collectionId: string;
+};
+
+export async function unpublishCollectionMutation({
+	collectionId,
+}: UnpublishCollectionMutation): Promise<{ unpublished: true }> {
+	return fetchJson(`/api/v2/collections/${collectionId}/publication`, {
+		method: "DELETE",
+	});
 }

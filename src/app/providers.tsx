@@ -20,10 +20,12 @@ import {
 	createCollectionNodeMutation,
 	deleteCollectionMutation,
 	deleteCollectionNodeMutation,
+	publishCollectionMutation,
 	removeCollectionMemberMutation,
 	reorderCollectionNodesMutation,
 	revokeCollectionInviteMutation,
 	transferCollectionOwnershipMutation,
+	unpublishCollectionMutation,
 	updateCollectionMemberMutation,
 	updateCollectionMutation,
 	updateCollectionNodeMutation,
@@ -142,6 +144,20 @@ function AccountQueryProvider({
 					queryKey: collectionQueryKeys.detail(variables.collectionId),
 				}),
 			]),
+	});
+	const invalidatePublication = (collectionId: string) =>
+		queryClient.invalidateQueries({
+			queryKey: collectionQueryKeys.publication(collectionId),
+		});
+	queryClient.setMutationDefaults(collectionMutationKeys.publish, {
+		mutationFn: publishCollectionMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidatePublication(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.unpublish, {
+		mutationFn: unpublishCollectionMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidatePublication(variables.collectionId),
 	});
 	const [persister] = useState(() =>
 		userId ? createCollectionQueryPersister(userId) : null,
