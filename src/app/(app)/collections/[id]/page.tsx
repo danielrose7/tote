@@ -1,6 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
+import {
+	dehydrate,
+	HydrationBoundary,
+	QueryClient,
+} from "@tanstack/react-query";
 import { notFound, redirect } from "next/navigation";
 import { canUseNeonCollections } from "../../../../lib/collections/api";
+import { collectionQueryKeys } from "../../../../lib/collections/queryKeys";
 import {
 	getAccountCollectionDataSource,
 	getCollectionDetail,
@@ -29,5 +35,12 @@ export default async function CollectionDetailRoute({
 		notFound();
 	}
 
-	return <NeonCollectionDetailPage detail={detail} />;
+	const queryClient = new QueryClient();
+	queryClient.setQueryData(collectionQueryKeys.detail(id), detail);
+
+	return (
+		<HydrationBoundary state={dehydrate(queryClient)}>
+			<NeonCollectionDetailPage collectionId={id} />
+		</HydrationBoundary>
+	);
 }

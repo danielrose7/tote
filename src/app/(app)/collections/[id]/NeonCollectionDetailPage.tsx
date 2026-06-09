@@ -1,6 +1,10 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import { Header } from "../../../../components/Header";
 import type { CollectionNode } from "../../../../db/schema";
-import type { CollectionDetail } from "../../../../lib/collections/repository";
+import { fetchCollectionDetail } from "../../../../lib/collections/client";
+import { collectionQueryKeys } from "../../../../lib/collections/queryKeys";
 import styles from "./NeonCollectionDetailPage.module.css";
 
 type NodeProperties = {
@@ -54,10 +58,18 @@ function ItemNode({ node }: { node: CollectionNode }) {
 }
 
 export function NeonCollectionDetailPage({
-	detail,
+	collectionId,
 }: {
-	detail: CollectionDetail;
+	collectionId: string;
 }) {
+	const { data: detail } = useQuery({
+		queryKey: collectionQueryKeys.detail(collectionId),
+		queryFn: () => fetchCollectionDetail(collectionId),
+	});
+	if (!detail) {
+		return null;
+	}
+
 	const { collection, nodes, role } = detail;
 	const sections = nodes.filter((node) => node.type === "section");
 	const rootNodes = nodes.filter(

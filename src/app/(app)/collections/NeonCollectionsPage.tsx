@@ -1,14 +1,19 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import cardStyles from "../../../components/CollectionCard/CollectionCard.module.css";
 import listStyles from "../../../components/CollectionList/CollectionList.module.css";
 import { Header } from "../../../components/Header";
-import type { CollectionSummary } from "../../../lib/collections/repository";
+import { fetchCollectionSummaries } from "../../../lib/collections/client";
+import { collectionQueryKeys } from "../../../lib/collections/queryKeys";
 
-export function NeonCollectionsPage({
-	collections,
-}: {
-	collections: CollectionSummary[];
-}) {
+export function NeonCollectionsPage() {
+	const { data: collections = [] } = useQuery({
+		queryKey: collectionQueryKeys.all,
+		queryFn: fetchCollectionSummaries,
+	});
+
 	return (
 		<>
 			<Header />

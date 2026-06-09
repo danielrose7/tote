@@ -1,6 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
+import {
+	dehydrate,
+	HydrationBoundary,
+	QueryClient,
+} from "@tanstack/react-query";
 import { redirect } from "next/navigation";
 import { canUseNeonCollections } from "../../../lib/collections/api";
+import { collectionQueryKeys } from "../../../lib/collections/queryKeys";
 import {
 	getAccountCollectionDataSource,
 	listCollectionSummaries,
@@ -20,5 +26,12 @@ export default async function CollectionsPage() {
 	}
 
 	const collections = await listCollectionSummaries(userId);
-	return <NeonCollectionsPage collections={collections} />;
+	const queryClient = new QueryClient();
+	queryClient.setQueryData(collectionQueryKeys.all, collections);
+
+	return (
+		<HydrationBoundary state={dehydrate(queryClient)}>
+			<NeonCollectionsPage />
+		</HydrationBoundary>
+	);
 }
