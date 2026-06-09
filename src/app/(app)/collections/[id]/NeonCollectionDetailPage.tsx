@@ -8,6 +8,7 @@ import { fetchCollectionDetail } from "../../../../lib/collections/client";
 import { roleCan } from "../../../../lib/collections/permissions";
 import { collectionQueryKeys } from "../../../../lib/collections/queryKeys";
 import styles from "./NeonCollectionDetailPage.module.css";
+import { NeonCreateNodeDialog } from "./NeonCreateNodeDialog";
 import { NeonEditCollectionDialog } from "./NeonEditCollectionDialog";
 
 type NodeProperties = {
@@ -66,6 +67,7 @@ export function NeonCollectionDetailPage({
 	collectionId: string;
 }) {
 	const [isEditOpen, setIsEditOpen] = useState(false);
+	const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
 	const { data: detail } = useQuery({
 		queryKey: collectionQueryKeys.detail(collectionId),
 		queryFn: () => fetchCollectionDetail(collectionId),
@@ -109,13 +111,22 @@ export function NeonCollectionDetailPage({
 							<h1>{collection.name}</h1>
 							<span className={styles.roleBadge}>{role}</span>
 							{roleCan(role, "edit") && (
-								<button
-									type="button"
-									className={styles.editButton}
-									onClick={() => setIsEditOpen(true)}
-								>
-									Edit
-								</button>
+								<>
+									<button
+										type="button"
+										className={styles.primaryButton}
+										onClick={() => setIsCreateNodeOpen(true)}
+									>
+										Add Content
+									</button>
+									<button
+										type="button"
+										className={styles.editButton}
+										onClick={() => setIsEditOpen(true)}
+									>
+										Edit
+									</button>
+								</>
 							)}
 						</div>
 						{collection.description && <p>{collection.description}</p>}
@@ -170,11 +181,18 @@ export function NeonCollectionDetailPage({
 				)}
 			</main>
 			{roleCan(role, "edit") && (
-				<NeonEditCollectionDialog
-					detail={detail}
-					open={isEditOpen}
-					onOpenChange={setIsEditOpen}
-				/>
+				<>
+					<NeonCreateNodeDialog
+						detail={detail}
+						open={isCreateNodeOpen}
+						onOpenChange={setIsCreateNodeOpen}
+					/>
+					<NeonEditCollectionDialog
+						detail={detail}
+						open={isEditOpen}
+						onOpenChange={setIsEditOpen}
+					/>
+				</>
 			)}
 		</>
 	);
