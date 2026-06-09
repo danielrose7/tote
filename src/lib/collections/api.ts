@@ -121,6 +121,29 @@ export const deleteCollectionNodeInputSchema = z.object({
 	mutationId: mutationIdSchema.optional(),
 });
 
+export const reorderCollectionNodesInputSchema = z
+	.object({
+		mutationId: mutationIdSchema,
+		nodes: z
+			.array(
+				z.object({
+					id: collectionIdSchema,
+					expectedVersion: collectionVersionSchema,
+					positionKey: z.string().trim().min(1).max(200),
+				}),
+			)
+			.min(2)
+			.max(500),
+	})
+	.refine(
+		(input) =>
+			new Set(input.nodes.map((node) => node.id)).size === input.nodes.length,
+		{
+			message: "Reorder node ids must be unique",
+			path: ["nodes"],
+		},
+	);
+
 export const createCollectionInviteInputSchema = z.object({
 	role: z.enum(["editor", "viewer"]),
 	recipientHint: z.string().trim().min(1).max(320).optional(),

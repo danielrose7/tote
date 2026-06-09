@@ -1,12 +1,38 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import {
+	closestCenter,
+	DndContext,
+	type DragEndEvent,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import {
+	arrayMove,
+	rectSortingStrategy,
+	SortableContext,
+	sortableKeyboardCoordinates,
+	useSortable,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Header } from "../../../../components/Header";
+import { useToast } from "../../../../components/ToastNotification";
 import type { CollectionNode } from "../../../../db/schema";
-import { fetchCollectionDetail } from "../../../../lib/collections/client";
+import {
+	fetchCollectionDetail,
+	type ReorderCollectionNodesMutation,
+} from "../../../../lib/collections/client";
 import { roleCan } from "../../../../lib/collections/permissions";
-import { collectionQueryKeys } from "../../../../lib/collections/queryKeys";
+import {
+	collectionMutationKeys,
+	collectionQueryKeys,
+} from "../../../../lib/collections/queryKeys";
+import type { CollectionDetail } from "../../../../lib/collections/repository";
 import styles from "./NeonCollectionDetailPage.module.css";
 import { NeonCreateNodeDialog } from "./NeonCreateNodeDialog";
 import { NeonEditCollectionDialog } from "./NeonEditCollectionDialog";
@@ -24,12 +50,58 @@ function propertiesFor(node: CollectionNode): NodeProperties {
 	return node.properties as NodeProperties;
 }
 
+function SortableNode({
+	id,
+	className,
+	handleLabel,
+	children,
+}: {
+	id: string;
+	className?: string;
+	handleLabel: string;
+	children: (dragHandle: React.ReactNode) => React.ReactNode;
+}) {
+	const {
+		attributes,
+		listeners,
+		setNodeRef,
+		transform,
+		transition,
+		isDragging,
+	} = useSortable({ id });
+
+	return (
+		<div
+			ref={setNodeRef}
+			className={`${className ?? ""} ${isDragging ? styles.dragging : ""}`}
+			style={{
+				transform: CSS.Transform.toString(transform),
+				transition,
+			}}
+		>
+			{children(
+				<button
+					type="button"
+					className={styles.dragHandle}
+					aria-label={handleLabel}
+					{...attributes}
+					{...listeners}
+				>
+					<span aria-hidden="true">⋮⋮</span>
+				</button>,
+			)}
+		</div>
+	);
+}
+
 function ItemNode({
 	node,
 	onEdit,
+	dragHandle,
 }: {
 	node: CollectionNode;
 	onEdit?: (node: CollectionNode) => void;
+	dragHandle?: React.ReactNode;
 }) {
 	const properties = propertiesFor(node);
 	const title = node.title || (node.type === "photo" ? "Photo" : "Untitled");
@@ -58,6 +130,7 @@ function ItemNode({
 		<article className={styles.itemCard}>
 			{content}
 			<div className={styles.itemActions}>
+				{dragHandle}
 				{properties.url && (
 					<a
 						href={properties.url}
@@ -86,9 +159,42 @@ export function NeonCollectionDetailPage({
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
 	const [selectedNode, setSelectedNode] = useState<CollectionNode | null>(null);
+	const queryClient = useQueryClient();
+	const { showToast } = useToast();
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: { distance: 8 },
+		}),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		}),
+	);
 	const { data: detail } = useQuery({
 		queryKey: collectionQueryKeys.detail(collectionId),
 		queryFn: () => fetchCollectionDetail(collectionId),
+	});
+	const reorderNodes = useMutation<
+		{
+			nodeCount: number;
+			collectionVersion: number;
+			itemCount: number;
+			replayed: boolean;
+		},
+		Error,
+		ReorderCollectionNodesMutation
+	>({
+		mutationKey: collectionMutationKeys.reorderNodes,
+		scope: { id: `collection:${collectionId}` },
+		onError: (error) => {
+			showToast({
+				title: "Reordering failed",
+				description: error.message,
+				variant: "error",
+			});
+			void queryClient.invalidateQueries({
+				queryKey: collectionQueryKeys.detail(collectionId),
+			});
+		},
 	});
 	if (!detail) {
 		return null;
@@ -107,6 +213,68 @@ export function NeonCollectionDetailPage({
 		children.push(node);
 		childrenByParent.set(node.parentId, children);
 	}
+
+	const reorderSiblings = (
+		siblings: CollectionNode[],
+		activeId: string,
+		overId: string,
+	) => {
+		const oldIndex = siblings.findIndex((node) => node.id === activeId);
+		const newIndex = siblings.findIndex((node) => node.id === overId);
+		if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
+
+		const reordered = arrayMove(siblings, oldIndex, newIndex);
+		const updates = reordered.map((node, index) => ({
+			node,
+			positionKey: `r:${String(index).padStart(8, "0")}:${node.id}`,
+		}));
+		const nextPositions = new Map(
+			updates.map(({ node, positionKey }) => [node.id, positionKey]),
+		);
+		queryClient.setQueryData<CollectionDetail>(
+			collectionQueryKeys.detail(collection.id),
+			(current) =>
+				current
+					? {
+							...current,
+							collection: {
+								...current.collection,
+								version: current.collection.version + updates.length,
+								updatedAt: new Date(),
+							},
+							nodes: current.nodes.map((node) => {
+								const positionKey = nextPositions.get(node.id);
+								return positionKey
+									? {
+											...node,
+											positionKey,
+											version: node.version + 1,
+											updatedAt: new Date(),
+										}
+									: node;
+							}),
+						}
+					: current,
+		);
+		reorderNodes.mutate({
+			collectionId: collection.id,
+			input: {
+				mutationId: crypto.randomUUID(),
+				nodes: updates.map(({ node, positionKey }) => ({
+					id: node.id,
+					expectedVersion: node.version,
+					positionKey,
+				})),
+			},
+		});
+	};
+
+	const dragEndHandler =
+		(siblings: CollectionNode[]) =>
+		({ active, over }: DragEndEvent) => {
+			if (!over) return;
+			reorderSiblings(siblings, String(active.id), String(over.id));
+		};
 
 	return (
 		<>
@@ -160,63 +328,136 @@ export function NeonCollectionDetailPage({
 
 				{rootNodes.length > 0 && (
 					<section className={styles.section}>
-						<div className={styles.grid}>
-							{rootNodes.map((node) => (
-								<ItemNode
-									key={node.id}
-									node={node}
-									onEdit={
-										roleCan(role, "edit")
-											? (selected) => setSelectedNode(selected)
-											: undefined
-									}
-								/>
-							))}
-						</div>
+						<DndContext
+							sensors={sensors}
+							collisionDetection={closestCenter}
+							onDragEnd={dragEndHandler(rootNodes)}
+						>
+							<SortableContext
+								items={rootNodes.map((node) => node.id)}
+								strategy={rectSortingStrategy}
+							>
+								<div className={styles.grid}>
+									{rootNodes.map((node) => (
+										<SortableNode
+											key={node.id}
+											id={node.id}
+											handleLabel={`Reorder ${node.title || node.type}`}
+										>
+											{(dragHandle) => (
+												<ItemNode
+													node={node}
+													dragHandle={
+														roleCan(role, "edit") ? dragHandle : undefined
+													}
+													onEdit={
+														roleCan(role, "edit")
+															? (selected) => setSelectedNode(selected)
+															: undefined
+													}
+												/>
+											)}
+										</SortableNode>
+									))}
+								</div>
+							</SortableContext>
+						</DndContext>
 					</section>
 				)}
 
-				{sections.map((section) => {
-					const children = childrenByParent.get(section.id) ?? [];
-					return (
-						<section key={section.id} className={styles.section}>
-							<div className={styles.sectionHeader}>
-								<div>
-									<h2>{section.title || "Untitled section"}</h2>
-									<span>
-										{children.length} {children.length === 1 ? "item" : "items"}
-									</span>
-								</div>
-								{roleCan(role, "edit") && (
-									<button
-										type="button"
-										className={styles.sectionEditButton}
-										onClick={() => setSelectedNode(section)}
-									>
-										Edit section
-									</button>
-								)}
-							</div>
-							{children.length > 0 ? (
-								<div className={styles.grid}>
-									{children.map((node) => (
-										<ItemNode
-											key={node.id}
-											node={node}
-											onEdit={
-												roleCan(role, "edit")
-													? (selected) => setSelectedNode(selected)
-													: undefined
-											}
-										/>
-									))}
-								</div>
-							) : (
-								<p className={styles.emptySection}>This section is empty.</p>
-							)}
-						</section>
-					);
-				})}
+				<DndContext
+					sensors={sensors}
+					collisionDetection={closestCenter}
+					onDragEnd={dragEndHandler(sections)}
+				>
+					<SortableContext
+						items={sections.map((section) => section.id)}
+						strategy={verticalListSortingStrategy}
+					>
+						{sections.map((section) => {
+							const children = childrenByParent.get(section.id) ?? [];
+							return (
+								<SortableNode
+									key={section.id}
+									id={section.id}
+									className={styles.section}
+									handleLabel={`Reorder ${section.title || "section"}`}
+								>
+									{(sectionDragHandle) => (
+										<section>
+											<div className={styles.sectionHeader}>
+												<div>
+													<h2>{section.title || "Untitled section"}</h2>
+													<span>
+														{children.length}{" "}
+														{children.length === 1 ? "item" : "items"}
+													</span>
+												</div>
+												{roleCan(role, "edit") && (
+													<div className={styles.sectionActions}>
+														{sectionDragHandle}
+														<button
+															type="button"
+															className={styles.sectionEditButton}
+															onClick={() => setSelectedNode(section)}
+														>
+															Edit section
+														</button>
+													</div>
+												)}
+											</div>
+											{children.length > 0 ? (
+												<DndContext
+													sensors={sensors}
+													collisionDetection={closestCenter}
+													onDragEnd={dragEndHandler(children)}
+												>
+													<SortableContext
+														items={children.map((node) => node.id)}
+														strategy={rectSortingStrategy}
+													>
+														<div className={styles.grid}>
+															{children.map((node) => (
+																<SortableNode
+																	key={node.id}
+																	id={node.id}
+																	handleLabel={`Reorder ${
+																		node.title || node.type
+																	}`}
+																>
+																	{(dragHandle) => (
+																		<ItemNode
+																			node={node}
+																			dragHandle={
+																				roleCan(role, "edit")
+																					? dragHandle
+																					: undefined
+																			}
+																			onEdit={
+																				roleCan(role, "edit")
+																					? (selected) =>
+																							setSelectedNode(selected)
+																					: undefined
+																			}
+																		/>
+																	)}
+																</SortableNode>
+															))}
+														</div>
+													</SortableContext>
+												</DndContext>
+											) : (
+												<p className={styles.emptySection}>
+													This section is empty.
+												</p>
+											)}
+										</section>
+									)}
+								</SortableNode>
+							);
+						})}
+					</SortableContext>
+				</DndContext>
 
 				{nodes.length === 0 && (
 					<div className={styles.emptyCollection}>

@@ -12,4 +12,5 @@ export const collectionMutationKeys = {
 	createNode: ["collections", "nodes", "create"] as const,
 	updateNode: ["collections", "nodes", "update"] as const,
 	deleteNode: ["collections", "nodes", "delete"] as const,
+	reorderNodes: ["collections", "nodes", "reorder"] as const,
 };

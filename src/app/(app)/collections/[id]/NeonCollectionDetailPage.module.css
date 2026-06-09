@@ -123,6 +123,11 @@
 	border-color: var(--color-accent);
 }
 
+.dragging {
+	z-index: 2;
+	opacity: 0.7;
+}
+
 .itemImage {
 	aspect-ratio: 16 / 9;
 	background: var(--color-background-secondary);
@@ -151,7 +156,8 @@
 
 .itemActions button,
 .itemLink,
-.sectionEditButton {
+.sectionEditButton,
+.dragHandle {
 	padding: 0.35rem 0.65rem;
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-md);
@@ -163,7 +169,8 @@
 
 .itemActions button:hover,
 .itemLink:hover,
-.sectionEditButton:hover {
+.sectionEditButton:hover,
+.dragHandle:hover {
 	border-color: var(--color-accent);
 	color: var(--color-accent);
 }
@@ -184,6 +191,21 @@
 
 .sectionEditButton {
 	flex: 0 0 auto;
+}
+
+.sectionActions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.dragHandle {
+	cursor: grab;
+	touch-action: none;
+}
+
+.dragHandle:active {
+	cursor: grabbing;
 }
 
 .emptyCollection {

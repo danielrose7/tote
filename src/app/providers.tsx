@@ -18,6 +18,7 @@ import {
 	createCollectionNodeMutation,
 	deleteCollectionMutation,
 	deleteCollectionNodeMutation,
+	reorderCollectionNodesMutation,
 	updateCollectionMutation,
 	updateCollectionNodeMutation,
 } from "../lib/collections/client";
@@ -93,6 +94,11 @@ function AccountQueryProvider({
 	});
 	queryClient.setMutationDefaults(collectionMutationKeys.deleteNode, {
 		mutationFn: deleteCollectionNodeMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionNodeQueries(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.reorderNodes, {
+		mutationFn: reorderCollectionNodesMutation,
 		onSettled: (_data, _error, variables) =>
 			invalidateCollectionNodeQueries(variables.collectionId),
 	});

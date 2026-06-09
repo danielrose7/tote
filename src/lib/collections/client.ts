@@ -5,6 +5,7 @@ import type {
 	CreateCollectionNodeInput,
 	DeleteCollectionInput,
 	DeleteCollectionNodeInput,
+	ReorderCollectionNodesInput,
 	UpdateCollectionInput,
 	UpdateCollectionNodeInput,
 } from "./repository";
@@ -179,6 +180,27 @@ export async function deleteCollectionNodeMutation({
 }> {
 	return fetchJson(`/api/v2/collections/${collectionId}/nodes/${nodeId}`, {
 		method: "DELETE",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(input),
+	});
+}
+
+export type ReorderCollectionNodesMutation = {
+	collectionId: string;
+	input: ReorderCollectionNodesInput;
+};
+
+export async function reorderCollectionNodesMutation({
+	collectionId,
+	input,
+}: ReorderCollectionNodesMutation): Promise<{
+	nodeCount: number;
+	collectionVersion: number;
+	itemCount: number;
+	replayed: boolean;
+}> {
+	return fetchJson(`/api/v2/collections/${collectionId}/nodes/reorder`, {
+		method: "POST",
 		headers: { "content-type": "application/json" },
 		body: JSON.stringify(input),
 	});

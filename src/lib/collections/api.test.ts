@@ -5,6 +5,7 @@ import {
 	createCollectionInputSchema,
 	createCollectionInviteInputSchema,
 	createCollectionNodeInputSchema,
+	reorderCollectionNodesInputSchema,
 	updateCollectionInputSchema,
 	updateCollectionNodeInputSchema,
 } from "./api";
@@ -116,6 +117,40 @@ describe("collection mutation schemas", () => {
 			updateCollectionNodeInputSchema.safeParse({
 				expectedVersion: 1,
 				positionKey: "a1",
+			}).success,
+		).toBe(true);
+	});
+
+	it("requires at least two unique nodes for a reorder", () => {
+		const mutationId = "4e14f92e-66ef-47d6-bd34-a57299b89021";
+		const node = {
+			id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+			expectedVersion: 1,
+			positionKey: "r:0",
+		};
+		expect(
+			reorderCollectionNodesInputSchema.safeParse({
+				mutationId,
+				nodes: [node],
+			}).success,
+		).toBe(false);
+		expect(
+			reorderCollectionNodesInputSchema.safeParse({
+				mutationId,
+				nodes: [node, node],
+			}).success,
+		).toBe(false);
+		expect(
+			reorderCollectionNodesInputSchema.safeParse({
+				mutationId,
+				nodes: [
+					node,
+					{
+						...node,
+						id: "550e8400-e29b-41d4-a716-446655440000",
+						positionKey: "r:1",
+					},
+				],
 			}).success,
 		).toBe(true);
 	});

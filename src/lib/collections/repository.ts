@@ -1228,6 +1228,229 @@ export type DeleteCollectionNodeInput = {
 	mutationId?: string;
 };
 
+export type ReorderCollectionNodesInput = {
+	mutationId: string;
+	nodes: Array<{
+		id: string;
+		expectedVersion: number;
+		positionKey: string;
+	}>;
+};
+
+export async function reorderCollectionNodes(
+	actorUserId: string,
+	collectionId: string,
+	input: ReorderCollectionNodesInput,
+	database: CollectionDatabase = productionDb,
+): Promise<
+	MutationResult<{
+		nodeCount: number;
+		collectionVersion: number;
+		itemCount: number;
+	}>
+> {
+	const operation = "collection_nodes.reorder.v1";
+	const requestFingerprint = fingerprintMutationRequest({
+		collectionId,
+		nodes: input.nodes,
+	});
+	const existingReceipt = await getCollectionMutationReceipt(
+		actorUserId,
+		input.mutationId,
+		database,
+	);
+	if (existingReceipt) {
+		if (
+			existingReceipt.operation !== operation ||
+			existingReceipt.requestFingerprint !== requestFingerprint
+		) {
+			return { status: "idempotency_conflict" };
+		}
+		return {
+			status: "ok",
+			value: {
+				nodeCount: existingReceipt.response.nodeCount as number,
+				...(await getCollectionMutationSummary(collectionId, database)),
+			},
+			replayed: true,
+		};
+	}
+
+	const access = await getActiveCollectionAccess(
+		actorUserId,
+		collectionId,
+		database,
+	);
+	if (!access) {
+		return { status: "not_found" };
+	}
+	if (!roleCan(access.role, "edit")) {
+		return { status: "forbidden" };
+	}
+
+	const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
+	try {
+		const result = (await database.execute<{
+			response: { nodeCount: number };
+		}>(sql`
+			WITH requested AS (
+				SELECT *
+				FROM jsonb_to_recordset(${JSON.stringify(input.nodes)}::jsonb) AS row(
+					id uuid,
+					"expectedVersion" bigint,
+					"positionKey" text
+				)
+			),
+			matched_nodes AS (
+				SELECT
+					node.id,
+					node.parent_id,
+					node.type
+				FROM collection_nodes node
+				INNER JOIN requested
+					ON requested.id = node.id
+					AND requested."expectedVersion" = node.version
+				WHERE node.collection_id = ${collectionId}
+					AND node.deleted_at IS NULL
+			),
+			reorder_group AS (
+				SELECT
+					parent_id,
+					type = 'section'::collection_node_type AS is_section_group
+				FROM matched_nodes
+				LIMIT 1
+			),
+			valid_reorder AS (
+				SELECT 1
+				FROM reorder_group group_shape
+				WHERE (SELECT count(*) FROM matched_nodes) =
+						(SELECT count(*) FROM requested)
+					AND NOT EXISTS (
+						SELECT 1
+						FROM matched_nodes matched
+						WHERE matched.parent_id IS DISTINCT FROM group_shape.parent_id
+							OR (
+								group_shape.parent_id IS NULL
+								AND (matched.type = 'section'::collection_node_type)
+									IS DISTINCT FROM group_shape.is_section_group
+							)
+					)
+					AND (
+						SELECT count(*)
+						FROM collection_nodes sibling
+						WHERE sibling.collection_id = ${collectionId}
+							AND sibling.deleted_at IS NULL
+							AND sibling.parent_id IS NOT DISTINCT FROM group_shape.parent_id
+							AND (
+								group_shape.parent_id IS NOT NULL
+								OR (sibling.type = 'section'::collection_node_type) =
+									group_shape.is_section_group
+							)
+					) = (SELECT count(*) FROM requested)
+			),
+			updated_nodes AS (
+				UPDATE collection_nodes node
+				SET position_key = requested."positionKey",
+					version = node.version + 1,
+					updated_at = now()
+				FROM requested
+				WHERE node.id = requested.id
+					AND node.collection_id = ${collectionId}
+					AND node.version = requested."expectedVersion"
+					AND node.deleted_at IS NULL
+					AND EXISTS (SELECT 1 FROM valid_reorder)
+				RETURNING node.id
+			),
+			inserted_receipt AS (
+				INSERT INTO collection_mutation_receipts (
+					user_id,
+					mutation_id,
+					operation,
+					request_fingerprint,
+					response,
+					expires_at
+				)
+				SELECT
+					${actorUserId},
+					${input.mutationId},
+					${operation},
+					${requestFingerprint},
+					jsonb_build_object('nodeCount', count(*)),
+					${expiresAt}
+				FROM updated_nodes
+				HAVING count(*) = (SELECT count(*) FROM requested)
+					AND count(*) > 0
+				RETURNING response
+			),
+			inserted_realtime_events AS (
+				INSERT INTO ably_outbox (
+					mutation_id,
+					channel,
+					name,
+					data
+				)
+				SELECT
+					${input.mutationId},
+					'collection:' || ${collectionId},
+					'collection.nodes.reordered',
+					jsonb_build_object(
+						'collectionId',
+						${collectionId}::text,
+						'nodeIds',
+						(SELECT jsonb_agg(id ORDER BY "positionKey") FROM requested)
+					)
+				FROM inserted_receipt
+				UNION ALL
+				SELECT
+					${input.mutationId},
+					'user:' || member.user_id || ':collections',
+					'collection.index.updated',
+					jsonb_build_object('collectionId', ${collectionId}::text)
+				FROM inserted_receipt
+				INNER JOIN collection_members member
+					ON member.collection_id = ${collectionId}
+					AND member.revoked_at IS NULL
+				RETURNING mutation_id
+			)
+			SELECT receipt.response
+			FROM inserted_receipt receipt
+			WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
+		`)) as { rows: Array<{ response: { nodeCount: number } }> };
+
+		const receipt = result.rows[0];
+		if (!receipt) {
+			return { status: "version_conflict" };
+		}
+		return {
+			status: "ok",
+			value: {
+				...receipt.response,
+				...(await getCollectionMutationSummary(collectionId, database)),
+			},
+		};
+	} catch (error) {
+		const concurrentReceipt = await getCollectionMutationReceipt(
+			actorUserId,
+			input.mutationId,
+			database,
+		);
+		if (
+			concurrentReceipt?.operation === operation &&
+			concurrentReceipt.requestFingerprint === requestFingerprint
+		) {
+			return {
+				status: "ok",
+				value: {
+					nodeCount: concurrentReceipt.response.nodeCount as number,
+					...(await getCollectionMutationSummary(collectionId, database)),
+				},
+				replayed: true,
+			};
+		}
+		throw error;
+	}
+}
+
 export async function deleteCollectionNode(
 	actorUserId: string,
 	collectionId: string,

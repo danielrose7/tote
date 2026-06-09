@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import {
 	createCollection,
 	createCollectionNode,
@@ -6,6 +6,7 @@ import {
 	deleteCollectionNode,
 	getCollectionDetail,
 	listCollectionSummaries,
+	reorderCollectionNodes,
 	updateCollection,
 	updateCollectionNode,
 } from "../../lib/collections/repository";
@@ -606,6 +607,112 @@ dbTest("replays idempotent node mutations", async ({ db }) => {
 				deletedNodeCount: 1,
 			},
 		},
+	]);
+});
+
+dbTest("reorders sibling nodes atomically and idempotently", async ({ db }) => {
+	const collection = await createOwnedCollection("reorder_owner");
+	const first = await collectionNodeFactory.create({
+		collectionId: collection.id,
+		createdByUserId: "reorder_owner",
+		positionKey: "a0",
+	});
+	const second = await collectionNodeFactory.create({
+		collectionId: collection.id,
+		createdByUserId: "reorder_owner",
+		positionKey: "a1",
+	});
+	const third = await collectionNodeFactory.create({
+		collectionId: collection.id,
+		createdByUserId: "reorder_owner",
+		positionKey: "a2",
+	});
+	const input = {
+		mutationId: "50000000-0000-4000-8000-000000000030",
+		nodes: [
+			{ id: third.id, expectedVersion: third.version, positionKey: "r:0" },
+			{ id: first.id, expectedVersion: first.version, positionKey: "r:1" },
+			{ id: second.id, expectedVersion: second.version, positionKey: "r:2" },
+		],
+	};
+
+	const reordered = await reorderCollectionNodes(
+		"reorder_owner",
+		collection.id,
+		input,
+		db,
+	);
+	expect(reordered).toMatchObject({
+		status: "ok",
+		value: { nodeCount: 3 },
+	});
+	expect(
+		await reorderCollectionNodes("reorder_owner", collection.id, input, db),
+	).toMatchObject({
+		status: "ok",
+		value: { nodeCount: 3 },
+		replayed: true,
+	});
+
+	const orderedNodes = await db
+		.select({ id: collectionNodes.id })
+		.from(collectionNodes)
+		.where(eq(collectionNodes.collectionId, collection.id))
+		.orderBy(asc(collectionNodes.positionKey));
+	expect(orderedNodes.map(({ id }) => id)).toEqual([
+		third.id,
+		first.id,
+		second.id,
+	]);
+
+	const events = await db
+		.select()
+		.from(ablyOutbox)
+		.where(eq(ablyOutbox.mutationId, input.mutationId));
+	expect(events).toHaveLength(2);
+	expect(events[0]).toMatchObject({
+		channel: `collection:${collection.id}`,
+		name: "collection.nodes.reordered",
+	});
+
+	expect(
+		await reorderCollectionNodes(
+			"reorder_owner",
+			collection.id,
+			{
+				mutationId: "50000000-0000-4000-8000-000000000031",
+				nodes: [
+					{ id: first.id, expectedVersion: 2, positionKey: "p0" },
+					{ id: second.id, expectedVersion: 2, positionKey: "p1" },
+				],
+			},
+			db,
+		),
+	).toEqual({ status: "version_conflict" });
+
+	const staleResult = await reorderCollectionNodes(
+		"reorder_owner",
+		collection.id,
+		{
+			mutationId: "50000000-0000-4000-8000-000000000032",
+			nodes: [
+				{ id: first.id, expectedVersion: first.version, positionKey: "z0" },
+				{ id: second.id, expectedVersion: 2, positionKey: "z1" },
+			],
+		},
+		db,
+	);
+	expect(staleResult).toEqual({ status: "version_conflict" });
+
+	const unchangedNodes = await db
+		.select({ id: collectionNodes.id })
+		.from(collectionNodes)
+		.where(eq(collectionNodes.collectionId, collection.id))
+		.orderBy(asc(collectionNodes.positionKey));
+	expect(unchangedNodes.map(({ id }) => id)).toEqual([
+		third.id,
+		first.id,
+		second.id,
 	]);
 });
 
