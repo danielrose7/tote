@@ -9,6 +9,7 @@
     "build": "npx tsx src/db/runner.ts && next build",
     "start": "next start",
     "test": "vitest run",
+    "test:db": "node scripts/test-collections-db.mjs",
     "test:watch": "vitest",
     "format-and-lint": "biome check .",
     "format-and-lint:fix": "biome check . --write"

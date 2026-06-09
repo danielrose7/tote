@@ -782,6 +782,38 @@ Invite acceptance:
 
 Invites may grant `viewer`, `editor`, or `admin`. Owner is never inviteable.
 
+### Collection team management
+
+Owners and admins need a collection-level team screen rather than managing
+collaboration only through one-off share links.
+
+The screen should show:
+
+- Active collaborators with display name, email/username where available, role,
+  inviter, and joined date.
+- Pending invites with intended recipient where known, granted role, creator,
+  creation time, expiry, use count, and status.
+- Revoked and expired invites in a lightweight history view.
+- The current owner clearly distinguished from other collaborators.
+
+Supported actions:
+
+- Owners and admins can invite viewers or editors.
+- Owners and admins can remove viewers or editors.
+- Owners and admins can change a collaborator between viewer and editor.
+- Owners can promote or demote admins.
+- Owners can transfer ownership through a separate confirmed flow.
+- Owners and admins can revoke pending invites and create replacement links.
+- Admins cannot alter or remove the owner, another admin, or themselves into a
+  more privileged role.
+
+Membership and invite changes should record actor, previous role, next role,
+reason/action, and server timestamp in an audit table or event stream. Revoking
+a member must invalidate future sync access and trigger local-data purge on
+connected clients. Invite tokens remain write-only bearer credentials: the team
+screen displays metadata and status, never the stored token hash or a previously
+issued raw token.
+
 ### `collection_sections`
 
 This replaces Jazz slot blocks.
@@ -1675,9 +1707,12 @@ instead of maintaining a long-lived global branch.
    - Exit: public URLs remain stable, private unpublished edits stay private,
      and converted snapshots match fingerprints.
 7. **Sharing and copies**
-   - Membership/invites, role enforcement, revocation, and row-duplicating
-     "make a copy" with lineage.
-   - Exit: access-matrix and copy-isolation tests pass.
+   - Collection team screen for owners/admins, member listing, pending invite
+     tracking, role changes, removal, invite revocation, and ownership transfer.
+   - Role enforcement, revocation/local purge, and row-duplicating "make a
+     copy" with lineage.
+   - Exit: access-matrix, team-management audit, invite lifecycle, revocation,
+     and copy-isolation tests pass.
 8. **Web-only Jazz migration**
    - Automatic export/import, receipt verification, user-confirmed cutover,
      retry/support tooling, and 14-day read-only rollback.
@@ -1742,11 +1777,13 @@ Keep classic Jazz available behind an account-level source flag.
 
 ### Phase 4: sharing and publishing
 
-- Neon membership and invites.
-- Role enforcement.
+- Neon membership, tracked invites, and membership audit events.
+- Owner/admin collection team management UI.
+- Role changes, collaborator removal, invite revocation, and ownership
+  transfer.
+- Role enforcement and revocation-driven local purge.
 - Public snapshot publishing.
 - Cloning from public snapshots.
-- Revocation and local purge.
 
 ### Phase 5: migration
 
@@ -1766,6 +1803,31 @@ Keep classic Jazz available behind an account-level source flag.
 - Update marketing and privacy documentation.
 
 ## Test Requirements
+
+### Test layers
+
+Use three complementary layers during the transition:
+
+1. Pure Vitest tests for role matrices, request validation, item-count
+   contribution rules, migration receipt verification, and conflict helpers.
+2. Disposable local PostgreSQL integration tests for committed migrations,
+   constraints, triggers, deterministic seed fixtures, recursive mutations, and
+   denormalized summaries.
+3. API integration tests against an isolated deployed or local app once the
+   authenticated Neon endpoints are enabled for internal accounts.
+
+Run the local database suite with:
+
+```text
+pnpm test:db
+```
+
+The command creates a temporary PostgreSQL cluster, applies the committed
+Drizzle migrations, loads `src/db/seeds/collections.integration.sql`, runs the
+SQL assertions, and deletes the cluster. It never uses the configured Neon URL.
+PostgreSQL 15 or newer must be installed locally. The deterministic seed includes
+owner/admin/editor/viewer memberships, migration receipts, a legacy Jazz
+mapping, publication migration state, sections, and generalized item types.
 
 ### Data model
 
