@@ -1,26 +1,36 @@
 # Neon Collections Architecture
 
-Status: proposed
+Status: implementation in progress
 
 ## Executive Summary
 
-Move private collection data to Neon as the canonical source of truth, with an
-embedded local database on each client for responsive reads, optimistic writes,
-and offline use.
+Move private collection data to Neon as the canonical source of truth, with a
+durable device-side cache for responsive reads, optimistic writes, and offline
+use.
 
 The recommended shape is:
 
 ```text
-Web / mobile / extension
-  -> local relational store
-  -> sync engine and mutation upload path
-  -> Neon Postgres
+Web
+  -> React Server Components for authoritative initial reads
+  -> TanStack Query for client cache, mutations, and invalidation
+  -> IndexedDB persistence for cached queries and paused mutations
+  -> HTTPS mutation API
+  -> Neon Postgres + transactional Ably outbox
+
+Mobile
+  -> SQLite cache and durable mutation queue
+  -> HTTPS mutation API
+  -> Neon Postgres + transactional Ably outbox
 ```
 
-For the current product, PowerSync is the strongest first candidate for the sync
-layer because it is designed around a canonical Postgres database, supports Neon,
-and has web and React Native/Expo SDKs. It keeps a SQLite database on the client,
-streams authorized Postgres changes down, and queues local writes for upload.
+The first implementation will use TanStack Query plus IndexedDB on the web and
+Ably LiveSync for realtime invalidations. This keeps Neon authoritative, fits the
+existing Next.js application, and lets Tote introduce offline behavior
+incrementally without adopting a second frontend state model. PowerSync remains
+a credible later option if maintaining custom mobile replication, durable
+queues, and revocation cleanup becomes more expensive than a managed sync
+layer.
 
 Jazz v2 should be evaluated as an alternative canonical database, not as a cache
 in front of Neon. Jazz v2 has its own server, storage model, permissions, history,
@@ -1255,16 +1265,41 @@ React components should not call Jazz, Neon, or a sync SDK directly.
 
 ### Web
 
-Replace `useAccount` and `useCoState` with reactive local SQL queries.
+Replace `useAccount` and `useCoState` in active collection routes with server
+reads and TanStack Query hooks. Keep the classic Jazz provider mounted only for
+the migration and rollback window.
 
 Requirements:
 
-- Persistent browser storage.
+- React Server Components fetch authoritative collection list/detail state.
+- `HydrationBoundary` seeds the same stable query keys used by client hooks.
+- TanStack Query owns optimistic mutations, retries, invalidation, and pending
+  state.
+- `PersistQueryClientProvider` persists eligible query and mutation state to an
+  account-scoped IndexedDB database.
+- Persisted mutation keys register default `mutationFn` handlers so paused
+  mutations can resume after a reload.
+- Query `gcTime` must be at least the persistence `maxAge`.
+- Cache keys include a schema/version buster and are cleared on sign-out.
 - Multi-tab coordination.
 - Offline create/edit/delete/reorder.
 - Route access by collection UUID.
 - Sync status and rejected-mutation UI.
 - SSR remains server-backed for public pages.
+
+Stable collection query keys:
+
+```text
+["collections"]
+["collections", collection_id]
+["collections", collection_id, "team"]
+```
+
+The persisted Query cache is the initial web device cache. Pending mutations are
+durable user intent and must be dehydrated independently of ordinary query cache
+eviction. Add a separate domain outbox only if TanStack's persisted paused
+mutations prove insufficient for conflict inspection, attachment uploads,
+migration support, or explicit user-facing retry management.
 
 ### Mobile
 
@@ -1324,26 +1359,37 @@ Browser / mobile client
 ```
 
 The connector detects inserts into the Postgres outbox using `LISTEN/NOTIFY`,
-claims the rows, publishes them to Ably channels, and removes processed rows.
+claims the rows, publishes them to Ably channels, and removes processed rows
+while retaining the latest sequence marker.
 The application data change and its outbound event are written in one Postgres
 transaction, avoiding a successful database write with a missing realtime event.
 
-An approximate Tote outbox:
+Use the connector-compatible tables rather than a Tote-specific queue shape:
 
 ```sql
-CREATE TABLE realtime_outbox (
-  sequence_id BIGSERIAL PRIMARY KEY,
-  mutation_id UUID NOT NULL,
+CREATE TABLE ably_nodes (
+  id TEXT PRIMARY KEY,
+  expiry TIMESTAMP WITHOUT TIME ZONE NOT NULL
+);
+
+CREATE TABLE ably_outbox (
+  sequence_id SERIAL PRIMARY KEY,
+  mutation_id TEXT NOT NULL,
   channel TEXT NOT NULL,
   name TEXT NOT NULL,
   rejected BOOLEAN NOT NULL DEFAULT false,
   data JSONB,
   headers JSONB,
   locked_by TEXT,
-  lock_expiry TIMESTAMP,
+  lock_expiry TIMESTAMP WITHOUT TIME ZONE,
   processed BOOLEAN NOT NULL DEFAULT false
 );
 ```
+
+The migration also installs the connector's statement-level `AFTER INSERT`
+trigger, which calls `pg_notify('ably_adbc', '')`. `locked_by`, `lock_expiry`,
+and `processed` belong to the connector and application writes must not set
+them.
 
 Suggested channel partitioning:
 
@@ -1370,10 +1416,16 @@ Each mutation should:
 6. Receive the confirmed event over Ably with the same `mutation_id`.
 7. Confirm or roll back the optimistic transaction.
 
-Initial state should be read from Tote's API together with the latest outbox
-`sequence_id`. Ably can then replay events newer than that checkpoint before
-continuing with live events. This closes the race between the initial database
-read and the WebSocket subscription.
+For the initial TanStack implementation, realtime messages are authoritative
+invalidation hints. On channel attach, immediately invalidate/refetch the
+corresponding query once to close the race between the RSC/API read and the
+subscription becoming active. Then apply targeted invalidation for subsequent
+events.
+
+If Tote later needs deterministic stream replay, initial state should be read in
+one database transaction together with the latest outbox `sequence_id`. Ably can
+then replay events newer than that checkpoint before continuing with live
+events.
 
 Prefer delta events:
 
@@ -1392,6 +1444,10 @@ For more complex transactions, an event can list all changed and deleted record
 IDs and let clients fetch authoritative records by version. This keeps event
 payloads smaller and makes the database, rather than the event log, the lasting
 source of truth.
+
+Do not adopt Ably Models in the first implementation. Its optimistic state and
+initial-model synchronization overlap with TanStack Query. Tote will use Ably
+Pub/Sub as transport and keep one client state owner.
 
 #### What Ably LiveSync solves
 
@@ -1427,17 +1483,21 @@ IndexedDB on web / SQLite on mobile
 This resembles the Notion architecture most closely, but Tote owns the local
 cache, outbox, sync cursors, and conflict handling.
 
-##### Realtime only for the first release
+##### Chosen first web implementation
 
 ```text
-React query state + optimistic updates
+RSC initial state
+  -> TanStack Query state + optimistic updates
+  -> account-scoped IndexedDB persistence
   -> Vercel mutation API
-  -> Neon + Ably
+  -> Neon + transactional Ably outbox
+  -> targeted query invalidation
 ```
 
-This is substantially smaller, but it is not a replacement for classic Jazz's
-offline guarantees. Browser refresh while offline would lose uncached state and
-unconfirmed mutations unless they were persisted separately.
+This supplies durable cached reads and paused mutation resumption on web without
+claiming to be a general Postgres replication engine. Attachments, complex
+multi-record conflicts, revoked-access purging, and long-lived rejected
+mutations may still require a Tote-owned device outbox.
 
 #### Cost characteristics
 
@@ -1711,12 +1771,16 @@ instead of maintaining a long-lived global branch.
    - Exit: collection cards and details match expected data, including
      `item_count`.
 4. **Internal web write path**
+   - Add connector-compatible realtime outbox tables and emit transactionally
+     from every accepted collection mutation.
+   - Add TanStack Query hydration, optimistic mutations, and targeted realtime
+     invalidation.
    - Neon-authoritative create/edit/delete/move/reorder for internal accounts.
    - Exit: normal editing works without Jazz dual-write and failure states are
-     observable.
+     observable; every committed mutation has one matching outbox event.
 5. **Local web cache and offline behavior**
-   - Add the chosen device database, mutation queue, reconnect handling, and
-     multi-tab coordination.
+   - Persist eligible TanStack queries and paused mutations to account-scoped
+     IndexedDB, then add reconnect handling and multi-tab coordination.
    - Exit: offline edits survive restart and reconcile across two browsers.
 6. **Publication v2**
    - Add independent publication snapshot tables, explicit publish/republish,
@@ -1748,7 +1812,8 @@ instead of maintaining a long-lived global branch.
 ### Phase 0: decisions and spikes
 
 - Choose server-readable versus E2EE privacy model.
-- Prototype PowerSync with the existing Neon project.
+- Validate the TanStack Query, IndexedDB, Neon, and Ably path on web.
+- Keep a PowerSync spike as a fallback evaluation for mobile replication.
 - Validate Clerk authentication through Tote's mutation and query APIs.
 - Validate web persistence and multi-tab behavior.
 - Validate Expo background/offline behavior.
