@@ -636,3 +636,102 @@ export async function acceptCollectionInvite(
 	const accepted = result.rows[0];
 	return accepted ? { status: "ok", value: accepted } : { status: "not_found" };
 }
+
+export async function transferCollectionOwnership(
+	actorUserId: string,
+	collectionId: string,
+	targetUserId: string,
+	database: CollectionDatabase = productionDb,
+): Promise<MutationResult<{ version: number }>> {
+	const actorRole = await getTeamManagerRole(
+		actorUserId,
+		collectionId,
+		database,
+	);
+	if (!actorRole) {
+		return { status: "not_found" };
+	}
+	if (actorRole !== "owner" || actorUserId === targetUserId) {
+		return { status: "forbidden" };
+	}
+
+	const targetRole = await getActiveMemberRole(
+		collectionId,
+		targetUserId,
+		database,
+	);
+	if (!targetRole) {
+		return { status: "not_found" };
+	}
+	if (targetRole === "owner") {
+		return { status: "forbidden" };
+	}
+
+	const result = (await database.execute<{ version: number }>(sql`
+		WITH updated_collection AS (
+			UPDATE collections
+			SET owner_user_id = ${targetUserId},
+				version = version + 1,
+				updated_at = now()
+			WHERE id = ${collectionId}
+				AND owner_user_id = ${actorUserId}
+				AND deleted_at IS NULL
+				AND EXISTS (
+					SELECT 1
+					FROM collection_members target
+					WHERE target.collection_id = ${collectionId}
+						AND target.user_id = ${targetUserId}
+						AND target.role <> 'owner'
+						AND target.revoked_at IS NULL
+				)
+			RETURNING id, version
+		),
+		updated_members AS (
+			UPDATE collection_members member
+			SET role = CASE
+					WHEN member.user_id = ${targetUserId}
+						THEN 'owner'::collection_role
+					ELSE 'admin'::collection_role
+				END,
+				updated_at = now()
+			FROM updated_collection collection
+			WHERE member.collection_id = collection.id
+				AND member.user_id IN (${actorUserId}, ${targetUserId})
+				AND member.revoked_at IS NULL
+			RETURNING member.user_id, member.role
+		),
+		inserted_event AS (
+			INSERT INTO collection_membership_events (
+				collection_id,
+				actor_user_id,
+				subject_user_id,
+				action,
+				previous_role,
+				next_role,
+				metadata
+			)
+			SELECT
+				collection.id,
+				${actorUserId},
+				${targetUserId},
+				'ownership_transferred',
+				${targetRole},
+				'owner',
+				jsonb_build_object('previousOwnerRole', 'admin')
+			FROM updated_collection collection
+			WHERE (
+				SELECT count(*)
+				FROM updated_members
+			) = 2
+			RETURNING collection_id
+		)
+		SELECT collection.version
+		FROM updated_collection collection
+		INNER JOIN inserted_event event ON event.collection_id = collection.id
+	`)) as { rows: Array<{ version: number }> };
+
+	const transferred = result.rows[0];
+	return transferred
+		? { status: "ok", value: { version: Number(transferred.version) } }
+		: { status: "version_conflict" };
+}

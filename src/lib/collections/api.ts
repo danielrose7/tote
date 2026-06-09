@@ -142,6 +142,10 @@ export const acceptCollectionInviteInputSchema = z.object({
 	token: z.string().trim().min(20).max(500),
 });
 
+export const transferCollectionOwnershipInputSchema = z.object({
+	targetUserId: collectionMemberUserIdSchema,
+});
+
 export function neonCollectionsApiEnabled(): boolean {
 	return process.env.NEON_COLLECTIONS_API_ENABLED === "true";
 }

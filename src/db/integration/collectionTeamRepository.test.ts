@@ -7,11 +7,13 @@ import {
 	getCollectionTeam,
 	removeCollectionMember,
 	revokeCollectionInvite,
+	transferCollectionOwnership,
 } from "../../lib/collections/teamRepository";
 import {
 	collectionInvites,
 	collectionMembers,
 	collectionMembershipEvents,
+	collections,
 } from "../schema";
 import {
 	collectionFactory,
@@ -333,6 +335,70 @@ dbTest("rejects expired and revoked invite tokens", async ({ db }) => {
 		),
 	).toEqual({ status: "not_found" });
 });
+
+dbTest(
+	"transfers ownership and preserves exactly one owner",
+	async ({ db }) => {
+		const collection = await createTeamCollection("transfer_owner");
+		await collectionMemberFactory.create({
+			collectionId: collection.id,
+			userId: "transfer_editor",
+			role: "editor",
+			invitedByUserId: "transfer_owner",
+		});
+
+		expect(
+			await transferCollectionOwnership(
+				"transfer_owner",
+				collection.id,
+				"transfer_editor",
+				db,
+			),
+		).toEqual({
+			status: "ok",
+			value: { version: collection.version + 1 },
+		});
+
+		const [updatedCollection] = await db
+			.select()
+			.from(collections)
+			.where(eq(collections.id, collection.id));
+		const members = await db
+			.select()
+			.from(collectionMembers)
+			.where(eq(collectionMembers.collectionId, collection.id));
+		const [event] = await db
+			.select()
+			.from(collectionMembershipEvents)
+			.where(eq(collectionMembershipEvents.collectionId, collection.id));
+
+		expect(updatedCollection.ownerUserId).toBe("transfer_editor");
+		expect(
+			members
+				.map(({ userId, role }) => ({ userId, role }))
+				.sort((a, b) => a.userId.localeCompare(b.userId)),
+		).toEqual([
+			{ userId: "transfer_editor", role: "owner" },
+			{ userId: "transfer_owner", role: "admin" },
+		]);
+		expect(event).toMatchObject({
+			action: "ownership_transferred",
+			actorUserId: "transfer_owner",
+			subjectUserId: "transfer_editor",
+			previousRole: "editor",
+			nextRole: "owner",
+		});
+
+		expect(
+			await transferCollectionOwnership(
+				"transfer_owner",
+				collection.id,
+				"transfer_editor",
+				db,
+			),
+		).toEqual({ status: "forbidden" });
+	},
+);
 
 dbTest("removes collaborators according to the role matrix", async ({ db }) => {
 	const collection = await createTeamCollection("remove_owner");
