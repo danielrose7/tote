@@ -4,3 +4,7 @@ export const collectionQueryKeys = {
 	team: (collectionId: string) =>
 		["collections", collectionId, "team"] as const,
 };
+
+export const collectionMutationKeys = {
+	create: ["collections", "create"] as const,
+};

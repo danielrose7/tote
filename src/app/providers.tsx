@@ -13,6 +13,11 @@ import { useEffect, useRef, useState } from "react";
 import { apiKey } from "../apiKey";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ToastProvider } from "../components/ToastNotification";
+import { createCollectionMutation } from "../lib/collections/client";
+import {
+	collectionMutationKeys,
+	collectionQueryKeys,
+} from "../lib/collections/queryKeys";
 import {
 	collectionQueryCacheBuster,
 	collectionQueryCacheMaxAge,
@@ -37,11 +42,16 @@ function AccountQueryProvider({
 						staleTime: 30_000,
 					},
 					mutations: {
-						networkMode: "offlineFirst",
+						networkMode: "online",
 					},
 				},
 			}),
 	);
+	queryClient.setMutationDefaults(collectionMutationKeys.create, {
+		mutationFn: createCollectionMutation,
+		onSettled: () =>
+			queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
+	});
 	const [persister] = useState(() =>
 		userId ? createCollectionQueryPersister(userId) : null,
 	);

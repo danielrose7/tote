@@ -2,13 +2,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useState } from "react";
 import cardStyles from "../../../components/CollectionCard/CollectionCard.module.css";
 import listStyles from "../../../components/CollectionList/CollectionList.module.css";
 import { Header } from "../../../components/Header";
 import { fetchCollectionSummaries } from "../../../lib/collections/client";
 import { collectionQueryKeys } from "../../../lib/collections/queryKeys";
+import { NeonCreateCollectionDialog } from "./NeonCreateCollectionDialog";
 
 export function NeonCollectionsPage() {
+	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const { data: collections = [] } = useQuery({
 		queryKey: collectionQueryKeys.all,
 		queryFn: fetchCollectionSummaries,
@@ -16,7 +19,10 @@ export function NeonCollectionsPage() {
 
 	return (
 		<>
-			<Header />
+			<Header
+				showAddCollection
+				onAddCollectionClick={() => setIsCreateOpen(true)}
+			/>
 			<main>
 				<div className={listStyles.container}>
 					{collections.length === 0 ? (
@@ -86,6 +92,10 @@ export function NeonCollectionsPage() {
 					)}
 				</div>
 			</main>
+			<NeonCreateCollectionDialog
+				open={isCreateOpen}
+				onOpenChange={setIsCreateOpen}
+			/>
 		</>
 	);
 }

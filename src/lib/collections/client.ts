@@ -1,8 +1,16 @@
-import type { CollectionDetail, CollectionSummary } from "./repository";
+import type {
+	CollectionDetail,
+	CollectionSummary,
+	CreateCollectionInput,
+} from "./repository";
 
-async function fetchJson<T>(input: RequestInfo | URL): Promise<T> {
+async function fetchJson<T>(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+): Promise<T> {
 	const response = await fetch(input, {
 		credentials: "same-origin",
+		...init,
 	});
 	if (!response.ok) {
 		throw new Error(`Collection request failed with status ${response.status}`);
@@ -49,4 +57,21 @@ export async function fetchCollectionDetail(
 			deletedAt: node.deletedAt ? new Date(node.deletedAt) : null,
 		})),
 	};
+}
+
+export type CreateCollectionMutation = Required<
+	Pick<CreateCollectionInput, "id" | "mutationId">
+> &
+	Pick<CreateCollectionInput, "name" | "description" | "color" | "positionKey">;
+
+export async function createCollectionMutation(
+	input: CreateCollectionMutation,
+): Promise<{ id: string; replayed: boolean }> {
+	return fetchJson("/api/v2/collections", {
+		method: "POST",
+		headers: {
+			"content-type": "application/json",
+		},
+		body: JSON.stringify(input),
+	});
 }
