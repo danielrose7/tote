@@ -60,6 +60,7 @@ export const deleteCollectionInputSchema = z.object({
 export const createCollectionNodeInputSchema = z
 	.object({
 		id: collectionIdSchema.optional(),
+		mutationId: mutationIdSchema.optional(),
 		parentId: collectionIdSchema.nullable().optional(),
 		type: collectionNodeTypeSchema,
 		title: z.string().trim().max(500).nullable().optional(),
@@ -69,11 +70,16 @@ export const createCollectionNodeInputSchema = z
 	.refine((input) => input.type !== "section" || input.parentId == null, {
 		message: "Sections must be top-level",
 		path: ["parentId"],
+	})
+	.refine((input) => !input.mutationId || Boolean(input.id), {
+		message: "Idempotent creates require a client-generated node id",
+		path: ["id"],
 	});
 
 export const updateCollectionNodeInputSchema = z
 	.object({
 		expectedVersion: collectionVersionSchema,
+		mutationId: mutationIdSchema.optional(),
 		parentId: collectionIdSchema.nullable().optional(),
 		type: collectionNodeTypeSchema.optional(),
 		title: z.string().trim().max(500).nullable().optional(),
@@ -81,7 +87,10 @@ export const updateCollectionNodeInputSchema = z
 		positionKey: z.string().trim().min(1).max(200).optional(),
 	})
 	.refine(
-		(input) => Object.keys(input).some((key) => key !== "expectedVersion"),
+		(input) =>
+			Object.keys(input).some(
+				(key) => key !== "expectedVersion" && key !== "mutationId",
+			),
 		{
 			message: "At least one node field is required",
 		},
@@ -109,6 +118,7 @@ export async function parseJsonRequest(
 
 export const deleteCollectionNodeInputSchema = z.object({
 	expectedVersion: collectionVersionSchema,
+	mutationId: mutationIdSchema.optional(),
 });
 
 export function neonCollectionsApiEnabled(): boolean {

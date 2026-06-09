@@ -97,6 +97,16 @@ describe("collection mutation schemas", () => {
 		).toBe(false);
 	});
 
+	it("requires a client-generated node id with a mutation id", () => {
+		expect(
+			createCollectionNodeInputSchema.safeParse({
+				mutationId: "4e14f92e-66ef-47d6-bd34-a57299b89021",
+				type: "link",
+				positionKey: "a0",
+			}).success,
+		).toBe(false);
+	});
+
 	it("requires a node change in addition to its expected version", () => {
 		expect(
 			updateCollectionNodeInputSchema.safeParse({ expectedVersion: 1 }).success,

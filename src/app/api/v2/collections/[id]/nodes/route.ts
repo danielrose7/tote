@@ -58,6 +58,15 @@ export async function POST(
 	if (result.status === "version_conflict") {
 		return NextResponse.json({ error: "Version conflict" }, { status: 409 });
 	}
+	if (result.status === "idempotency_conflict") {
+		return NextResponse.json(
+			{ error: "Mutation id was already used for another request" },
+			{ status: 409 },
+		);
+	}
 
-	return NextResponse.json(result.value, { status: 201 });
+	return NextResponse.json(
+		{ ...result.value, replayed: result.replayed ?? false },
+		{ status: result.replayed ? 200 : 201 },
+	);
 }

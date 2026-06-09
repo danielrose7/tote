@@ -663,6 +663,7 @@ export async function deleteCollection(
 
 export type CreateCollectionNodeInput = {
 	id?: string;
+	mutationId?: string;
 	parentId?: string | null;
 	type: CollectionNode["type"];
 	title?: string | null;
@@ -683,6 +684,49 @@ export async function createCollectionNode(
 		itemCount: number;
 	}>
 > {
+	if (input.mutationId && !input.id) {
+		throw new Error("Idempotent node creation requires a client-generated id");
+	}
+
+	const nodeId = input.id ?? randomUUID();
+	const operation = "collection_node.create.v1";
+	const requestFingerprint = input.mutationId
+		? fingerprintMutationRequest({
+				collectionId,
+				id: nodeId,
+				parentId: input.parentId ?? null,
+				type: input.type,
+				title: input.title ?? null,
+				properties: input.properties ?? {},
+				positionKey: input.positionKey,
+			})
+		: undefined;
+
+	if (input.mutationId && requestFingerprint) {
+		const existing = await getCollectionMutationReceipt(
+			actorUserId,
+			input.mutationId,
+			database,
+		);
+		if (existing) {
+			if (
+				existing.operation !== operation ||
+				existing.requestFingerprint !== requestFingerprint
+			) {
+				return { status: "idempotency_conflict" };
+			}
+			return {
+				status: "ok",
+				value: {
+					id: existing.response.id as string,
+					version: existing.response.version as number,
+					...(await getCollectionMutationSummary(collectionId, database)),
+				},
+				replayed: true,
+			};
+		}
+	}
+
 	const access = await getActiveCollectionAccess(
 		actorUserId,
 		collectionId,
@@ -695,10 +739,99 @@ export async function createCollectionNode(
 		return { status: "forbidden" };
 	}
 
+	if (input.mutationId && requestFingerprint) {
+		const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
+		try {
+			const result = (await database.execute<{
+				response: { id: string; version: number };
+			}>(sql`
+				WITH inserted_node AS (
+					INSERT INTO collection_nodes (
+						id,
+						collection_id,
+						parent_id,
+						type,
+						title,
+						properties,
+						position_key,
+						created_by_user_id
+					) VALUES (
+						${nodeId},
+						${collectionId},
+						${input.parentId ?? null},
+						${input.type},
+						${input.title ?? null},
+						${JSON.stringify(input.properties ?? {})}::jsonb,
+						${input.positionKey},
+						${actorUserId}
+					)
+					RETURNING id, version
+				),
+				inserted_receipt AS (
+					INSERT INTO collection_mutation_receipts (
+						user_id,
+						mutation_id,
+						operation,
+						request_fingerprint,
+						response,
+						expires_at
+					)
+					SELECT
+						${actorUserId},
+						${input.mutationId},
+						${operation},
+						${requestFingerprint},
+						jsonb_build_object('id', id, 'version', version),
+						${expiresAt}
+					FROM inserted_node
+					RETURNING response
+				)
+				SELECT response
+				FROM inserted_receipt
+			`)) as { rows: { response: { id: string; version: number } }[] };
+
+			const receipt = result.rows[0];
+			if (!receipt) {
+				throw new Error("Node creation did not produce a mutation receipt");
+			}
+			return {
+				status: "ok",
+				value: {
+					...receipt.response,
+					...(await getCollectionMutationSummary(collectionId, database)),
+				},
+			};
+		} catch (error) {
+			const concurrentReceipt = await getCollectionMutationReceipt(
+				actorUserId,
+				input.mutationId,
+				database,
+			);
+			if (concurrentReceipt) {
+				if (
+					concurrentReceipt.operation !== operation ||
+					concurrentReceipt.requestFingerprint !== requestFingerprint
+				) {
+					return { status: "idempotency_conflict" };
+				}
+				return {
+					status: "ok",
+					value: {
+						id: concurrentReceipt.response.id as string,
+						version: concurrentReceipt.response.version as number,
+						...(await getCollectionMutationSummary(collectionId, database)),
+					},
+					replayed: true,
+				};
+			}
+			throw error;
+		}
+	}
+
 	const [node] = await database
 		.insert(collectionNodes)
 		.values({
-			id: input.id ?? randomUUID(),
+			id: nodeId,
 			collectionId,
 			parentId: input.parentId,
 			type: input.type,
@@ -720,6 +853,7 @@ export async function createCollectionNode(
 
 export type UpdateCollectionNodeInput = {
 	expectedVersion: number;
+	mutationId?: string;
 	parentId?: string | null;
 	type?: CollectionNode["type"];
 	title?: string | null;
@@ -740,6 +874,40 @@ export async function updateCollectionNode(
 		itemCount: number;
 	}>
 > {
+	const operation = "collection_node.update.v1";
+	const requestFingerprint = input.mutationId
+		? fingerprintMutationRequest({
+				collectionId,
+				nodeId,
+				...input,
+				mutationId: undefined,
+			})
+		: undefined;
+
+	if (input.mutationId && requestFingerprint) {
+		const existing = await getCollectionMutationReceipt(
+			actorUserId,
+			input.mutationId,
+			database,
+		);
+		if (existing) {
+			if (
+				existing.operation !== operation ||
+				existing.requestFingerprint !== requestFingerprint
+			) {
+				return { status: "idempotency_conflict" };
+			}
+			return {
+				status: "ok",
+				value: {
+					version: existing.response.version as number,
+					...(await getCollectionMutationSummary(collectionId, database)),
+				},
+				replayed: true,
+			};
+		}
+	}
+
 	const access = await getActiveCollectionAccess(
 		actorUserId,
 		collectionId,
@@ -752,7 +920,101 @@ export async function updateCollectionNode(
 		return { status: "forbidden" };
 	}
 
-	const { expectedVersion, ...fields } = input;
+	const { expectedVersion, mutationId, ...fields } = input;
+	if (mutationId && requestFingerprint) {
+		const assignments: SQL[] = [];
+		if (fields.parentId !== undefined) {
+			assignments.push(sql`parent_id = ${fields.parentId}`);
+		}
+		if (fields.type !== undefined) {
+			assignments.push(sql`type = ${fields.type}`);
+		}
+		if (fields.title !== undefined) {
+			assignments.push(sql`title = ${fields.title}`);
+		}
+		if (fields.properties !== undefined) {
+			assignments.push(
+				sql`properties = ${JSON.stringify(fields.properties)}::jsonb`,
+			);
+		}
+		if (fields.positionKey !== undefined) {
+			assignments.push(sql`position_key = ${fields.positionKey}`);
+		}
+		assignments.push(sql`version = version + 1`, sql`updated_at = now()`);
+
+		const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
+		try {
+			const result = (await database.execute<{
+				response: { version: number };
+			}>(sql`
+				WITH updated_node AS (
+					UPDATE collection_nodes
+					SET ${sql.join(assignments, sql`, `)}
+					WHERE id = ${nodeId}
+						AND collection_id = ${collectionId}
+						AND version = ${expectedVersion}
+						AND deleted_at IS NULL
+					RETURNING version
+				),
+				inserted_receipt AS (
+					INSERT INTO collection_mutation_receipts (
+						user_id,
+						mutation_id,
+						operation,
+						request_fingerprint,
+						response,
+						expires_at
+					)
+					SELECT
+						${actorUserId},
+						${mutationId},
+						${operation},
+						${requestFingerprint},
+						jsonb_build_object('version', version),
+						${expiresAt}
+					FROM updated_node
+					RETURNING response
+				)
+				SELECT response
+				FROM inserted_receipt
+			`)) as { rows: { response: { version: number } }[] };
+
+			const receipt = result.rows[0];
+			if (receipt) {
+				return {
+					status: "ok",
+					value: {
+						...receipt.response,
+						...(await getCollectionMutationSummary(collectionId, database)),
+					},
+				};
+			}
+		} catch (error) {
+			const concurrentReceipt = await getCollectionMutationReceipt(
+				actorUserId,
+				mutationId,
+				database,
+			);
+			if (concurrentReceipt) {
+				if (
+					concurrentReceipt.operation !== operation ||
+					concurrentReceipt.requestFingerprint !== requestFingerprint
+				) {
+					return { status: "idempotency_conflict" };
+				}
+				return {
+					status: "ok",
+					value: {
+						version: concurrentReceipt.response.version as number,
+						...(await getCollectionMutationSummary(collectionId, database)),
+					},
+					replayed: true,
+				};
+			}
+			throw error;
+		}
+	}
+
 	const [updated] = await database
 		.update(collectionNodes)
 		.set({
@@ -795,11 +1057,16 @@ export async function updateCollectionNode(
 	return existing ? { status: "version_conflict" } : { status: "not_found" };
 }
 
+export type DeleteCollectionNodeInput = {
+	expectedVersion: number;
+	mutationId?: string;
+};
+
 export async function deleteCollectionNode(
 	actorUserId: string,
 	collectionId: string,
 	nodeId: string,
-	expectedVersion: number,
+	input: DeleteCollectionNodeInput,
 	database: CollectionDatabase = productionDb,
 ): Promise<
 	MutationResult<{
@@ -808,6 +1075,39 @@ export async function deleteCollectionNode(
 		itemCount: number;
 	}>
 > {
+	const operation = "collection_node.delete.v1";
+	const requestFingerprint = input.mutationId
+		? fingerprintMutationRequest({
+				collectionId,
+				nodeId,
+				expectedVersion: input.expectedVersion,
+			})
+		: undefined;
+
+	if (input.mutationId && requestFingerprint) {
+		const existing = await getCollectionMutationReceipt(
+			actorUserId,
+			input.mutationId,
+			database,
+		);
+		if (existing) {
+			if (
+				existing.operation !== operation ||
+				existing.requestFingerprint !== requestFingerprint
+			) {
+				return { status: "idempotency_conflict" };
+			}
+			return {
+				status: "ok",
+				value: {
+					deletedNodeCount: existing.response.deletedNodeCount as number,
+					...(await getCollectionMutationSummary(collectionId, database)),
+				},
+				replayed: true,
+			};
+		}
+	}
+
 	const access = await getActiveCollectionAccess(
 		actorUserId,
 		collectionId,
@@ -835,8 +1135,101 @@ export async function deleteCollectionNode(
 	if (!existing) {
 		return { status: "not_found" };
 	}
-	if (existing.version !== expectedVersion) {
+	if (existing.version !== input.expectedVersion) {
 		return { status: "version_conflict" };
+	}
+
+	const { expectedVersion, mutationId } = input;
+	if (mutationId && requestFingerprint) {
+		const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
+		try {
+			const result = (await database.execute<{
+				response: { deletedNodeCount: number };
+			}>(sql`
+				WITH RECURSIVE subtree AS (
+					SELECT id
+					FROM collection_nodes
+					WHERE id = ${nodeId}
+						AND collection_id = ${collectionId}
+						AND version = ${expectedVersion}
+						AND deleted_at IS NULL
+
+					UNION ALL
+
+					SELECT child.id
+					FROM collection_nodes child
+					INNER JOIN subtree parent ON child.parent_id = parent.id
+					WHERE child.collection_id = ${collectionId}
+						AND child.deleted_at IS NULL
+				),
+				deleted_nodes AS (
+					UPDATE collection_nodes
+					SET deleted_at = now(),
+						version = version + 1,
+						updated_at = now()
+					WHERE id IN (SELECT id FROM subtree)
+					RETURNING id
+				),
+				inserted_receipt AS (
+					INSERT INTO collection_mutation_receipts (
+						user_id,
+						mutation_id,
+						operation,
+						request_fingerprint,
+						response,
+						expires_at
+					)
+					SELECT
+						${actorUserId},
+						${mutationId},
+						${operation},
+						${requestFingerprint},
+						jsonb_build_object('deletedNodeCount', count(*)),
+						${expiresAt}
+					FROM deleted_nodes
+					HAVING count(*) > 0
+					RETURNING response
+				)
+				SELECT response
+				FROM inserted_receipt
+			`)) as { rows: { response: { deletedNodeCount: number } }[] };
+
+			const receipt = result.rows[0];
+			if (receipt) {
+				return {
+					status: "ok",
+					value: {
+						...receipt.response,
+						...(await getCollectionMutationSummary(collectionId, database)),
+					},
+				};
+			}
+			return { status: "version_conflict" };
+		} catch (error) {
+			const concurrentReceipt = await getCollectionMutationReceipt(
+				actorUserId,
+				mutationId,
+				database,
+			);
+			if (concurrentReceipt) {
+				if (
+					concurrentReceipt.operation !== operation ||
+					concurrentReceipt.requestFingerprint !== requestFingerprint
+				) {
+					return { status: "idempotency_conflict" };
+				}
+				return {
+					status: "ok",
+					value: {
+						deletedNodeCount: concurrentReceipt.response
+							.deletedNodeCount as number,
+						...(await getCollectionMutationSummary(collectionId, database)),
+					},
+					replayed: true,
+				};
+			}
+			throw error;
+		}
 	}
 
 	const deleted = (await database.execute<{ id: string }>(sql`

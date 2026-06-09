@@ -384,6 +384,136 @@ dbTest(
 	},
 );
 
+dbTest("replays idempotent node mutations", async ({ db }) => {
+	const collection = await createOwnedCollection("node_retry_owner");
+	const createInput = {
+		id: "40000000-0000-4000-8000-000000000020",
+		mutationId: "50000000-0000-4000-8000-000000000020",
+		type: "product" as const,
+		title: "Retry-safe node",
+		positionKey: "a0",
+	};
+
+	const created = await createCollectionNode(
+		"node_retry_owner",
+		collection.id,
+		createInput,
+		db,
+	);
+	expect(created).toEqual({
+		status: "ok",
+		value: {
+			id: createInput.id,
+			version: 1,
+			collectionVersion: collection.version + 1,
+			itemCount: 1,
+		},
+	});
+	expect(
+		await createCollectionNode(
+			"node_retry_owner",
+			collection.id,
+			createInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: {
+			id: createInput.id,
+			version: 1,
+			collectionVersion: collection.version + 1,
+			itemCount: 1,
+		},
+		replayed: true,
+	});
+
+	const updateInput = {
+		expectedVersion: 1,
+		mutationId: "50000000-0000-4000-8000-000000000021",
+		title: "Updated once",
+	};
+	expect(
+		await updateCollectionNode(
+			"node_retry_owner",
+			collection.id,
+			createInput.id,
+			updateInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: {
+			version: 2,
+			collectionVersion: collection.version + 2,
+			itemCount: 1,
+		},
+	});
+	expect(
+		await updateCollectionNode(
+			"node_retry_owner",
+			collection.id,
+			createInput.id,
+			updateInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: {
+			version: 2,
+			collectionVersion: collection.version + 2,
+			itemCount: 1,
+		},
+		replayed: true,
+	});
+	expect(
+		await updateCollectionNode(
+			"node_retry_owner",
+			collection.id,
+			createInput.id,
+			{ ...updateInput, title: "Different request" },
+			db,
+		),
+	).toEqual({ status: "idempotency_conflict" });
+
+	const deleteInput = {
+		expectedVersion: 2,
+		mutationId: "50000000-0000-4000-8000-000000000022",
+	};
+	expect(
+		await deleteCollectionNode(
+			"node_retry_owner",
+			collection.id,
+			createInput.id,
+			deleteInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: {
+			deletedNodeCount: 1,
+			collectionVersion: collection.version + 3,
+			itemCount: 0,
+		},
+	});
+	expect(
+		await deleteCollectionNode(
+			"node_retry_owner",
+			collection.id,
+			createInput.id,
+			deleteInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: {
+			deletedNodeCount: 1,
+			collectionVersion: collection.version + 3,
+			itemCount: 0,
+		},
+		replayed: true,
+	});
+});
+
 dbTest(
 	"deleting a section soft-deletes its subtree and updates itemCount",
 	async ({ db }) => {
@@ -411,7 +541,7 @@ dbTest(
 			"subtree_owner",
 			collection.id,
 			section.id,
-			section.version,
+			{ expectedVersion: section.version },
 			db,
 		);
 
