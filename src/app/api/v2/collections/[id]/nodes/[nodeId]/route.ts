@@ -3,22 +3,22 @@ import { NextResponse } from "next/server";
 import {
 	canUseNeonCollections,
 	collectionIdSchema,
-	deleteCollectionInputSchema,
+	deleteCollectionNodeInputSchema,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
-	updateCollectionInputSchema,
-} from "../../../../../lib/collections/api";
+	updateCollectionNodeInputSchema,
+} from "../../../../../../../lib/collections/api";
 import {
-	deleteCollection,
+	deleteCollectionNode,
 	getAccountCollectionDataSource,
-	getCollectionDetail,
-	updateCollection,
-} from "../../../../../lib/collections/repository";
+	updateCollectionNode,
+} from "../../../../../../../lib/collections/repository";
 
-export async function GET(
-	_request: Request,
-	{ params }: { params: Promise<{ id: string }> },
-) {
+type RouteContext = {
+	params: Promise<{ id: string; nodeId: string }>;
+};
+
+export async function PATCH(request: Request, { params }: RouteContext) {
 	if (!neonCollectionsApiEnabled()) {
 		return NextResponse.json({ error: "Not found" }, { status: 404 });
 	}
@@ -36,61 +36,28 @@ export async function GET(
 		);
 	}
 
-	const { id } = await params;
-	const parsedId = collectionIdSchema.safeParse(id);
-	if (!parsedId.success) {
-		return NextResponse.json(
-			{ error: "Invalid collection id" },
-			{ status: 400 },
-		);
-	}
-
-	const collection = await getCollectionDetail(userId, parsedId.data);
-
-	if (!collection) {
-		return NextResponse.json({ error: "Not found" }, { status: 404 });
-	}
-
-	return NextResponse.json(collection);
-}
-
-export async function PATCH(
-	request: Request,
-	{ params }: { params: Promise<{ id: string }> },
-) {
-	if (!neonCollectionsApiEnabled()) {
-		return NextResponse.json({ error: "Not found" }, { status: 404 });
-	}
-
-	const { userId } = await auth();
-	if (!userId) {
-		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
-
-	const dataSource = await getAccountCollectionDataSource(userId);
-	if (!canUseNeonCollections(dataSource)) {
-		return NextResponse.json(
-			{ error: "Neon collections are not enabled", dataSource },
-			{ status: 409 },
-		);
-	}
-
-	const { id } = await params;
-	const parsedId = collectionIdSchema.safeParse(id);
+	const { id, nodeId } = await params;
+	const parsedCollectionId = collectionIdSchema.safeParse(id);
+	const parsedNodeId = collectionIdSchema.safeParse(nodeId);
 	const body = await parseJsonRequest(request);
-	if (!parsedId.success || !body.success) {
+	if (!parsedCollectionId.success || !parsedNodeId.success || !body.success) {
 		return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 	}
 
-	const parsed = updateCollectionInputSchema.safeParse(body.data);
+	const parsed = updateCollectionNodeInputSchema.safeParse(body.data);
 	if (!parsed.success) {
 		return NextResponse.json(
-			{ error: "Invalid collection update", issues: parsed.error.issues },
+			{ error: "Invalid node update", issues: parsed.error.issues },
 			{ status: 400 },
 		);
 	}
 
-	const result = await updateCollection(userId, parsedId.data, parsed.data);
+	const result = await updateCollectionNode(
+		userId,
+		parsedCollectionId.data,
+		parsedNodeId.data,
+		parsed.data,
+	);
 	if (result.status === "not_found") {
 		return NextResponse.json({ error: "Not found" }, { status: 404 });
 	}
@@ -104,10 +71,7 @@ export async function PATCH(
 	return NextResponse.json(result.value);
 }
 
-export async function DELETE(
-	request: Request,
-	{ params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(request: Request, { params }: RouteContext) {
 	if (!neonCollectionsApiEnabled()) {
 		return NextResponse.json({ error: "Not found" }, { status: 404 });
 	}
@@ -125,24 +89,26 @@ export async function DELETE(
 		);
 	}
 
-	const { id } = await params;
-	const parsedId = collectionIdSchema.safeParse(id);
+	const { id, nodeId } = await params;
+	const parsedCollectionId = collectionIdSchema.safeParse(id);
+	const parsedNodeId = collectionIdSchema.safeParse(nodeId);
 	const body = await parseJsonRequest(request);
-	if (!parsedId.success || !body.success) {
+	if (!parsedCollectionId.success || !parsedNodeId.success || !body.success) {
 		return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 	}
 
-	const parsed = deleteCollectionInputSchema.safeParse(body.data);
+	const parsed = deleteCollectionNodeInputSchema.safeParse(body.data);
 	if (!parsed.success) {
 		return NextResponse.json(
-			{ error: "Invalid collection deletion", issues: parsed.error.issues },
+			{ error: "Invalid node deletion", issues: parsed.error.issues },
 			{ status: 400 },
 		);
 	}
 
-	const result = await deleteCollection(
+	const result = await deleteCollectionNode(
 		userId,
-		parsedId.data,
+		parsedCollectionId.data,
+		parsedNodeId.data,
 		parsed.data.expectedVersion,
 	);
 	if (result.status === "not_found") {

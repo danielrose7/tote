@@ -4,6 +4,7 @@ import {
 	canUseNeonCollections,
 	createCollectionInputSchema,
 	neonCollectionsApiEnabled,
+	parseJsonRequest,
 } from "../../../../lib/collections/api";
 import {
 	createCollection,
@@ -51,14 +52,12 @@ export async function POST(request: Request) {
 		);
 	}
 
-	let body: unknown;
-	try {
-		body = await request.json();
-	} catch {
+	const body = await parseJsonRequest(request);
+	if (!body.success) {
 		return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 	}
 
-	const parsed = createCollectionInputSchema.safeParse(body);
+	const parsed = createCollectionInputSchema.safeParse(body.data);
 	if (!parsed.success) {
 		return NextResponse.json(
 			{ error: "Invalid collection", issues: parsed.error.issues },
