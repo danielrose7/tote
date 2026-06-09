@@ -2,6 +2,8 @@ import type {
 	CollectionDetail,
 	CollectionSummary,
 	CreateCollectionInput,
+	DeleteCollectionInput,
+	UpdateCollectionInput,
 } from "./repository";
 
 async function fetchJson<T>(
@@ -72,6 +74,38 @@ export async function createCollectionMutation(
 		headers: {
 			"content-type": "application/json",
 		},
+		body: JSON.stringify(input),
+	});
+}
+
+export type UpdateCollectionMutation = {
+	collectionId: string;
+	input: UpdateCollectionInput & { mutationId: string };
+};
+
+export async function updateCollectionMutation({
+	collectionId,
+	input,
+}: UpdateCollectionMutation): Promise<{ version: number; replayed: boolean }> {
+	return fetchJson(`/api/v2/collections/${collectionId}`, {
+		method: "PATCH",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(input),
+	});
+}
+
+export type DeleteCollectionMutation = {
+	collectionId: string;
+	input: DeleteCollectionInput & { mutationId: string };
+};
+
+export async function deleteCollectionMutation({
+	collectionId,
+	input,
+}: DeleteCollectionMutation): Promise<{ version: number; replayed: boolean }> {
+	return fetchJson(`/api/v2/collections/${collectionId}`, {
+		method: "DELETE",
+		headers: { "content-type": "application/json" },
 		body: JSON.stringify(input),
 	});
 }

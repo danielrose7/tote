@@ -13,7 +13,11 @@ import { useEffect, useRef, useState } from "react";
 import { apiKey } from "../apiKey";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ToastProvider } from "../components/ToastNotification";
-import { createCollectionMutation } from "../lib/collections/client";
+import {
+	createCollectionMutation,
+	deleteCollectionMutation,
+	updateCollectionMutation,
+} from "../lib/collections/client";
 import {
 	collectionMutationKeys,
 	collectionQueryKeys,
@@ -50,6 +54,21 @@ function AccountQueryProvider({
 	queryClient.setMutationDefaults(collectionMutationKeys.create, {
 		mutationFn: createCollectionMutation,
 		onSettled: () =>
+			queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.update, {
+		mutationFn: updateCollectionMutation,
+		onSettled: (_data, _error, _variables) =>
+			Promise.all([
+				queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
+				queryClient.invalidateQueries({
+					queryKey: collectionQueryKeys.detail(variables.collectionId),
+				}),
+			]),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.delete, {
+		mutationFn: deleteCollectionMutation,
+		onSettled: (_data, _error, variables) =>
 			queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
 	});
 	const [persister] = useState(() =>

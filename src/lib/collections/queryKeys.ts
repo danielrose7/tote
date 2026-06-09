@@ -7,4 +7,6 @@ export const collectionQueryKeys = {
 
 export const collectionMutationKeys = {
 	create: ["collections", "create"] as const,
+	update: ["collections", "update"] as const,
+	delete: ["collections", "delete"] as const,
 };
