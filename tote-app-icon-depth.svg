@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-120 -60 693.15 668.7">
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#faf9ff"/>
+    </linearGradient>
     <linearGradient id="bodyGradient" x1="0" y1="0" x2="0.82" y2="1">
       <stop offset="0" stop-color="#9a82ff"/>
       <stop offset="0.42" stop-color="#7655ff"/>
@@ -36,24 +40,19 @@
     </clipPath>
   </defs>
 
-  <g id="shadow">
-    <use href="#toteShape" fill="#6c47ff" filter="url(#groundingShadow)"/>
-  </g>
+  <rect width="1024" height="1024" fill="url(#background)"/>
 
-  <g id="base">
+  <g transform="translate(284.6 182.3) scale(1.005)">
+    <use href="#toteShape" fill="#6c47ff" filter="url(#groundingShadow)"/>
     <use href="#toteShape" fill="url(#bodyGradient)"
          stroke="url(#bodyGradient)" stroke-width="9"
          stroke-linejoin="round" stroke-linecap="round"/>
-  </g>
-
-  <g id="surface-lighting" clip-path="url(#shapeClip)">
-    <rect x="-10" y="-10" width="470" height="570" fill="url(#lightGradient)"/>
-    <rect x="-10" y="-10" width="470" height="570" fill="url(#shadeGradient)"/>
-    <path d="M42 470C101 493 321 493 414 465L428 548H21Z"
-          fill="#321078" opacity="0.04"/>
-  </g>
-
-  <g id="edge-definition">
+    <g clip-path="url(#shapeClip)">
+      <rect x="-10" y="-10" width="470" height="570" fill="url(#lightGradient)"/>
+      <rect x="-10" y="-10" width="470" height="570" fill="url(#shadeGradient)"/>
+      <path d="M42 470C101 493 321 493 414 465L428 548H21Z"
+            fill="#321078" opacity="0.04"/>
+    </g>
     <use href="#toteShape" transform="translate(-3 -4)"
          fill="none" stroke="url(#offsetHighlight)"
          stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>

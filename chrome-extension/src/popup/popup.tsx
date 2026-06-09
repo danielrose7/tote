@@ -716,7 +716,7 @@ function PopupHeader() {
   return (
     <header className="header">
       <div className="header-left">
-        <div className="logo" />
+        <img src="/assets/icons/icon48.png" alt="" className="logo" />
         <h1>Save to Tote</h1>
       </div>
       <SignedIn>
