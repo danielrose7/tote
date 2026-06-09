@@ -13,6 +13,7 @@ import {
 	type ClassicMigrationCollection,
 	normalizeClassicMigrationCollections,
 } from "./migrationPayload";
+import { getRollbackExpiration } from "./migrationReceipt";
 import type { CollectionDatabase } from "./repository";
 
 export type { ClassicMigrationCollection } from "./migrationPayload";
@@ -390,4 +391,91 @@ export async function importClassicCollections(
 			{ isolationLevel: "repeatable read" },
 		),
 	);
+}
+
+export type CollectionMigrationStatus = {
+	dataSource:
+		| "classic_jazz"
+		| "migrating"
+		| "neon_verifying"
+		| "neon"
+		| "migration_failed";
+	migrationVersion: number | null;
+	status:
+		| "pending"
+		| "exporting"
+		| "importing"
+		| "verifying"
+		| "completed"
+		| "failed"
+		| null;
+	collectionCount: number | null;
+	itemCount: number | null;
+	cutoverAt: Date | null;
+	rollbackExpiresAt: Date | null;
+	error: Record<string, unknown> | null;
+};
+
+export async function getCollectionMigrationStatus(
+	actorUserId: string,
+	database: CollectionDatabase,
+): Promise<CollectionMigrationStatus> {
+	const [account] = await database
+		.select()
+		.from(accountDataSources)
+		.where(eq(accountDataSources.userId, actorUserId))
+		.limit(1);
+	const [migration] = await database
+		.select()
+		.from(accountCollectionMigrations)
+		.where(eq(accountCollectionMigrations.userId, actorUserId))
+		.orderBy(asc(accountCollectionMigrations.migrationVersion))
+		.limit(1);
+
+	return {
+		dataSource: account?.dataSource ?? "classic_jazz",
+		migrationVersion: account?.migrationVersion ?? null,
+		status: migration?.status ?? null,
+		collectionCount: migration?.importedCollectionCount ?? null,
+		itemCount: migration?.importedItemCount ?? null,
+		cutoverAt: account?.cutoverAt ?? null,
+		rollbackExpiresAt: account?.rollbackExpiresAt ?? null,
+		error: migration?.error ?? null,
+	};
+}
+
+export type ConfirmCollectionMigrationResult =
+	| {
+			status: "ok";
+			value: { cutoverAt: Date; rollbackExpiresAt: Date };
+	  }
+	| { status: "not_ready" };
+
+export async function confirmCollectionMigration(
+	actorUserId: string,
+	database: CollectionDatabase,
+): Promise<ConfirmCollectionMigrationResult> {
+	const status = await getCollectionMigrationStatus(actorUserId, database);
+	if (status.dataSource !== "neon_verifying" || status.status !== "completed") {
+		return { status: "not_ready" };
+	}
+	const cutoverAt = new Date();
+	const rollbackExpiresAt = getRollbackExpiration(cutoverAt);
+	const [updated] = await database
+		.update(accountDataSources)
+		.set({
+			dataSource: "neon",
+			cutoverAt,
+			rollbackExpiresAt,
+			updatedAt: cutoverAt,
+		})
+		.where(
+			and(
+				eq(accountDataSources.userId, actorUserId),
+				eq(accountDataSources.dataSource, "neon_verifying"),
+			),
+		)
+		.returning({ userId: accountDataSources.userId });
+	if (!updated) return { status: "not_ready" };
+	return { status: "ok", value: { cutoverAt, rollbackExpiresAt } };
 }

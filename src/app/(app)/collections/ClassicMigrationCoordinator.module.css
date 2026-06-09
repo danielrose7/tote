@@ -1,0 +1,56 @@
+.card {
+	max-width: 760px;
+	margin: 1rem auto;
+	padding: 1rem 1.25rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	background: var(--color-background);
+	box-shadow: var(--shadow-sm);
+}
+
+.card h2,
+.card p {
+	margin: 0;
+}
+
+.card p {
+	margin-top: 0.4rem;
+	color: var(--color-text-secondary);
+}
+
+.actions {
+	display: flex;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.primary,
+.secondary {
+	padding: 0.55rem 0.9rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.primary {
+	border-color: var(--color-accent);
+	background: var(--color-accent);
+	color: white;
+}
+
+.secondary {
+	background: var(--color-background);
+	color: var(--color-text-primary);
+}
+
+.primary:disabled,
+.secondary:disabled {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.error {
+	color: var(--color-danger) !important;
+}

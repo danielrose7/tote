@@ -1,6 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import {
+	confirmCollectionMigration,
 	fingerprintClassicMigrationCollections,
+	getCollectionMigrationStatus,
 	type ImportClassicCollectionsInput,
 	importClassicCollections,
 } from "../../lib/collections/migrationRepository";
@@ -233,5 +235,42 @@ dbTest(
 				.from(collections)
 				.where(eq(collections.ownerUserId, "invalid_graph_owner")),
 		).toEqual([]);
+	},
+);
+
+dbTest(
+	"requires verification before confirmed Neon cutover",
+	async ({ db }) => {
+		expect(await confirmCollectionMigration("cutover_owner", db)).toEqual({
+			status: "not_ready",
+		});
+		const input = migrationInput();
+		await importClassicCollections("cutover_owner", input, db);
+		expect(
+			await getCollectionMigrationStatus("cutover_owner", db),
+		).toMatchObject({
+			dataSource: "neon_verifying",
+			status: "completed",
+			collectionCount: 1,
+			itemCount: 1,
+			cutoverAt: null,
+			rollbackExpiresAt: null,
+		});
+
+		const confirmed = await confirmCollectionMigration("cutover_owner", db);
+		expect(confirmed.status).toBe("ok");
+		if (confirmed.status !== "ok") throw new Error("Expected cutover");
+		expect(
+			confirmed.value.rollbackExpiresAt.getTime() -
+				confirmed.value.cutoverAt.getTime(),
+		).toBe(14 * 24 * 60 * 60 * 1_000);
+		expect(
+			await getCollectionMigrationStatus("cutover_owner", db),
+		).toMatchObject({
+			dataSource: "neon",
+			status: "completed",
+			cutoverAt: confirmed.value.cutoverAt,
+			rollbackExpiresAt: confirmed.value.rollbackExpiresAt,
+		});
 	},
 );

@@ -16,6 +16,7 @@ import {
 	JazzAccount,
 	type SharedCollectionRef,
 } from "../../../schema";
+import { ClassicMigrationCoordinator } from "./ClassicMigrationCoordinator";
 
 type LoadedBlock = co.loaded<typeof Block>;
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
@@ -36,6 +37,7 @@ export function ClassicCollectionsPage() {
 								children: { $each: {} }, // For slots containing products
 							},
 						},
+						notes: { $each: {} },
 					},
 				},
 				sharedWithMe: { $each: {} },
@@ -111,6 +113,7 @@ export function ClassicCollectionsPage() {
 				showSaveTabs={enableSaveTabs}
 				onSaveTabsClick={() => setIsSaveTabsDialogOpen(true)}
 			/>
+			<ClassicMigrationCoordinator rootBlocks={me.root?.blocks} />
 			<main>
 				<CollectionList
 					account={me}
