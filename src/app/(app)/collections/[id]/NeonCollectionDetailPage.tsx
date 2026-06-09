@@ -34,6 +34,7 @@ import {
 } from "../../../../lib/collections/queryKeys";
 import type { CollectionDetail } from "../../../../lib/collections/repository";
 import styles from "./NeonCollectionDetailPage.module.css";
+import { NeonCopyCollectionDialog } from "./NeonCopyCollectionDialog";
 import { NeonCreateNodeDialog } from "./NeonCreateNodeDialog";
 import { NeonEditCollectionDialog } from "./NeonEditCollectionDialog";
 import { NeonEditNodeDialog } from "./NeonEditNodeDialog";
@@ -162,6 +163,7 @@ export function NeonCollectionDetailPage({
 	const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
 	const [isTeamOpen, setIsTeamOpen] = useState(false);
 	const [isPublicationOpen, setIsPublicationOpen] = useState(false);
+	const [isCopyOpen, setIsCopyOpen] = useState(false);
 	const [selectedNode, setSelectedNode] = useState<CollectionNode | null>(null);
 	const queryClient = useQueryClient();
 	const { showToast } = useToast();
@@ -205,6 +207,10 @@ export function NeonCollectionDetailPage({
 	}
 
 	const { collection, nodes, role } = detail;
+	const canCopy =
+		role === "owner" ||
+		collection.copyPolicy === "members" ||
+		collection.copyPolicy === "public";
 	const sections = nodes.filter((node) => node.type === "section");
 	const rootNodes = nodes.filter(
 		(node) => node.type !== "section" && node.parentId === null,
@@ -334,6 +340,15 @@ export function NeonCollectionDetailPage({
 									onClick={() => setIsPublicationOpen(true)}
 								>
 									Publish
+								</button>
+							)}
+							{canCopy && (
+								<button
+									type="button"
+									className={styles.editButton}
+									onClick={() => setIsCopyOpen(true)}
+								>
+									Make a copy
 								</button>
 							)}
 						</div>
@@ -523,6 +538,13 @@ export function NeonCollectionDetailPage({
 					detail={detail}
 					open={isPublicationOpen}
 					onOpenChange={setIsPublicationOpen}
+				/>
+			)}
+			{canCopy && (
+				<NeonCopyCollectionDialog
+					detail={detail}
+					open={isCopyOpen}
+					onOpenChange={setIsCopyOpen}
 				/>
 			)}
 		</>
