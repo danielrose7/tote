@@ -72,6 +72,47 @@ INSERT INTO collection_members (collection_id, user_id, role) VALUES
 	('10000000-0000-4000-8000-000000000001', 'user_editor', 'editor'),
 	('10000000-0000-4000-8000-000000000001', 'user_viewer', 'viewer');
 
+UPDATE collection_members
+SET invited_by_user_id = 'user_owner'
+WHERE collection_id = '10000000-0000-4000-8000-000000000001'
+	AND user_id IN ('user_admin', 'user_editor', 'user_viewer');
+
+INSERT INTO collection_invites (
+	id,
+	collection_id,
+	created_by_user_id,
+	role,
+	recipient_hint,
+	token_hash,
+	expires_at,
+	max_uses
+) VALUES (
+	'60000000-0000-4000-8000-000000000001',
+	'10000000-0000-4000-8000-000000000001',
+	'user_admin',
+	'viewer',
+	'teammate@example.com',
+	'sha256:integration-invite',
+	'2026-06-15T12:00:00Z',
+	1
+);
+
+INSERT INTO collection_membership_events (
+	collection_id,
+	actor_user_id,
+	invite_id,
+	action,
+	next_role,
+	metadata
+) VALUES (
+	'10000000-0000-4000-8000-000000000001',
+	'user_admin',
+	'60000000-0000-4000-8000-000000000001',
+	'invite_created',
+	'viewer',
+	'{"source":"integration_seed"}'
+);
+
 INSERT INTO collection_nodes (
 	id,
 	collection_id,

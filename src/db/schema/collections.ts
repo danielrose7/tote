@@ -59,6 +59,18 @@ export const collectionLineageRelationship = pgEnum(
 	["copied", "imported", "curated", "templated"],
 );
 
+export const collectionMembershipAction = pgEnum(
+	"collection_membership_action",
+	[
+		"invite_created",
+		"invite_revoked",
+		"invite_accepted",
+		"role_changed",
+		"member_removed",
+		"ownership_transferred",
+	],
+);
+
 export type CollectionNodeProperties = Record<string, unknown>;
 
 export const collections = pgTable(
@@ -118,6 +130,7 @@ export const collectionMembers = pgTable(
 			.references(() => collections.id, { onDelete: "cascade" }),
 		userId: text("user_id").notNull(),
 		role: collectionRole("role").notNull(),
+		invitedByUserId: text("invited_by_user_id"),
 		createdAt: timestamp("created_at", { withTimezone: true })
 			.notNull()
 			.defaultNow(),
@@ -131,6 +144,79 @@ export const collectionMembers = pgTable(
 		index("collection_members_user_active_idx")
 			.on(table.userId, table.collectionId)
 			.where(sql`${table.revokedAt} IS NULL`),
+	],
+);
+
+export const collectionInvites = pgTable(
+	"collection_invites",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		collectionId: uuid("collection_id")
+			.notNull()
+			.references(() => collections.id, { onDelete: "cascade" }),
+		createdByUserId: text("created_by_user_id").notNull(),
+		role: collectionRole("role").notNull(),
+		recipientHint: text("recipient_hint"),
+		tokenHash: text("token_hash").notNull(),
+		expiresAt: timestamp("expires_at", { withTimezone: true }),
+		maxUses: integer("max_uses"),
+		useCount: integer("use_count").notNull().default(0),
+		revokedAt: timestamp("revoked_at", { withTimezone: true }),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		uniqueIndex("collection_invites_token_hash_uidx").on(table.tokenHash),
+		index("collection_invites_collection_status_idx").on(
+			table.collectionId,
+			table.revokedAt,
+			table.expiresAt,
+		),
+		check("collection_invites_role_not_owner", sql`${table.role} <> 'owner'`),
+		check(
+			"collection_invites_positive_max_uses",
+			sql`${table.maxUses} IS NULL OR ${table.maxUses} > 0`,
+		),
+		check(
+			"collection_invites_valid_use_count",
+			sql`${table.useCount} >= 0 AND (${table.maxUses} IS NULL OR ${table.useCount} <= ${table.maxUses})`,
+		),
+	],
+);
+
+export const collectionMembershipEvents = pgTable(
+	"collection_membership_events",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		collectionId: uuid("collection_id")
+			.notNull()
+			.references(() => collections.id, { onDelete: "cascade" }),
+		actorUserId: text("actor_user_id").notNull(),
+		subjectUserId: text("subject_user_id"),
+		inviteId: uuid("invite_id").references(() => collectionInvites.id, {
+			onDelete: "set null",
+		}),
+		action: collectionMembershipAction("action").notNull(),
+		previousRole: collectionRole("previous_role"),
+		nextRole: collectionRole("next_role"),
+		metadata: jsonb("metadata")
+			.$type<Record<string, unknown>>()
+			.notNull()
+			.default({}),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+	},
+	(table) => [
+		index("collection_membership_events_collection_created_idx").on(
+			table.collectionId,
+			table.createdAt,
+		),
+		index("collection_membership_events_subject_idx").on(table.subjectUserId),
 	],
 );
 
@@ -215,6 +301,9 @@ export const collectionLineage = pgTable(
 export type Collection = typeof collections.$inferSelect;
 export type NewCollection = typeof collections.$inferInsert;
 export type CollectionMember = typeof collectionMembers.$inferSelect;
+export type CollectionInvite = typeof collectionInvites.$inferSelect;
+export type CollectionMembershipEvent =
+	typeof collectionMembershipEvents.$inferSelect;
 export type CollectionNode = typeof collectionNodes.$inferSelect;
 export type NewCollectionNode = typeof collectionNodes.$inferInsert;
 export type CollectionLineage = typeof collectionLineage.$inferSelect;

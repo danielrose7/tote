@@ -136,6 +136,46 @@ BEGIN
 END;
 $$;
 
+DO $$
+BEGIN
+	BEGIN
+		INSERT INTO collection_invites (
+			collection_id,
+			created_by_user_id,
+			role,
+			token_hash
+		) VALUES (
+			'10000000-0000-4000-8000-000000000001',
+			'user_owner',
+			'owner',
+			'sha256:invalid-owner-invite'
+		);
+		RAISE EXCEPTION 'expected owner invite constraint to fail';
+	EXCEPTION
+		WHEN check_violation THEN
+			NULL;
+	END;
+
+	BEGIN
+		INSERT INTO collection_invites (
+			collection_id,
+			created_by_user_id,
+			role,
+			token_hash
+		) VALUES (
+			'10000000-0000-4000-8000-000000000001',
+			'user_owner',
+			'viewer',
+			'sha256:integration-invite'
+		);
+		RAISE EXCEPTION 'expected duplicate invite token hash to fail';
+	EXCEPTION
+		WHEN unique_violation THEN
+			NULL;
+	END;
+END;
+$$;
+
 WITH RECURSIVE subtree AS (
 	SELECT id
 	FROM collection_nodes
@@ -189,6 +229,8 @@ $$;
 DO $$
 DECLARE
 	member_count integer;
+	invite_count integer;
+	event_count integer;
 	migration_status data_migration_status;
 BEGIN
 	SELECT COUNT(*)
@@ -197,6 +239,17 @@ BEGIN
 	WHERE collection_id = '10000000-0000-4000-8000-000000000001'
 		AND revoked_at IS NULL;
 
+	SELECT COUNT(*)
+	INTO invite_count
+	FROM collection_invites
+	WHERE collection_id = '10000000-0000-4000-8000-000000000001'
+		AND revoked_at IS NULL;
+
+	SELECT COUNT(*)
+	INTO event_count
+	FROM collection_membership_events
+	WHERE collection_id = '10000000-0000-4000-8000-000000000001';
+
 	SELECT status
 	INTO migration_status
 	FROM publication_snapshot_migrations
@@ -204,6 +257,14 @@ BEGIN
 
 	IF member_count <> 4 THEN
 		RAISE EXCEPTION 'expected four active seeded members, got %', member_count;
+	END IF;
+
+	IF invite_count <> 1 THEN
+		RAISE EXCEPTION 'expected one active seeded invite, got %', invite_count;
+	END IF;
+
+	IF event_count <> 1 THEN
+		RAISE EXCEPTION 'expected one seeded membership event, got %', event_count;
 	END IF;
 
 	IF migration_status <> 'completed' THEN
