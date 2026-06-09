@@ -135,6 +135,24 @@ export async function deleteCollectionMutation({
 	});
 }
 
+export type CopyCollectionMutation = {
+	collectionId: string;
+	mutationId: string;
+	name?: string;
+};
+
+export async function copyCollectionMutation({
+	collectionId,
+	mutationId,
+	name,
+}: CopyCollectionMutation): Promise<{ id: string; replayed: boolean }> {
+	return fetchJson(`/api/v2/collections/${collectionId}/copy`, {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify({ mutationId, name }),
+	});
+}
+
 export type CreateCollectionNodeMutation = {
 	collectionId: string;
 	input: CreateCollectionNodeInput & {

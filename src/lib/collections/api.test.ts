@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	canUseNeonCollections,
 	collectionIdSchema,
+	copyCollectionInputSchema,
 	createCollectionInputSchema,
 	createCollectionInviteInputSchema,
 	createCollectionNodeInputSchema,
@@ -67,6 +68,19 @@ describe("createCollectionInputSchema", () => {
 });
 
 describe("collection mutation schemas", () => {
+	it("requires an idempotency key for collection copies", () => {
+		expect(copyCollectionInputSchema.safeParse({}).success).toBe(false);
+		expect(
+			copyCollectionInputSchema.parse({
+				mutationId: "4e14f92e-66ef-47d6-bd34-a57299b89021",
+				name: "  My lighting list  ",
+			}),
+		).toEqual({
+			mutationId: "4e14f92e-66ef-47d6-bd34-a57299b89021",
+			name: "My lighting list",
+		});
+	});
+
 	it("requires a version and at least one collection change", () => {
 		expect(
 			updateCollectionInputSchema.safeParse({ expectedVersion: 2 }).success,

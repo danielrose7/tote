@@ -57,6 +57,11 @@ export const deleteCollectionInputSchema = z.object({
 	mutationId: mutationIdSchema.optional(),
 });
 
+export const copyCollectionInputSchema = z.object({
+	mutationId: mutationIdSchema,
+	name: z.string().trim().min(1).max(200).optional(),
+});
+
 export const createCollectionNodeInputSchema = z
 	.object({
 		id: collectionIdSchema.optional(),
