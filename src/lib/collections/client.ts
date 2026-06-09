@@ -9,6 +9,10 @@ import type {
 	UpdateCollectionInput,
 	UpdateCollectionNodeInput,
 } from "./repository";
+import type {
+	CollectionTeam,
+	CreateCollectionInviteInput,
+} from "./teamRepository";
 
 async function fetchJson<T>(
 	input: RequestInfo | URL,
@@ -204,4 +208,126 @@ export async function reorderCollectionNodesMutation({
 		headers: { "content-type": "application/json" },
 		body: JSON.stringify(input),
 	});
+}
+
+function hydrateCollectionTeam(team: CollectionTeam): CollectionTeam {
+	return {
+		members: team.members.map((member) => ({
+			...member,
+			joinedAt: new Date(member.joinedAt),
+		})),
+		invites: team.invites.map((invite) => ({
+			...invite,
+			expiresAt: invite.expiresAt ? new Date(invite.expiresAt) : null,
+			revokedAt: invite.revokedAt ? new Date(invite.revokedAt) : null,
+			createdAt: new Date(invite.createdAt),
+		})),
+		events: team.events.map((event) => ({
+			...event,
+			createdAt: new Date(event.createdAt),
+		})),
+	};
+}
+
+export async function fetchCollectionTeam(
+	collectionId: string,
+): Promise<CollectionTeam> {
+	const team = await fetchJson<CollectionTeam>(
+		`/api/v2/collections/${collectionId}/team`,
+	);
+	return hydrateCollectionTeam(team);
+}
+
+export type CreateCollectionInviteMutation = {
+	collectionId: string;
+	input: Omit<CreateCollectionInviteInput, "expiresAt"> & {
+		expiresAt?: string;
+	};
+};
+
+export async function createCollectionInviteMutation({
+	collectionId,
+	input,
+}: CreateCollectionInviteMutation): Promise<{
+	id: string;
+	token: string;
+	role: "editor" | "viewer";
+	expiresAt: string | null;
+	maxUses: number | null;
+}> {
+	return fetchJson(`/api/v2/collections/${collectionId}/team`, {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(input),
+	});
+}
+
+export type RevokeCollectionInviteMutation = {
+	collectionId: string;
+	inviteId: string;
+};
+
+export async function revokeCollectionInviteMutation({
+	collectionId,
+	inviteId,
+}: RevokeCollectionInviteMutation): Promise<{ revokedAt: string }> {
+	return fetchJson(
+		`/api/v2/collections/${collectionId}/team/invites/${inviteId}`,
+		{ method: "DELETE" },
+	);
+}
+
+export type UpdateCollectionMemberMutation = {
+	collectionId: string;
+	userId: string;
+	role: "admin" | "editor" | "viewer";
+};
+
+export async function updateCollectionMemberMutation({
+	collectionId,
+	userId,
+	role,
+}: UpdateCollectionMemberMutation): Promise<{ role: string }> {
+	return fetchJson(
+		`/api/v2/collections/${collectionId}/team/members/${encodeURIComponent(userId)}`,
+		{
+			method: "PATCH",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ role }),
+		},
+	);
+}
+
+export type RemoveCollectionMemberMutation = {
+	collectionId: string;
+	userId: string;
+};
+
+export async function removeCollectionMemberMutation({
+	collectionId,
+	userId,
+}: RemoveCollectionMemberMutation): Promise<{ revokedAt: string }> {
+	return fetchJson(
+		`/api/v2/collections/${collectionId}/team/members/${encodeURIComponent(userId)}`,
+		{ method: "DELETE" },
+	);
+}
+
+export type TransferCollectionOwnershipMutation = {
+	collectionId: string;
+	targetUserId: string;
+};
+
+export async function transferCollectionOwnershipMutation({
+	collectionId,
+	targetUserId,
+}: TransferCollectionOwnershipMutation): Promise<{ version: number }> {
+	return fetchJson(
+		`/api/v2/collections/${collectionId}/team/transfer-ownership`,
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({ targetUserId }),
+		},
+	);
 }

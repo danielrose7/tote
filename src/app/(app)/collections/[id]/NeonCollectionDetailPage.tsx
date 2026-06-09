@@ -37,6 +37,7 @@ import styles from "./NeonCollectionDetailPage.module.css";
 import { NeonCreateNodeDialog } from "./NeonCreateNodeDialog";
 import { NeonEditCollectionDialog } from "./NeonEditCollectionDialog";
 import { NeonEditNodeDialog } from "./NeonEditNodeDialog";
+import { NeonTeamDialog } from "./NeonTeamDialog";
 
 type NodeProperties = {
 	url?: string;
@@ -158,6 +159,7 @@ export function NeonCollectionDetailPage({
 }) {
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
+	const [isTeamOpen, setIsTeamOpen] = useState(false);
 	const [selectedNode, setSelectedNode] = useState<CollectionNode | null>(null);
 	const queryClient = useQueryClient();
 	const { showToast } = useToast();
@@ -313,6 +315,15 @@ export function NeonCollectionDetailPage({
 										Edit
 									</button>
 								</>
+							)}
+							{roleCan(role, "manage_members") && (
+								<button
+									type="button"
+									className={styles.editButton}
+									onClick={() => setIsTeamOpen(true)}
+								>
+									Team
+								</button>
 							)}
 						</div>
 						{collection.description && <p>{collection.description}</p>}
@@ -487,6 +498,14 @@ export function NeonCollectionDetailPage({
 						}}
 					/>
 				</>
+			)}
+			{roleCan(role, "manage_members") && (
+				<NeonTeamDialog
+					collectionId={collection.id}
+					actorRole={role}
+					open={isTeamOpen}
+					onOpenChange={setIsTeamOpen}
+				/>
 			)}
 		</>
 	);

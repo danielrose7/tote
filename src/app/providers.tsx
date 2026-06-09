@@ -14,11 +14,16 @@ import { apiKey } from "../apiKey";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ToastProvider } from "../components/ToastNotification";
 import {
+	createCollectionInviteMutation,
 	createCollectionMutation,
 	createCollectionNodeMutation,
 	deleteCollectionMutation,
 	deleteCollectionNodeMutation,
+	removeCollectionMemberMutation,
 	reorderCollectionNodesMutation,
+	revokeCollectionInviteMutation,
+	transferCollectionOwnershipMutation,
+	updateCollectionMemberMutation,
 	updateCollectionMutation,
 	updateCollectionNodeMutation,
 } from "../lib/collections/client";
@@ -101,6 +106,41 @@ function AccountQueryProvider({
 		mutationFn: reorderCollectionNodesMutation,
 		onSettled: (_data, _error, variables) =>
 			invalidateCollectionNodeQueries(variables.collectionId),
+	});
+	const invalidateCollectionTeam = (collectionId: string) =>
+		queryClient.invalidateQueries({
+			queryKey: collectionQueryKeys.team(collectionId),
+		});
+	queryClient.setMutationDefaults(collectionMutationKeys.createInvite, {
+		mutationFn: createCollectionInviteMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionTeam(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.revokeInvite, {
+		mutationFn: revokeCollectionInviteMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionTeam(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.updateMember, {
+		mutationFn: updateCollectionMemberMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionTeam(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.removeMember, {
+		mutationFn: removeCollectionMemberMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionTeam(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.transferOwnership, {
+		mutationFn: transferCollectionOwnershipMutation,
+		onSettled: (_data, _error, variables) =>
+			Promise.all([
+				invalidateCollectionTeam(variables.collectionId),
+				queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
+				queryClient.invalidateQueries({
+					queryKey: collectionQueryKeys.detail(variables.collectionId),
+				}),
+			]),
 	});
 	const [persister] = useState(() =>
 		userId ? createCollectionQueryPersister(userId) : null,
