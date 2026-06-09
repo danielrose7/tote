@@ -58,7 +58,7 @@ function AccountQueryProvider({
 	});
 	queryClient.setMutationDefaults(collectionMutationKeys.update, {
 		mutationFn: updateCollectionMutation,
-		onSettled: (_data, _error, _variables) =>
+		onSettled: (_data, _error, variables) =>
 			Promise.all([
 				queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
 				queryClient.invalidateQueries({
@@ -68,7 +68,7 @@ function AccountQueryProvider({
 	});
 	queryClient.setMutationDefaults(collectionMutationKeys.delete, {
 		mutationFn: deleteCollectionMutation,
-		onSettled: (_data, _error, variables) =>
+		onSettled: () =>
 			queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
 	});
 	const [persister] = useState(() =>
