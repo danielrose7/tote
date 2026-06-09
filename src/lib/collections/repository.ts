@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import type * as schema from "../../db/schema";
 import {
 	accountDataSources,
 	type Collection,
@@ -8,8 +10,10 @@ import {
 	collectionNodes,
 	collections,
 } from "../../db/schema";
-import { db } from "../db";
+import { db as productionDb } from "../db";
 import { roleCan } from "./permissions";
+
+export type CollectionDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
 
 export type MutationFailure =
 	| { status: "not_found" }
@@ -22,11 +26,12 @@ export type MutationResult<T> = MutationSuccess<T> | MutationFailure;
 async function getActiveCollectionAccess(
 	actorUserId: string,
 	collectionId: string,
+	database: CollectionDatabase,
 ): Promise<{
 	collection: Collection;
 	role: (typeof collectionMembers.$inferSelect)["role"];
 } | null> {
-	const [access] = await db
+	const [access] = await database
 		.select({
 			collection: collections,
 			role: collectionMembers.role,
@@ -46,11 +51,14 @@ async function getActiveCollectionAccess(
 	return access ?? null;
 }
 
-async function getCollectionMutationSummary(collectionId: string): Promise<{
+async function getCollectionMutationSummary(
+	collectionId: string,
+	database: CollectionDatabase,
+): Promise<{
 	collectionVersion: number;
 	itemCount: number;
 }> {
-	const [summary] = await db
+	const [summary] = await database
 		.select({
 			collectionVersion: collections.version,
 			itemCount: collections.itemCount,
@@ -82,8 +90,9 @@ export type CollectionSummary = Pick<
 
 export async function listCollectionSummaries(
 	actorUserId: string,
+	database: CollectionDatabase = productionDb,
 ): Promise<CollectionSummary[]> {
-	return db
+	return database
 		.select({
 			id: collections.id,
 			ownerUserId: collections.ownerUserId,
@@ -116,14 +125,19 @@ export type CollectionDetail = {
 export async function getCollectionDetail(
 	actorUserId: string,
 	collectionId: string,
+	database: CollectionDatabase = productionDb,
 ): Promise<CollectionDetail | null> {
-	const access = await getActiveCollectionAccess(actorUserId, collectionId);
+	const access = await getActiveCollectionAccess(
+		actorUserId,
+		collectionId,
+		database,
+	);
 
 	if (!access) {
 		return null;
 	}
 
-	const nodes = await db
+	const nodes = await database
 		.select()
 		.from(collectionNodes)
 		.where(
@@ -142,8 +156,9 @@ export async function getCollectionDetail(
 
 export async function getAccountCollectionDataSource(
 	actorUserId: string,
+	database: CollectionDatabase = productionDb,
 ): Promise<(typeof accountDataSources.$inferSelect)["dataSource"]> {
-	const [account] = await db
+	const [account] = await database
 		.select({ dataSource: accountDataSources.dataSource })
 		.from(accountDataSources)
 		.where(eq(accountDataSources.userId, actorUserId))
@@ -163,24 +178,33 @@ export type CreateCollectionInput = {
 export async function createCollection(
 	actorUserId: string,
 	input: CreateCollectionInput,
+	database: CollectionDatabase = productionDb,
 ): Promise<string> {
 	const collectionId = input.id ?? randomUUID();
 
-	await db.batch([
-		db.insert(collections).values({
-			id: collectionId,
-			ownerUserId: actorUserId,
-			name: input.name,
-			description: input.description,
-			color: input.color,
-			positionKey: input.positionKey,
-		}),
-		db.insert(collectionMembers).values({
-			collectionId,
-			userId: actorUserId,
-			role: "owner",
-		}),
-	]);
+	await database.execute(sql`
+		WITH inserted_collection AS (
+			INSERT INTO collections (
+				id,
+				owner_user_id,
+				name,
+				description,
+				color,
+				position_key
+			) VALUES (
+				${collectionId},
+				${actorUserId},
+				${input.name},
+				${input.description ?? null},
+				${input.color ?? null},
+				${input.positionKey}
+			)
+			RETURNING id
+		)
+		INSERT INTO collection_members (collection_id, user_id, role)
+		SELECT id, ${actorUserId}, 'owner'::collection_role
+		FROM inserted_collection
+	`);
 
 	return collectionId;
 }
@@ -201,8 +225,13 @@ export async function updateCollection(
 	actorUserId: string,
 	collectionId: string,
 	input: UpdateCollectionInput,
+	database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<{ version: number }>> {
-	const access = await getActiveCollectionAccess(actorUserId, collectionId);
+	const access = await getActiveCollectionAccess(
+		actorUserId,
+		collectionId,
+		database,
+	);
 	if (!access) {
 		return { status: "not_found" };
 	}
@@ -211,7 +240,7 @@ export async function updateCollection(
 	}
 
 	const { expectedVersion, ...fields } = input;
-	const [updated] = await db
+	const [updated] = await database
 		.update(collections)
 		.set({
 			...fields,
@@ -236,8 +265,13 @@ export async function deleteCollection(
 	actorUserId: string,
 	collectionId: string,
 	expectedVersion: number,
+	database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<{ version: number }>> {
-	const access = await getActiveCollectionAccess(actorUserId, collectionId);
+	const access = await getActiveCollectionAccess(
+		actorUserId,
+		collectionId,
+		database,
+	);
 	if (!access) {
 		return { status: "not_found" };
 	}
@@ -245,7 +279,7 @@ export async function deleteCollection(
 		return { status: "forbidden" };
 	}
 
-	const [deleted] = await db
+	const [deleted] = await database
 		.update(collections)
 		.set({
 			deletedAt: new Date(),
@@ -279,6 +313,7 @@ export async function createCollectionNode(
 	actorUserId: string,
 	collectionId: string,
 	input: CreateCollectionNodeInput,
+	database: CollectionDatabase = productionDb,
 ): Promise<
 	MutationResult<{
 		id: string;
@@ -287,7 +322,11 @@ export async function createCollectionNode(
 		itemCount: number;
 	}>
 > {
-	const access = await getActiveCollectionAccess(actorUserId, collectionId);
+	const access = await getActiveCollectionAccess(
+		actorUserId,
+		collectionId,
+		database,
+	);
 	if (!access) {
 		return { status: "not_found" };
 	}
@@ -295,7 +334,7 @@ export async function createCollectionNode(
 		return { status: "forbidden" };
 	}
 
-	const [node] = await db
+	const [node] = await database
 		.insert(collectionNodes)
 		.values({
 			id: input.id ?? randomUUID(),
@@ -313,7 +352,7 @@ export async function createCollectionNode(
 		status: "ok",
 		value: {
 			...node,
-			...(await getCollectionMutationSummary(collectionId)),
+			...(await getCollectionMutationSummary(collectionId, database)),
 		},
 	};
 }
@@ -332,6 +371,7 @@ export async function updateCollectionNode(
 	collectionId: string,
 	nodeId: string,
 	input: UpdateCollectionNodeInput,
+	database: CollectionDatabase = productionDb,
 ): Promise<
 	MutationResult<{
 		version: number;
@@ -339,7 +379,11 @@ export async function updateCollectionNode(
 		itemCount: number;
 	}>
 > {
-	const access = await getActiveCollectionAccess(actorUserId, collectionId);
+	const access = await getActiveCollectionAccess(
+		actorUserId,
+		collectionId,
+		database,
+	);
 	if (!access) {
 		return { status: "not_found" };
 	}
@@ -348,7 +392,7 @@ export async function updateCollectionNode(
 	}
 
 	const { expectedVersion, ...fields } = input;
-	const [updated] = await db
+	const [updated] = await database
 		.update(collectionNodes)
 		.set({
 			...fields,
@@ -370,12 +414,12 @@ export async function updateCollectionNode(
 			status: "ok",
 			value: {
 				...updated,
-				...(await getCollectionMutationSummary(collectionId)),
+				...(await getCollectionMutationSummary(collectionId, database)),
 			},
 		};
 	}
 
-	const [existing] = await db
+	const [existing] = await database
 		.select({ id: collectionNodes.id })
 		.from(collectionNodes)
 		.where(
@@ -395,6 +439,7 @@ export async function deleteCollectionNode(
 	collectionId: string,
 	nodeId: string,
 	expectedVersion: number,
+	database: CollectionDatabase = productionDb,
 ): Promise<
 	MutationResult<{
 		deletedNodeCount: number;
@@ -402,7 +447,11 @@ export async function deleteCollectionNode(
 		itemCount: number;
 	}>
 > {
-	const access = await getActiveCollectionAccess(actorUserId, collectionId);
+	const access = await getActiveCollectionAccess(
+		actorUserId,
+		collectionId,
+		database,
+	);
 	if (!access) {
 		return { status: "not_found" };
 	}
@@ -410,7 +459,7 @@ export async function deleteCollectionNode(
 		return { status: "forbidden" };
 	}
 
-	const [existing] = await db
+	const [existing] = await database
 		.select({ version: collectionNodes.version })
 		.from(collectionNodes)
 		.where(
@@ -429,7 +478,7 @@ export async function deleteCollectionNode(
 		return { status: "version_conflict" };
 	}
 
-	const deleted = await db.execute<{ id: string }>(sql`
+	const deleted = (await database.execute<{ id: string }>(sql`
 		WITH RECURSIVE subtree AS (
 			SELECT id
 			FROM collection_nodes
@@ -452,7 +501,7 @@ export async function deleteCollectionNode(
 			updated_at = now()
 		WHERE id IN (SELECT id FROM subtree)
 		RETURNING id
-	`);
+	`)) as { rows: { id: string }[] };
 
 	if (deleted.rows.length === 0) {
 		return { status: "version_conflict" };
@@ -462,7 +511,7 @@ export async function deleteCollectionNode(
 		status: "ok",
 		value: {
 			deletedNodeCount: deleted.rows.length,
-			...(await getCollectionMutationSummary(collectionId)),
+			...(await getCollectionMutationSummary(collectionId, database)),
 		},
 	};
 }

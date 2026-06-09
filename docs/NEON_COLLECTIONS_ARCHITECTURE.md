@@ -521,6 +521,14 @@ Use custom SQL migrations for:
 - Concurrent index creation where deployment tooling supports it.
 - Postgres features Drizzle Kit cannot express accurately.
 
+As existing Neon-backed modules enter this migration, port ordinary reads and
+writes from raw Neon SQL to the typed Drizzle schema and query builders. Keep
+reviewed SQL where PostgreSQL itself is the useful abstraction, including
+recursive CTEs, triggers/functions, complex atomic graph operations, and
+migration backfills. Repository methods should accept an injectable Drizzle
+database so the same query code runs against Neon in production and a
+transaction-bound local PostgreSQL client in integration tests.
+
 ### Runtime connections
 
 Use the Neon HTTP driver for ordinary one-shot reads and writes and non-

@@ -116,6 +116,7 @@ try {
 		{
 			env: {
 				...process.env,
+				NEON_DB_POSTGRES_URL: testDatabaseUrl,
 				TEST_DATABASE_URL: testDatabaseUrl,
 			},
 		},
