@@ -141,6 +141,33 @@
 	padding: 1rem;
 }
 
+.itemActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-top: auto;
+	padding: 0 1rem 1rem;
+}
+
+.itemActions button,
+.itemLink,
+.sectionEditButton {
+	padding: 0.35rem 0.65rem;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-background);
+	color: var(--color-text-primary);
+	font-size: 0.8rem;
+	text-decoration: none;
+}
+
+.itemActions button:hover,
+.itemLink:hover,
+.sectionEditButton:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent);
+}
+
 .itemContent p {
 	margin: 0;
 }
@@ -153,6 +180,10 @@
 
 .price {
 	font-weight: 600;
+}
+
+.sectionEditButton {
+	flex: 0 0 auto;
 }
 
 .emptyCollection {

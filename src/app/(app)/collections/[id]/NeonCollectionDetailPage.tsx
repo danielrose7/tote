@@ -10,6 +10,7 @@ import { collectionQueryKeys } from "../../../../lib/collections/queryKeys";
 import styles from "./NeonCollectionDetailPage.module.css";
 import { NeonCreateNodeDialog } from "./NeonCreateNodeDialog";
 import { NeonEditCollectionDialog } from "./NeonEditCollectionDialog";
+import { NeonEditNodeDialog } from "./NeonEditNodeDialog";
 
 type NodeProperties = {
 	url?: string;
@@ -23,7 +24,13 @@ function propertiesFor(node: CollectionNode): NodeProperties {
 	return node.properties as NodeProperties;
 }
 
-function ItemNode({ node }: { node: CollectionNode }) {
+function ItemNode({
+	node,
+	onEdit,
+}: {
+	node: CollectionNode;
+	onEdit?: (node: CollectionNode) => void;
+}) {
 	const properties = propertiesFor(node);
 	const title = node.title || (node.type === "photo" ? "Photo" : "Untitled");
 	const content = (
@@ -47,17 +54,27 @@ function ItemNode({ node }: { node: CollectionNode }) {
 		</>
 	);
 
-	return properties.url ? (
-		<a
-			className={styles.itemCard}
-			href={properties.url}
-			target="_blank"
-			rel="noopener noreferrer"
-		>
+	return (
+		<article className={styles.itemCard}>
 			{content}
-		</a>
-	) : (
-		<article className={styles.itemCard}>{content}</article>
+			<div className={styles.itemActions}>
+				{properties.url && (
+					<a
+						href={properties.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						className={styles.itemLink}
+					>
+						Open
+					</a>
+				)}
+				{onEdit && (
+					<button type="button" onClick={() => onEdit(node)}>
+						Edit
+					</button>
+				)}
+			</div>
+		</article>
 	);
 }
 
@@ -68,6 +85,7 @@ export function NeonCollectionDetailPage({
 }) {
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
+	const [selectedNode, setSelectedNode] = useState<CollectionNode | null>(null);
 	const { data: detail } = useQuery({
 		queryKey: collectionQueryKeys.detail(collectionId),
 		queryFn: () => fetchCollectionDetail(collectionId),
@@ -144,7 +162,15 @@ export function NeonCollectionDetailPage({
 					<section className={styles.section}>
 						<div className={styles.grid}>
 							{rootNodes.map((node) => (
-								<ItemNode key={node.id} node={node} />
+								<ItemNode
+									key={node.id}
+									node={node}
+									onEdit={
+										roleCan(role, "edit")
+											? (selected) => setSelectedNode(selected)
+											: undefined
+									}
+								/>
 							))}
 						</div>
 					</section>
@@ -155,15 +181,34 @@ export function NeonCollectionDetailPage({
 					return (
 						<section key={section.id} className={styles.section}>
 							<div className={styles.sectionHeader}>
-								<h2>{section.title || "Untitled section"}</h2>
-								<span>
-									{children.length} {children.length === 1 ? "item" : "items"}
-								</span>
+								<div>
+									<h2>{section.title || "Untitled section"}</h2>
+									<span>
+										{children.length} {children.length === 1 ? "item" : "items"}
+									</span>
+								</div>
+								{roleCan(role, "edit") && (
+									<button
+										type="button"
+										className={styles.sectionEditButton}
+										onClick={() => setSelectedNode(section)}
+									>
+										Edit section
+									</button>
+								)}
 							</div>
 							{children.length > 0 ? (
 								<div className={styles.grid}>
 									{children.map((node) => (
-										<ItemNode key={node.id} node={node} />
+										<ItemNode
+											key={node.id}
+											node={node}
+											onEdit={
+												roleCan(role, "edit")
+													? (selected) => setSelectedNode(selected)
+													: undefined
+											}
+										/>
 									))}
 								</div>
 							) : (
@@ -191,6 +236,14 @@ export function NeonCollectionDetailPage({
 						detail={detail}
 						open={isEditOpen}
 						onOpenChange={setIsEditOpen}
+					/>
+					<NeonEditNodeDialog
+						detail={detail}
+						node={selectedNode}
+						open={selectedNode !== null}
+						onOpenChange={(nextOpen) => {
+							if (!nextOpen) setSelectedNode(null);
+						}}
 					/>
 				</>
 			)}

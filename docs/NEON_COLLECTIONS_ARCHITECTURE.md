@@ -1773,8 +1773,7 @@ instead of maintaining a long-lived global branch.
 4. **Internal web write path**
    - Add connector-compatible realtime outbox tables and emit transactionally
      from every accepted collection mutation.
-   - Add TanStack Query hydration, optimistic mutations, and targeted realtime
-     invalidation.
+   - Add TanStack Query hydration and optimistic, durable mutations.
    - Neon-authoritative create/edit/delete/move/reorder for internal accounts.
    - Exit: normal editing works without Jazz dual-write and failure states are
      observable; every committed mutation has one matching outbox event.
@@ -1799,11 +1798,16 @@ instead of maintaining a long-lived global branch.
      retry/support tooling, and 14-day read-only rollback.
    - Exit: representative internal accounts migrate repeatedly and
      idempotently, including shared and published collections.
-9. **Mobile and capture**
+9. **Realtime client**
+   - Add authenticated Ably subscriptions and targeted TanStack Query
+     invalidation after the core web feature set and migration flow are stable.
+   - Exit: two active collaborators receive collection/index updates without
+     polling, and reconnect closes the initial-read subscription gap.
+10. **Mobile and capture**
    - Neon-backed iOS local data layer, share-sheet capture, and extension
      capture. Reset the internal iOS Jazz data instead of migrating it.
    - Exit: queued captures and edits survive process termination and reconnect.
-10. **Release cohorts**
+11. **Release cohorts**
     - New accounts first, then opt-in existing accounts, then progressively
       larger migration cohorts.
     - Exit: migration, sync, authorization, and publication health remain
