@@ -1,5 +1,8 @@
 import { eq } from "drizzle-orm";
-import { copyCollection } from "../../lib/collections/copyRepository";
+import {
+	copyCollection,
+	copyPublishedCollection,
+} from "../../lib/collections/copyRepository";
 import {
 	ablyOutbox,
 	collectionInvites,
@@ -7,6 +10,7 @@ import {
 	collectionMembers,
 	collectionNodes,
 	collections,
+	publishedBlocks,
 	publishedCollections,
 } from "../schema";
 import {
@@ -213,4 +217,134 @@ dbTest("replays copies and rejects reused mutation ids", async ({ db }) => {
 			db,
 		),
 	).toEqual({ status: "idempotency_conflict" });
+});
+
+dbTest(
+	"copies only the public snapshot into a private collection",
+	async ({ db }) => {
+		const source = await createCopySource("public_source_owner", "public");
+		const [publication] = await db
+			.insert(publishedCollections)
+			.values({
+				sourceCollectionId: source.id,
+				sourceVersion: source.version,
+				ownerClerkId: "public_source_owner",
+				slug: "public-lighting",
+				name: "Published lighting",
+				description: "Public description",
+				color: "#f97316",
+				layout: "feature",
+				allowCloning: true,
+			})
+			.returning();
+		const [section] = await db
+			.insert(publishedBlocks)
+			.values({
+				collectionId: publication.id,
+				type: "section",
+				sortOrder: 0,
+				slotName: "Reading lamps",
+				slotDescription: "For a cozy corner",
+				properties: {},
+			})
+			.returning();
+		await db.insert(publishedBlocks).values([
+			{
+				collectionId: publication.id,
+				parentBlockId: section.id,
+				type: "product",
+				sortOrder: 0,
+				title: "Paper lamp",
+				url: "https://example.com/paper-lamp",
+				price: "$80",
+				properties: { custom: "kept" },
+			},
+			{
+				collectionId: publication.id,
+				type: "link",
+				sortOrder: 1,
+				title: "Lighting guide",
+				url: "https://example.com/guide",
+				description: "How to choose a bulb",
+				properties: {},
+			},
+		]);
+		await db
+			.update(collectionNodes)
+			.set({ title: "Private unpublished title" })
+			.where(eq(collectionNodes.collectionId, source.id));
+
+		const result = await copyPublishedCollection(
+			"public_copy_user",
+			publication.id,
+			{ mutationId: "7e0136c8-1043-48b2-b21a-dfc48f157f8f" },
+			db,
+		);
+		expect(result.status).toBe("ok");
+		if (result.status !== "ok") throw new Error("Expected public copy");
+
+		const [copy] = await db
+			.select()
+			.from(collections)
+			.where(eq(collections.id, result.value.id));
+		expect(copy).toMatchObject({
+			ownerUserId: "public_copy_user",
+			name: "Copy of Published lighting",
+			description: "Public description",
+			color: "#f97316",
+			publicLayout: "feature",
+			copyPolicy: "disabled",
+			originType: "copy",
+			itemCount: 2,
+		});
+		const copiedNodes = await db
+			.select()
+			.from(collectionNodes)
+			.where(eq(collectionNodes.collectionId, copy.id));
+		expect(copiedNodes.map((node) => node.title).sort()).toEqual([
+			"Lighting guide",
+			"Paper lamp",
+			"Reading lamps",
+		]);
+		expect(
+			copiedNodes.some((node) => node.title === "Private unpublished title"),
+		).toBe(false);
+		const copiedProduct = copiedNodes.find((node) => node.type === "product");
+		expect(copiedProduct?.properties).toMatchObject({
+			custom: "kept",
+			url: "https://example.com/paper-lamp",
+			price: "$80",
+		});
+		const [lineage] = await db
+			.select()
+			.from(collectionLineage)
+			.where(eq(collectionLineage.childCollectionId, copy.id));
+		expect(lineage).toMatchObject({
+			sourcePublicationId: publication.id,
+			sourceCollectionId: source.id,
+			sourceOwnerUserId: "public_source_owner",
+			sourceNameSnapshot: "Published lighting",
+		});
+	},
+);
+
+dbTest("rejects copies of non-cloneable public snapshots", async ({ db }) => {
+	const [publication] = await db
+		.insert(publishedCollections)
+		.values({
+			ownerClerkId: "closed_public_owner",
+			slug: "closed",
+			name: "Closed publication",
+			allowCloning: false,
+		})
+		.returning();
+
+	expect(
+		await copyPublishedCollection(
+			"public_copy_user",
+			publication.id,
+			{ mutationId: "acba97db-f51e-4d2d-bf5c-c01d434b4d98" },
+			db,
+		),
+	).toEqual({ status: "forbidden" });
 });
