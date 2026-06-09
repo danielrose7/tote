@@ -1829,6 +1829,15 @@ PostgreSQL 15 or newer must be installed locally. The deterministic seed include
 owner/admin/editor/viewer memberships, migration receipts, a legacy Jazz
 mapping, publication migration state, sections, and generalized item types.
 
+TypeScript database tests use the exported `dbTest` Vitest fixture. Every test
+receives a dedicated PostgreSQL connection, begins a transaction automatically,
+and rolls it back after the test. Fishery factories persist rows through
+`onCreate`; they resolve the active test database by default and accept
+`{ transient: { db } }` when a test needs an explicit client. Integration test
+files run sequentially while using the shared delegate. Tests that later need
+parallel execution should use explicit transient clients or separate databases
+per worker.
+
 ### Data model
 
 - FK and check constraints.

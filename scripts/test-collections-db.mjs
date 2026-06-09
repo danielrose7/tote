@@ -108,6 +108,19 @@ try {
 		"src/db/integration/collections.sql",
 	]);
 
+	const pnpm = findCommand("pnpm");
+	const testDatabaseUrl = `postgresql://postgres@127.0.0.1:${port}/${database}`;
+	run(
+		pnpm,
+		["exec", "vitest", "run", "--config", "vitest.integration.config.ts"],
+		{
+			env: {
+				...process.env,
+				TEST_DATABASE_URL: testDatabaseUrl,
+			},
+		},
+	);
+
 	console.log("[db:integration] collection schema checks passed");
 } catch (error) {
 	if (existsSync(logPath)) {
