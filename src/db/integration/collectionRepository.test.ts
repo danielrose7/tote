@@ -208,7 +208,7 @@ dbTest("enforces viewer and owner mutation capabilities", async ({ db }) => {
 		await deleteCollection(
 			"capability_viewer",
 			collection.id,
-			collection.version,
+			{ expectedVersion: collection.version },
 			db,
 		),
 	).toEqual({ status: "forbidden" });
@@ -217,10 +217,80 @@ dbTest("enforces viewer and owner mutation capabilities", async ({ db }) => {
 		await deleteCollection(
 			"capability_owner",
 			collection.id,
-			collection.version,
+			{ expectedVersion: collection.version },
 			db,
 		),
 	).toEqual({ status: "ok", value: { version: collection.version + 1 } });
+});
+
+dbTest("replays collection updates and deletions", async ({ db }) => {
+	const updatedCollection = await createOwnedCollection("mutation_owner");
+	const updateInput = {
+		expectedVersion: updatedCollection.version,
+		mutationId: "50000000-0000-4000-8000-000000000010",
+		name: "Updated once",
+	};
+
+	expect(
+		await updateCollection(
+			"mutation_owner",
+			updatedCollection.id,
+			updateInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: { version: updatedCollection.version + 1 },
+	});
+	expect(
+		await updateCollection(
+			"mutation_owner",
+			updatedCollection.id,
+			updateInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: { version: updatedCollection.version + 1 },
+		replayed: true,
+	});
+	expect(
+		await updateCollection(
+			"mutation_owner",
+			updatedCollection.id,
+			{ ...updateInput, name: "Different request" },
+			db,
+		),
+	).toEqual({ status: "idempotency_conflict" });
+
+	const deletedCollection = await createOwnedCollection("mutation_owner");
+	const deleteInput = {
+		expectedVersion: deletedCollection.version,
+		mutationId: "50000000-0000-4000-8000-000000000011",
+	};
+	expect(
+		await deleteCollection(
+			"mutation_owner",
+			deletedCollection.id,
+			deleteInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: { version: deletedCollection.version + 1 },
+	});
+	expect(
+		await deleteCollection(
+			"mutation_owner",
+			deletedCollection.id,
+			deleteInput,
+			db,
+		),
+	).toEqual({
+		status: "ok",
+		value: { version: deletedCollection.version + 1 },
+		replayed: true,
+	});
 });
 
 dbTest("detects stale collection and node versions", async ({ db }) => {

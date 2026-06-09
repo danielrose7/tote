@@ -100,8 +100,17 @@ export async function PATCH(
 	if (result.status === "version_conflict") {
 		return NextResponse.json({ error: "Version conflict" }, { status: 409 });
 	}
+	if (result.status === "idempotency_conflict") {
+		return NextResponse.json(
+			{ error: "Mutation id was already used for another request" },
+			{ status: 409 },
+		);
+	}
 
-	return NextResponse.json(result.value);
+	return NextResponse.json({
+		...result.value,
+		replayed: result.replayed ?? false,
+	});
 }
 
 export async function DELETE(
@@ -140,11 +149,7 @@ export async function DELETE(
 		);
 	}
 
-	const result = await deleteCollection(
-		userId,
-		parsedId.data,
-		parsed.data.expectedVersion,
-	);
+	const result = await deleteCollection(userId, parsedId.data, parsed.data);
 	if (result.status === "not_found") {
 		return NextResponse.json({ error: "Not found" }, { status: 404 });
 	}
@@ -154,6 +159,15 @@ export async function DELETE(
 	if (result.status === "version_conflict") {
 		return NextResponse.json({ error: "Version conflict" }, { status: 409 });
 	}
+	if (result.status === "idempotency_conflict") {
+		return NextResponse.json(
+			{ error: "Mutation id was already used for another request" },
+			{ status: 409 },
+		);
+	}
 
-	return NextResponse.json(result.value);
+	return NextResponse.json({
+		...result.value,
+		replayed: result.replayed ?? false,
+	});
 }

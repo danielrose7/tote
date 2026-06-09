@@ -34,6 +34,7 @@ export type CreateCollectionRequest = z.infer<
 export const updateCollectionInputSchema = z
 	.object({
 		expectedVersion: collectionVersionSchema,
+		mutationId: mutationIdSchema.optional(),
 		name: z.string().trim().min(1).max(200).optional(),
 		description: z.string().trim().max(2_000).nullable().optional(),
 		color: z.string().trim().min(1).max(100).nullable().optional(),
@@ -44,12 +45,16 @@ export const updateCollectionInputSchema = z
 		positionKey: z.string().trim().min(1).max(200).optional(),
 	})
 	.refine(
-		(input) => Object.keys(input).some((key) => key !== "expectedVersion"),
+		(input) =>
+			Object.keys(input).some(
+				(key) => key !== "expectedVersion" && key !== "mutationId",
+			),
 		{ message: "At least one collection field is required" },
 	);
 
 export const deleteCollectionInputSchema = z.object({
 	expectedVersion: collectionVersionSchema,
+	mutationId: mutationIdSchema.optional(),
 });
 
 export const createCollectionNodeInputSchema = z

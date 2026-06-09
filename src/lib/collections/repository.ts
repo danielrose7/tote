@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, type SQL, sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type * as schema from "../../db/schema";
 import {
@@ -20,9 +20,14 @@ export type CollectionDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
 export type MutationFailure =
 	| { status: "not_found" }
 	| { status: "forbidden" }
-	| { status: "version_conflict" };
+	| { status: "version_conflict" }
+	| { status: "idempotency_conflict" };
 
-export type MutationSuccess<T> = { status: "ok"; value: T };
+export type MutationSuccess<T> = {
+	status: "ok";
+	value: T;
+	replayed?: true;
+};
 export type MutationResult<T> = MutationSuccess<T> | MutationFailure;
 
 async function getActiveCollectionAccess(
@@ -344,6 +349,7 @@ async function getCollectionMutationReceipt(
 
 export type UpdateCollectionInput = {
 	expectedVersion: number;
+	mutationId?: string;
 	name?: string;
 	description?: string | null;
 	color?: string | null;
@@ -360,6 +366,36 @@ export async function updateCollection(
 	input: UpdateCollectionInput,
 	database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<{ version: number }>> {
+	const operation = "collection.update.v1";
+	const requestFingerprint = input.mutationId
+		? fingerprintMutationRequest({
+				collectionId,
+				...input,
+				mutationId: undefined,
+			})
+		: undefined;
+
+	if (input.mutationId && requestFingerprint) {
+		const existing = await getCollectionMutationReceipt(
+			actorUserId,
+			input.mutationId,
+			database,
+		);
+		if (existing) {
+			if (
+				existing.operation !== operation ||
+				existing.requestFingerprint !== requestFingerprint
+			) {
+				return { status: "idempotency_conflict" };
+			}
+			return {
+				status: "ok",
+				value: { version: existing.response.version as number },
+				replayed: true,
+			};
+		}
+	}
+
 	const access = await getActiveCollectionAccess(
 		actorUserId,
 		collectionId,
@@ -372,7 +408,98 @@ export async function updateCollection(
 		return { status: "forbidden" };
 	}
 
-	const { expectedVersion, ...fields } = input;
+	const { expectedVersion, mutationId, ...fields } = input;
+	if (mutationId && requestFingerprint) {
+		const assignments: SQL[] = [];
+		if (fields.name !== undefined) {
+			assignments.push(sql`name = ${fields.name}`);
+		}
+		if (fields.description !== undefined) {
+			assignments.push(sql`description = ${fields.description}`);
+		}
+		if (fields.color !== undefined) {
+			assignments.push(sql`color = ${fields.color}`);
+		}
+		if (fields.budgetCents !== undefined) {
+			assignments.push(sql`budget_cents = ${fields.budgetCents}`);
+		}
+		if (fields.defaultViewMode !== undefined) {
+			assignments.push(sql`default_view_mode = ${fields.defaultViewMode}`);
+		}
+		if (fields.publicLayout !== undefined) {
+			assignments.push(sql`public_layout = ${fields.publicLayout}`);
+		}
+		if (fields.copyPolicy !== undefined) {
+			assignments.push(sql`copy_policy = ${fields.copyPolicy}`);
+		}
+		if (fields.positionKey !== undefined) {
+			assignments.push(sql`position_key = ${fields.positionKey}`);
+		}
+		assignments.push(sql`version = version + 1`, sql`updated_at = now()`);
+
+		const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
+		try {
+			const result = (await database.execute<{ response: { version: number } }>(
+				sql`
+					WITH updated AS (
+						UPDATE collections
+						SET ${sql.join(assignments, sql`, `)}
+						WHERE id = ${collectionId}
+							AND version = ${expectedVersion}
+							AND deleted_at IS NULL
+						RETURNING version
+					),
+					inserted_receipt AS (
+						INSERT INTO collection_mutation_receipts (
+							user_id,
+							mutation_id,
+							operation,
+							request_fingerprint,
+							response,
+							expires_at
+						)
+						SELECT
+							${actorUserId},
+							${mutationId},
+							${operation},
+							${requestFingerprint},
+							jsonb_build_object('version', version),
+							${expiresAt}
+						FROM updated
+						RETURNING response
+					)
+					SELECT response
+					FROM inserted_receipt
+				`,
+			)) as { rows: { response: { version: number } }[] };
+
+			const receipt = result.rows[0];
+			return receipt
+				? { status: "ok", value: receipt.response }
+				: { status: "version_conflict" };
+		} catch (error) {
+			const concurrentReceipt = await getCollectionMutationReceipt(
+				actorUserId,
+				mutationId,
+				database,
+			);
+			if (concurrentReceipt) {
+				if (
+					concurrentReceipt.operation !== operation ||
+					concurrentReceipt.requestFingerprint !== requestFingerprint
+				) {
+					return { status: "idempotency_conflict" };
+				}
+				return {
+					status: "ok",
+					value: { version: concurrentReceipt.response.version as number },
+					replayed: true,
+				};
+			}
+			throw error;
+		}
+	}
+
 	const [updated] = await database
 		.update(collections)
 		.set({
@@ -394,12 +521,46 @@ export async function updateCollection(
 		: { status: "version_conflict" };
 }
 
+export type DeleteCollectionInput = {
+	expectedVersion: number;
+	mutationId?: string;
+};
+
 export async function deleteCollection(
 	actorUserId: string,
 	collectionId: string,
-	expectedVersion: number,
+	input: DeleteCollectionInput,
 	database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<{ version: number }>> {
+	const operation = "collection.delete.v1";
+	const requestFingerprint = input.mutationId
+		? fingerprintMutationRequest({
+				collectionId,
+				expectedVersion: input.expectedVersion,
+			})
+		: undefined;
+
+	if (input.mutationId && requestFingerprint) {
+		const existing = await getCollectionMutationReceipt(
+			actorUserId,
+			input.mutationId,
+			database,
+		);
+		if (existing) {
+			if (
+				existing.operation !== operation ||
+				existing.requestFingerprint !== requestFingerprint
+			) {
+				return { status: "idempotency_conflict" };
+			}
+			return {
+				status: "ok",
+				value: { version: existing.response.version as number },
+				replayed: true,
+			};
+		}
+	}
+
 	const access = await getActiveCollectionAccess(
 		actorUserId,
 		collectionId,
@@ -410,6 +571,73 @@ export async function deleteCollection(
 	}
 	if (!roleCan(access.role, "delete")) {
 		return { status: "forbidden" };
+	}
+
+	const { expectedVersion, mutationId } = input;
+	if (mutationId && requestFingerprint) {
+		const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
+		try {
+			const result = (await database.execute<{ response: { version: number } }>(
+				sql`
+					WITH deleted AS (
+						UPDATE collections
+						SET deleted_at = now(),
+							version = version + 1,
+							updated_at = now()
+						WHERE id = ${collectionId}
+							AND version = ${expectedVersion}
+							AND deleted_at IS NULL
+						RETURNING version
+					),
+					inserted_receipt AS (
+						INSERT INTO collection_mutation_receipts (
+							user_id,
+							mutation_id,
+							operation,
+							request_fingerprint,
+							response,
+							expires_at
+						)
+						SELECT
+							${actorUserId},
+							${mutationId},
+							${operation},
+							${requestFingerprint},
+							jsonb_build_object('version', version),
+							${expiresAt}
+						FROM deleted
+						RETURNING response
+					)
+					SELECT response
+					FROM inserted_receipt
+				`,
+			)) as { rows: { response: { version: number } }[] };
+
+			const receipt = result.rows[0];
+			return receipt
+				? { status: "ok", value: receipt.response }
+				: { status: "version_conflict" };
+		} catch (error) {
+			const concurrentReceipt = await getCollectionMutationReceipt(
+				actorUserId,
+				mutationId,
+				database,
+			);
+			if (concurrentReceipt) {
+				if (
+					concurrentReceipt.operation !== operation ||
+					concurrentReceipt.requestFingerprint !== requestFingerprint
+				) {
+					return { status: "idempotency_conflict" };
+				}
+				return {
+					status: "ok",
+					value: { version: concurrentReceipt.response.version as number },
+					replayed: true,
+				};
+			}
+			throw error;
+		}
 	}
 
 	const [deleted] = await database
