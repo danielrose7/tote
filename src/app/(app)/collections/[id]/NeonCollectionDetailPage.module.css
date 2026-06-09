@@ -1,0 +1,143 @@
+.page {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 2rem;
+}
+
+.collectionHeader {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+	margin-bottom: 2.5rem;
+}
+
+.colorIndicator {
+	width: 0.75rem;
+	height: 4rem;
+	border-radius: 999px;
+	flex: 0 0 auto;
+}
+
+.titleRow {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.titleRow h1,
+.sectionHeader h2,
+.itemHeading h3,
+.emptyCollection h2 {
+	margin: 0;
+}
+
+.collectionHeader p,
+.itemContent p,
+.emptyCollection p,
+.emptySection {
+	color: var(--color-text-secondary);
+}
+
+.meta {
+	display: flex;
+	gap: 1rem;
+	margin-top: 0.75rem;
+	font-size: 0.875rem;
+	color: var(--color-text-secondary);
+}
+
+.roleBadge,
+.typeBadge {
+	display: inline-flex;
+	padding: 0.2rem 0.5rem;
+	border-radius: 999px;
+	background: var(--color-background-secondary);
+	color: var(--color-text-secondary);
+	font-size: 0.75rem;
+	text-transform: capitalize;
+}
+
+.section {
+	margin-bottom: 2.5rem;
+}
+
+.sectionHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 1rem;
+	margin-bottom: 1rem;
+}
+
+.sectionHeader span {
+	color: var(--color-text-secondary);
+	font-size: 0.875rem;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 1rem;
+}
+
+.itemCard {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	min-height: 9rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.75rem;
+	background: var(--color-background);
+	color: inherit;
+	text-decoration: none;
+}
+
+.itemCard:hover {
+	border-color: var(--color-accent);
+}
+
+.itemImage {
+	aspect-ratio: 16 / 9;
+	background: var(--color-background-secondary);
+}
+
+.itemImage img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.itemContent {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1rem;
+}
+
+.itemContent p {
+	margin: 0;
+}
+
+.itemHeading {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.price {
+	font-weight: 600;
+}
+
+.emptyCollection {
+	padding: 4rem 1rem;
+	text-align: center;
+	border: 1px dashed var(--color-border);
+	border-radius: 0.75rem;
+}
+
+@media (max-width: 640px) {
+	.page {
+		padding: 1.25rem;
+	}
+}
