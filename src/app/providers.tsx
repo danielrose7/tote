@@ -15,8 +15,11 @@ import { OfflineBanner } from "../components/OfflineBanner";
 import { ToastProvider } from "../components/ToastNotification";
 import {
 	createCollectionMutation,
+	createCollectionNodeMutation,
 	deleteCollectionMutation,
+	deleteCollectionNodeMutation,
 	updateCollectionMutation,
+	updateCollectionNodeMutation,
 } from "../lib/collections/client";
 import {
 	collectionMutationKeys,
@@ -70,6 +73,28 @@ function AccountQueryProvider({
 		mutationFn: deleteCollectionMutation,
 		onSettled: () =>
 			queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
+	});
+	const invalidateCollectionNodeQueries = (collectionId: string) =>
+		Promise.all([
+			queryClient.invalidateQueries({ queryKey: collectionQueryKeys.all }),
+			queryClient.invalidateQueries({
+				queryKey: collectionQueryKeys.detail(collectionId),
+			}),
+		]);
+	queryClient.setMutationDefaults(collectionMutationKeys.createNode, {
+		mutationFn: createCollectionNodeMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionNodeQueries(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.updateNode, {
+		mutationFn: updateCollectionNodeMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionNodeQueries(variables.collectionId),
+	});
+	queryClient.setMutationDefaults(collectionMutationKeys.deleteNode, {
+		mutationFn: deleteCollectionNodeMutation,
+		onSettled: (_data, _error, variables) =>
+			invalidateCollectionNodeQueries(variables.collectionId),
 	});
 	const [persister] = useState(() =>
 		userId ? createCollectionQueryPersister(userId) : null,

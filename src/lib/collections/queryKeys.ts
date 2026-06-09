@@ -9,4 +9,7 @@ export const collectionMutationKeys = {
 	create: ["collections", "create"] as const,
 	update: ["collections", "update"] as const,
 	delete: ["collections", "delete"] as const,
+	createNode: ["collections", "nodes", "create"] as const,
+	updateNode: ["collections", "nodes", "update"] as const,
+	deleteNode: ["collections", "nodes", "delete"] as const,
 };

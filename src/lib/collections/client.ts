@@ -2,8 +2,11 @@ import type {
 	CollectionDetail,
 	CollectionSummary,
 	CreateCollectionInput,
+	CreateCollectionNodeInput,
 	DeleteCollectionInput,
+	DeleteCollectionNodeInput,
 	UpdateCollectionInput,
+	UpdateCollectionNodeInput,
 } from "./repository";
 
 async function fetchJson<T>(
@@ -104,6 +107,77 @@ export async function deleteCollectionMutation({
 	input,
 }: DeleteCollectionMutation): Promise<{ version: number; replayed: boolean }> {
 	return fetchJson(`/api/v2/collections/${collectionId}`, {
+		method: "DELETE",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(input),
+	});
+}
+
+export type CreateCollectionNodeMutation = {
+	collectionId: string;
+	input: CreateCollectionNodeInput & {
+		id: string;
+		mutationId: string;
+	};
+};
+
+export async function createCollectionNodeMutation({
+	collectionId,
+	input,
+}: CreateCollectionNodeMutation): Promise<{
+	id: string;
+	version: number;
+	collectionVersion: number;
+	itemCount: number;
+	replayed: boolean;
+}> {
+	return fetchJson(`/api/v2/collections/${collectionId}/nodes`, {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(input),
+	});
+}
+
+export type UpdateCollectionNodeMutation = {
+	collectionId: string;
+	nodeId: string;
+	input: UpdateCollectionNodeInput & { mutationId: string };
+};
+
+export async function updateCollectionNodeMutation({
+	collectionId,
+	nodeId,
+	input,
+}: UpdateCollectionNodeMutation): Promise<{
+	version: number;
+	collectionVersion: number;
+	itemCount: number;
+	replayed: boolean;
+}> {
+	return fetchJson(`/api/v2/collections/${collectionId}/nodes/${nodeId}`, {
+		method: "PATCH",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(input),
+	});
+}
+
+export type DeleteCollectionNodeMutation = {
+	collectionId: string;
+	nodeId: string;
+	input: DeleteCollectionNodeInput & { mutationId: string };
+};
+
+export async function deleteCollectionNodeMutation({
+	collectionId,
+	nodeId,
+	input,
+}: DeleteCollectionNodeMutation): Promise<{
+	deletedNodeCount: number;
+	collectionVersion: number;
+	itemCount: number;
+	replayed: boolean;
+}> {
+	return fetchJson(`/api/v2/collections/${collectionId}/nodes/${nodeId}`, {
 		method: "DELETE",
 		headers: { "content-type": "application/json" },
 		body: JSON.stringify(input),
