@@ -19,6 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useState } from "react";
 import { Header } from "../../../../components/Header";
 import { useToast } from "../../../../components/ToastNotification";
@@ -207,6 +208,7 @@ export function NeonCollectionDetailPage({
 	}
 
 	const { collection, nodes, role } = detail;
+	const primaryLineage = detail.lineage[0];
 	const canCopy =
 		role === "owner" ||
 		collection.copyPolicy === "members" ||
@@ -359,6 +361,20 @@ export function NeonCollectionDetailPage({
 								{collection.itemCount === 1 ? "item" : "items"}
 							</span>
 							<span>Version {collection.version}</span>
+							{primaryLineage &&
+								(primaryLineage.sourceCollectionId ? (
+									<Link
+										href={`/collections/${primaryLineage.sourceCollectionId}`}
+									>
+										Copied from {primaryLineage.sourceName}
+									</Link>
+								) : primaryLineage.sourcePublicationId ? (
+									<Link href={`/view/${primaryLineage.sourcePublicationId}`}>
+										Copied from {primaryLineage.sourceName}
+									</Link>
+								) : (
+									<span>Copied from {primaryLineage.sourceName}</span>
+								))}
 						</div>
 					</div>
 				</header>

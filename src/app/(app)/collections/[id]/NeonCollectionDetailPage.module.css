@@ -47,6 +47,10 @@
 	color: var(--color-text-secondary);
 }
 
+.meta a {
+	color: inherit;
+}
+
 .roleBadge,
 .typeBadge {
 	display: inline-flex;

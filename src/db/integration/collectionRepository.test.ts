@@ -12,6 +12,7 @@ import {
 } from "../../lib/collections/repository";
 import {
 	ablyOutbox,
+	collectionLineage,
 	collectionMembers,
 	collectionMutationReceipts,
 	collectionNodes,
@@ -185,6 +186,16 @@ dbTest(
 	"returns active collection detail without soft-deleted nodes",
 	async ({ db }) => {
 		const collection = await createOwnedCollection("detail_owner");
+		const source = await createOwnedCollection("detail_owner");
+		await db.insert(collectionLineage).values({
+			childCollectionId: collection.id,
+			relationship: "copied",
+			sourceCollectionId: source.id,
+			sourceOwnerUserId: "detail_owner",
+			sourceVersion: source.version,
+			sourceNameSnapshot: "Source snapshot",
+			createdByUserId: "detail_owner",
+		});
 		const activeNode = await collectionNodeFactory.create({
 			collectionId: collection.id,
 			createdByUserId: "detail_owner",
@@ -201,6 +212,31 @@ dbTest(
 
 		expect(detail?.role).toBe("owner");
 		expect(detail?.nodes.map((node) => node.id)).toEqual([activeNode.id]);
+		expect(detail?.lineage).toEqual([
+			{
+				relationship: "copied",
+				sourceName: "Source snapshot",
+				sourceCollectionId: source.id,
+				sourcePublicationId: null,
+				sourceVersion: source.version,
+			},
+		]);
+
+		await db
+			.update(collectionMembers)
+			.set({ revokedAt: new Date() })
+			.where(
+				and(
+					eq(collectionMembers.collectionId, source.id),
+					eq(collectionMembers.userId, "detail_owner"),
+				),
+			);
+		const detailAfterRevocation = await getCollectionDetail(
+			"detail_owner",
+			collection.id,
+			db,
+		);
+		expect(detailAfterRevocation?.lineage[0]?.sourceCollectionId).toBeNull();
 	},
 );
 

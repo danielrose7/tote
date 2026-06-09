@@ -6,6 +6,7 @@ import {
 	accountDataSources,
 	type Collection,
 	type CollectionNode,
+	collectionLineage,
 	collectionMembers,
 	collectionMutationReceipts,
 	collectionNodes,
@@ -127,6 +128,13 @@ export type CollectionDetail = {
 	collection: Collection;
 	role: (typeof collectionMembers.$inferSelect)["role"];
 	nodes: CollectionNode[];
+	lineage: Array<{
+		relationship: (typeof collectionLineage.$inferSelect)["relationship"];
+		sourceName: string;
+		sourceCollectionId: string | null;
+		sourcePublicationId: string | null;
+		sourceVersion: number | null;
+	}>;
 };
 
 export async function getCollectionDetail(
@@ -154,10 +162,38 @@ export async function getCollectionDetail(
 			),
 		)
 		.orderBy(asc(collectionNodes.parentId), asc(collectionNodes.positionKey));
+	const lineageRows = await database
+		.select()
+		.from(collectionLineage)
+		.where(eq(collectionLineage.childCollectionId, collectionId))
+		.orderBy(asc(collectionLineage.createdAt));
+	const lineage = await Promise.all(
+		lineageRows.map(async (entry) => {
+			let visibleSourceCollectionId: string | null = null;
+			if (entry.sourceCollectionId) {
+				const sourceAccess = await getActiveCollectionAccess(
+					actorUserId,
+					entry.sourceCollectionId,
+					database,
+				);
+				if (sourceAccess) {
+					visibleSourceCollectionId = entry.sourceCollectionId;
+				}
+			}
+			return {
+				relationship: entry.relationship,
+				sourceName: entry.sourceNameSnapshot,
+				sourceCollectionId: visibleSourceCollectionId,
+				sourcePublicationId: entry.sourcePublicationId,
+				sourceVersion: entry.sourceVersion,
+			};
+		}),
+	);
 
 	return {
 		...access,
 		nodes,
+		lineage,
 	};
 }
 
