@@ -14,6 +14,16 @@ import type {
 	CreateCollectionInviteInput,
 } from "./teamRepository";
 
+export class CollectionRequestError extends Error {
+	constructor(
+		message: string,
+		readonly status: number,
+	) {
+		super(message);
+		this.name = "CollectionRequestError";
+	}
+}
+
 async function fetchJson<T>(
 	input: RequestInfo | URL,
 	init?: RequestInit,
@@ -23,7 +33,13 @@ async function fetchJson<T>(
 		...init,
 	});
 	if (!response.ok) {
-		throw new Error(`Collection request failed with status ${response.status}`);
+		const body = (await response.json().catch(() => null)) as {
+			error?: string;
+		} | null;
+		throw new CollectionRequestError(
+			body?.error || `Collection request failed with status ${response.status}`,
+			response.status,
+		);
 	}
 	return response.json() as Promise<T>;
 }

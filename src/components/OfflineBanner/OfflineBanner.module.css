@@ -1,31 +1,61 @@
 .banner {
-	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-	color: white;
-	padding: var(--spacing-sm) 0;
 	position: sticky;
 	top: 0;
 	z-index: 100;
+	padding: var(--spacing-sm) 0;
+	color: white;
 	animation: slideDown 0.3s ease-out;
 }
 
+.offline {
+	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.syncing {
+	background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+}
+
+.synced {
+	background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+}
+
+.error {
+	background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+}
+
 .content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-md);
 	max-width: var(--max-width-container);
 	margin: 0 auto;
 	padding: 0 var(--spacing-lg);
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-sm);
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-medium);
 }
 
+.content button {
+	flex: 0 0 auto;
+	padding: 0.25rem 0.6rem;
+	border: 1px solid rgba(255, 255, 255, 0.7);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: white;
+	cursor: pointer;
+}
+
+.content button:hover {
+	background: rgba(255, 255, 255, 0.12);
+}
+
 @keyframes slideDown {
 	from {
-		transform: translateY(-100%);
 		opacity: 0;
+		transform: translateY(-100%);
 	}
 	to {
-		transform: translateY(0);
 		opacity: 1;
+		transform: translateY(0);
 	}
 }

@@ -11,6 +11,7 @@ import { JazzInspector } from "jazz-tools/inspector";
 import { JazzReactProviderWithClerk } from "jazz-tools/react";
 import { useEffect, useRef, useState } from "react";
 import { apiKey } from "../apiKey";
+import { CollectionSyncCoordinator } from "../components/CollectionSyncCoordinator";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ToastProvider } from "../components/ToastNotification";
 import {
@@ -148,7 +149,10 @@ function AccountQueryProvider({
 
 	if (!persister) {
 		return (
-			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+			<QueryClientProvider client={queryClient}>
+				{userId && <CollectionSyncCoordinator userId={userId} />}
+				{children}
+			</QueryClientProvider>
 		);
 	}
 	return (
@@ -165,6 +169,7 @@ function AccountQueryProvider({
 			}}
 			onSuccess={() => queryClient.resumePausedMutations()}
 		>
+			<CollectionSyncCoordinator userId={userId} />
 			{children}
 		</PersistQueryClientProvider>
 	);

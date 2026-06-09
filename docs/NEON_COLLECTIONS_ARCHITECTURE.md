@@ -1780,6 +1780,10 @@ instead of maintaining a long-lived global branch.
 5. **Local web cache and offline behavior**
    - Persist eligible TanStack queries and paused mutations to account-scoped
      IndexedDB, then add reconnect handling and multi-tab coordination.
+   - Initial web implementation persists collection queries and paused
+     mutations, resumes and refetches on reconnect, invalidates collection
+     queries across tabs with an account-scoped `BroadcastChannel`, and retains
+     rejected-mutation notices in IndexedDB until dismissed.
    - Exit: offline edits survive restart and reconcile across two browsers.
 6. **Publication v2**
    - Add independent publication snapshot tables, explicit publish/republish,
