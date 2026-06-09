@@ -51,6 +51,16 @@ describe("createCollectionInputSchema", () => {
 			}).success,
 		).toBe(false);
 	});
+
+	it("requires a client-generated id with a mutation id", () => {
+		expect(
+			createCollectionInputSchema.safeParse({
+				mutationId: "4e14f92e-66ef-47d6-bd34-a57299b89021",
+				name: "Reading list",
+				positionKey: "a0",
+			}).success,
+		).toBe(false);
+	});
 });
 
 describe("collection mutation schemas", () => {

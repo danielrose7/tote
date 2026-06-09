@@ -7,10 +7,12 @@ import {
 	type Collection,
 	type CollectionNode,
 	collectionMembers,
+	collectionMutationReceipts,
 	collectionNodes,
 	collections,
 } from "../../db/schema";
 import { db as productionDb } from "../db";
+import { fingerprintMutationRequest } from "./idempotency";
 import { roleCan } from "./permissions";
 
 export type CollectionDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
@@ -169,20 +171,85 @@ export async function getAccountCollectionDataSource(
 
 export type CreateCollectionInput = {
 	id?: string;
+	mutationId?: string;
 	name: string;
 	description?: string;
 	color?: string;
 	positionKey: string;
 };
 
+export type CreateCollectionResult =
+	| { status: "created"; id: string }
+	| { status: "replayed"; id: string }
+	| { status: "idempotency_conflict" };
+
 export async function createCollection(
 	actorUserId: string,
 	input: CreateCollectionInput,
 	database: CollectionDatabase = productionDb,
-): Promise<string> {
-	const collectionId = input.id ?? randomUUID();
+): Promise<CreateCollectionResult> {
+	if (input.mutationId && !input.id) {
+		throw new Error(
+			"Idempotent collection creation requires a client-generated id",
+		);
+	}
 
-	await database.execute(sql`
+	const collectionId = input.id ?? randomUUID();
+	if (!input.mutationId) {
+		await database.execute(sql`
+			WITH inserted_collection AS (
+				INSERT INTO collections (
+					id,
+					owner_user_id,
+					name,
+					description,
+					color,
+					position_key
+				) VALUES (
+					${collectionId},
+					${actorUserId},
+					${input.name},
+					${input.description ?? null},
+					${input.color ?? null},
+					${input.positionKey}
+				)
+				RETURNING id
+			)
+			INSERT INTO collection_members (collection_id, user_id, role)
+			SELECT id, ${actorUserId}, 'owner'::collection_role
+			FROM inserted_collection
+		`);
+
+		return { status: "created", id: collectionId };
+	}
+
+	const operation = "collection.create.v1";
+	const requestFingerprint = fingerprintMutationRequest({
+		id: collectionId,
+		name: input.name,
+		description: input.description ?? null,
+		color: input.color ?? null,
+		positionKey: input.positionKey,
+	});
+	const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
+
+	const existing = await getCollectionMutationReceipt(
+		actorUserId,
+		input.mutationId,
+		database,
+	);
+	if (existing) {
+		if (
+			existing.operation !== operation ||
+			existing.requestFingerprint !== requestFingerprint
+		) {
+			return { status: "idempotency_conflict" };
+		}
+		return { status: "replayed", id: existing.response.id as string };
+	}
+
+	try {
+		await database.execute(sql`
 		WITH inserted_collection AS (
 			INSERT INTO collections (
 				id,
@@ -200,13 +267,79 @@ export async function createCollection(
 				${input.positionKey}
 			)
 			RETURNING id
+		),
+		inserted_member AS (
+			INSERT INTO collection_members (collection_id, user_id, role)
+			SELECT id, ${actorUserId}, 'owner'::collection_role
+			FROM inserted_collection
+			RETURNING collection_id
 		)
-		INSERT INTO collection_members (collection_id, user_id, role)
-		SELECT id, ${actorUserId}, 'owner'::collection_role
-		FROM inserted_collection
-	`);
+		INSERT INTO collection_mutation_receipts (
+			user_id,
+			mutation_id,
+			operation,
+			request_fingerprint,
+			response,
+			expires_at
+		)
+		SELECT
+			${actorUserId},
+			${input.mutationId},
+			${operation},
+			${requestFingerprint},
+			jsonb_build_object('id', collection_id),
+			${expiresAt}
+		FROM inserted_member
+		`);
+	} catch (error) {
+		const concurrentReceipt = await getCollectionMutationReceipt(
+			actorUserId,
+			input.mutationId,
+			database,
+		);
+		if (
+			concurrentReceipt?.operation === operation &&
+			concurrentReceipt.requestFingerprint === requestFingerprint
+		) {
+			return {
+				status: "replayed",
+				id: concurrentReceipt.response.id as string,
+			};
+		}
+		throw error;
+	}
 
-	return collectionId;
+	return { status: "created", id: collectionId };
+}
+
+async function getCollectionMutationReceipt(
+	userId: string,
+	mutationId: string,
+	database: CollectionDatabase,
+): Promise<
+	| {
+			operation: string;
+			requestFingerprint: string;
+			response: Record<string, unknown>;
+	  }
+	| undefined
+> {
+	const [receipt] = await database
+		.select({
+			operation: collectionMutationReceipts.operation,
+			requestFingerprint: collectionMutationReceipts.requestFingerprint,
+			response: collectionMutationReceipts.response,
+		})
+		.from(collectionMutationReceipts)
+		.where(
+			and(
+				eq(collectionMutationReceipts.userId, userId),
+				eq(collectionMutationReceipts.mutationId, mutationId),
+			),
+		)
+		.limit(1);
+
+	return receipt;
 }
 
 export type UpdateCollectionInput = {

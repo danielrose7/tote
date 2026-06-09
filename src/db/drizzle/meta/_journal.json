@@ -15,6 +15,13 @@
       "when": 1780958541331,
       "tag": "0001_migration_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780973108955,
+      "tag": "0002_collection_mutation_receipts",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -73,10 +73,12 @@ try {
 
 	run(createdb, [...connectionArgs, database]);
 
-	for (const migration of [
-		"src/db/drizzle/0000_neon_collections_foundation.sql",
-		"src/db/drizzle/0001_migration_tracking.sql",
-	]) {
+	const migrations = readdirSync(join(root, "src/db/drizzle"))
+		.filter((file) => /^\d+.*\.sql$/.test(file))
+		.sort()
+		.map((file) => `src/db/drizzle/${file}`);
+
+	for (const migration of migrations) {
 		run(psql, [
 			...connectionArgs,
 			"--dbname",

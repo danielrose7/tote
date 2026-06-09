@@ -1098,6 +1098,15 @@ These rules must be specified before UI migration.
 - Retrying an upload must not duplicate rows or side effects.
 - Every device has a stable `device_id` for diagnostics, not authorization.
 
+The first implemented path is collection creation. Idempotent creates require
+both a client-generated collection UUID and mutation UUID. PostgreSQL inserts
+the collection, owner membership, and `collection_mutation_receipts` row in one
+statement. The receipt stores the operation, canonical request fingerprint,
+replayable response, and expiry. An identical retry returns the original
+collection UUID; reusing a mutation UUID with different input returns a
+conflict. Extend this receipt pattern to node and scalar mutations before those
+commands are accepted from an offline queue.
+
 ### Creates
 
 - IDs are generated before network access.

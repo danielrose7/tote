@@ -9,7 +9,12 @@ import {
 	updateCollection,
 	updateCollectionNode,
 } from "../../lib/collections/repository";
-import { collectionMembers, collectionNodes, collections } from "../schema";
+import {
+	collectionMembers,
+	collectionMutationReceipts,
+	collectionNodes,
+	collections,
+} from "../schema";
 import {
 	collectionFactory,
 	collectionMemberFactory,
@@ -30,7 +35,7 @@ async function createOwnedCollection(ownerUserId: string) {
 dbTest(
 	"creates a collection and owner membership atomically",
 	async ({ db }) => {
-		const collectionId = await createCollection(
+		const result = await createCollection(
 			"new_owner",
 			{
 				name: "Created through repository",
@@ -38,6 +43,11 @@ dbTest(
 			},
 			db,
 		);
+		expect(result.status).toBe("created");
+		if (result.status === "idempotency_conflict") {
+			throw new Error("Expected collection creation to succeed");
+		}
+		const collectionId = result.id;
 
 		const [collection] = await db
 			.select()
@@ -53,6 +63,61 @@ dbTest(
 			userId: "new_owner",
 			role: "owner",
 		});
+	},
+);
+
+dbTest(
+	"replays an idempotent collection create without duplicating rows",
+	async ({ db }) => {
+		const input = {
+			id: "40000000-0000-4000-8000-000000000001",
+			mutationId: "50000000-0000-4000-8000-000000000001",
+			name: "Retry-safe collection",
+			positionKey: "a0",
+		};
+
+		expect(await createCollection("retry_owner", input, db)).toEqual({
+			status: "created",
+			id: input.id,
+		});
+		expect(await createCollection("retry_owner", input, db)).toEqual({
+			status: "replayed",
+			id: input.id,
+		});
+
+		const createdCollections = await db
+			.select()
+			.from(collections)
+			.where(eq(collections.id, input.id));
+		const receipts = await db
+			.select()
+			.from(collectionMutationReceipts)
+			.where(eq(collectionMutationReceipts.mutationId, input.mutationId));
+
+		expect(createdCollections).toHaveLength(1);
+		expect(receipts).toHaveLength(1);
+	},
+);
+
+dbTest(
+	"rejects mutation id reuse with different collection input",
+	async ({ db }) => {
+		const id = "40000000-0000-4000-8000-000000000002";
+		const mutationId = "50000000-0000-4000-8000-000000000002";
+
+		await createCollection(
+			"conflict_owner",
+			{ id, mutationId, name: "Original", positionKey: "a0" },
+			db,
+		);
+
+		expect(
+			await createCollection(
+				"conflict_owner",
+				{ id, mutationId, name: "Changed", positionKey: "a0" },
+				db,
+			),
+		).toEqual({ status: "idempotency_conflict" });
 	},
 );
 

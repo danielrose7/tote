@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const collectionIdSchema = z.uuid();
+export const mutationIdSchema = z.uuid();
 export const collectionVersionSchema = z.number().int().positive();
 export const collectionNodeTypeSchema = z.enum([
 	"section",
@@ -12,13 +13,19 @@ export const collectionNodeTypeSchema = z.enum([
 ]);
 export const collectionNodePropertiesSchema = z.record(z.string(), z.unknown());
 
-export const createCollectionInputSchema = z.object({
-	id: collectionIdSchema.optional(),
-	name: z.string().trim().min(1).max(200),
-	description: z.string().trim().max(2_000).optional(),
-	color: z.string().trim().min(1).max(100).optional(),
-	positionKey: z.string().trim().min(1).max(200),
-});
+export const createCollectionInputSchema = z
+	.object({
+		id: collectionIdSchema.optional(),
+		mutationId: mutationIdSchema.optional(),
+		name: z.string().trim().min(1).max(200),
+		description: z.string().trim().max(2_000).optional(),
+		color: z.string().trim().min(1).max(100).optional(),
+		positionKey: z.string().trim().min(1).max(200),
+	})
+	.refine((input) => !input.mutationId || Boolean(input.id), {
+		message: "Idempotent creates require a client-generated collection id",
+		path: ["id"],
+	});
 
 export type CreateCollectionRequest = z.infer<
 	typeof createCollectionInputSchema

@@ -65,6 +65,16 @@ export async function POST(request: Request) {
 		);
 	}
 
-	const id = await createCollection(userId, parsed.data);
-	return NextResponse.json({ id }, { status: 201 });
+	const result = await createCollection(userId, parsed.data);
+	if (result.status === "idempotency_conflict") {
+		return NextResponse.json(
+			{ error: "Mutation id was already used with different input" },
+			{ status: 409 },
+		);
+	}
+
+	return NextResponse.json(
+		{ id: result.id, replayed: result.status === "replayed" },
+		{ status: result.status === "created" ? 201 : 200 },
+	);
 }

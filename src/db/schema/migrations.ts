@@ -167,8 +167,33 @@ export const publicationSnapshotMigrations = pgTable(
 	],
 );
 
+export const collectionMutationReceipts = pgTable(
+	"collection_mutation_receipts",
+	{
+		userId: text("user_id").notNull(),
+		mutationId: uuid("mutation_id").notNull(),
+		operation: text("operation").notNull(),
+		requestFingerprint: text("request_fingerprint").notNull(),
+		response: jsonb("response").$type<Record<string, unknown>>().notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.notNull()
+			.defaultNow(),
+		expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.mutationId] }),
+		index("collection_mutation_receipts_expires_idx").on(table.expiresAt),
+		check(
+			"collection_mutation_receipts_expiry_after_creation",
+			sql`${table.expiresAt} > ${table.createdAt}`,
+		),
+	],
+);
+
 export type AccountDataSource = typeof accountDataSources.$inferSelect;
 export type AccountCollectionMigration =
 	typeof accountCollectionMigrations.$inferSelect;
 export type PublicationSnapshotMigration =
 	typeof publicationSnapshotMigrations.$inferSelect;
+export type CollectionMutationReceipt =
+	typeof collectionMutationReceipts.$inferSelect;
