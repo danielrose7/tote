@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import {
 	accountCollectionMigrations,
 	accountDataSources,
@@ -37,6 +37,10 @@ export type ImportClassicCollectionsResult =
 	| { status: "fingerprint_mismatch" }
 	| { status: "migration_conflict" }
 	| { status: "invalid_source"; reason: string };
+
+export class CollectionMigrationVerificationError extends Error {
+	override name = "CollectionMigrationVerificationError";
+}
 
 export function fingerprintClassicMigrationCollections(
 	collectionsToFingerprint: ClassicMigrationCollection[],
@@ -334,7 +338,9 @@ async function importClassicCollectionsWithDatabase(
 		importedItemCount !== countItems(input.collections) ||
 		importFingerprint !== input.sourceFingerprint
 	) {
-		throw new Error("Imported collection verification failed");
+		throw new CollectionMigrationVerificationError(
+			"Imported collection verification failed",
+		);
 	}
 
 	await database
@@ -393,6 +399,110 @@ export async function importClassicCollections(
 	);
 }
 
+export type CollectionMigrationFailureCode =
+	| "verification_failed"
+	| "import_failed";
+
+type RecordCollectionMigrationFailureInput = {
+	migrationVersion: 1;
+	sourceFingerprint: string;
+	sourceCollectionCount: number;
+	sourceItemCount: number;
+	code: CollectionMigrationFailureCode;
+};
+
+async function recordCollectionMigrationFailureWithDatabase(
+	actorUserId: string,
+	input: RecordCollectionMigrationFailureInput,
+	database: CollectionDatabase,
+) {
+	const now = new Date();
+	await database
+		.insert(accountDataSources)
+		.values({
+			userId: actorUserId,
+			dataSource: "migration_failed",
+			migrationVersion: input.migrationVersion,
+			updatedAt: now,
+		})
+		.onConflictDoNothing();
+	const [eligibleAccount] = await database
+		.update(accountDataSources)
+		.set({
+			dataSource: "migration_failed",
+			migrationVersion: input.migrationVersion,
+			updatedAt: now,
+		})
+		.where(
+			and(
+				eq(accountDataSources.userId, actorUserId),
+				inArray(accountDataSources.dataSource, [
+					"classic_jazz",
+					"migrating",
+					"migration_failed",
+				]),
+			),
+		)
+		.returning({ userId: accountDataSources.userId });
+	if (!eligibleAccount) return { recorded: false };
+
+	await database
+		.insert(accountCollectionMigrations)
+		.values({
+			userId: actorUserId,
+			migrationVersion: input.migrationVersion,
+			status: "failed",
+			sourceCollectionCount: input.sourceCollectionCount,
+			sourceItemCount: input.sourceItemCount,
+			sourceFingerprint: input.sourceFingerprint,
+			error: { code: input.code },
+			startedAt: now,
+			updatedAt: now,
+		})
+		.onConflictDoUpdate({
+			target: [
+				accountCollectionMigrations.userId,
+				accountCollectionMigrations.migrationVersion,
+			],
+			set: {
+				status: "failed",
+				sourceCollectionCount: input.sourceCollectionCount,
+				sourceItemCount: input.sourceItemCount,
+				sourceFingerprint: input.sourceFingerprint,
+				importedCollectionCount: null,
+				importedItemCount: null,
+				importFingerprint: null,
+				error: { code: input.code },
+				completedAt: null,
+				updatedAt: now,
+			},
+		});
+	return { recorded: true };
+}
+
+export async function recordCollectionMigrationFailure(
+	actorUserId: string,
+	input: RecordCollectionMigrationFailureInput,
+	database?: CollectionDatabase,
+) {
+	if (database) {
+		return recordCollectionMigrationFailureWithDatabase(
+			actorUserId,
+			input,
+			database,
+		);
+	}
+	return withTransactionalDb((transactionalDatabase) =>
+		transactionalDatabase.transaction((transaction) =>
+			recordCollectionMigrationFailureWithDatabase(
+				actorUserId,
+				input,
+				transaction,
+			),
+		),
+	);
+}
+
 export type CollectionMigrationStatus = {
 	dataSource:
 		| "classic_jazz"
@@ -429,7 +539,7 @@ export async function getCollectionMigrationStatus(
 		.select()
 		.from(accountCollectionMigrations)
 		.where(eq(accountCollectionMigrations.userId, actorUserId))
-		.orderBy(asc(accountCollectionMigrations.migrationVersion))
+		.orderBy(desc(accountCollectionMigrations.migrationVersion))
 		.limit(1);
 
 	return {

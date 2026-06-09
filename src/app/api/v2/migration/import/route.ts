@@ -5,7 +5,11 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 } from "../../../../../../lib/collections/api";
-import { importClassicCollections } from "../../../../../../lib/collections/migrationRepository";
+import {
+	CollectionMigrationVerificationError,
+	importClassicCollections,
+	recordCollectionMigrationFailure,
+} from "../../../../../../lib/collections/migrationRepository";
 
 export async function POST(request: Request) {
 	if (!neonCollectionsApiEnabled()) {
@@ -27,7 +31,46 @@ export async function POST(request: Request) {
 		);
 	}
 
-	const result = await importClassicCollections(userId, parsed.data);
+	let result: Awaited<ReturnType<typeof importClassicCollections>>;
+	try {
+		result = await importClassicCollections(userId, parsed.data);
+	} catch (error) {
+		const code =
+			error instanceof CollectionMigrationVerificationError
+				? "verification_failed"
+				: "import_failed";
+		try {
+			await recordCollectionMigrationFailure(userId, {
+				migrationVersion: parsed.data.migrationVersion,
+				sourceFingerprint: parsed.data.sourceFingerprint,
+				sourceCollectionCount: parsed.data.collections.length,
+				sourceItemCount: parsed.data.collections.reduce(
+					(total, collection) =>
+						total +
+						collection.nodes.filter((node) =>
+							["product", "link", "photo"].includes(node.type),
+						).length,
+					0,
+				),
+				code,
+			});
+		} catch (recordingError) {
+			console.error(
+				"Failed to record collection migration failure",
+				recordingError,
+			);
+		}
+		console.error("Classic Jazz collection migration failed", error);
+		return NextResponse.json(
+			{
+				error:
+					code === "verification_failed"
+						? "Imported collections could not be verified"
+						: "Collection migration could not be completed",
+			},
+			{ status: 500 },
+		);
+	}
 	if (result.status === "fingerprint_mismatch") {
 		return NextResponse.json(
 			{ error: "Source fingerprint does not match the migration payload" },

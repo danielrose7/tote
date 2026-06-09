@@ -5,6 +5,7 @@ import {
 	getCollectionMigrationStatus,
 	type ImportClassicCollectionsInput,
 	importClassicCollections,
+	recordCollectionMigrationFailure,
 	rollbackCollectionMigration,
 } from "../../lib/collections/migrationRepository";
 import {
@@ -330,3 +331,80 @@ dbTest("rejects rollback after the rollback window expires", async ({ db }) => {
 		rollbackExpiresAt: confirmed.value.rollbackExpiresAt,
 	});
 });
+
+dbTest(
+	"records a retryable migration failure without partial imported rows",
+	async ({ db }) => {
+		const input = migrationInput();
+		expect(
+			await recordCollectionMigrationFailure(
+				"failed_migration_owner",
+				{
+					migrationVersion: input.migrationVersion,
+					sourceFingerprint: input.sourceFingerprint,
+					sourceCollectionCount: input.collections.length,
+					sourceItemCount: 1,
+					code: "verification_failed",
+				},
+				db,
+			),
+		).toEqual({ recorded: true });
+		expect(
+			await getCollectionMigrationStatus("failed_migration_owner", db),
+		).toMatchObject({
+			dataSource: "migration_failed",
+			status: "failed",
+			error: { code: "verification_failed" },
+		});
+		expect(
+			await db
+				.select()
+				.from(collections)
+				.where(eq(collections.ownerUserId, "failed_migration_owner")),
+		).toEqual([]);
+
+		expect(
+			await importClassicCollections("failed_migration_owner", input, db),
+		).toMatchObject({
+			status: "ok",
+			value: { replayed: false },
+		});
+		expect(
+			await getCollectionMigrationStatus("failed_migration_owner", db),
+		).toMatchObject({
+			dataSource: "neon_verifying",
+			status: "completed",
+			error: null,
+		});
+	},
+);
+
+dbTest(
+	"does not downgrade a confirmed Neon account when recording a failure",
+	async ({ db }) => {
+		const input = migrationInput();
+		await importClassicCollections("protected_neon_owner", input, db);
+		await confirmCollectionMigration("protected_neon_owner", db);
+
+		expect(
+			await recordCollectionMigrationFailure(
+				"protected_neon_owner",
+				{
+					migrationVersion: input.migrationVersion,
+					sourceFingerprint: input.sourceFingerprint,
+					sourceCollectionCount: input.collections.length,
+					sourceItemCount: 1,
+					code: "import_failed",
+				},
+				db,
+			),
+		).toEqual({ recorded: false });
+		expect(
+			await getCollectionMigrationStatus("protected_neon_owner", db),
+		).toMatchObject({
+			dataSource: "neon",
+			status: "completed",
+			error: null,
+		});
+	},
+);

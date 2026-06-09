@@ -43,9 +43,19 @@ export function ClassicMigrationCoordinator({
 				const status = (await statusResponse.json()) as {
 					dataSource: string;
 					cutoverAt: string | null;
+					error: { code?: string } | null;
 				};
 				if (status.dataSource === "classic_jazz" && status.cutoverAt) {
 					setPhase("hidden");
+					return;
+				}
+				if (status.dataSource === "migration_failed" && attempt === 0) {
+					setError(
+						status.error?.code === "verification_failed"
+							? "The imported collections could not be verified."
+							: "The collection migration could not be completed.",
+					);
+					setPhase("error");
 					return;
 				}
 			}
