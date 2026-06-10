@@ -20,7 +20,9 @@ export const createCollectionInputSchema = z
 		name: z.string().trim().min(1).max(200),
 		description: z.string().trim().max(2_000).optional(),
 		color: z.string().trim().min(1).max(100).optional(),
-		positionKey: z.string().trim().min(1).max(200),
+		// Optional so capture clients can let the server assign canonical
+		// end-of-list ordering.
+		positionKey: z.string().trim().min(1).max(200).optional(),
 	})
 	.refine((input) => !input.mutationId || Boolean(input.id), {
 		message: "Idempotent creates require a client-generated collection id",

@@ -101,6 +101,32 @@ export function buildCapturePayload({
 	};
 }
 
+// Collection creation is online-only; the server assigns canonical ordering
+// when positionKey is omitted.
+export async function createNeonCollection({
+	token,
+	ids,
+	name,
+}: {
+	token: string;
+	ids: CaptureIds;
+	name: string;
+}) {
+	return request<{ id: string; replayed: boolean }>(
+		"/api/v2/collections",
+		token,
+		{
+			method: "POST",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				id: ids.nodeId,
+				mutationId: ids.mutationId,
+				name: name.trim(),
+			}),
+		},
+	);
+}
+
 export type CapturePayload = ReturnType<typeof buildCapturePayload>;
 
 export async function sendCapturePayload(

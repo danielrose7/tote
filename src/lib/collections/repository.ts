@@ -218,7 +218,7 @@ export type CreateCollectionInput = {
 	name: string;
 	description?: string;
 	color?: string;
-	positionKey: string;
+	positionKey?: string;
 };
 
 export type CreateCollectionResult =
@@ -238,6 +238,9 @@ export async function createCollection(
 	}
 
 	const collectionId = input.id ?? randomUUID();
+	// Capture clients omit positionKey; assign a canonical end-of-list key
+	// using the same convention as captured nodes.
+	const positionKey = input.positionKey ?? `z:${collectionId}`;
 	if (!input.mutationId) {
 		await database.execute(sql`
 			WITH inserted_collection AS (
@@ -254,7 +257,7 @@ export async function createCollection(
 					${input.name},
 					${input.description ?? null},
 					${input.color ?? null},
-					${input.positionKey}
+					${positionKey}
 				)
 				RETURNING id
 			)
@@ -272,7 +275,7 @@ export async function createCollection(
 		name: input.name,
 		description: input.description ?? null,
 		color: input.color ?? null,
-		positionKey: input.positionKey,
+		positionKey,
 	});
 	const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000);
 
@@ -307,7 +310,7 @@ export async function createCollection(
 				${input.name},
 				${input.description ?? null},
 				${input.color ?? null},
-				${input.positionKey}
+				${positionKey}
 			)
 			RETURNING id
 		),

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	buildCapturePayload,
 	createCaptureIds,
+	createNeonCollection,
 	fetchNeonCaptureCollections,
 	saveNeonCapture,
 } from "./neonCapture";
@@ -141,6 +142,40 @@ describe("Neon capture client", () => {
 			price: undefined,
 			description: undefined,
 		});
+	});
+
+	it("creates a collection without a position key", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValue(
+				new Response(
+					JSON.stringify({ id: CAPTURE_IDS.nodeId, replayed: false }),
+					{ status: 201 },
+				),
+			);
+		vi.stubGlobal("fetch", fetchMock);
+
+		await expect(
+			createNeonCollection({
+				token: "session-token",
+				ids: CAPTURE_IDS,
+				name: "  Lighting  ",
+			}),
+		).resolves.toEqual({ id: CAPTURE_IDS.nodeId, replayed: false });
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			expect.stringContaining("/api/v2/collections"),
+			expect.objectContaining({ method: "POST" }),
+		);
+		const body = JSON.parse(
+			String((fetchMock.mock.calls[0]?.[1] as RequestInit).body),
+		);
+		expect(body).toEqual({
+			id: CAPTURE_IDS.nodeId,
+			mutationId: CAPTURE_IDS.mutationId,
+			name: "Lighting",
+		});
+		expect(body).not.toHaveProperty("positionKey");
 	});
 
 	it("exposes HTTP status for Classic Jazz fallback decisions", async () => {

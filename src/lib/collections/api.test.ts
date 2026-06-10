@@ -49,6 +49,15 @@ describe("createCollectionInputSchema", () => {
 		).toBe(false);
 	});
 
+	it("allows omitting positionKey so the server assigns ordering", () => {
+		const parsed = createCollectionInputSchema.parse({
+			id: "4e14f92e-66ef-47d6-bd34-a57299b89021",
+			mutationId: "5e14f92e-66ef-47d6-bd34-a57299b89021",
+			name: "Reading list",
+		});
+		expect(parsed.positionKey).toBeUndefined();
+	});
+
 	it("rejects malformed client-generated ids", () => {
 		expect(
 			createCollectionInputSchema.safeParse({

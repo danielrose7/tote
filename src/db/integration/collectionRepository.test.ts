@@ -70,6 +70,33 @@ dbTest(
 );
 
 dbTest(
+	"assigns an end-of-list position key when the client omits one",
+	async ({ db }) => {
+		const input = {
+			id: "40000000-0000-4000-8000-000000000031",
+			mutationId: "50000000-0000-4000-8000-000000000031",
+			name: "Capture-created collection",
+		};
+
+		expect(await createCollection("capture_owner", input, db)).toEqual({
+			status: "created",
+			id: input.id,
+		});
+		// The replay must fingerprint the same server-assigned key.
+		expect(await createCollection("capture_owner", input, db)).toEqual({
+			status: "replayed",
+			id: input.id,
+		});
+
+		const [collection] = await db
+			.select()
+			.from(collections)
+			.where(eq(collections.id, input.id));
+		expect(collection.positionKey).toBe(`z:${input.id}`);
+	},
+);
+
+dbTest(
 	"replays an idempotent collection create without duplicating rows",
 	async ({ db }) => {
 		const input = {
