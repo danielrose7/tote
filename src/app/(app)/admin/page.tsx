@@ -1,7 +1,13 @@
 import { clerkClient, currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
-import { sql } from '../../../lib/db';
-import { AdminClient, type Balance, type Grant } from './AdminClient';
+import { listCollectionMigrationHealth } from '../../../lib/collections/migrationRepository';
+import { db, sql } from '../../../lib/db';
+import {
+  AdminClient,
+  type Balance,
+  type Grant,
+  type MigrationHealth,
+} from './AdminClient';
 
 export default async function AdminPage() {
   const user = await currentUser();
@@ -67,11 +73,38 @@ export default async function AdminPage() {
       email: cu?.emailAddresses[0]?.emailAddress ?? '—',
     };
   });
+  const migrationHealth = await listCollectionMigrationHealth(db);
+  const migrationUsers = migrationHealth.length
+    ? (
+        await clerk.users.getUserList({
+          userId: migrationHealth.map((migration) => migration.userId),
+        })
+      ).data
+    : [];
+  const migrationUserById = Object.fromEntries(
+    migrationUsers.map((migrationUser) => [migrationUser.id, migrationUser]),
+  );
+  const enrichedMigrationHealth = migrationHealth.map((migration) => {
+    const migrationUser = migrationUserById[migration.userId];
+    return {
+      ...migration,
+      email:
+        migrationUser?.emailAddresses[0]?.emailAddress ?? 'Unknown Clerk user',
+      cutoverAt: migration.cutoverAt?.toISOString() ?? null,
+      rollbackExpiresAt: migration.rollbackExpiresAt?.toISOString() ?? null,
+      updatedAt: migration.updatedAt.toISOString(),
+      errorCode:
+        typeof migration.error?.code === 'string'
+          ? migration.error.code
+          : null,
+    };
+  });
 
   return (
     <AdminClient
       balances={enrichedBalances as Balance[]}
       recentGrants={enrichedRecentGrants as Grant[]}
+      migrationHealth={enrichedMigrationHealth as MigrationHealth[]}
     />
   );
 }

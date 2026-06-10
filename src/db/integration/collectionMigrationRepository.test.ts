@@ -5,6 +5,7 @@ import {
 	getCollectionMigrationStatus,
 	type ImportClassicCollectionsInput,
 	importClassicCollections,
+	listCollectionMigrationHealth,
 	recordCollectionMigrationFailure,
 	rollbackCollectionMigration,
 } from "../../lib/collections/migrationRepository";
@@ -493,3 +494,42 @@ dbTest(
 		});
 	},
 );
+
+dbTest("lists latest migration health for support tooling", async ({ db }) => {
+	const input = migrationInput();
+	await importClassicCollections("health_neon_owner", input, db);
+	await confirmCollectionMigration("health_neon_owner", db);
+	await recordCollectionMigrationFailure(
+		"health_failed_owner",
+		{
+			migrationVersion: input.migrationVersion,
+			sourceFingerprint: input.sourceFingerprint,
+			sourceCollectionCount: input.collections.length,
+			sourceItemCount: 1,
+			code: "import_failed",
+		},
+		db,
+	);
+
+	const health = await listCollectionMigrationHealth(db);
+	expect(
+		health.find((row) => row.userId === "health_neon_owner"),
+	).toMatchObject({
+		dataSource: "neon",
+		migrationVersion: 1,
+		status: "completed",
+		collectionCount: 1,
+		itemCount: 1,
+		error: null,
+	});
+	expect(
+		health.find((row) => row.userId === "health_failed_owner"),
+	).toMatchObject({
+		dataSource: "migration_failed",
+		migrationVersion: 1,
+		status: "failed",
+		collectionCount: null,
+		itemCount: null,
+		error: { code: "import_failed" },
+	});
+});

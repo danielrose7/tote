@@ -576,6 +576,57 @@ export type CollectionMigrationStatus = {
 	error: Record<string, unknown> | null;
 };
 
+export type CollectionMigrationHealth = CollectionMigrationStatus & {
+	userId: string;
+	updatedAt: Date;
+};
+
+export async function listCollectionMigrationHealth(
+	database: CollectionDatabase,
+): Promise<CollectionMigrationHealth[]> {
+	const [accounts, migrations] = await Promise.all([
+		database
+			.select()
+			.from(accountDataSources)
+			.orderBy(desc(accountDataSources.updatedAt)),
+		database
+			.select()
+			.from(accountCollectionMigrations)
+			.orderBy(
+				desc(accountCollectionMigrations.migrationVersion),
+				desc(accountCollectionMigrations.updatedAt),
+			),
+	]);
+	const latestMigrationByUserId = new Map<
+		string,
+		(typeof migrations)[number]
+	>();
+	for (const migration of migrations) {
+		if (!latestMigrationByUserId.has(migration.userId)) {
+			latestMigrationByUserId.set(migration.userId, migration);
+		}
+	}
+
+	return accounts.map((account) => {
+		const migration = latestMigrationByUserId.get(account.userId);
+		return {
+			userId: account.userId,
+			dataSource: account.dataSource,
+			migrationVersion: account.migrationVersion,
+			status: migration?.status ?? null,
+			collectionCount: migration?.importedCollectionCount ?? null,
+			itemCount: migration?.importedItemCount ?? null,
+			cutoverAt: account.cutoverAt,
+			rollbackExpiresAt: account.rollbackExpiresAt,
+			error: migration?.error ?? null,
+			updatedAt:
+				migration && migration.updatedAt > account.updatedAt
+					? migration.updatedAt
+					: account.updatedAt,
+		};
+	});
+}
+
 export async function getCollectionMigrationStatus(
 	actorUserId: string,
 	database: CollectionDatabase,
