@@ -6,13 +6,13 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	publishCollectionInputSchema,
-} from "../../../../../../../lib/collections/api";
+} from "@/lib/collections/api";
 import {
 	getCollectionPublicationStatus,
 	publishCollectionSnapshot,
 	unpublishCollectionSnapshot,
-} from "../../../../../../../lib/collections/publicationRepository";
-import { getAccountCollectionDataSource } from "../../../../../../../lib/collections/repository";
+} from "@/lib/collections/publicationRepository";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 
 async function getContext(id: string) {
 	if (!neonCollectionsApiEnabled()) {

@@ -5,9 +5,9 @@ import {
 	copyClassicSharedCollectionInputSchema,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
-} from "../../../../../../lib/collections/api";
-import { copyClassicSharedCollection } from "../../../../../../lib/collections/copyRepository";
-import { getAccountCollectionDataSource } from "../../../../../../lib/collections/repository";
+} from "@/lib/collections/api";
+import { copyClassicSharedCollection } from "@/lib/collections/copyRepository";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 
 export async function POST(request: Request) {
 	if (!neonCollectionsApiEnabled()) {

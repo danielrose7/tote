@@ -5,13 +5,13 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	saveCaptureInputSchema,
-} from "../../../../../lib/collections/api";
+} from "@/lib/collections/api";
 import {
 	listCaptureCollections,
 	saveCapture,
-} from "../../../../../lib/collections/captureRepository";
-import { getAccountCollectionDataSource } from "../../../../../lib/collections/repository";
-import { db } from "../../../../../lib/db";
+} from "@/lib/collections/captureRepository";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
+import { db } from "@/lib/db";
 
 async function authorizedNeonUser() {
 	if (!neonCollectionsApiEnabled()) return { status: 404 as const };

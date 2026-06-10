@@ -6,9 +6,9 @@ import {
 	copyCollectionInputSchema,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
-} from "../../../../../../../lib/collections/api";
-import { copyPublishedCollection } from "../../../../../../../lib/collections/copyRepository";
-import { getAccountCollectionDataSource } from "../../../../../../../lib/collections/repository";
+} from "@/lib/collections/api";
+import { copyPublishedCollection } from "@/lib/collections/copyRepository";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 
 export async function POST(
 	request: Request,

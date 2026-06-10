@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { rollbackCollectionMigration } from "../../../../../../lib/collections/migrationRepository";
-import { db } from "../../../../../../lib/db";
+import { rollbackCollectionMigration } from "@/lib/collections/migrationRepository";
+import { db } from "@/lib/db";
 
 export async function POST() {
 	const { userId } = await auth();

@@ -5,13 +5,13 @@ import {
 	importClassicCollectionsInputSchema,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
-} from "../../../../../../lib/collections/api";
+} from "@/lib/collections/api";
 import {
 	CollectionMigrationVerificationError,
 	importClassicCollections,
 	recordCollectionMigrationFailure,
-} from "../../../../../../lib/collections/migrationRepository";
-import { getAccountCollectionDataSource } from "../../../../../../lib/collections/repository";
+} from "@/lib/collections/migrationRepository";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 
 export async function POST(request: Request) {
 	if (!neonCollectionsApiEnabled()) {

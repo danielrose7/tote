@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 import {
 	canUseNeonCollections,
 	neonCollectionsApiEnabled,
-} from "../../../../../../lib/collections/api";
-import { collectionRealtimeCapabilities } from "../../../../../../lib/collections/realtime";
+} from "@/lib/collections/api";
+import { collectionRealtimeCapabilities } from "@/lib/collections/realtime";
 import {
 	getAccountCollectionDataSource,
 	listCollectionSummaries,
-} from "../../../../../../lib/collections/repository";
+} from "@/lib/collections/repository";
 
 export async function POST() {
 	if (!neonCollectionsApiEnabled() || !process.env.ABLY_API_KEY) {
