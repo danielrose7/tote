@@ -262,7 +262,6 @@ export function canStartCollectionMigration(
     | 'neon_verifying'
     | 'neon'
     | 'migration_failed',
-  accountEnabled: boolean,
 ) {
-  return dataSource !== 'classic_jazz' || accountEnabled;
+  return dataSource !== 'migrating';
 }

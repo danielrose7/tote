@@ -40,7 +40,7 @@ export default async function CollectionsPage() {
     );
   }
   if (!canUseNeonCollections(dataSource)) {
-    return <ClassicCollectionsPage migrationEnabled={true} />;
+    return <ClassicCollectionsPage />;
   }
 
   const collections = await listCollectionSummaries(userId);
