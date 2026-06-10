@@ -198,6 +198,26 @@ Exit: Neon-enabled accounts no longer depend on Jazz for normal extension use.
 Exit: collection edits and share-sheet captures survive process termination,
 sync exactly once after reconnect, and appear on web through realtime invalidation.
 
+### Deferred: Clerk User Projection
+
+This is useful for collaboration UX and account lifecycle management, but it is
+not required before beginning the iOS vertical slice.
+
+- Keep Clerk authoritative for identity, authentication, and session validity.
+- Add a minimal Neon user projection keyed by Clerk user ID for fields Tote
+  needs to query or display, such as display name, primary email, username,
+  avatar URL, and deleted status.
+- Listen for verified, idempotent `user.created`, `user.updated`, and
+  `user.deleted` Clerk webhooks.
+- Upsert the current user opportunistically during authenticated app use so
+  onboarding never depends on eventually consistent webhook delivery.
+- Use the local projection to render collaborators and audit actors instead of
+  exposing raw Clerk IDs.
+- Define deletion, anonymization, collection ownership transfer, billing
+  retention, and audit-history behavior before acting on `user.deleted`.
+- Update the existing account-deletion route to cover the Neon collection model
+  before relying on it for production account removal.
+
 ## Configuration And External Setup
 
 - Root rollout requires `NEON_COLLECTIONS_API_ENABLED=true`.
