@@ -144,11 +144,13 @@ dbTest("lists only active collections visible to the actor", async ({ db }) => {
 	const first = await collectionFactory.create({
 		ownerUserId: "first_owner",
 		name: "First",
+		legacyJazzId: "co_zFirst",
 		positionKey: "a0",
 	});
 	const second = await collectionFactory.create({
 		ownerUserId: "second_owner",
 		name: "Second",
+		legacyJazzId: "co_zSecond",
 		positionKey: "a1",
 	});
 	const revoked = await collectionFactory.create({
@@ -176,9 +178,15 @@ dbTest("lists only active collections visible to the actor", async ({ db }) => {
 
 	const summaries = await listCollectionSummaries(actorUserId, db);
 
-	expect(summaries.map(({ name, role }) => ({ name, role }))).toEqual([
-		{ name: "First", role: "viewer" },
-		{ name: "Second", role: "editor" },
+	expect(
+		summaries.map(({ name, role, legacyJazzId }) => ({
+			name,
+			role,
+			legacyJazzId,
+		})),
+	).toEqual([
+		{ name: "First", role: "viewer", legacyJazzId: "co_zFirst" },
+		{ name: "Second", role: "editor", legacyJazzId: "co_zSecond" },
 	]);
 });
 

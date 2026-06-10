@@ -59,6 +59,7 @@ export function NeonCreateCollectionDialog({
 				description: input.description ?? null,
 				color: input.color ?? null,
 				itemCount: 0,
+				legacyJazzId: null,
 				positionKey: input.positionKey,
 				updatedAt: new Date(),
 				role: "owner",

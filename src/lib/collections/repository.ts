@@ -90,6 +90,7 @@ export type CollectionSummary = Pick<
 	| "description"
 	| "color"
 	| "itemCount"
+	| "legacyJazzId"
 	| "positionKey"
 	| "updatedAt"
 > & {
@@ -108,6 +109,7 @@ export async function listCollectionSummaries(
 			description: collections.description,
 			color: collections.color,
 			itemCount: collections.itemCount,
+			legacyJazzId: collections.legacyJazzId,
 			positionKey: collections.positionKey,
 			updatedAt: collections.updatedAt,
 			role: collectionMembers.role,

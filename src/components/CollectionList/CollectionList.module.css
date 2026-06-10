@@ -133,6 +133,37 @@
 	border-radius: var(--radius-sm);
 }
 
+.waitingDescription {
+	margin: calc(-1 * var(--spacing-sm)) 0 var(--spacing-lg);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+}
+
+.waitingCard {
+	min-height: 150px;
+	padding: var(--spacing-lg);
+	border: 1px dashed var(--color-border);
+	border-radius: var(--radius-lg);
+	background: var(--color-surface);
+}
+
+.waitingCard h3,
+.waitingCard p {
+	margin: 0;
+}
+
+.waitingCard h3 {
+	margin-bottom: var(--spacing-sm);
+	color: var(--color-text-primary);
+	font-size: var(--font-size-lg);
+}
+
+.waitingCard p {
+	margin-top: var(--spacing-md);
+	color: var(--color-text-secondary);
+	font-size: var(--font-size-sm);
+}
+
 /* Wrapper for shared card with leave button */
 .sharedCardWrapper {
 	position: relative;
