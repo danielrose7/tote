@@ -40,7 +40,11 @@ export default async function CollectionsPage() {
 		);
 	}
 	if (!canUseNeonCollections(dataSource)) {
-		return <ClassicCollectionsPage />;
+		return (
+			<ClassicCollectionsPage
+				migrationEnabled={process.env.NEON_COLLECTIONS_API_ENABLED === "true"}
+			/>
+		);
 	}
 
 	const collections = await listCollectionSummaries(userId);

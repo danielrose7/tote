@@ -1,6 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import {
+	canStartCollectionMigration,
 	importClassicCollectionsInputSchema,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
@@ -10,6 +11,7 @@ import {
 	importClassicCollections,
 	recordCollectionMigrationFailure,
 } from "../../../../../../lib/collections/migrationRepository";
+import { getAccountCollectionDataSource } from "../../../../../../lib/collections/repository";
 
 export async function POST(request: Request) {
 	if (!neonCollectionsApiEnabled()) {
@@ -18,6 +20,21 @@ export async function POST(request: Request) {
 	const { userId } = await auth();
 	if (!userId) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+	}
+	const [user, dataSource] = await Promise.all([
+		currentUser(),
+		getAccountCollectionDataSource(userId),
+	]);
+	if (
+		!canStartCollectionMigration(
+			dataSource,
+			user?.publicMetadata?.neonCollectionsEnabled === true,
+		)
+	) {
+		return NextResponse.json(
+			{ error: "Collection migration is not enabled for this account" },
+			{ status: 403 },
+		);
 	}
 	const body = await parseJsonRequest(request);
 	if (!body.success) {

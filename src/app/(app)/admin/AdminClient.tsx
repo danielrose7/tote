@@ -10,6 +10,7 @@ export interface Balance {
   email: string;
   curator: boolean;
   chatEnabled: boolean;
+  neonCollectionsEnabled: boolean;
   balance_cents: number;
   updated_at: string;
   run_count: number;
@@ -82,6 +83,13 @@ export function AdminClient({
       balances.map((b) => [b.clerk_user_id, b.chatEnabled]),
     ),
   );
+  const [neonCollectionsToggles, setNeonCollectionsToggles] = useState<
+    Record<string, boolean>
+  >(
+    Object.fromEntries(
+      balances.map((b) => [b.clerk_user_id, b.neonCollectionsEnabled]),
+    ),
+  );
   const [togglingFeature, setTogglingFeature] = useState<string | null>(null);
 
   async function handleCuratorToggle(userId: string) {
@@ -112,6 +120,29 @@ export function AdminClient({
       });
       if (res.ok) {
         setChatEnabledToggles((prev) => ({ ...prev, [userId]: !current }));
+      }
+    } finally {
+      setTogglingFeature(null);
+    }
+  }
+
+  async function handleNeonCollectionsToggle(userId: string) {
+    const current = neonCollectionsToggles[userId];
+    setTogglingFeature(`neon:${userId}`);
+    try {
+      const res = await fetch('/api/admin/neon-collections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          neonCollectionsEnabled: !current,
+        }),
+      });
+      if (res.ok) {
+        setNeonCollectionsToggles((prev) => ({
+          ...prev,
+          [userId]: !current,
+        }));
       }
     } finally {
       setTogglingFeature(null);
@@ -245,6 +276,7 @@ export function AdminClient({
                   <th>Runs</th>
                   <th>Curator</th>
                   <th>Chat</th>
+                  <th>Neon collections</th>
                   <th>Credit</th>
                 </tr>
               </thead>
@@ -300,6 +332,29 @@ export function AdminClient({
                           onClick={() => handleChatToggle(b.clerk_user_id)}
                         >
                           {chatEnabledToggles[b.clerk_user_id] ? 'On' : 'Off'}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.button}
+                          style={{
+                            padding: '0.25rem 0.625rem',
+                            fontSize: '0.8rem',
+                            background: neonCollectionsToggles[b.clerk_user_id]
+                              ? '#065f46'
+                              : undefined,
+                          }}
+                          disabled={
+                            togglingFeature === `neon:${b.clerk_user_id}`
+                          }
+                          onClick={() =>
+                            handleNeonCollectionsToggle(b.clerk_user_id)
+                          }
+                        >
+                          {neonCollectionsToggles[b.clerk_user_id]
+                            ? 'On'
+                            : 'Off'}
                         </button>
                       </td>
                       <td>

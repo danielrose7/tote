@@ -1821,6 +1821,11 @@ instead of maintaining a long-lived global branch.
 11. **Release cohorts**
     - New accounts first, then opt-in existing accounts, then progressively
       larger migration cohorts.
+    - Existing-account migration is gated by both
+      `NEON_COLLECTIONS_API_ENABLED` and the Clerk public metadata flag
+      `neonCollectionsEnabled`. Admins can change the per-user flag from the
+      existing dashboard; accounts with migration state already underway remain
+      eligible to retry or finish even if the flag is later removed.
     - Exit: migration, sync, authorization, and publication health remain
       within agreed operational thresholds.
 

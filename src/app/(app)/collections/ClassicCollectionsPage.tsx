@@ -21,11 +21,17 @@ import { ClassicMigrationCoordinator } from "./ClassicMigrationCoordinator";
 type LoadedBlock = co.loaded<typeof Block>;
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;
 
-export function ClassicCollectionsPage() {
+export function ClassicCollectionsPage({
+	migrationEnabled,
+}: {
+	migrationEnabled: boolean;
+}) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { user } = useUser();
 	const enableSaveTabs = user?.publicMetadata?.enableSaveTabs === true;
+	const canMigrate =
+		migrationEnabled && user?.publicMetadata?.neonCollectionsEnabled === true;
 	const me = useAccount(JazzAccount, {
 		resolve: {
 			profile: true,
@@ -113,7 +119,9 @@ export function ClassicCollectionsPage() {
 				showSaveTabs={enableSaveTabs}
 				onSaveTabsClick={() => setIsSaveTabsDialogOpen(true)}
 			/>
-			<ClassicMigrationCoordinator rootBlocks={me.root?.blocks} />
+			{canMigrate && (
+				<ClassicMigrationCoordinator rootBlocks={me.root?.blocks} />
+			)}
 			<main>
 				<CollectionList
 					account={me}

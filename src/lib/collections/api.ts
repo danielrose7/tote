@@ -239,3 +239,15 @@ export function canUseNeonCollections(
 ): boolean {
 	return dataSource === "neon_verifying" || dataSource === "neon";
 }
+
+export function canStartCollectionMigration(
+	dataSource:
+		| "classic_jazz"
+		| "migrating"
+		| "neon_verifying"
+		| "neon"
+		| "migration_failed",
+	accountEnabled: boolean,
+) {
+	return dataSource !== "classic_jazz" || accountEnabled;
+}

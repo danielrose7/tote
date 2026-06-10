@@ -46,6 +46,8 @@ export default async function AdminPage() {
       email: cu?.emailAddresses[0]?.emailAddress ?? '—',
       curator: cu?.publicMetadata?.curator === true,
       chatEnabled: cu?.publicMetadata?.chatEnabled === true,
+      neonCollectionsEnabled:
+        cu?.publicMetadata?.neonCollectionsEnabled === true,
     };
   });
 

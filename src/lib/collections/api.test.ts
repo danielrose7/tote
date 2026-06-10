@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	canStartCollectionMigration,
 	canUseNeonCollections,
 	collectionIdSchema,
 	copyCollectionInputSchema,
@@ -184,6 +185,20 @@ describe("canUseNeonCollections", () => {
 		"keeps %s accounts off the private API",
 		(dataSource) => {
 			expect(canUseNeonCollections(dataSource)).toBe(false);
+		},
+	);
+});
+
+describe("canStartCollectionMigration", () => {
+	it("requires explicit eligibility for untouched Classic Jazz accounts", () => {
+		expect(canStartCollectionMigration("classic_jazz", false)).toBe(false);
+		expect(canStartCollectionMigration("classic_jazz", true)).toBe(true);
+	});
+
+	it.each(["migrating", "neon_verifying", "neon", "migration_failed"] as const)(
+		"allows an existing %s account to continue",
+		(dataSource) => {
+			expect(canStartCollectionMigration(dataSource, false)).toBe(true);
 		},
 	);
 });
