@@ -40,7 +40,10 @@ export default async function CollectionDetailRoute({
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<NeonCollectionDetailPage collectionId={id} />
+			<NeonCollectionDetailPage
+				collectionId={id}
+				realtimeEnabled={Boolean(process.env.ABLY_API_KEY)}
+			/>
 		</HydrationBoundary>
 	);
 }

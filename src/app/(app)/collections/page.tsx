@@ -49,7 +49,9 @@ export default async function CollectionsPage() {
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<NeonCollectionsPage />
+			<NeonCollectionsPage
+				realtimeEnabled={Boolean(process.env.ABLY_API_KEY)}
+			/>
 		</HydrationBoundary>
 	);
 }

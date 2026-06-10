@@ -8,6 +8,7 @@ import { useState } from "react";
 import cardStyles from "../../../components/CollectionCard/CollectionCard.module.css";
 import listStyles from "../../../components/CollectionList/CollectionList.module.css";
 import { Header } from "../../../components/Header";
+import { useCollectionRealtime } from "../../../hooks/useCollectionRealtime";
 import { exportClassicCollection } from "../../../lib/collections/classicMigrationExport";
 import { getWaitingClassicSharedCollections } from "../../../lib/collections/classicSharedMigration";
 import { fetchCollectionSummaries } from "../../../lib/collections/client";
@@ -16,7 +17,11 @@ import { collectionQueryKeys } from "../../../lib/collections/queryKeys";
 import { Block, JazzAccount } from "../../../schema";
 import { NeonCreateCollectionDialog } from "./NeonCreateCollectionDialog";
 
-export function NeonCollectionsPage() {
+export function NeonCollectionsPage({
+	realtimeEnabled,
+}: {
+	realtimeEnabled: boolean;
+}) {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const classicAccount = useAccount(JazzAccount, {
 		resolve: { root: { sharedWithMe: { $each: {} } } },
@@ -33,6 +38,10 @@ export function NeonCollectionsPage() {
 	);
 	const hasCollections =
 		collections.length > 0 || waitingSharedCollections.length > 0;
+	useCollectionRealtime({
+		enabled: realtimeEnabled,
+		collectionIds: collections.map((collection) => collection.id),
+	});
 
 	return (
 		<>

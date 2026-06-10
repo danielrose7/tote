@@ -24,6 +24,7 @@ import { useState } from "react";
 import { Header } from "../../../../components/Header";
 import { useToast } from "../../../../components/ToastNotification";
 import type { CollectionNode } from "../../../../db/schema";
+import { useCollectionRealtime } from "../../../../hooks/useCollectionRealtime";
 import {
 	fetchCollectionDetail,
 	type ReorderCollectionNodesMutation,
@@ -157,8 +158,10 @@ function ItemNode({
 
 export function NeonCollectionDetailPage({
 	collectionId,
+	realtimeEnabled,
 }: {
 	collectionId: string;
+	realtimeEnabled: boolean;
 }) {
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
@@ -168,6 +171,10 @@ export function NeonCollectionDetailPage({
 	const [selectedNode, setSelectedNode] = useState<CollectionNode | null>(null);
 	const queryClient = useQueryClient();
 	const { showToast } = useToast();
+	useCollectionRealtime({
+		enabled: realtimeEnabled,
+		collectionIds: [collectionId],
+	});
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: { distance: 8 },

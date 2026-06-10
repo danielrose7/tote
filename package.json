@@ -30,6 +30,7 @@
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-query-persist-client": "^5.101.0",
     "@tanstack/react-table": "^8.21.3",
+    "ably": "^2.22.1",
     "ai": "^6.0.176",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",

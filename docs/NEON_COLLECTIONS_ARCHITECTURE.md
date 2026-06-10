@@ -1807,6 +1807,11 @@ instead of maintaining a long-lived global branch.
 9. **Realtime client**
    - Add authenticated Ably subscriptions and targeted TanStack Query
      invalidation after the core web feature set and migration flow are stable.
+   - Initial web implementation issues 10-minute, subscribe-only Ably tokens
+     scoped to active memberships. Collection lists subscribe to the account
+     index plus currently accessible collection channels; detail pages subscribe
+     to the open collection. Attaching triggers one authoritative refetch to
+     close the initial-read race.
    - Exit: two active collaborators receive collection/index updates without
      polling, and reconnect closes the initial-read subscription gap.
 10. **Mobile and capture**
