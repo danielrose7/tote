@@ -42,12 +42,16 @@ dual-write or use Jazz v2 as a second writable cache.
 
 The database foundation, collection repositories and APIs, web collection UI,
 offline persistence, publication, sharing/team management, Jazz migration,
-realtime invalidation, rollout gating, and migration health tooling are
-implemented and committed.
+realtime invalidation, rollout gating, migration health tooling, and the
+extension capture migration (checkpoints 1–4 below) are implemented and
+committed.
 
 Important recent commits:
 
 ```text
+c96e618 Add collection creation to extension capture
+9530f58 Add extension capture cache and durable outbox
+9ba5763 Add online Neon capture path to extension
 7c28d5e Add Neon capture API
 0356613 Gate collection migration rollout
 5bf3086 Add collection migration health dashboard
@@ -68,36 +72,33 @@ The capture API in `7c28d5e` provides:
 
 ## Current Workspace State
 
-At this handoff, the extension's first online Neon path is in progress and may
-be uncommitted. Inspect `git status` before editing.
+Extension checkpoints 1–4 are committed; the working tree should be clean.
+Inspect `git status` before editing.
 
-Expected in-progress files:
-
-```text
-chrome-extension/src/config.ts
-chrome-extension/src/lib/neonCapture.ts
-chrome-extension/src/lib/neonCapture.test.ts
-chrome-extension/src/popup/NeonSaveUI.tsx
-chrome-extension/src/popup/popup.tsx
-```
-
-The intended behavior is:
+The implemented extension behavior is:
 
 - Accounts with Clerk public metadata `neonCollectionsEnabled: true` use the
-  Neon capture API.
-- Other accounts continue through the classic Jazz extension path.
-- API `404` or `409` falls back to classic Jazz during the rollout.
-- The picker lists writable collections and sections and remembers the last
-  selected collection.
-- Saves use a Clerk bearer token and client-generated node and mutation UUIDs.
-
-Finish and commit this checkpoint before starting the durable outbox.
+  Neon capture API; `404`/`409` falls back to classic Jazz during rollout.
+- The picker lists writable collections and sections, remembers the last
+  selected collection per account, and can create a new collection online
+  (the server assigns its end-of-list `positionKey`).
+- Captures persist to an account-scoped `chrome.storage.local` outbox before
+  any network attempt, reuse stable node/mutation UUIDs on retry, flush on
+  popup startup and connectivity recovery, and purge on sign-out or account
+  change. Rejected entries stay visible with retry/remove actions.
+- Jazz mounts only on the classic fallback path (`JazzProvider` inside
+  `AuthenticatedSaveUI`); Neon-enabled accounts never open a Jazz connection.
+- Manual popup verification against a real allowlisted account remains
+  deferred per the browser-policy caveat below; automated coverage lives in
+  `neonCapture.test.ts`, `captureStore.test.ts`, and `NeonSaveUI.test.tsx`.
 
 ## Next Checkpoints
 
-Commit after each checkpoint.
+Commit after each checkpoint. Checkpoints 1–4 are complete; their
+descriptions are retained below as the record of what was delivered. The
+next checkpoint is 5 (iOS Neon vertical slice).
 
-### 1. Finish Online Extension Capture
+### 1. (Done) Finish Online Extension Capture
 
 - Review only the in-progress extension files and preserve unrelated changes.
 - Run the focused Neon client test and extension production build.
@@ -110,7 +111,7 @@ Commit after each checkpoint.
 Exit: an allowlisted signed-in extension user can save an extracted product to a
 Neon collection or section online, while non-allowlisted users still use Jazz.
 
-### 2. Add Extension Cache And Durable Outbox
+### 2. (Done) Add Extension Cache And Durable Outbox
 
 Use account-scoped records in `chrome.storage.local`.
 
@@ -132,7 +133,7 @@ type CaptureOutboxEntry = {
   collectionId: string;
   sectionId: string | null;
   payload: CapturePayload;
-  status: "pending" | "sending" | "failed";
+  status: 'pending' | 'sending' | 'failed';
   attempts: number;
   createdAt: string;
   lastAttemptAt: string | null;
@@ -156,7 +157,7 @@ Requirements:
 Exit: a capture made offline survives popup/browser restart and is inserted once
 after reconnect.
 
-### 3. Extension Collection And Section Creation
+### 3. (Done) Extension Collection And Section Creation
 
 - Add capture-specific create endpoints or reuse the authorized v2 collection
   APIs if their payloads are suitable.
@@ -168,7 +169,12 @@ after reconnect.
 Exit: the extension can create a destination and immediately save into it
 without Jazz.
 
-### 4. Extension Verification And Jazz Untangling
+Delivered as collection creation only (online, via `POST
+/api/v2/collections` with a now-optional `positionKey`). Section creation
+from the extension was deferred; sections are still created on the web and
+appear in the picker on the next index read.
+
+### 4. (Done) Extension Verification And Jazz Untangling
 
 - Exercise sign-in, allowlist switching, empty state, collection selection,
   section selection, online save, offline queue, retry, and sign-out purge.

@@ -206,6 +206,29 @@ describe("capture outbox", () => {
 		});
 	});
 
+	it("treats an expired session (401) as transient and keeps auto-retrying", async () => {
+		vi.stubGlobal(
+			"fetch",
+			vi.fn().mockResolvedValue(
+				new Response(JSON.stringify({ error: "Unauthorized" }), {
+					status: 401,
+				}),
+			),
+		);
+		const outcome = await submitCapture({
+			userId: "user-a",
+			payload: payload(),
+			getToken,
+		});
+		expect(outcome).toEqual({ status: "queued" });
+
+		const entries = await readOutbox("user-a");
+		expect(entries[0]).toMatchObject({
+			status: "pending",
+			lastError: "Unauthorized",
+		});
+	});
+
 	it("retries a failed entry after an explicit requeue", async () => {
 		vi.stubGlobal(
 			"fetch",
