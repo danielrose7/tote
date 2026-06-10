@@ -199,26 +199,30 @@ const migrationMemberSchema = z.object({
 	role: z.enum(["admin", "editor", "viewer"]),
 });
 
+export const classicMigrationCollectionSchema = z.object({
+	legacyJazzId: z.string().trim().min(1).max(500),
+	name: z.string().trim().min(1).max(200),
+	description: z.string().max(2_000).nullable(),
+	color: z.string().trim().min(1).max(100).nullable(),
+	budgetCents: z.number().int().nonnegative().nullable(),
+	defaultViewMode: z.enum(["grid", "table"]).nullable(),
+	publicLayout: z.enum(["minimal", "feature"]),
+	copyPolicy: z.enum(["disabled", "members", "public"]),
+	positionKey: z.string().trim().min(1).max(200),
+	members: z.array(migrationMemberSchema).max(1_000).optional(),
+	nodes: z.array(migrationNodeSchema).max(10_000),
+});
+
 export const importClassicCollectionsInputSchema = z.object({
 	migrationVersion: z.literal(1),
 	sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
-	collections: z
-		.array(
-			z.object({
-				legacyJazzId: z.string().trim().min(1).max(500),
-				name: z.string().trim().min(1).max(200),
-				description: z.string().max(2_000).nullable(),
-				color: z.string().trim().min(1).max(100).nullable(),
-				budgetCents: z.number().int().nonnegative().nullable(),
-				defaultViewMode: z.enum(["grid", "table"]).nullable(),
-				publicLayout: z.enum(["minimal", "feature"]),
-				copyPolicy: z.enum(["disabled", "members", "public"]),
-				positionKey: z.string().trim().min(1).max(200),
-				members: z.array(migrationMemberSchema).max(1_000).optional(),
-				nodes: z.array(migrationNodeSchema).max(10_000),
-			}),
-		)
-		.max(1_000),
+	collections: z.array(classicMigrationCollectionSchema).max(1_000),
+});
+
+export const copyClassicSharedCollectionInputSchema = z.object({
+	mutationId: mutationIdSchema,
+	sourceFingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+	collection: classicMigrationCollectionSchema,
 });
 
 export function neonCollectionsApiEnabled(): boolean {

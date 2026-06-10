@@ -1,8 +1,10 @@
 import { eq } from "drizzle-orm";
 import {
+	copyClassicSharedCollection,
 	copyCollection,
 	copyPublishedCollection,
 } from "../../lib/collections/copyRepository";
+import { fingerprintClassicMigrationCollections } from "../../lib/collections/migrationRepository";
 import {
 	ablyOutbox,
 	collectionInvites,
@@ -192,6 +194,93 @@ dbTest(
 				db,
 			),
 		).toMatchObject({ status: "ok", value: { replayed: false } });
+	},
+);
+
+dbTest(
+	"copies a Classic Jazz shared snapshot without claiming its migration id",
+	async ({ db }) => {
+		const collection = {
+			legacyJazzId: "co_zClassicShared",
+			name: "Shared lighting",
+			description: "A Jazz snapshot",
+			color: "#f59e0b",
+			budgetCents: 90000,
+			defaultViewMode: "grid" as const,
+			publicLayout: "feature" as const,
+			copyPolicy: "disabled" as const,
+			positionKey: "m00000000",
+			nodes: [
+				{
+					legacyJazzId: "co_zClassicSection",
+					parentLegacyJazzId: null,
+					type: "section" as const,
+					title: "Task lighting",
+					properties: {},
+					positionKey: "m00000000",
+				},
+				{
+					legacyJazzId: "co_zClassicProduct",
+					parentLegacyJazzId: "co_zClassicSection",
+					type: "product" as const,
+					title: "Anglepoise lamp",
+					properties: { price: "$220" },
+					positionKey: "m00000000",
+				},
+			],
+		};
+		const input = {
+			mutationId: "9ec1356b-a443-438c-9655-36a4b6694b41",
+			sourceFingerprint: fingerprintClassicMigrationCollections([collection]),
+			collection,
+		};
+
+		const result = await copyClassicSharedCollection(
+			"classic_collaborator",
+			input,
+			db,
+		);
+		expect(result.status).toBe("ok");
+		if (result.status !== "ok") throw new Error("Expected classic shared copy");
+
+		const [copy] = await db
+			.select()
+			.from(collections)
+			.where(eq(collections.id, result.value.id));
+		expect(copy).toMatchObject({
+			ownerUserId: "classic_collaborator",
+			name: "Copy of Shared lighting",
+			originType: "copy",
+			legacyJazzId: null,
+			copyPolicy: "disabled",
+			itemCount: 1,
+		});
+		const [lineage] = await db
+			.select()
+			.from(collectionLineage)
+			.where(eq(collectionLineage.childCollectionId, copy.id));
+		expect(lineage).toMatchObject({
+			relationship: "copied",
+			sourceCollectionId: null,
+			sourceNameSnapshot: "Shared lighting",
+			sourceRef: "jazz:co_zClassicShared",
+			createdByUserId: "classic_collaborator",
+		});
+		const copiedNodes = await db
+			.select()
+			.from(collectionNodes)
+			.where(eq(collectionNodes.collectionId, copy.id));
+		expect(copiedNodes).toHaveLength(2);
+		expect(copiedNodes.find((node) => node.type === "product")?.parentId).toBe(
+			copiedNodes.find((node) => node.type === "section")?.id,
+		);
+
+		expect(
+			await copyClassicSharedCollection("classic_collaborator", input, db),
+		).toEqual({
+			status: "ok",
+			value: { id: copy.id, replayed: true },
+		});
 	},
 );
 

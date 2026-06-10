@@ -1,16 +1,19 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useAccount } from "jazz-tools/react";
+import { useAccount, useCoState } from "jazz-tools/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import cardStyles from "../../../components/CollectionCard/CollectionCard.module.css";
 import listStyles from "../../../components/CollectionList/CollectionList.module.css";
 import { Header } from "../../../components/Header";
+import { exportClassicCollection } from "../../../lib/collections/classicMigrationExport";
 import { getWaitingClassicSharedCollections } from "../../../lib/collections/classicSharedMigration";
 import { fetchCollectionSummaries } from "../../../lib/collections/client";
+import { fingerprintClassicMigrationCollectionsInBrowser } from "../../../lib/collections/migrationPayload";
 import { collectionQueryKeys } from "../../../lib/collections/queryKeys";
-import { JazzAccount } from "../../../schema";
+import { Block, JazzAccount } from "../../../schema";
 import { NeonCreateCollectionDialog } from "./NeonCreateCollectionDialog";
 
 export function NeonCollectionsPage() {
@@ -119,16 +122,10 @@ export function NeonCollectionsPage() {
 									</p>
 									<div className={listStyles.grid}>
 										{waitingSharedCollections.map((collection) => (
-											<div
+											<ClassicSharedCopyCard
 												key={collection.collectionId}
-												className={listStyles.waitingCard}
-											>
-												<h3>{collection.name || "Shared collection"}</h3>
-												<span className={listStyles.sharedBadge}>
-													Shared · {collection.role}
-												</span>
-												<p>Waiting for the owner to migrate this collection.</p>
-											</div>
+												collection={collection}
+											/>
 										))}
 									</div>
 								</section>
@@ -142,5 +139,77 @@ export function NeonCollectionsPage() {
 				onOpenChange={setIsCreateOpen}
 			/>
 		</>
+	);
+}
+
+function ClassicSharedCopyCard({
+	collection,
+}: {
+	collection: ReturnType<typeof getWaitingClassicSharedCollections>[number];
+}) {
+	const router = useRouter();
+	const source = useCoState(Block, collection.collectionId as `co_z${string}`, {
+		resolve: {
+			children: { $each: { children: { $each: {} } } },
+			notes: { $each: {} },
+		},
+	});
+	const [phase, setPhase] = useState<"idle" | "copying" | "error">("idle");
+	const [error, setError] = useState<string | null>(null);
+
+	const copyToMyCollections = async () => {
+		const exported = exportClassicCollection(source);
+		if (!exported) {
+			setError("The Classic Jazz collection is not fully available yet.");
+			setPhase("error");
+			return;
+		}
+		setPhase("copying");
+		setError(null);
+		try {
+			const sourceFingerprint =
+				await fingerprintClassicMigrationCollectionsInBrowser([exported]);
+			const response = await fetch("/api/v2/migration/shared-copy", {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					mutationId: crypto.randomUUID(),
+					sourceFingerprint,
+					collection: exported,
+				}),
+			});
+			const body = (await response.json().catch(() => null)) as {
+				id?: string;
+				error?: string;
+			} | null;
+			if (!response.ok || !body?.id) {
+				throw new Error(body?.error || "Could not copy this collection.");
+			}
+			router.push(`/collections/${body.id}`);
+		} catch (copyError) {
+			setError(
+				copyError instanceof Error
+					? copyError.message
+					: "Could not copy this collection.",
+			);
+			setPhase("error");
+		}
+	};
+
+	return (
+		<div className={listStyles.waitingCard}>
+			<h3>{collection.name || "Shared collection"}</h3>
+			<span className={listStyles.sharedBadge}>Shared · {collection.role}</span>
+			<p>Waiting for the owner to migrate this collection.</p>
+			<button
+				type="button"
+				className={listStyles.waitingCopyButton}
+				disabled={!source?.$isLoaded || phase === "copying"}
+				onClick={copyToMyCollections}
+			>
+				{phase === "copying" ? "Copying..." : "Copy to my collections"}
+			</button>
+			{error && <p className={listStyles.waitingError}>{error}</p>}
+		</div>
 	);
 }

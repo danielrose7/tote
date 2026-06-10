@@ -97,104 +97,118 @@ function productNode(
 	};
 }
 
-export function exportClassicCollections(
-	rootBlocks: unknown,
-): ClassicMigrationCollection[] {
-	const collectionsToExport: ClassicMigrationCollection[] = [];
+export function exportClassicCollection(
+	block: unknown,
+	positionKeyValue = positionKey(0),
+): ClassicMigrationCollection | null {
+	if (!block || typeof block !== "object") return null;
+	const collectionBlock = block as JazzValue;
+	if (
+		collectionBlock.$isLoaded !== true ||
+		collectionBlock.type !== "collection" ||
+		collectionBlock.parentId ||
+		(collectionBlock.collectionData as Record<string, unknown> | undefined)
+			?.sourceId
+	) {
+		return null;
+	}
+	const legacyJazzId = stringValue(collectionBlock.$jazz?.id);
+	const name = stringValue(collectionBlock.name);
+	if (!legacyJazzId || !name) return null;
+	const collectionData = (collectionBlock.collectionData ?? {}) as Record<
+		string,
+		unknown
+	>;
+	const nodes: ClassicMigrationNode[] = [];
 
-	for (const [collectionIndex, block] of loadedValues(rootBlocks).entries()) {
-		if (
-			block.type !== "collection" ||
-			block.parentId ||
-			(block.collectionData as Record<string, unknown> | undefined)?.sourceId
-		) {
+	for (const [childIndex, child] of loadedValues(
+		collectionBlock.children,
+	).entries()) {
+		if (child.type === "product") {
+			const node = productNode(child, childIndex, null);
+			if (node) nodes.push(node);
 			continue;
 		}
-		const legacyJazzId = stringValue(block.$jazz?.id);
-		const name = stringValue(block.name);
-		if (!legacyJazzId || !name) continue;
-		const collectionData = (block.collectionData ?? {}) as Record<
-			string,
-			unknown
-		>;
-		const nodes: ClassicMigrationNode[] = [];
-
-		for (const [childIndex, child] of loadedValues(block.children).entries()) {
-			if (child.type === "product") {
-				const node = productNode(child, childIndex, null);
-				if (node) nodes.push(node);
-				continue;
-			}
-			if (child.type !== "slot") continue;
-			const sectionLegacyJazzId = stringValue(child.$jazz?.id);
-			if (!sectionLegacyJazzId) continue;
-			const slotData = (child.slotData ?? {}) as Record<string, unknown>;
-			nodes.push({
-				legacyJazzId: sectionLegacyJazzId,
-				parentLegacyJazzId: null,
-				type: "section",
-				title: stringValue(child.name)?.slice(0, 500) ?? "Section",
-				properties: {
-					...(numberValue(slotData.budget) !== undefined
-						? { budgetCents: numberValue(slotData.budget) }
-						: {}),
-					...(numberValue(slotData.maxSelections) !== undefined
-						? { maxSelections: numberValue(slotData.maxSelections) }
-						: {}),
-					...(Array.isArray(slotData.selectedProductIds)
-						? { selectedProductIds: slotData.selectedProductIds }
-						: {}),
-				},
-				positionKey: positionKey(childIndex),
-			});
-			for (const [productIndex, product] of loadedValues(
-				child.children,
-			).entries()) {
-				if (product.type !== "product") continue;
-				const node = productNode(product, productIndex, sectionLegacyJazzId);
-				if (node) nodes.push(node);
-			}
+		if (child.type !== "slot") continue;
+		const sectionLegacyJazzId = stringValue(child.$jazz?.id);
+		if (!sectionLegacyJazzId) continue;
+		const slotData = (child.slotData ?? {}) as Record<string, unknown>;
+		nodes.push({
+			legacyJazzId: sectionLegacyJazzId,
+			parentLegacyJazzId: null,
+			type: "section",
+			title: stringValue(child.name)?.slice(0, 500) ?? "Section",
+			properties: {
+				...(numberValue(slotData.budget) !== undefined
+					? { budgetCents: numberValue(slotData.budget) }
+					: {}),
+				...(numberValue(slotData.maxSelections) !== undefined
+					? { maxSelections: numberValue(slotData.maxSelections) }
+					: {}),
+				...(Array.isArray(slotData.selectedProductIds)
+					? { selectedProductIds: slotData.selectedProductIds }
+					: {}),
+			},
+			positionKey: positionKey(childIndex),
+		});
+		for (const [productIndex, product] of loadedValues(
+			child.children,
+		).entries()) {
+			if (product.type !== "product") continue;
+			const node = productNode(product, productIndex, sectionLegacyJazzId);
+			if (node) nodes.push(node);
 		}
+	}
 
-		for (const [noteIndex, note] of loadedValues(block.notes).entries()) {
-			const noteLegacyJazzId = stringValue(note.$jazz?.id);
-			const text = stringValue(note.text);
-			if (!noteLegacyJazzId || !text) continue;
-			nodes.push({
-				legacyJazzId: noteLegacyJazzId,
-				parentLegacyJazzId: null,
-				type: "note",
-				title: text.split("\n")[0]?.slice(0, 500) || "Note",
-				properties: {
-					body: text,
-					...(stringValue(note.url) ? { url: stringValue(note.url) } : {}),
-					...(typeof note.done === "boolean" ? { isDone: note.done } : {}),
-				},
-				positionKey: `n${String(noteIndex).padStart(8, "0")}`,
-			});
-		}
-
-		collectionsToExport.push({
-			legacyJazzId,
-			name: name.slice(0, 200),
-			description:
-				stringValue(collectionData.description)?.slice(0, 2_000) ?? null,
-			color: stringValue(collectionData.color)?.slice(0, 100) ?? null,
-			budgetCents: numberValue(collectionData.budget) ?? null,
-			defaultViewMode:
-				collectionData.viewMode === "grid" ||
-				collectionData.viewMode === "table"
-					? collectionData.viewMode
-					: null,
-			publicLayout:
-				collectionData.publicLayout === "feature" ? "feature" : "minimal",
-			copyPolicy: collectionData.allowCloning === true ? "public" : "disabled",
-			positionKey: positionKey(collectionIndex),
-			nodes,
+	for (const [noteIndex, note] of loadedValues(
+		collectionBlock.notes,
+	).entries()) {
+		const noteLegacyJazzId = stringValue(note.$jazz?.id);
+		const text = stringValue(note.text);
+		if (!noteLegacyJazzId || !text) continue;
+		nodes.push({
+			legacyJazzId: noteLegacyJazzId,
+			parentLegacyJazzId: null,
+			type: "note",
+			title: text.split("\n")[0]?.slice(0, 500) || "Note",
+			properties: {
+				body: text,
+				...(stringValue(note.url) ? { url: stringValue(note.url) } : {}),
+				...(typeof note.done === "boolean" ? { isDone: note.done } : {}),
+			},
+			positionKey: `n${String(noteIndex).padStart(8, "0")}`,
 		});
 	}
 
-	return collectionsToExport;
+	return {
+		legacyJazzId,
+		name: name.slice(0, 200),
+		description:
+			stringValue(collectionData.description)?.slice(0, 2_000) ?? null,
+		color: stringValue(collectionData.color)?.slice(0, 100) ?? null,
+		budgetCents: numberValue(collectionData.budget) ?? null,
+		defaultViewMode:
+			collectionData.viewMode === "grid" || collectionData.viewMode === "table"
+				? collectionData.viewMode
+				: null,
+		publicLayout:
+			collectionData.publicLayout === "feature" ? "feature" : "minimal",
+		copyPolicy: collectionData.allowCloning === true ? "public" : "disabled",
+		positionKey: positionKeyValue,
+		nodes,
+	};
+}
+
+export function exportClassicCollections(
+	rootBlocks: unknown,
+): ClassicMigrationCollection[] {
+	return loadedValues(rootBlocks).flatMap((block, collectionIndex) => {
+		const collection = exportClassicCollection(
+			block,
+			positionKey(collectionIndex),
+		);
+		return collection ? [collection] : [];
+	});
 }
 
 export async function exportClassicCollectionsWithMembers(

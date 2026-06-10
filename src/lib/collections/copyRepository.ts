@@ -12,11 +12,21 @@ import {
 } from "../../db/schema";
 import { withTransactionalDb } from "../transactionalDb";
 import { fingerprintMutationRequest } from "./idempotency";
+import {
+	type ClassicMigrationCollection,
+	normalizeClassicMigrationCollections,
+} from "./migrationPayload";
 import type { CollectionDatabase } from "./repository";
 
 export type CopyCollectionInput = {
 	mutationId: string;
 	name?: string;
+};
+
+export type CopyClassicSharedCollectionInput = {
+	mutationId: string;
+	sourceFingerprint: string;
+	collection: ClassicMigrationCollection;
 };
 
 export type CopyCollectionResult =
@@ -27,6 +37,7 @@ export type CopyCollectionResult =
 
 const operation = "collection.copy.v1";
 const publicOperation = "publication.copy.v1";
+const classicSharedOperation = "classic-shared-collection.copy.v1";
 
 async function getCopyReceipt(
 	actorUserId: string,
@@ -218,6 +229,174 @@ export async function copyCollection(
 				copyCollectionWithDatabase(
 					actorUserId,
 					sourceCollectionId,
+					input,
+					transaction,
+				),
+			{ isolationLevel: "repeatable read" },
+		),
+	);
+}
+
+function validateClassicSharedCollection(
+	collection: ClassicMigrationCollection,
+) {
+	const nodeIds = new Set(collection.nodes.map((node) => node.legacyJazzId));
+	if (nodeIds.size !== collection.nodes.length) {
+		return "Source collection contains duplicate node ids";
+	}
+	const nodesById = new Map(
+		collection.nodes.map((node) => [node.legacyJazzId, node]),
+	);
+	for (const node of collection.nodes) {
+		if (!node.parentLegacyJazzId) continue;
+		const parent = nodesById.get(node.parentLegacyJazzId);
+		if (!parent) return `Missing parent ${node.parentLegacyJazzId}`;
+		if (parent.type !== "section") {
+			return `Parent ${node.parentLegacyJazzId} is not a section`;
+		}
+		if (node.type === "section") {
+			return `Section ${node.legacyJazzId} cannot have a parent`;
+		}
+	}
+	return null;
+}
+
+async function copyClassicSharedCollectionWithDatabase(
+	actorUserId: string,
+	input: CopyClassicSharedCollectionInput,
+	database: CollectionDatabase,
+): Promise<
+	CopyCollectionResult | { status: "invalid_source"; reason: string }
+> {
+	const computedSourceFingerprint = fingerprintMutationRequest(
+		normalizeClassicMigrationCollections([input.collection]),
+	);
+	if (computedSourceFingerprint !== input.sourceFingerprint) {
+		return {
+			status: "invalid_source",
+			reason: "Source fingerprint does not match the collection snapshot",
+		};
+	}
+	const invalidReason = validateClassicSharedCollection(input.collection);
+	if (invalidReason) return { status: "invalid_source", reason: invalidReason };
+
+	const requestFingerprint = fingerprintMutationRequest({
+		sourceFingerprint: input.sourceFingerprint,
+		legacyJazzId: input.collection.legacyJazzId,
+	});
+	const existingReceipt = await getCopyReceipt(
+		actorUserId,
+		input.mutationId,
+		database,
+	);
+	if (existingReceipt) {
+		if (
+			existingReceipt.operation !== classicSharedOperation ||
+			existingReceipt.requestFingerprint !== requestFingerprint
+		) {
+			return { status: "idempotency_conflict" };
+		}
+		return {
+			status: "ok",
+			value: {
+				id: existingReceipt.response.id as string,
+				replayed: true,
+			},
+		};
+	}
+
+	const source = input.collection;
+	const copyId = randomUUID();
+	await database.insert(collections).values({
+		id: copyId,
+		ownerUserId: actorUserId,
+		name: `Copy of ${source.name}`.slice(0, 200),
+		description: source.description,
+		color: source.color,
+		budgetCents: source.budgetCents,
+		defaultViewMode: source.defaultViewMode,
+		publicLayout: source.publicLayout,
+		copyPolicy: "disabled",
+		positionKey: `z${Date.now().toString(36)}:${copyId}`,
+		originType: "copy",
+	});
+	await database.insert(collectionMembers).values({
+		collectionId: copyId,
+		userId: actorUserId,
+		role: "owner",
+	});
+
+	const copiedNodeIds = new Map(
+		source.nodes.map((node) => [node.legacyJazzId, randomUUID()]),
+	);
+	const copiedNodeValues = source.nodes.map((node) => ({
+		id: copiedNodeIds.get(node.legacyJazzId),
+		collectionId: copyId,
+		parentId: node.parentLegacyJazzId
+			? copiedNodeIds.get(node.parentLegacyJazzId)
+			: null,
+		type: node.type,
+		title: node.title,
+		properties: node.properties,
+		positionKey: node.positionKey,
+		createdByUserId: actorUserId,
+	}));
+	const topLevelNodes = copiedNodeValues.filter(
+		(node) => node.parentId === null,
+	);
+	const childNodes = copiedNodeValues.filter((node) => node.parentId !== null);
+	if (topLevelNodes.length > 0) {
+		await database.insert(collectionNodes).values(topLevelNodes);
+	}
+	if (childNodes.length > 0) {
+		await database.insert(collectionNodes).values(childNodes);
+	}
+
+	await database.insert(collectionLineage).values({
+		childCollectionId: copyId,
+		relationship: "copied",
+		sourceNameSnapshot: source.name,
+		sourceRef: `jazz:${source.legacyJazzId}`,
+		createdByUserId: actorUserId,
+	});
+	await database.insert(ablyOutbox).values({
+		mutationId: input.mutationId,
+		channel: `collection:${copyId}`,
+		name: "collection.copied",
+		data: {
+			collectionId: copyId,
+			sourceRef: `jazz:${source.legacyJazzId}`,
+		},
+	});
+	await database.insert(collectionMutationReceipts).values({
+		userId: actorUserId,
+		mutationId: input.mutationId,
+		operation: classicSharedOperation,
+		requestFingerprint,
+		response: { id: copyId },
+		expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1_000),
+	});
+
+	return { status: "ok", value: { id: copyId, replayed: false } };
+}
+
+export async function copyClassicSharedCollection(
+	actorUserId: string,
+	input: CopyClassicSharedCollectionInput,
+	database?: CollectionDatabase,
+) {
+	if (database) {
+		return copyClassicSharedCollectionWithDatabase(
+			actorUserId,
+			input,
+			database,
+		);
+	}
+	return withTransactionalDb((transactionalDatabase) =>
+		transactionalDatabase.transaction(
+			(transaction) =>
+				copyClassicSharedCollectionWithDatabase(
+					actorUserId,
 					input,
 					transaction,
 				),
