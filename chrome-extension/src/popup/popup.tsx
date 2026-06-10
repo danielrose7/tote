@@ -13,6 +13,7 @@ import {
   Component,
   type ErrorInfo,
   type ReactNode,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -28,6 +29,7 @@ import {
   ExtensionProviders,
   JazzProvider,
 } from '../providers/ExtensionProviders';
+import { NeonSaveUI } from './NeonSaveUI';
 
 // Error boundary to catch rendering errors
 class ErrorBoundary extends Component<
@@ -768,6 +770,38 @@ function PopupHeader() {
   );
 }
 
+function AuthenticatedSaveUI({
+  metadata,
+  onSuccess,
+}: {
+  metadata: ExtractedMetadata;
+  onSuccess: (collectionId: string) => void;
+}) {
+  const { user } = useUser();
+  const [useClassicJazz, setUseClassicJazz] = useState(
+    user?.publicMetadata?.neonCollectionsEnabled !== true,
+  );
+  const fallBackToClassicJazz = useCallback(() => {
+    setUseClassicJazz(true);
+  }, []);
+
+  if (!useClassicJazz) {
+    return (
+      <NeonSaveUI
+        metadata={metadata}
+        onSuccess={onSuccess}
+        onUnavailable={fallBackToClassicJazz}
+      />
+    );
+  }
+
+  return (
+    <JazzProvider>
+      <SaveUI metadata={metadata} onSuccess={onSuccess} />
+    </JazzProvider>
+  );
+}
+
 /**
  * Main popup content
  */
@@ -887,15 +921,13 @@ function PopupContent() {
           </SignedOut>
 
           <SignedIn>
-            <JazzProvider>
-              <SaveUI
-                metadata={{
-                  ...metadata,
-                  imageUrl: selectedImageUrl || metadata.imageUrl,
-                }}
-                onSuccess={handleSuccess}
-              />
-            </JazzProvider>
+            <AuthenticatedSaveUI
+              metadata={{
+                ...metadata,
+                imageUrl: selectedImageUrl || metadata.imageUrl,
+              }}
+              onSuccess={handleSuccess}
+            />
           </SignedIn>
         </>
       )}
