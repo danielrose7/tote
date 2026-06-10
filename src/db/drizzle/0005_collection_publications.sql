@@ -57,11 +57,11 @@ ALTER TABLE "published_blocks" ADD CONSTRAINT "published_blocks_collection_id_pu
 ALTER TABLE "published_blocks" ADD CONSTRAINT "published_blocks_source_node_id_collection_nodes_id_fk" FOREIGN KEY ("source_node_id") REFERENCES "public"."collection_nodes"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "published_blocks" ADD CONSTRAINT "published_blocks_parent_block_id_published_blocks_id_fk" FOREIGN KEY ("parent_block_id") REFERENCES "public"."published_blocks"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "published_collections" ADD CONSTRAINT "published_collections_source_collection_id_collections_id_fk" FOREIGN KEY ("source_collection_id") REFERENCES "public"."collections"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "published_blocks_collection_idx" ON "published_blocks" USING btree ("collection_id");--> statement-breakpoint
-CREATE INDEX "published_blocks_parent_idx" ON "published_blocks" USING btree ("parent_block_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "published_blocks_collection_source_node_uidx" ON "published_blocks" USING btree ("collection_id","source_node_id") WHERE "published_blocks"."source_node_id" IS NOT NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX "published_collections_source_jazz_uidx" ON "published_collections" USING btree ("source_jazz_id") WHERE "published_collections"."source_jazz_id" IS NOT NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX "published_collections_source_collection_uidx" ON "published_collections" USING btree ("source_collection_id") WHERE "published_collections"."source_collection_id" IS NOT NULL;--> statement-breakpoint
-CREATE INDEX "published_collections_owner_idx" ON "published_collections" USING btree ("owner_clerk_id");--> statement-breakpoint
-CREATE INDEX "published_collections_username_idx" ON "published_collections" USING btree ("username");--> statement-breakpoint
-CREATE INDEX "published_collections_slug_idx" ON "published_collections" USING btree ("slug");
+CREATE INDEX IF NOT EXISTS "published_blocks_collection_idx" ON "published_blocks" USING btree ("collection_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "published_blocks_parent_idx" ON "published_blocks" USING btree ("parent_block_id");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "published_blocks_collection_source_node_uidx" ON "published_blocks" USING btree ("collection_id","source_node_id") WHERE "published_blocks"."source_node_id" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "published_collections_source_jazz_uidx" ON "published_collections" USING btree ("source_jazz_id") WHERE "published_collections"."source_jazz_id" IS NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "published_collections_source_collection_uidx" ON "published_collections" USING btree ("source_collection_id") WHERE "published_collections"."source_collection_id" IS NOT NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "published_collections_owner_idx" ON "published_collections" USING btree ("owner_clerk_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "published_collections_username_idx" ON "published_collections" USING btree ("username");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "published_collections_slug_idx" ON "published_collections" USING btree ("slug");
