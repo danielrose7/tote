@@ -10,6 +10,7 @@ import {
 	importClassicCollectionsInputSchema,
 	publishCollectionInputSchema,
 	reorderCollectionNodesInputSchema,
+	saveCaptureInputSchema,
 	updateCollectionInputSchema,
 	updateCollectionNodeInputSchema,
 } from "./api";
@@ -201,6 +202,38 @@ describe("canStartCollectionMigration", () => {
 			expect(canStartCollectionMigration(dataSource, false)).toBe(true);
 		},
 	);
+});
+
+describe("saveCaptureInputSchema", () => {
+	it("accepts an idempotent product capture", () => {
+		expect(
+			saveCaptureInputSchema.parse({
+				id: "40000000-0000-4000-8000-000000000901",
+				mutationId: "50000000-0000-4000-8000-000000000901",
+				collectionId: "40000000-0000-4000-8000-000000000902",
+				sectionId: null,
+				title: "Task lamp",
+				url: "https://example.com/lamp",
+				imageUrl: "https://example.com/lamp.jpg",
+				price: "$129",
+			}),
+		).toMatchObject({
+			title: "Task lamp",
+			url: "https://example.com/lamp",
+		});
+	});
+
+	it("rejects non-http capture URLs", () => {
+		expect(
+			saveCaptureInputSchema.safeParse({
+				id: "40000000-0000-4000-8000-000000000901",
+				mutationId: "50000000-0000-4000-8000-000000000901",
+				collectionId: "40000000-0000-4000-8000-000000000902",
+				title: "Unsafe",
+				url: "not a url",
+			}).success,
+		).toBe(false);
+	});
 });
 
 describe("collection team schemas", () => {

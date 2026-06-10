@@ -225,6 +225,19 @@ export const copyClassicSharedCollectionInputSchema = z.object({
 	collection: classicMigrationCollectionSchema,
 });
 
+export const saveCaptureInputSchema = z.object({
+	id: collectionIdSchema,
+	mutationId: mutationIdSchema,
+	collectionId: collectionIdSchema,
+	sectionId: collectionIdSchema.nullable().optional(),
+	title: z.string().trim().min(1).max(500),
+	url: z.url().max(4_000),
+	imageUrl: z.url().max(4_000).optional(),
+	images: z.array(z.url().max(4_000)).max(50).optional(),
+	price: z.string().trim().max(200).optional(),
+	description: z.string().trim().max(10_000).optional(),
+});
+
 export function neonCollectionsApiEnabled(): boolean {
 	return process.env.NEON_COLLECTIONS_API_ENABLED === "true";
 }
