@@ -101,6 +101,19 @@ export function buildCapturePayload({
 	};
 }
 
+export type CapturePayload = ReturnType<typeof buildCapturePayload>;
+
+export async function sendCapturePayload(
+	token: string,
+	payload: CapturePayload,
+) {
+	return request<{ id: string; replayed: boolean }>("/api/v2/capture", token, {
+		method: "POST",
+		headers: { "content-type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+}
+
 export async function saveNeonCapture({
 	token,
 	ids,
@@ -114,11 +127,8 @@ export async function saveNeonCapture({
 	sectionId: string | null;
 	metadata: ExtractedMetadata;
 }) {
-	return request<{ id: string; replayed: boolean }>("/api/v2/capture", token, {
-		method: "POST",
-		headers: { "content-type": "application/json" },
-		body: JSON.stringify(
-			buildCapturePayload({ ids, collectionId, sectionId, metadata }),
-		),
-	});
+	return sendCapturePayload(
+		token,
+		buildCapturePayload({ ids, collectionId, sectionId, metadata }),
+	);
 }

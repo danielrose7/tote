@@ -596,3 +596,67 @@ body {
   color: #6b7280;
   margin-bottom: 12px;
 }
+
+/* Neon capture offline and outbox states */
+.offline-banner {
+  font-size: 12px;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+}
+
+.outbox-status {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.outbox-failed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 10px;
+}
+
+.outbox-failed-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.outbox-failed-title {
+  font-weight: 600;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outbox-failed-error {
+  color: #b91c1c;
+}
+
+.outbox-failed-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.outbox-failed-actions button {
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}

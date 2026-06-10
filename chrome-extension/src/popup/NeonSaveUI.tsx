@@ -1,32 +1,51 @@
 import { useAuth } from "@clerk/chrome-extension";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { APP_URL } from "../config";
+import {
+	type CaptureOutboxEntry,
+	flushOutbox,
+	readCachedIndex,
+	readLastSelectedCollection,
+	readOutbox,
+	removeOutboxEntry,
+	requeueOutboxEntry,
+	submitCapture,
+	syncActiveAccount,
+	writeCachedIndex,
+	writeLastSelectedCollection,
+} from "../lib/captureStore";
 import type { ExtractedMetadata } from "../lib/extractors/types";
 import {
+	buildCapturePayload,
 	type CaptureIds,
 	createCaptureIds,
 	fetchNeonCaptureCollections,
 	type NeonCaptureCollection,
 	NeonCaptureRequestError,
-	saveNeonCapture,
 } from "../lib/neonCapture";
 
 export function NeonSaveUI({
 	metadata,
 	onSuccess,
+	onQueued,
 	onUnavailable,
 }: {
 	metadata: ExtractedMetadata;
 	onSuccess: (collectionId: string) => void;
+	onQueued: (collectionId: string) => void;
 	onUnavailable: () => void;
 }) {
-	const { getToken } = useAuth();
+	const { getToken, userId } = useAuth();
 	const [collections, setCollections] = useState<NeonCaptureCollection[]>([]);
 	const [selectedCollection, setSelectedCollection] = useState("");
 	const [selectedSection, setSelectedSection] = useState("");
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	// True while the picker shows the cached index because the network read
+	// failed; the user can still queue saves into the outbox.
+	const [offline, setOffline] = useState(false);
+	const [outbox, setOutbox] = useState<CaptureOutboxEntry[]>([]);
 	// Stable per-capture identity so a retry replays the original save instead
 	// of inserting a duplicate. Reset when the destination changes.
 	const captureIds = useRef<CaptureIds | null>(null);
@@ -35,25 +54,60 @@ export function NeonSaveUI({
 			collections.find((collection) => collection.id === selectedCollection),
 		[collections, selectedCollection],
 	);
+	const pendingCount = useMemo(
+		() => outbox.filter((entry) => entry.status !== "failed").length,
+		[outbox],
+	);
+	const failedEntries = useMemo(
+		() => outbox.filter((entry) => entry.status === "failed"),
+		[outbox],
+	);
+
+	const refreshOutbox = useCallback(async () => {
+		if (!userId) return;
+		setOutbox(await readOutbox(userId));
+	}, [userId]);
+
+	const applySelection = useCallback(
+		async (nextCollections: NeonCaptureCollection[], accountId: string) => {
+			const storedId = await readLastSelectedCollection(accountId);
+			setSelectedCollection((current) => {
+				if (nextCollections.some((collection) => collection.id === current)) {
+					return current;
+				}
+				return nextCollections.some((collection) => collection.id === storedId)
+					? (storedId as string)
+					: (nextCollections[0]?.id ?? "");
+			});
+		},
+		[],
+	);
 
 	useEffect(() => {
+		if (!userId) return;
 		let cancelled = false;
 		const load = async () => {
+			await syncActiveAccount(userId);
+			void flushOutbox(userId, getToken).then(() => {
+				if (!cancelled) void refreshOutbox();
+			});
+			const cached = await readCachedIndex(userId);
+			if (cached && !cancelled) {
+				setCollections(cached.collections);
+				await applySelection(cached.collections, userId);
+				setLoading(false);
+			}
 			try {
 				const token = await getToken();
 				if (!token) throw new Error("Your Tote session is unavailable.");
 				const nextCollections = await fetchNeonCaptureCollections(token);
 				if (cancelled) return;
+				// A successful read is the authoritative index; it also drops
+				// collections the account can no longer write to.
+				await writeCachedIndex(userId, nextCollections);
 				setCollections(nextCollections);
-				const stored = await chrome.storage.local.get(
-					"lastSelectedNeonCollection",
-				);
-				const storedId = stored.lastSelectedNeonCollection;
-				setSelectedCollection(
-					nextCollections.some((collection) => collection.id === storedId)
-						? storedId
-						: (nextCollections[0]?.id ?? ""),
-				);
+				setOffline(false);
+				await applySelection(nextCollections, userId);
 			} catch (loadError) {
 				if (
 					loadError instanceof NeonCaptureRequestError &&
@@ -63,11 +117,15 @@ export function NeonSaveUI({
 					return;
 				}
 				if (!cancelled) {
-					setError(
-						loadError instanceof Error
-							? loadError.message
-							: "Could not load collections.",
-					);
+					if (cached) {
+						setOffline(true);
+					} else {
+						setError(
+							loadError instanceof Error
+								? loadError.message
+								: "Could not load collections.",
+						);
+					}
 				}
 			} finally {
 				if (!cancelled) setLoading(false);
@@ -77,15 +135,22 @@ export function NeonSaveUI({
 		return () => {
 			cancelled = true;
 		};
-	}, [getToken, onUnavailable]);
+	}, [userId, getToken, onUnavailable, refreshOutbox, applySelection]);
+
+	useEffect(() => {
+		if (!userId) return;
+		const onOnline = () => {
+			void flushOutbox(userId, getToken).then(() => refreshOutbox());
+		};
+		window.addEventListener("online", onOnline);
+		return () => window.removeEventListener("online", onOnline);
+	}, [userId, getToken, refreshOutbox]);
 
 	const chooseCollection = (collectionId: string) => {
 		captureIds.current = null;
 		setSelectedCollection(collectionId);
 		setSelectedSection("");
-		void chrome.storage.local.set({
-			lastSelectedNeonCollection: collectionId,
-		});
+		if (userId) void writeLastSelectedCollection(userId, collectionId);
 	};
 
 	const chooseSection = (sectionId: string) => {
@@ -94,30 +159,46 @@ export function NeonSaveUI({
 	};
 
 	const save = async () => {
-		if (!selectedCollection) return;
+		if (!selectedCollection || !userId) return;
 		setSaving(true);
 		setError(null);
-		try {
-			const token = await getToken();
-			if (!token) throw new Error("Your Tote session is unavailable.");
-			captureIds.current ??= createCaptureIds();
-			await saveNeonCapture({
-				token,
+		captureIds.current ??= createCaptureIds();
+		const outcome = await submitCapture({
+			userId,
+			payload: buildCapturePayload({
 				ids: captureIds.current,
 				collectionId: selectedCollection,
 				sectionId: selectedSection || null,
 				metadata,
-			});
+			}),
+			getToken,
+		});
+		if (outcome.status === "saved") {
 			captureIds.current = null;
 			onSuccess(selectedCollection);
-		} catch (saveError) {
-			setError(
-				saveError instanceof Error
-					? saveError.message
-					: "Could not save this product.",
-			);
-			setSaving(false);
+			return;
 		}
+		if (outcome.status === "queued") {
+			captureIds.current = null;
+			onQueued(selectedCollection);
+			return;
+		}
+		setError(outcome.message);
+		await refreshOutbox();
+		setSaving(false);
+	};
+
+	const retryEntry = async (nodeId: string) => {
+		if (!userId) return;
+		await requeueOutboxEntry(userId, nodeId);
+		await flushOutbox(userId, getToken);
+		await refreshOutbox();
+	};
+
+	const discardEntry = async (nodeId: string) => {
+		if (!userId) return;
+		await removeOutboxEntry(userId, nodeId);
+		await refreshOutbox();
 	};
 
 	if (loading) {
@@ -148,6 +229,12 @@ export function NeonSaveUI({
 
 	return (
 		<>
+			{offline && (
+				<div className="offline-banner">
+					Offline — showing saved collections. Saves will sync when you're back
+					online.
+				</div>
+			)}
 			{error && <div className="error">{error}</div>}
 			<div className="form-group">
 				<label htmlFor="neon-collection">Collection</label>
@@ -190,6 +277,27 @@ export function NeonSaveUI({
 			>
 				{saving ? "Saving..." : "Save to Tote"}
 			</button>
+			{pendingCount > 0 && (
+				<div className="outbox-status">
+					{pendingCount} {pendingCount === 1 ? "save" : "saves"} waiting to sync
+				</div>
+			)}
+			{failedEntries.map((entry) => (
+				<div className="outbox-failed" key={entry.nodeId}>
+					<div className="outbox-failed-info">
+						<span className="outbox-failed-title">{entry.payload.title}</span>
+						<span className="outbox-failed-error">{entry.lastError}</span>
+					</div>
+					<div className="outbox-failed-actions">
+						<button type="button" onClick={() => retryEntry(entry.nodeId)}>
+							Retry
+						</button>
+						<button type="button" onClick={() => discardEntry(entry.nodeId)}>
+							Remove
+						</button>
+					</div>
+				</div>
+			))}
 		</>
 	);
 }

@@ -29,6 +29,7 @@ import {
   ExtensionProviders,
   JazzProvider,
 } from '../providers/ExtensionProviders';
+import { purgeInactiveAccountData } from '../lib/captureStore';
 import { NeonSaveUI } from './NeonSaveUI';
 
 // Error boundary to catch rendering errors
@@ -67,7 +68,7 @@ class ErrorBoundary extends Component<
   }
 }
 
-type Status = 'loading' | 'ready' | 'saving' | 'success' | 'error';
+type Status = 'loading' | 'ready' | 'saving' | 'success' | 'queued' | 'error';
 
 function formatPrice(price?: string, currency?: string): string {
   if (!price) return '';
@@ -770,12 +771,23 @@ function PopupHeader() {
   );
 }
 
+// Cached collections and queued captures are account data; drop them as soon
+// as the popup observes a signed-out session.
+function PurgeNeonCaptureData() {
+  useEffect(() => {
+    void purgeInactiveAccountData();
+  }, []);
+  return null;
+}
+
 function AuthenticatedSaveUI({
   metadata,
   onSuccess,
+  onQueued,
 }: {
   metadata: ExtractedMetadata;
   onSuccess: (collectionId: string) => void;
+  onQueued: (collectionId: string) => void;
 }) {
   const { user } = useUser();
   const [useClassicJazz, setUseClassicJazz] = useState(
@@ -790,6 +802,7 @@ function AuthenticatedSaveUI({
       <NeonSaveUI
         metadata={metadata}
         onSuccess={onSuccess}
+        onQueued={onQueued}
         onUnavailable={fallBackToClassicJazz}
       />
     );
@@ -863,6 +876,11 @@ function PopupContent() {
     setStatus('success');
   };
 
+  const handleQueued = (collectionId: string) => {
+    setSavedCollectionId(collectionId);
+    setStatus('queued');
+  };
+
   // Wait for Clerk to load
   if (!isLoaded) {
     return (
@@ -908,6 +926,14 @@ function PopupContent() {
         </div>
       )}
 
+      {status === 'queued' && (
+        <div className="success">
+          <div className="success-icon">&#10003;</div>
+          <h2>Saved offline</h2>
+          <p>This product will sync the next time you're online.</p>
+        </div>
+      )}
+
       {status === 'ready' && metadata && (
         <>
           <MetadataPreview
@@ -917,6 +943,7 @@ function PopupContent() {
           />
 
           <SignedOut>
+            <PurgeNeonCaptureData />
             <SignInPrompt />
           </SignedOut>
 
@@ -927,6 +954,7 @@ function PopupContent() {
                 imageUrl: selectedImageUrl || metadata.imageUrl,
               }}
               onSuccess={handleSuccess}
+              onQueued={handleQueued}
             />
           </SignedIn>
         </>
