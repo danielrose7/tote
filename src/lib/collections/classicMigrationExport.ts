@@ -22,17 +22,43 @@ export type ClassicMemberClerkIdResolver = (
 	jazzAccountId: string,
 ) => Promise<string | null>;
 
-function loadedValues(value: unknown): JazzValue[] {
-	if (!value || typeof value !== "object") return [];
+export class ClassicMigrationExportIncompleteError extends Error {
+	override name = "ClassicMigrationExportIncompleteError";
+}
+
+function values(value: unknown): unknown[] | null {
+	if (value == null) return [];
+	if (typeof value !== "object") return null;
 	try {
-		return Array.from(value as Iterable<unknown>).filter(
-			(entry): entry is JazzValue =>
-				Boolean(entry) &&
-				typeof entry === "object" &&
-				(entry as JazzValue).$isLoaded === true,
-		);
+		return Array.from(value as Iterable<unknown>);
 	} catch {
-		return [];
+		return null;
+	}
+}
+
+function loadedValues(value: unknown): JazzValue[] {
+	return (values(value) ?? []).filter(
+		(entry): entry is JazzValue =>
+			Boolean(entry) &&
+			typeof entry === "object" &&
+			(entry as JazzValue).$isLoaded === true,
+	);
+}
+
+function assertCompleteList(value: unknown, label: string) {
+	const entries = values(value);
+	if (
+		entries === null ||
+		entries.some(
+			(entry) =>
+				!entry ||
+				typeof entry !== "object" ||
+				(entry as JazzValue).$isLoaded !== true,
+		)
+	) {
+		throw new ClassicMigrationExportIncompleteError(
+			`${label} is not fully loaded`,
+		);
 	}
 }
 
@@ -120,6 +146,11 @@ export function exportClassicCollection(
 		unknown
 	>;
 	const nodes: ClassicMigrationNode[] = [];
+	assertCompleteList(
+		collectionBlock.children,
+		`Collection ${legacyJazzId} children`,
+	);
+	assertCompleteList(collectionBlock.notes, `Collection ${legacyJazzId} notes`);
 
 	for (const [childIndex, child] of loadedValues(
 		collectionBlock.children,
@@ -151,6 +182,10 @@ export function exportClassicCollection(
 			},
 			positionKey: positionKey(childIndex),
 		});
+		assertCompleteList(
+			child.children,
+			`Collection ${legacyJazzId} section ${sectionLegacyJazzId} children`,
+		);
 		for (const [productIndex, product] of loadedValues(
 			child.children,
 		).entries()) {
@@ -216,6 +251,7 @@ export async function exportClassicCollectionsWithMembers(
 	actorUserId: string,
 	resolveClerkUserId: ClassicMemberClerkIdResolver,
 ): Promise<ClassicMigrationCollection[]> {
+	assertCompleteList(rootBlocks, "Classic Jazz collections");
 	const exported = exportClassicCollections(rootBlocks);
 	const blocksById = new Map(
 		loadedValues(rootBlocks).flatMap((block) => {

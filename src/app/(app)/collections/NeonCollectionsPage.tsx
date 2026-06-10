@@ -158,15 +158,15 @@ function ClassicSharedCopyCard({
 	const [error, setError] = useState<string | null>(null);
 
 	const copyToMyCollections = async () => {
-		const exported = exportClassicCollection(source);
-		if (!exported) {
-			setError("The Classic Jazz collection is not fully available yet.");
-			setPhase("error");
-			return;
-		}
 		setPhase("copying");
 		setError(null);
 		try {
+			const exported = exportClassicCollection(source);
+			if (!exported) {
+				throw new Error(
+					"The Classic Jazz collection is not fully available yet.",
+				);
+			}
 			const sourceFingerprint =
 				await fingerprintClassicMigrationCollectionsInBrowser([exported]);
 			const response = await fetch("/api/v2/migration/shared-copy", {

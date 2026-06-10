@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+	ClassicMigrationExportIncompleteError,
+	exportClassicCollection,
 	exportClassicCollections,
 	exportClassicCollectionsWithMembers,
 } from "./classicMigrationExport";
@@ -153,6 +155,43 @@ describe("exportClassicCollections", () => {
 			{ userId: "editor_user", role: "editor" },
 			{ userId: "viewer_user", role: "viewer" },
 		]);
+	});
+
+	it("stops owner migration when the Jazz graph is only partially loaded", async () => {
+		await expect(
+			exportClassicCollectionsWithMembers(
+				[
+					jazzValue("co_zCollection", {
+						type: "collection",
+						name: "Loaded collection",
+						collectionData: {},
+						children: [],
+					}),
+					{ $isLoaded: false },
+				],
+				"owner_user",
+				async () => null,
+			),
+		).rejects.toBeInstanceOf(ClassicMigrationExportIncompleteError);
+	});
+
+	it("stops a shared copy when nested Jazz children are incomplete", () => {
+		const collection = jazzValue("co_zCollection", {
+			type: "collection",
+			name: "Partially loaded collection",
+			collectionData: {},
+			children: [
+				jazzValue("co_zSlot", {
+					type: "slot",
+					name: "Section",
+					children: [{ $isLoaded: false }],
+				}),
+			],
+		});
+
+		expect(() => exportClassicCollection(collection)).toThrow(
+			ClassicMigrationExportIncompleteError,
+		);
 	});
 });
 
