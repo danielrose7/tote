@@ -35,6 +35,7 @@ import {
   collectionQueryKeys,
 } from '../../../../lib/collections/queryKeys';
 import type { CollectionDetail } from '../../../../lib/collections/repository';
+import productCardStyles from '../../../../components/ProductCard/ProductCard.module.css';
 import styles from './NeonCollectionDetailPage.module.css';
 import { NeonCopyCollectionDialog } from './NeonCopyCollectionDialog';
 import { NeonCreateNodeDialog } from './NeonCreateNodeDialog';
@@ -92,7 +93,14 @@ function SortableNode({
           {...attributes}
           {...listeners}
         >
-          <span aria-hidden="true">⋮⋮</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="9" cy="5" r="2" />
+            <circle cx="9" cy="12" r="2" />
+            <circle cx="9" cy="19" r="2" />
+            <circle cx="15" cy="5" r="2" />
+            <circle cx="15" cy="12" r="2" />
+            <circle cx="15" cy="19" r="2" />
+          </svg>
         </button>,
       )}
     </div>
@@ -108,49 +116,138 @@ function ItemNode({
   onEdit?: (node: CollectionNode) => void;
   dragHandle?: React.ReactNode;
 }) {
+  const [showActions, setShowActions] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const properties = propertiesFor(node);
   const title = node.title || (node.type === 'photo' ? 'Photo' : 'Untitled');
-  const content = (
-    <>
-      {properties.imageUrl && (
-        <div className={styles.itemImage}>
-          <img src={properties.imageUrl} alt="" />
-        </div>
-      )}
-      <div className={styles.itemContent}>
-        <div className={styles.itemHeading}>
-          <span className={styles.typeBadge}>{node.type}</span>
-          <h3>{title}</h3>
-        </div>
-        {properties.description && <p>{properties.description}</p>}
-        {properties.body && <p>{properties.body}</p>}
+  const isReorderMode = dragHandle !== undefined;
+  const hasImage = !!(properties.imageUrl && !imageError);
+
+  // List row — reorder mode
+  if (isReorderMode) {
+    return (
+      <div className={styles.nodeListItem}>
+        {dragHandle}
+        {hasImage && (
+          <img
+            src={properties.imageUrl!}
+            alt=""
+            className={styles.nodeListItemImage}
+            onError={() => setImageError(true)}
+          />
+        )}
+        <span className={styles.nodeListItemTitle}>{title}</span>
         {properties.price !== undefined && properties.price !== null && (
-          <span className={styles.price}>{String(properties.price)}</span>
+          <span className={styles.nodeListItemPrice}>
+            {String(properties.price)}
+          </span>
         )}
       </div>
-    </>
-  );
+    );
+  }
 
+  // Full card — normal mode, using ProductCard styles for visual consistency
   return (
-    <article className={styles.itemCard}>
-      {content}
-      <div className={styles.itemActions}>
-        {dragHandle}
-        {properties.url && (
-          <a
-            href={properties.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.itemLink}
+    <article
+      className={productCardStyles.card}
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
+    >
+      {hasImage ? (
+        <div className={productCardStyles.imageContainer}>
+          {!imageLoaded && <div className={productCardStyles.imageSkeleton} />}
+          <img
+            src={properties.imageUrl!}
+            alt={title}
+            className={`${productCardStyles.image} ${imageLoaded ? productCardStyles.imageLoaded : ''}`}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageError(true)}
+          />
+          {properties.price !== undefined && properties.price !== null && (
+            <div className={productCardStyles.priceOverlay}>
+              <span className={productCardStyles.priceTag}>
+                {String(properties.price)}
+              </span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className={productCardStyles.imagePlaceholder}>
+          <svg
+            className={productCardStyles.placeholderIcon}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            Open
-          </a>
-        )}
-        {onEdit && (
-          <button type="button" onClick={() => onEdit(node)}>
-            Edit
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          {properties.price !== undefined && properties.price !== null && (
+            <div className={productCardStyles.priceOverlay}>
+              <span className={productCardStyles.priceTag}>
+                {String(properties.price)}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showActions && onEdit && (
+        <div className={productCardStyles.actionsMenu}>
+          <button
+            type="button"
+            onClick={() => onEdit(node)}
+            className={productCardStyles.actionButton}
+            aria-label="Edit"
+            data-tooltip="Edit"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
           </button>
+        </div>
+      )}
+
+      <div className={productCardStyles.content}>
+        <div className={productCardStyles.header}>
+          <h3 className={productCardStyles.title}>{title}</h3>
+        </div>
+        {(properties.description || properties.body) && (
+          <p className={productCardStyles.description}>
+            {properties.description || properties.body}
+          </p>
         )}
+        <div className={productCardStyles.footer}>
+          {properties.url ? (
+            <a
+              href={properties.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={productCardStyles.link}
+              onClick={(e) => e.stopPropagation()}
+            >
+              Visit →
+            </a>
+          ) : (
+            <span className={styles.itemTypeBadge}>{node.type}</span>
+          )}
+        </div>
       </div>
     </article>
   );
@@ -465,9 +562,13 @@ export function NeonCollectionDetailPage({
             >
               <SortableContext
                 items={rootNodes.map((node) => node.id)}
-                strategy={rectSortingStrategy}
+                strategy={
+                  isReorderMode
+                    ? verticalListSortingStrategy
+                    : rectSortingStrategy
+                }
               >
-                <div className={styles.grid}>
+                <div className={isReorderMode ? styles.nodeList : styles.grid}>
                   {rootNodes.map((node) => (
                     <SortableNode
                       key={node.id}
@@ -546,9 +647,17 @@ export function NeonCollectionDetailPage({
                         >
                           <SortableContext
                             items={children.map((node) => node.id)}
-                            strategy={rectSortingStrategy}
+                            strategy={
+                              isReorderMode
+                                ? verticalListSortingStrategy
+                                : rectSortingStrategy
+                            }
                           >
-                            <div className={styles.grid}>
+                            <div
+                              className={
+                                isReorderMode ? styles.nodeList : styles.grid
+                              }
+                            >
                               {children.map((node) => (
                                 <SortableNode
                                   key={node.id}

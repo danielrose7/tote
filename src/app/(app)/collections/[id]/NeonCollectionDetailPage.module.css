@@ -207,7 +207,23 @@
   gap: var(--spacing-sm);
 }
 
-/* Grid */
+.sectionEditButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sectionEditButton:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Grid layout (normal mode) */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -227,65 +243,82 @@
   }
 }
 
-/* Item cards */
-.itemCard {
+/* List layout (reorder mode) */
+.nodeList {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: var(--spacing-sm);
+}
+
+.nodeListItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-background);
-  color: inherit;
-  text-decoration: none;
-  transition: border-color var(--transition-fast);
+  border-radius: var(--radius-md);
+  transition: box-shadow var(--transition-fast);
 }
 
-.itemCard:hover {
-  border-color: var(--color-accent);
+.nodeListItemImage {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
 }
 
+.nodeListItemTitle {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nodeListItemPrice {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* Drag handle — minimal dots style */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs);
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.dragHandle:hover {
+  background-color: var(--color-surface-hover);
+  color: var(--color-text-primary);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* Dragging state (applied to SortableNode wrapper) */
 .dragging {
   z-index: 2;
   opacity: 0.7;
 }
 
-.itemImage {
-  aspect-ratio: 16 / 9;
-  background: var(--color-background-secondary);
-}
-
-.itemImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.itemContent {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-md);
-  flex: 1;
-}
-
-.itemContent p {
-  margin: 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-.itemHeading {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.itemHeading h3 {
-  margin: 0;
-  font-size: var(--font-size-base);
-}
-
-.typeBadge {
+/* Type badge — shown on cards with no URL */
+.itemTypeBadge {
   display: inline-flex;
   padding: 2px var(--spacing-sm);
   border-radius: var(--radius-full);
@@ -293,51 +326,6 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-xs);
   text-transform: capitalize;
-  flex-shrink: 0;
-}
-
-.price {
-  font-weight: var(--font-weight-semibold);
-}
-
-.itemActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--spacing-sm);
-  margin-top: auto;
-  padding: 0 var(--spacing-md) var(--spacing-md);
-}
-
-.itemLink,
-.itemActions button,
-.sectionEditButton,
-.dragHandle {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  text-decoration: none;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.itemLink:hover,
-.itemActions button:hover,
-.sectionEditButton:hover,
-.dragHandle:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.dragHandle {
-  cursor: grab;
-  touch-action: none;
-}
-
-.dragHandle:active {
-  cursor: grabbing;
 }
 
 /* Empty states */
