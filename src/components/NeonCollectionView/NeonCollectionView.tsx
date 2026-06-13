@@ -536,6 +536,47 @@ export function NeonCollectionView({
         />
       ) : (
         <>
+          {/* Sections */}
+          {sections.length > 0 && (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={({ active, over }) => {
+                if (!over) return;
+                localReorder(
+                  setReorderSections,
+                  String(active.id),
+                  String(over.id),
+                );
+              }}
+            >
+              {(() => {
+                const displaySections = isSectionReorderMode
+                  ? reorderSections
+                  : sections;
+                return (
+                  <SortableContext
+                    items={displaySections.map((s) => s.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {displaySections.map((section) => (
+                      <SortableSectionWrapper
+                        key={section.id}
+                        id={section.id}
+                        section={section}
+                        items={childrenByParent.get(section.id) ?? []}
+                        collectionId={collection.id}
+                        canEdit={canEdit}
+                        isSectionReorderMode={isSectionReorderMode}
+                        onEditItem={canEdit ? onEditNode : undefined}
+                      />
+                    ))}
+                  </SortableContext>
+                );
+              })()}
+            </DndContext>
+          )}
+
           {/* Ungrouped root nodes */}
           {rootNodes.length > 0 && (
             <section className={pageStyles.section}>
@@ -621,47 +662,6 @@ export function NeonCollectionView({
                 })()}
               </DndContext>
             </section>
-          )}
-
-          {/* Sections */}
-          {sections.length > 0 && (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={({ active, over }) => {
-                if (!over) return;
-                localReorder(
-                  setReorderSections,
-                  String(active.id),
-                  String(over.id),
-                );
-              }}
-            >
-              {(() => {
-                const displaySections = isSectionReorderMode
-                  ? reorderSections
-                  : sections;
-                return (
-                  <SortableContext
-                    items={displaySections.map((s) => s.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {displaySections.map((section) => (
-                      <SortableSectionWrapper
-                        key={section.id}
-                        id={section.id}
-                        section={section}
-                        items={childrenByParent.get(section.id) ?? []}
-                        collectionId={collection.id}
-                        canEdit={canEdit}
-                        isSectionReorderMode={isSectionReorderMode}
-                        onEditItem={canEdit ? onEditNode : undefined}
-                      />
-                    ))}
-                  </SortableContext>
-                );
-              })()}
-            </DndContext>
           )}
         </>
       )}
