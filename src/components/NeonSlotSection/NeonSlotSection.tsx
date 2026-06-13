@@ -271,7 +271,9 @@ export function NeonSlotSection({
 }: NeonSlotSectionProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isProductReorderMode, setIsProductReorderMode] = useState(false);
+  // Non-empty = reorder mode active; doubles as the local ordered list
+  const [reorderItems, setReorderItems] = useState<CollectionNode[]>([]);
+  const isProductReorderMode = reorderItems.length > 0;
   const [editName, setEditName] = useState(section.title ?? '');
 
   const queryClient = useQueryClient();
@@ -404,56 +406,64 @@ export function NeonSlotSection({
 
   const handleProductDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
-    const oldIndex = items.findIndex((n) => n.id === String(active.id));
-    const newIndex = items.findIndex((n) => n.id === String(over.id));
-    if (oldIndex < 0 || newIndex < 0) return;
+    setReorderItems((prev) => {
+      const oldIndex = prev.findIndex((n) => n.id === String(active.id));
+      const newIndex = prev.findIndex((n) => n.id === String(over.id));
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
 
-    const reordered = arrayMove(items, oldIndex, newIndex);
-    const updates = reordered.map((node, i) => ({
+  const handleProductReorderDone = () => {
+    const updates = reorderItems.map((node, i) => ({
       node,
       positionKey: `r:${String(i).padStart(8, '0')}:${node.id}`,
     }));
-    const nextPositions = new Map(
-      updates.map(({ node, positionKey }) => [node.id, positionKey]),
+    const hasChanged = updates.some(
+      ({ node, positionKey }) => node.positionKey !== positionKey,
     );
-
-    queryClient.setQueryData<CollectionDetail>(
-      collectionQueryKeys.detail(collectionId),
-      (current) =>
-        current
-          ? {
-              ...current,
-              collection: {
-                ...current.collection,
-                version: current.collection.version + updates.length,
-                updatedAt: new Date(),
-              },
-              nodes: current.nodes.map((n) => {
-                const positionKey = nextPositions.get(n.id);
-                return positionKey
-                  ? {
-                      ...n,
-                      positionKey,
-                      version: n.version + 1,
-                      updatedAt: new Date(),
-                    }
-                  : n;
-              }),
-            }
-          : current,
-    );
-
-    reorderProducts.mutate({
-      collectionId,
-      input: {
-        mutationId: crypto.randomUUID(),
-        nodes: updates.map(({ node, positionKey }) => ({
-          id: node.id,
-          expectedVersion: node.version,
-          positionKey,
-        })),
-      },
-    });
+    if (hasChanged) {
+      const nextPositions = new Map(
+        updates.map(({ node, positionKey }) => [node.id, positionKey]),
+      );
+      queryClient.setQueryData<CollectionDetail>(
+        collectionQueryKeys.detail(collectionId),
+        (current) =>
+          current
+            ? {
+                ...current,
+                collection: {
+                  ...current.collection,
+                  version: current.collection.version + updates.length,
+                  updatedAt: new Date(),
+                },
+                nodes: current.nodes.map((n) => {
+                  const positionKey = nextPositions.get(n.id);
+                  return positionKey
+                    ? {
+                        ...n,
+                        positionKey,
+                        version: n.version + 1,
+                        updatedAt: new Date(),
+                      }
+                    : n;
+                }),
+              }
+            : current,
+      );
+      reorderProducts.mutate({
+        collectionId,
+        input: {
+          mutationId: crypto.randomUUID(),
+          nodes: updates.map(({ node, positionKey }) => ({
+            id: node.id,
+            expectedVersion: node.version,
+            positionKey,
+          })),
+        },
+      });
+    }
+    setReorderItems([]);
   };
 
   const effectiveCollapsed = forceCollapsed || isCollapsed;
@@ -533,9 +543,13 @@ export function NeonSlotSection({
                 {items.length > 1 && (
                   <button
                     type="button"
-                    onClick={() =>
-                      setIsProductReorderMode(!isProductReorderMode)
-                    }
+                    onClick={() => {
+                      if (!isProductReorderMode) {
+                        setReorderItems([...items]);
+                      } else {
+                        handleProductReorderDone();
+                      }
+                    }}
                     className={
                       isProductReorderMode
                         ? styles.doneButton
@@ -604,11 +618,11 @@ export function NeonSlotSection({
               onDragEnd={handleProductDragEnd}
             >
               <SortableContext
-                items={items.map((n) => n.id)}
+                items={reorderItems.map((n) => n.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className={styles.productList}>
-                  {items.map((node) => (
+                  {reorderItems.map((node) => (
                     <NeonSortableItem
                       key={node.id}
                       id={node.id}

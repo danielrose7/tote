@@ -3,7 +3,6 @@
 import {
   closestCenter,
   DndContext,
-  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -350,8 +349,11 @@ export function NeonCollectionView({
   const canEdit = roleCan(role, 'edit');
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [isSectionReorderMode, setIsSectionReorderMode] = useState(false);
-  const [isRootReorderMode, setIsRootReorderMode] = useState(false);
+  // Non-empty = reorder mode active; doubles as the local ordered list
+  const [reorderSections, setReorderSections] = useState<CollectionNode[]>([]);
+  const [reorderRoots, setReorderRoots] = useState<CollectionNode[]>([]);
+  const isSectionReorderMode = reorderSections.length > 0;
+  const isRootReorderMode = reorderRoots.length > 0;
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -412,24 +414,32 @@ export function NeonCollectionView({
     childrenByParent.set(node.parentId, children);
   }
 
-  const reorderSiblings = (
-    siblings: CollectionNode[],
+  const localReorder = (
+    setOrder: React.Dispatch<React.SetStateAction<CollectionNode[]>>,
     activeId: string,
     overId: string,
   ) => {
-    const oldIndex = siblings.findIndex((n) => n.id === activeId);
-    const newIndex = siblings.findIndex((n) => n.id === overId);
-    if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return;
+    setOrder((prev) => {
+      const oldIndex = prev.findIndex((n) => n.id === activeId);
+      const newIndex = prev.findIndex((n) => n.id === overId);
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return prev;
+      return arrayMove(prev, oldIndex, newIndex);
+    });
+  };
 
-    const reordered = arrayMove(siblings, oldIndex, newIndex);
-    const updates = reordered.map((node, i) => ({
+  const saveReorder = (orderedNodes: CollectionNode[]) => {
+    const updates = orderedNodes.map((node, i) => ({
       node,
       positionKey: `r:${String(i).padStart(8, '0')}:${node.id}`,
     }));
+    const hasChanged = updates.some(
+      ({ node, positionKey }) => node.positionKey !== positionKey,
+    );
+    if (!hasChanged) return;
+
     const nextPositions = new Map(
       updates.map(({ node, positionKey }) => [node.id, positionKey]),
     );
-
     queryClient.setQueryData<CollectionDetail>(
       collectionQueryKeys.detail(collection.id),
       (current) =>
@@ -455,7 +465,6 @@ export function NeonCollectionView({
             }
           : current,
     );
-
     reorderNodes.mutate({
       collectionId: collection.id,
       input: {
@@ -469,12 +478,15 @@ export function NeonCollectionView({
     });
   };
 
-  const dragEndHandler =
-    (siblings: CollectionNode[]) =>
-    ({ active, over }: DragEndEvent) => {
-      if (!over) return;
-      reorderSiblings(siblings, String(active.id), String(over.id));
-    };
+  const handleRootReorderDone = () => {
+    saveReorder(reorderRoots);
+    setReorderRoots([]);
+  };
+
+  const handleSectionReorderDone = () => {
+    saveReorder(reorderSections);
+    setReorderSections([]);
+  };
 
   if (nodes.length === 0) {
     return (
@@ -497,7 +509,13 @@ export function NeonCollectionView({
           {viewMode === 'grid' && sections.length > 1 && canEdit && (
             <button
               type="button"
-              onClick={() => setIsSectionReorderMode(!isSectionReorderMode)}
+              onClick={() => {
+                if (!isSectionReorderMode) {
+                  setReorderSections([...sections]);
+                } else {
+                  handleSectionReorderDone();
+                }
+              }}
               className={
                 isSectionReorderMode
                   ? pageStyles.doneButton
@@ -541,7 +559,13 @@ export function NeonCollectionView({
                             ? pageStyles.doneButton
                             : pageStyles.sectionEditButton
                         }
-                        onClick={() => setIsRootReorderMode(!isRootReorderMode)}
+                        onClick={() => {
+                          if (!isRootReorderMode) {
+                            setReorderRoots([...rootNodes]);
+                          } else {
+                            handleRootReorderDone();
+                          }
+                        }}
                       >
                         {isRootReorderMode ? 'Done' : 'Reorder'}
                       </button>
@@ -552,33 +576,49 @@ export function NeonCollectionView({
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
-                onDragEnd={dragEndHandler(rootNodes)}
+                onDragEnd={({ active, over }) => {
+                  if (!over) return;
+                  localReorder(
+                    setReorderRoots,
+                    String(active.id),
+                    String(over.id),
+                  );
+                }}
               >
-                <SortableContext
-                  items={rootNodes.map((n) => n.id)}
-                  strategy={
-                    isRootReorderMode
-                      ? verticalListSortingStrategy
-                      : rectSortingStrategy
-                  }
-                >
-                  <div
-                    className={
-                      isRootReorderMode ? pageStyles.nodeList : pageStyles.grid
-                    }
-                  >
-                    {rootNodes.map((node) => (
-                      <SortableItemNode
-                        key={node.id}
-                        id={node.id}
-                        node={node}
-                        isReorderMode={isRootReorderMode}
-                        canEdit={canEdit}
-                        onEdit={onEditNode}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
+                {(() => {
+                  const displayNodes = isRootReorderMode
+                    ? reorderRoots
+                    : rootNodes;
+                  return (
+                    <SortableContext
+                      items={displayNodes.map((n) => n.id)}
+                      strategy={
+                        isRootReorderMode
+                          ? verticalListSortingStrategy
+                          : rectSortingStrategy
+                      }
+                    >
+                      <div
+                        className={
+                          isRootReorderMode
+                            ? pageStyles.nodeList
+                            : pageStyles.grid
+                        }
+                      >
+                        {displayNodes.map((node) => (
+                          <SortableItemNode
+                            key={node.id}
+                            id={node.id}
+                            node={node}
+                            isReorderMode={isRootReorderMode}
+                            canEdit={canEdit}
+                            onEdit={onEditNode}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  );
+                })()}
               </DndContext>
             </section>
           )}
@@ -588,25 +628,39 @@ export function NeonCollectionView({
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
-              onDragEnd={dragEndHandler(sections)}
+              onDragEnd={({ active, over }) => {
+                if (!over) return;
+                localReorder(
+                  setReorderSections,
+                  String(active.id),
+                  String(over.id),
+                );
+              }}
             >
-              <SortableContext
-                items={sections.map((s) => s.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {sections.map((section) => (
-                  <SortableSectionWrapper
-                    key={section.id}
-                    id={section.id}
-                    section={section}
-                    items={childrenByParent.get(section.id) ?? []}
-                    collectionId={collection.id}
-                    canEdit={canEdit}
-                    isSectionReorderMode={isSectionReorderMode}
-                    onEditItem={canEdit ? onEditNode : undefined}
-                  />
-                ))}
-              </SortableContext>
+              {(() => {
+                const displaySections = isSectionReorderMode
+                  ? reorderSections
+                  : sections;
+                return (
+                  <SortableContext
+                    items={displaySections.map((s) => s.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {displaySections.map((section) => (
+                      <SortableSectionWrapper
+                        key={section.id}
+                        id={section.id}
+                        section={section}
+                        items={childrenByParent.get(section.id) ?? []}
+                        collectionId={collection.id}
+                        canEdit={canEdit}
+                        isSectionReorderMode={isSectionReorderMode}
+                        onEditItem={canEdit ? onEditNode : undefined}
+                      />
+                    ))}
+                  </SortableContext>
+                );
+              })()}
             </DndContext>
           )}
         </>
