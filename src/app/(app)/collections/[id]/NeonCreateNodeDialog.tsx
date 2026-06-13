@@ -3,8 +3,9 @@
 import { useUser } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import dialogStyles from '../../../../components/CreateCollectionDialog/CreateCollectionDialog.module.css';
+import { NeonSectionSelector } from '../../../../components/NeonSectionSelector/NeonSectionSelector';
 import { useToast } from '../../../../components/ToastNotification';
 import type { CollectionNode } from '../../../../db/schema';
 import {
@@ -57,7 +58,13 @@ export function NeonCreateNodeDialog({
   const [description, setDescription] = useState('');
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const sections = detail.nodes.filter((node) => node.type === 'section');
+  // Merge prop sections with any sections created inline during this session
+  const [extraSections, setExtraSections] = useState<CollectionNode[]>([]);
+  const baseSections = detail.nodes.filter((node) => node.type === 'section');
+  const sections = [
+    ...baseSections,
+    ...extraSections.filter((s) => !baseSections.some((b) => b.id === s.id)),
+  ];
 
   useEffect(() => {
     if (type === 'section') {
@@ -158,6 +165,49 @@ export function NeonCreateNodeDialog({
     },
   });
 
+  const handleCreateSection = useCallback(
+    async (name: string): Promise<string> => {
+      const nodeId = crypto.randomUUID();
+      const now = new Date();
+      const optimisticSection: CollectionNode = {
+        id: nodeId,
+        collectionId: detail.collection.id,
+        parentId: null,
+        type: 'section',
+        title: name,
+        properties: {},
+        positionKey: `${now.toISOString()}:${nodeId}`,
+        version: 1,
+        createdByUserId: user?.id ?? '',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
+      setExtraSections((prev) => [...prev, optimisticSection]);
+      queryClient.setQueryData<CollectionDetail>(
+        collectionQueryKeys.detail(detail.collection.id),
+        (current) =>
+          current
+            ? { ...current, nodes: [...current.nodes, optimisticSection] }
+            : current,
+      );
+      createNode.mutate({
+        collectionId: detail.collection.id,
+        input: {
+          id: nodeId,
+          mutationId: crypto.randomUUID(),
+          type: 'section',
+          title: name,
+          parentId: null,
+          properties: {},
+          positionKey: optimisticSection.positionKey,
+        },
+      });
+      return nodeId;
+    },
+    [detail.collection.id, user?.id, queryClient, createNode],
+  );
+
   const reset = () => {
     setType('product');
     setTitle('');
@@ -167,6 +217,7 @@ export function NeonCreateNodeDialog({
     setDescription('');
     setBody('');
     setError(null);
+    setExtraSections([]);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -263,27 +314,15 @@ export function NeonCreateNodeDialog({
               />
             </div>
 
-            {type !== 'section' && sections.length > 0 && (
+            {type !== 'section' && (
               <div className={dialogStyles.inputGroup}>
-                <label
-                  htmlFor="neon-node-section"
-                  className={dialogStyles.label}
-                >
-                  Section
-                </label>
-                <select
-                  id="neon-node-section"
-                  value={parentId}
-                  onChange={(event) => setParentId(event.target.value)}
-                  className={dialogStyles.input}
-                >
-                  <option value="">Top level</option>
-                  {sections.map((section) => (
-                    <option key={section.id} value={section.id}>
-                      {section.title || 'Untitled section'}
-                    </option>
-                  ))}
-                </select>
+                <label className={dialogStyles.label}>Section</label>
+                <NeonSectionSelector
+                  value={parentId || null}
+                  onChange={(id) => setParentId(id ?? '')}
+                  sections={sections}
+                  onCreateSection={handleCreateSection}
+                />
               </div>
             )}
 

@@ -2,11 +2,13 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import editStyles from '../../../../components/EditCollectionDialog/EditCollectionDialog.module.css';
+import { NeonSectionSelector } from '../../../../components/NeonSectionSelector/NeonSectionSelector';
 import { useToast } from '../../../../components/ToastNotification';
 import type { CollectionNode } from '../../../../db/schema';
 import {
+  createCollectionNodeMutation,
   deleteCollectionNodeMutation,
   type DeleteCollectionNodeMutation,
   updateCollectionNodeMutation,
@@ -69,9 +71,14 @@ export function NeonEditNodeDialog({
   const [body, setBody] = useState('');
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const sections = detail.nodes.filter(
+  const [extraSections, setExtraSections] = useState<CollectionNode[]>([]);
+  const baseSections = detail.nodes.filter(
     (candidate) => candidate.type === 'section' && candidate.id !== node?.id,
   );
+  const sections = [
+    ...baseSections,
+    ...extraSections.filter((s) => !baseSections.some((b) => b.id === s.id)),
+  ];
 
   useEffect(() => {
     if (!open || !node) return;
@@ -255,6 +262,49 @@ export function NeonEditNodeDialog({
     },
   });
 
+  const handleCreateSection = useCallback(
+    async (name: string): Promise<string> => {
+      const nodeId = crypto.randomUUID();
+      const now = new Date();
+      const optimisticSection: CollectionNode = {
+        id: nodeId,
+        collectionId: detail.collection.id,
+        parentId: null,
+        type: 'section',
+        title: name,
+        properties: {},
+        positionKey: `${now.toISOString()}:${nodeId}`,
+        version: 1,
+        createdByUserId: '',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+      };
+      setExtraSections((prev) => [...prev, optimisticSection]);
+      queryClient.setQueryData<CollectionDetail>(
+        collectionQueryKeys.detail(detail.collection.id),
+        (current) =>
+          current
+            ? { ...current, nodes: [...current.nodes, optimisticSection] }
+            : current,
+      );
+      await createCollectionNodeMutation({
+        collectionId: detail.collection.id,
+        input: {
+          id: nodeId,
+          mutationId: crypto.randomUUID(),
+          type: 'section',
+          title: name,
+          parentId: null,
+          properties: {},
+          positionKey: optimisticSection.positionKey,
+        },
+      });
+      return nodeId;
+    },
+    [detail.collection.id, queryClient],
+  );
+
   if (!node) return null;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -354,25 +404,13 @@ export function NeonEditNodeDialog({
 
             {node.type !== 'section' && (
               <div className={editStyles.inputGroup}>
-                <label
-                  htmlFor="neon-edit-node-section"
-                  className={editStyles.label}
-                >
-                  Section
-                </label>
-                <select
-                  id="neon-edit-node-section"
-                  value={parentId}
-                  onChange={(event) => setParentId(event.target.value)}
-                  className={editStyles.select}
-                >
-                  <option value="">Top level</option>
-                  {sections.map((section) => (
-                    <option key={section.id} value={section.id}>
-                      {section.title || 'Untitled section'}
-                    </option>
-                  ))}
-                </select>
+                <label className={editStyles.label}>Section</label>
+                <NeonSectionSelector
+                  value={parentId || null}
+                  onChange={(id) => setParentId(id ?? '')}
+                  sections={sections}
+                  onCreateSection={handleCreateSection}
+                />
               </div>
             )}
 
