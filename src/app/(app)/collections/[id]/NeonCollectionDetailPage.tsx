@@ -22,11 +22,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Header } from '../../../../components/Header';
+import { NeonSlotSection } from '../../../../components/NeonSlotSection/NeonSlotSection';
 import { useToast } from '../../../../components/ToastNotification';
 import type { CollectionNode } from '../../../../db/schema';
 import { useCollectionRealtime } from '../../../../hooks/useCollectionRealtime';
 import {
   fetchCollectionDetail,
+  reorderCollectionNodesMutation,
   type ReorderCollectionNodesMutation,
 } from '../../../../lib/collections/client';
 import { roleCan } from '../../../../lib/collections/permissions';
@@ -65,7 +67,10 @@ function SortableNode({
   id: string;
   className?: string;
   handleLabel: string;
-  children: (dragHandle: React.ReactNode) => React.ReactNode;
+  children: (
+    dragHandle: React.ReactNode,
+    isDragging: boolean,
+  ) => React.ReactNode;
 }) {
   const {
     attributes,
@@ -102,6 +107,7 @@ function SortableNode({
             <circle cx="15" cy="19" r="2" />
           </svg>
         </button>,
+        isDragging,
       )}
     </div>
   );
@@ -124,7 +130,6 @@ function ItemNode({
   const isReorderMode = dragHandle !== undefined;
   const hasImage = !!(properties.imageUrl && !imageError);
 
-  // List row — reorder mode
   if (isReorderMode) {
     return (
       <div className={styles.nodeListItem}>
@@ -147,7 +152,6 @@ function ItemNode({
     );
   }
 
-  // Full card — normal mode, using ProductCard styles for visual consistency
   return (
     <article
       className={productCardStyles.card}
@@ -265,7 +269,8 @@ export function NeonCollectionDetailPage({
   const [isTeamOpen, setIsTeamOpen] = useState(false);
   const [isPublicationOpen, setIsPublicationOpen] = useState(false);
   const [isCopyOpen, setIsCopyOpen] = useState(false);
-  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [isSectionReorderMode, setIsSectionReorderMode] = useState(false);
+  const [isRootReorderMode, setIsRootReorderMode] = useState(false);
   const [selectedNode, setSelectedNode] = useState<CollectionNode | null>(null);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -296,6 +301,7 @@ export function NeonCollectionDetailPage({
     ReorderCollectionNodesMutation
   >({
     mutationKey: collectionMutationKeys.reorderNodes,
+    mutationFn: reorderCollectionNodesMutation,
     scope: { id: `collection:${collectionId}` },
     onError: (error) => {
       showToast({
@@ -539,22 +545,37 @@ export function NeonCollectionDetailPage({
           </div>
         </div>
 
-        {nodes.length > 1 && roleCan(role, 'edit') && (
-          <div className={styles.actions}>
-            <button
-              type="button"
-              onClick={() => setIsReorderMode(!isReorderMode)}
-              className={
-                isReorderMode ? styles.doneButton : styles.reorderButton
-              }
-            >
-              {isReorderMode ? 'Done' : 'Reorder'}
-            </button>
-          </div>
-        )}
-
+        {/* Root nodes (ungrouped) */}
         {rootNodes.length > 0 && (
           <section className={styles.section}>
+            {(sections.length > 0 || rootNodes.length > 1) && (
+              <div className={styles.sectionHeader}>
+                {sections.length > 0 && (
+                  <div>
+                    <h2>Ungrouped</h2>
+                    <span>
+                      {rootNodes.length}{' '}
+                      {rootNodes.length === 1 ? 'item' : 'items'}
+                    </span>
+                  </div>
+                )}
+                {rootNodes.length > 1 && roleCan(role, 'edit') && (
+                  <div className={styles.sectionActions}>
+                    <button
+                      type="button"
+                      className={
+                        isRootReorderMode
+                          ? styles.doneButton
+                          : styles.sectionEditButton
+                      }
+                      onClick={() => setIsRootReorderMode(!isRootReorderMode)}
+                    >
+                      {isRootReorderMode ? 'Done' : 'Reorder'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -563,12 +584,14 @@ export function NeonCollectionDetailPage({
               <SortableContext
                 items={rootNodes.map((node) => node.id)}
                 strategy={
-                  isReorderMode
+                  isRootReorderMode
                     ? verticalListSortingStrategy
                     : rectSortingStrategy
                 }
               >
-                <div className={isReorderMode ? styles.nodeList : styles.grid}>
+                <div
+                  className={isRootReorderMode ? styles.nodeList : styles.grid}
+                >
                   {rootNodes.map((node) => (
                     <SortableNode
                       key={node.id}
@@ -579,7 +602,7 @@ export function NeonCollectionDetailPage({
                         <ItemNode
                           node={node}
                           dragHandle={
-                            isReorderMode && roleCan(role, 'edit')
+                            isRootReorderMode && roleCan(role, 'edit')
                               ? dragHandle
                               : undefined
                           }
@@ -598,112 +621,71 @@ export function NeonCollectionDetailPage({
           </section>
         )}
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={dragEndHandler(sections)}
-        >
-          <SortableContext
-            items={sections.map((section) => section.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {sections.map((section) => {
-              const children = childrenByParent.get(section.id) ?? [];
-              return (
-                <SortableNode
-                  key={section.id}
-                  id={section.id}
-                  className={styles.section}
-                  handleLabel={`Reorder ${section.title || 'section'}`}
+        {/* Sections */}
+        {sections.length > 0 && (
+          <>
+            {sections.length > 1 && roleCan(role, 'edit') && (
+              <div className={styles.actions}>
+                <button
+                  type="button"
+                  onClick={() => setIsSectionReorderMode(!isSectionReorderMode)}
+                  className={
+                    isSectionReorderMode
+                      ? styles.doneButton
+                      : styles.reorderButton
+                  }
                 >
-                  {(sectionDragHandle) => (
-                    <section>
-                      <div className={styles.sectionHeader}>
-                        <div>
-                          <h2>{section.title || 'Untitled section'}</h2>
-                          <span>
-                            {children.length}{' '}
-                            {children.length === 1 ? 'item' : 'items'}
-                          </span>
-                        </div>
-                        {roleCan(role, 'edit') && (
-                          <div className={styles.sectionActions}>
-                            {isReorderMode && sectionDragHandle}
-                            <button
-                              type="button"
-                              className={styles.sectionEditButton}
-                              onClick={() => setSelectedNode(section)}
-                            >
-                              Edit section
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      {children.length > 0 ? (
-                        <DndContext
-                          sensors={sensors}
-                          collisionDetection={closestCenter}
-                          onDragEnd={dragEndHandler(children)}
-                        >
-                          <SortableContext
-                            items={children.map((node) => node.id)}
-                            strategy={
-                              isReorderMode
-                                ? verticalListSortingStrategy
-                                : rectSortingStrategy
-                            }
-                          >
-                            <div
-                              className={
-                                isReorderMode ? styles.nodeList : styles.grid
-                              }
-                            >
-                              {children.map((node) => (
-                                <SortableNode
-                                  key={node.id}
-                                  id={node.id}
-                                  handleLabel={`Reorder ${
-                                    node.title || node.type
-                                  }`}
-                                >
-                                  {(dragHandle) => (
-                                    <ItemNode
-                                      node={node}
-                                      dragHandle={
-                                        isReorderMode && roleCan(role, 'edit')
-                                          ? dragHandle
-                                          : undefined
-                                      }
-                                      onEdit={
-                                        roleCan(role, 'edit')
-                                          ? (selected) =>
-                                              setSelectedNode(selected)
-                                          : undefined
-                                      }
-                                    />
-                                  )}
-                                </SortableNode>
-                              ))}
-                            </div>
-                          </SortableContext>
-                        </DndContext>
-                      ) : (
-                        <p className={styles.emptySection}>
-                          This section is empty.
-                        </p>
+                  {isSectionReorderMode ? 'Done' : 'Reorder Sections'}
+                </button>
+              </div>
+            )}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={dragEndHandler(sections)}
+            >
+              <SortableContext
+                items={sections.map((section) => section.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {sections.map((section) => {
+                  const children = childrenByParent.get(section.id) ?? [];
+                  return (
+                    <SortableNode
+                      key={section.id}
+                      id={section.id}
+                      handleLabel={`Reorder ${section.title || 'section'}`}
+                    >
+                      {(sectionDragHandle, isDragging) => (
+                        <NeonSlotSection
+                          section={section}
+                          items={children}
+                          collectionId={collection.id}
+                          canEdit={roleCan(role, 'edit')}
+                          onEditItem={
+                            roleCan(role, 'edit')
+                              ? (node) => setSelectedNode(node)
+                              : undefined
+                          }
+                          dragHandle={
+                            isSectionReorderMode ? sectionDragHandle : undefined
+                          }
+                          isDragging={isDragging}
+                          forceCollapsed={isSectionReorderMode}
+                        />
                       )}
-                    </section>
-                  )}
-                </SortableNode>
-              );
-            })}
-          </SortableContext>
-        </DndContext>
+                    </SortableNode>
+                  );
+                })}
+              </SortableContext>
+            </DndContext>
+          </>
+        )}
 
         {nodes.length === 0 && (
           <div className={styles.emptyCollection}>
             <h2>This collection is empty</h2>
-            <p>Items added to the Neon collection will appear here.</p>
+            <p>Items added to this collection will appear here.</p>
           </div>
         )}
       </main>
