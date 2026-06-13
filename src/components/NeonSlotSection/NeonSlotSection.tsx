@@ -42,18 +42,50 @@ type NodeProperties = {
   body?: string;
 };
 
+type SectionProperties = {
+  maxSelections?: number;
+  budget?: number; // stored in cents
+  selectedItemIds?: string[];
+};
+
 function propertiesFor(node: CollectionNode): NodeProperties {
   return node.properties as NodeProperties;
+}
+
+function sectionPropsFor(section: CollectionNode): SectionProperties {
+  return section.properties as SectionProperties;
+}
+
+function formatBudget(cents: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100);
+}
+
+function parsePriceToCents(
+  price: string | number | undefined,
+): number | undefined {
+  if (price === undefined || price === null) return undefined;
+  const cleaned = String(price)
+    .replace(/[^0-9.,]/g, '')
+    .replace(',', '.');
+  const value = parseFloat(cleaned);
+  return isNaN(value) ? undefined : Math.round(value * 100);
 }
 
 function NeonProductItem({
   node,
   onEdit,
   dragHandle,
+  isSelected = false,
+  onToggleSelection,
 }: {
   node: CollectionNode;
   onEdit?: (node: CollectionNode) => void;
   dragHandle?: React.ReactNode;
+  isSelected?: boolean;
+  onToggleSelection?: () => void;
 }) {
   const [showActions, setShowActions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -87,7 +119,7 @@ function NeonProductItem({
 
   return (
     <article
-      className={productCardStyles.card}
+      className={`${productCardStyles.card} ${isSelected ? productCardStyles.cardSelected : ''}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -134,30 +166,74 @@ function NeonProductItem({
         </div>
       )}
 
-      {showActions && onEdit && (
-        <div className={productCardStyles.actionsMenu}>
-          <button
-            type="button"
-            onClick={() => onEdit(node)}
-            className={productCardStyles.actionButton}
-            aria-label="Edit"
-            data-tooltip="Edit"
+      {isSelected && (
+        <div className={productCardStyles.selectionBadge}>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+      )}
+
+      {showActions && (onEdit || onToggleSelection) && (
+        <div className={productCardStyles.actionsMenu}>
+          {onToggleSelection && (
+            <button
+              type="button"
+              onClick={onToggleSelection}
+              className={`${productCardStyles.actionButton} ${isSelected ? productCardStyles.actionButtonSelected : ''}`}
+              aria-label={isSelected ? 'Deselect' : 'Select'}
+              data-tooltip={isSelected ? 'Deselect' : 'Select'}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-          </button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <circle cx="12" cy="12" r="9" strokeWidth={2} />
+                {isSelected && (
+                  <polyline
+                    points="8 12 11 15 16 9"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+              </svg>
+            </button>
+          )}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(node)}
+              className={productCardStyles.actionButton}
+              aria-label="Edit"
+              data-tooltip="Edit"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 
@@ -269,12 +345,28 @@ export function NeonSlotSection({
   isDragging,
   forceCollapsed,
 }: NeonSlotSectionProps) {
+  const sectionProps = sectionPropsFor(section);
+  const selectedItemIds = sectionProps.selectedItemIds ?? [];
+  const maxSelections = sectionProps.maxSelections;
+  const budget = sectionProps.budget;
+  const selectedCount = selectedItemIds.length;
+  const selectedTotal = items.reduce((sum, item) => {
+    if (!selectedItemIds.includes(item.id)) return sum;
+    return sum + (parsePriceToCents(propertiesFor(item).price) ?? 0);
+  }, 0);
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   // Non-empty = reorder mode active; doubles as the local ordered list
   const [reorderItems, setReorderItems] = useState<CollectionNode[]>([]);
   const isProductReorderMode = reorderItems.length > 0;
   const [editName, setEditName] = useState(section.title ?? '');
+  const [editMaxSelections, setEditMaxSelections] = useState(
+    maxSelections !== undefined ? String(maxSelections) : '',
+  );
+  const [editBudget, setEditBudget] = useState(
+    budget !== undefined ? String(budget / 100) : '',
+  );
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -301,6 +393,9 @@ export function NeonSlotSection({
                     ? {
                         ...n,
                         title: input.title ?? n.title,
+                        properties: input.properties
+                          ? { ...n.properties, ...input.properties }
+                          : n.properties,
                         version: n.version + 1,
                         updatedAt: new Date(),
                       }
@@ -312,7 +407,7 @@ export function NeonSlotSection({
     },
     onError: (error) => {
       showToast({
-        title: 'Failed to rename section',
+        title: 'Failed to update section',
         description: error.message,
         variant: 'error',
       });
@@ -370,6 +465,12 @@ export function NeonSlotSection({
   const handleSaveEdit = () => {
     const trimmed = editName.trim();
     if (!trimmed) return;
+    const newMaxSelections = editMaxSelections
+      ? Number(editMaxSelections)
+      : undefined;
+    const newBudget = editBudget
+      ? Math.round(Number(editBudget) * 100)
+      : undefined;
     updateSection.mutate({
       collectionId,
       nodeId: section.id,
@@ -377,6 +478,11 @@ export function NeonSlotSection({
         expectedVersion: section.version,
         mutationId: crypto.randomUUID(),
         title: trimmed,
+        properties: {
+          ...sectionProps,
+          maxSelections: newMaxSelections,
+          budget: newBudget,
+        },
       },
     });
     setIsEditing(false);
@@ -384,7 +490,42 @@ export function NeonSlotSection({
 
   const handleCancelEdit = () => {
     setEditName(section.title ?? '');
+    setEditMaxSelections(
+      maxSelections !== undefined ? String(maxSelections) : '',
+    );
+    setEditBudget(budget !== undefined ? String(budget / 100) : '');
     setIsEditing(false);
+  };
+
+  const handleToggleSelection = (itemId: string) => {
+    const isCurrentlySelected = selectedItemIds.includes(itemId);
+    let newIds: string[];
+    if (isCurrentlySelected) {
+      newIds = selectedItemIds.filter((id) => id !== itemId);
+    } else {
+      if (
+        maxSelections !== undefined &&
+        maxSelections > 0 &&
+        selectedItemIds.length >= maxSelections
+      ) {
+        showToast({
+          title: 'Selection limit reached',
+          description: `Maximum ${maxSelections} selection${maxSelections === 1 ? '' : 's'} allowed`,
+          variant: 'error',
+        });
+        return;
+      }
+      newIds = [...selectedItemIds, itemId];
+    }
+    updateSection.mutate({
+      collectionId,
+      nodeId: section.id,
+      input: {
+        expectedVersion: section.version,
+        mutationId: crypto.randomUUID(),
+        properties: { ...sectionProps, selectedItemIds: newIds },
+      },
+    });
   };
 
   const handleDelete = () => {
@@ -509,6 +650,32 @@ export function NeonSlotSection({
               placeholder="Section name"
               autoFocus
             />
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>Pick</label>
+              <input
+                type="number"
+                value={editMaxSelections}
+                onChange={(e) => setEditMaxSelections(e.target.value)}
+                className={styles.editInput}
+                placeholder="Any"
+                min="1"
+              />
+            </div>
+            <div className={styles.editField}>
+              <label className={styles.editLabel}>Budget</label>
+              <div className={styles.budgetInputWrapper}>
+                <span className={styles.currencyPrefix}>$</span>
+                <input
+                  type="number"
+                  value={editBudget}
+                  onChange={(e) => setEditBudget(e.target.value)}
+                  className={styles.editInput}
+                  placeholder="100"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+            </div>
             <div className={styles.editActions}>
               <button
                 type="button"
@@ -533,9 +700,25 @@ export function NeonSlotSection({
                 {section.title || 'Untitled section'}
               </h3>
               {!forceCollapsed && (
-                <span className={styles.selectionCount}>
-                  {items.length} {items.length === 1 ? 'item' : 'items'}
-                </span>
+                <>
+                  {maxSelections !== undefined ? (
+                    <span className={styles.selectionCount}>
+                      {selectedCount}/
+                      {maxSelections === 0 ? '∞' : maxSelections} selected
+                    </span>
+                  ) : (
+                    <span className={styles.selectionCount}>
+                      {items.length} {items.length === 1 ? 'item' : 'items'}
+                    </span>
+                  )}
+                  {budget !== undefined && (
+                    <span
+                      className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ''}`}
+                    >
+                      {formatBudget(selectedTotal)} / {formatBudget(budget)}
+                    </span>
+                  )}
+                </>
               )}
             </div>
             {!forceCollapsed && canEdit && (
@@ -640,6 +823,8 @@ export function NeonSlotSection({
                   key={node.id}
                   node={node}
                   onEdit={onEditItem}
+                  isSelected={selectedItemIds.includes(node.id)}
+                  onToggleSelection={() => handleToggleSelection(node.id)}
                 />
               ))}
             </div>
