@@ -260,13 +260,6 @@ export function NeonCreateNodeDialog({
         positionKey: `${new Date().toISOString()}:${nodeId}`,
       },
     });
-    showToast({
-      title: 'Content queued',
-      description: navigator.onLine
-        ? `"${trimmedTitle}" is syncing now.`
-        : `"${trimmedTitle}" will sync when you are back online.`,
-      variant: 'success',
-    });
     handleOpenChange(false);
   };
 

@@ -12,6 +12,7 @@ import { roleCan } from '../../../../lib/collections/permissions';
 import { collectionQueryKeys } from '../../../../lib/collections/queryKeys';
 import styles from './NeonCollectionDetailPage.module.css';
 import { NeonCopyCollectionDialog } from './NeonCopyCollectionDialog';
+import { SyncStatus } from './SyncStatus';
 import { NeonCreateNodeDialog } from './NeonCreateNodeDialog';
 import { NeonEditCollectionDialog } from './NeonEditCollectionDialog';
 import { NeonEditNodeDialog } from './NeonEditNodeDialog';
@@ -179,7 +180,7 @@ export function NeonCollectionDetailPage({
               {role !== 'owner' && (
                 <span className={styles.roleBadge}>{role}</span>
               )}
-              <span>Version {collection.version}</span>
+              <SyncStatus collectionId={collectionId} />
               {primaryLineage &&
                 (primaryLineage.sourceCollectionId ? (
                   <Link

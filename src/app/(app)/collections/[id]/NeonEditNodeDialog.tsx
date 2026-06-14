@@ -343,13 +343,6 @@ export function NeonEditNodeDialog({
         properties,
       },
     });
-    showToast({
-      title: 'Content update queued',
-      description: navigator.onLine
-        ? 'Your changes are syncing now.'
-        : 'Your changes will sync when you are back online.',
-      variant: 'success',
-    });
     onOpenChange(false);
   };
 
@@ -362,13 +355,6 @@ export function NeonEditNodeDialog({
         expectedVersion: node.version,
         mutationId: crypto.randomUUID(),
       },
-    });
-    showToast({
-      title: 'Content deletion queued',
-      description: navigator.onLine
-        ? 'The deletion is syncing now.'
-        : 'The deletion will sync when you are back online.',
-      variant: 'success',
     });
     onOpenChange(false);
   };
