@@ -23,6 +23,10 @@ import type { CollectionNode } from '../../db/schema';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
 import { useToast } from '../ToastNotification';
 import {
+  checkExtensionAvailable,
+  refreshViaExtension,
+} from '../../lib/extension';
+import {
   deleteCollectionNodeMutation,
   reorderCollectionNodesMutation,
   updateCollectionNodeMutation,
@@ -74,18 +78,50 @@ function parsePriceToCents(
   return isNaN(value) ? undefined : Math.round(value * 100);
 }
 
+async function refreshNodeMetadata(
+  url: string,
+  useExtension: boolean,
+): Promise<{
+  title?: string;
+  imageUrl?: string;
+  description?: string;
+  price?: string;
+} | null> {
+  try {
+    if (useExtension) {
+      const ext = await refreshViaExtension(url, { capture: true });
+      if (ext) return ext;
+    }
+    const response = await fetch('/api/extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    if (!response.ok) return null;
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
 function NeonProductItem({
   node,
   onEdit,
   dragHandle,
   isSelected = false,
   onToggleSelection,
+  onRefresh,
+  isRefreshing = false,
+  isEnqueued = false,
 }: {
   node: CollectionNode;
   onEdit?: (node: CollectionNode) => void;
   dragHandle?: React.ReactNode;
   isSelected?: boolean;
   onToggleSelection?: () => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  isEnqueued?: boolean;
 }) {
   const [showActions, setShowActions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -122,6 +158,7 @@ function NeonProductItem({
       className={`${productCardStyles.card} ${isSelected ? productCardStyles.cardSelected : ''}`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
+      style={isEnqueued ? { opacity: 0.5 } : undefined}
     >
       {hasImage ? (
         <div className={productCardStyles.imageContainer}>
@@ -181,7 +218,7 @@ function NeonProductItem({
         </div>
       )}
 
-      {showActions && (onEdit || onToggleSelection) && (
+      {showActions && (onEdit || onToggleSelection || onRefresh) && (
         <div className={productCardStyles.actionsMenu}>
           {onToggleSelection && (
             <button
@@ -207,6 +244,36 @@ function NeonProductItem({
                     strokeLinejoin="round"
                   />
                 )}
+              </svg>
+            </button>
+          )}
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className={productCardStyles.actionButton}
+              aria-label="Refresh metadata"
+              data-tooltip={isRefreshing ? 'Refreshing…' : 'Refresh'}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={
+                  isRefreshing
+                    ? { animation: 'spin 0.8s linear infinite' }
+                    : undefined
+                }
+              >
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
               </svg>
             </button>
           )}
@@ -367,6 +434,12 @@ export function NeonSlotSection({
   const [editBudget, setEditBudget] = useState(
     budget !== undefined ? String(budget / 100) : '',
   );
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const [enqueuedIds, setEnqueuedIds] = useState<string[]>([]);
+  const [refreshAllProgress, setRefreshAllProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -461,6 +534,118 @@ export function NeonSlotSection({
       });
     },
   });
+
+  const updateItem = useMutation({
+    mutationKey: collectionMutationKeys.updateNode,
+    mutationFn: updateCollectionNodeMutation,
+    onMutate: ({ nodeId, input }) => {
+      queryClient.setQueryData<CollectionDetail>(
+        collectionQueryKeys.detail(collectionId),
+        (current) =>
+          current
+            ? {
+                ...current,
+                nodes: current.nodes.map((n) =>
+                  n.id === nodeId
+                    ? {
+                        ...n,
+                        title: input.title ?? n.title,
+                        properties: input.properties
+                          ? { ...n.properties, ...input.properties }
+                          : n.properties,
+                        version: n.version + 1,
+                        updatedAt: new Date(),
+                      }
+                    : n,
+                ),
+              }
+            : current,
+      );
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Refresh failed',
+        description: error.message,
+        variant: 'error',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: collectionQueryKeys.detail(collectionId),
+      });
+    },
+  });
+
+  const handleRefreshItem = async (node: CollectionNode) => {
+    const url = propertiesFor(node).url;
+    if (!url) return;
+    setRefreshingId(node.id);
+    const extensionAvailable = await checkExtensionAvailable();
+    const metadata = await refreshNodeMetadata(url, extensionAvailable);
+    if (metadata) {
+      const existingProps = propertiesFor(node);
+      updateItem.mutate({
+        collectionId,
+        nodeId: node.id,
+        input: {
+          expectedVersion: node.version,
+          mutationId: crypto.randomUUID(),
+          title: metadata.title ?? node.title ?? undefined,
+          properties: {
+            ...existingProps,
+            ...(metadata.imageUrl ? { imageUrl: metadata.imageUrl } : {}),
+            ...(metadata.description
+              ? { description: metadata.description }
+              : {}),
+            ...(metadata.price ? { price: metadata.price } : {}),
+          },
+        },
+      });
+    }
+    setRefreshingId(null);
+  };
+
+  const handleRefreshAll = async () => {
+    const refreshable = items.filter(
+      (n) =>
+        (n.type === 'product' || n.type === 'link') && propertiesFor(n).url,
+    );
+    if (refreshable.length === 0) return;
+    const extensionAvailable = await checkExtensionAvailable();
+    setEnqueuedIds(refreshable.map((n) => n.id));
+    setRefreshAllProgress({ current: 0, total: refreshable.length });
+    for (let i = 0; i < refreshable.length; i++) {
+      const node = refreshable[i];
+      setEnqueuedIds((prev) => prev.filter((id) => id !== node.id));
+      setRefreshingId(node.id);
+      const metadata = await refreshNodeMetadata(
+        propertiesFor(node).url!,
+        extensionAvailable,
+      );
+      if (metadata) {
+        const existingProps = propertiesFor(node);
+        updateItem.mutate({
+          collectionId,
+          nodeId: node.id,
+          input: {
+            expectedVersion: node.version,
+            mutationId: crypto.randomUUID(),
+            title: metadata.title ?? node.title ?? undefined,
+            properties: {
+              ...existingProps,
+              ...(metadata.imageUrl ? { imageUrl: metadata.imageUrl } : {}),
+              ...(metadata.description
+                ? { description: metadata.description }
+                : {}),
+              ...(metadata.price ? { price: metadata.price } : {}),
+            },
+          },
+        });
+      }
+      setRefreshAllProgress({ current: i + 1, total: refreshable.length });
+    }
+    setRefreshingId(null);
+    setEnqueuedIds([]);
+    setRefreshAllProgress(null);
+  };
 
   const handleSaveEdit = () => {
     const trimmed = editName.trim();
@@ -744,6 +929,44 @@ export function NeonSlotSection({
                 )}
                 {!isProductReorderMode && (
                   <>
+                    {items.some(
+                      (n) =>
+                        (n.type === 'product' || n.type === 'link') &&
+                        propertiesFor(n).url,
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => void handleRefreshAll()}
+                        disabled={refreshAllProgress !== null}
+                        className={styles.actionButton}
+                        aria-label="Refresh all"
+                        data-tooltip={
+                          refreshAllProgress
+                            ? `${refreshAllProgress.current}/${refreshAllProgress.total}`
+                            : 'Refresh all'
+                        }
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={
+                            refreshAllProgress !== null
+                              ? { animation: 'spin 0.8s linear infinite' }
+                              : undefined
+                          }
+                        >
+                          <path d="M23 4v6h-6" />
+                          <path d="M1 20v-6h6" />
+                          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setIsEditing(true)}
@@ -825,6 +1048,13 @@ export function NeonSlotSection({
                   onEdit={onEditItem}
                   isSelected={selectedItemIds.includes(node.id)}
                   onToggleSelection={() => handleToggleSelection(node.id)}
+                  onRefresh={
+                    propertiesFor(node).url
+                      ? () => void handleRefreshItem(node)
+                      : undefined
+                  }
+                  isRefreshing={refreshingId === node.id}
+                  isEnqueued={enqueuedIds.includes(node.id)}
                 />
               ))}
             </div>

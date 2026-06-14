@@ -58,6 +58,38 @@ export function NeonCreateNodeDialog({
   const [description, setDescription] = useState('');
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+
+  const handleFetchUrl = async () => {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    try {
+      new URL(trimmed);
+    } catch {
+      setError('Enter a valid URL first');
+      return;
+    }
+    setIsFetchingUrl(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: trimmed }),
+      });
+      if (response.ok) {
+        const metadata = await response.json();
+        if (metadata.title && !title) setTitle(metadata.title);
+        if (metadata.imageUrl && !imageUrl) setImageUrl(metadata.imageUrl);
+        if (metadata.description && !description)
+          setDescription(metadata.description);
+      }
+    } catch {
+      // silently ignore fetch errors
+    } finally {
+      setIsFetchingUrl(false);
+    }
+  };
   // Merge prop sections with any sections created inline during this session
   const [extraSections, setExtraSections] = useState<CollectionNode[]>([]);
   const baseSections = detail.nodes.filter((node) => node.type === 'section');
@@ -218,6 +250,7 @@ export function NeonCreateNodeDialog({
     setBody('');
     setError(null);
     setExtraSections([]);
+    setIsFetchingUrl(false);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -324,13 +357,32 @@ export function NeonCreateNodeDialog({
                 <label htmlFor="neon-node-url" className={dialogStyles.label}>
                   URL *
                 </label>
-                <input
-                  id="neon-node-url"
-                  type="url"
-                  value={url}
-                  onChange={(event) => setUrl(event.target.value)}
-                  className={dialogStyles.input}
-                />
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    id="neon-node-url"
+                    type="url"
+                    value={url}
+                    onChange={(event) => setUrl(event.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        void handleFetchUrl();
+                      }
+                    }}
+                    className={dialogStyles.input}
+                    style={{ flex: 1 }}
+                    placeholder="https://…"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleFetchUrl()}
+                    disabled={!url.trim() || isFetchingUrl}
+                    className={dialogStyles.saveButton}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {isFetchingUrl ? 'Fetching…' : 'Fetch'}
+                  </button>
+                </div>
               </div>
             )}
 

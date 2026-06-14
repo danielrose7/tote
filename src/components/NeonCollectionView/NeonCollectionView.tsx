@@ -24,8 +24,13 @@ import productCardStyles from '../ProductCard/ProductCard.module.css';
 import { NeonSlotSection } from '../NeonSlotSection/NeonSlotSection';
 import { useToast } from '../ToastNotification';
 import {
+  checkExtensionAvailable,
+  refreshViaExtension,
+} from '../../lib/extension';
+import {
   reorderCollectionNodesMutation,
   type ReorderCollectionNodesMutation,
+  updateCollectionNodeMutation,
 } from '../../lib/collections/client';
 import {
   collectionMutationKeys,
@@ -62,12 +67,18 @@ function SortableItemNode({
   isReorderMode,
   canEdit,
   onEdit,
+  onRefresh,
+  isRefreshing,
+  isEnqueued,
 }: {
   id: string;
   node: CollectionNode;
   isReorderMode: boolean;
   canEdit: boolean;
   onEdit?: (node: CollectionNode) => void;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  isEnqueued?: boolean;
 }) {
   const {
     attributes,
@@ -112,6 +123,9 @@ function SortableItemNode({
           ) : undefined
         }
         onEdit={canEdit ? onEdit : undefined}
+        onRefresh={!isReorderMode ? onRefresh : undefined}
+        isRefreshing={isRefreshing}
+        isEnqueued={isEnqueued}
       />
     </div>
   );
@@ -194,10 +208,16 @@ function ItemNode({
   node,
   onEdit,
   dragHandle,
+  onRefresh,
+  isRefreshing = false,
+  isEnqueued = false,
 }: {
   node: CollectionNode;
   onEdit?: (node: CollectionNode) => void;
   dragHandle?: React.ReactNode;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  isEnqueued?: boolean;
 }) {
   const [showActions, setShowActions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -234,6 +254,7 @@ function ItemNode({
       className={productCardStyles.card}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
+      style={isEnqueued ? { opacity: 0.5 } : undefined}
     >
       {hasImage ? (
         <div className={productCardStyles.imageContainer}>
@@ -278,30 +299,62 @@ function ItemNode({
         </div>
       )}
 
-      {showActions && onEdit && (
+      {showActions && (onEdit || onRefresh) && (
         <div className={productCardStyles.actionsMenu}>
-          <button
-            type="button"
-            onClick={() => onEdit(node)}
-            className={productCardStyles.actionButton}
-            aria-label="Edit"
-            data-tooltip="Edit"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className={productCardStyles.actionButton}
+              aria-label="Refresh metadata"
+              data-tooltip={isRefreshing ? 'Refreshing…' : 'Refresh'}
             >
-              <path
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-          </button>
+                style={
+                  isRefreshing
+                    ? { animation: 'spin 0.8s linear infinite' }
+                    : undefined
+                }
+              >
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
+          )}
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(node)}
+              className={productCardStyles.actionButton}
+              aria-label="Edit"
+              data-tooltip="Edit"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 
@@ -354,6 +407,12 @@ export function NeonCollectionView({
   const [reorderRoots, setReorderRoots] = useState<CollectionNode[]>([]);
   const isSectionReorderMode = reorderSections.length > 0;
   const isRootReorderMode = reorderRoots.length > 0;
+  const [refreshingRootId, setRefreshingRootId] = useState<string | null>(null);
+  const [enqueuedRootIds, setEnqueuedRootIds] = useState<string[]>([]);
+  const [refreshAllRootsProgress, setRefreshAllRootsProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -399,6 +458,155 @@ export function NeonCollectionView({
       });
     },
   });
+
+  const updateRootNode = useMutation({
+    mutationKey: collectionMutationKeys.updateNode,
+    mutationFn: updateCollectionNodeMutation,
+    onMutate: ({ nodeId, input }) => {
+      queryClient.setQueryData<CollectionDetail>(
+        collectionQueryKeys.detail(collection.id),
+        (current) =>
+          current
+            ? {
+                ...current,
+                nodes: current.nodes.map((n) =>
+                  n.id === nodeId
+                    ? {
+                        ...n,
+                        title: input.title ?? n.title,
+                        properties: input.properties
+                          ? { ...n.properties, ...input.properties }
+                          : n.properties,
+                        version: n.version + 1,
+                        updatedAt: new Date(),
+                      }
+                    : n,
+                ),
+              }
+            : current,
+      );
+    },
+    onError: (error) => {
+      showToast({
+        title: 'Refresh failed',
+        description: error.message,
+        variant: 'error',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: collectionQueryKeys.detail(collection.id),
+      });
+    },
+  });
+
+  const handleRefreshRootItem = async (node: CollectionNode) => {
+    const url = propertiesFor(node).url;
+    if (!url) return;
+    setRefreshingRootId(node.id);
+    const extensionAvailable = await checkExtensionAvailable();
+    let metadata: {
+      title?: string;
+      imageUrl?: string;
+      description?: string;
+      price?: string;
+    } | null = null;
+    try {
+      if (extensionAvailable) {
+        metadata = await refreshViaExtension(url, { capture: true });
+      }
+      if (!metadata) {
+        const res = await fetch('/api/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+        if (res.ok) metadata = await res.json();
+      }
+    } catch {
+      /* ignore */
+    }
+    if (metadata) {
+      const existingProps = propertiesFor(node);
+      updateRootNode.mutate({
+        collectionId: collection.id,
+        nodeId: node.id,
+        input: {
+          expectedVersion: node.version,
+          mutationId: crypto.randomUUID(),
+          title: metadata.title ?? node.title ?? undefined,
+          properties: {
+            ...existingProps,
+            ...(metadata.imageUrl ? { imageUrl: metadata.imageUrl } : {}),
+            ...(metadata.description
+              ? { description: metadata.description }
+              : {}),
+            ...(metadata.price ? { price: metadata.price } : {}),
+          },
+        },
+      });
+    }
+    setRefreshingRootId(null);
+  };
+
+  const handleRefreshAllRoots = async (refreshableNodes: CollectionNode[]) => {
+    if (refreshableNodes.length === 0) return;
+    const extensionAvailable = await checkExtensionAvailable();
+    setEnqueuedRootIds(refreshableNodes.map((n) => n.id));
+    setRefreshAllRootsProgress({ current: 0, total: refreshableNodes.length });
+    for (let i = 0; i < refreshableNodes.length; i++) {
+      const node = refreshableNodes[i];
+      setEnqueuedRootIds((prev) => prev.filter((id) => id !== node.id));
+      setRefreshingRootId(node.id);
+      const url = propertiesFor(node).url!;
+      let metadata: {
+        title?: string;
+        imageUrl?: string;
+        description?: string;
+        price?: string;
+      } | null = null;
+      try {
+        if (extensionAvailable) {
+          metadata = await refreshViaExtension(url, { capture: true });
+        }
+        if (!metadata) {
+          const res = await fetch('/api/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          });
+          if (res.ok) metadata = await res.json();
+        }
+      } catch {
+        /* ignore */
+      }
+      if (metadata) {
+        const existingProps = propertiesFor(node);
+        updateRootNode.mutate({
+          collectionId: collection.id,
+          nodeId: node.id,
+          input: {
+            expectedVersion: node.version,
+            mutationId: crypto.randomUUID(),
+            title: metadata.title ?? node.title ?? undefined,
+            properties: {
+              ...existingProps,
+              ...(metadata.imageUrl ? { imageUrl: metadata.imageUrl } : {}),
+              ...(metadata.description
+                ? { description: metadata.description }
+                : {}),
+              ...(metadata.price ? { price: metadata.price } : {}),
+            },
+          },
+        });
+      }
+      setRefreshAllRootsProgress({
+        current: i + 1,
+        total: refreshableNodes.length,
+      });
+    }
+    setRefreshingRootId(null);
+    setEnqueuedRootIds([]);
+    setRefreshAllRootsProgress(null);
+  };
 
   const sections = nodes.filter((n) => n.type === 'section');
   const rootNodes = nodes.filter(
@@ -593,6 +801,51 @@ export function NeonCollectionView({
                   )}
                   {rootNodes.length > 1 && canEdit && (
                     <div className={pageStyles.sectionActions}>
+                      {!isRootReorderMode &&
+                        rootNodes.some(
+                          (n) =>
+                            (n.type === 'product' || n.type === 'link') &&
+                            propertiesFor(n).url,
+                        ) && (
+                          <button
+                            type="button"
+                            className={pageStyles.sectionEditButton}
+                            disabled={refreshAllRootsProgress !== null}
+                            onClick={() => {
+                              const refreshable = rootNodes.filter(
+                                (n) =>
+                                  (n.type === 'product' || n.type === 'link') &&
+                                  propertiesFor(n).url,
+                              );
+                              void handleRefreshAllRoots(refreshable);
+                            }}
+                            aria-label={
+                              refreshAllRootsProgress
+                                ? `${refreshAllRootsProgress.current}/${refreshAllRootsProgress.total}`
+                                : 'Refresh all'
+                            }
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              style={
+                                refreshAllRootsProgress !== null
+                                  ? { animation: 'spin 0.8s linear infinite' }
+                                  : undefined
+                              }
+                            >
+                              <path d="M23 4v6h-6" />
+                              <path d="M1 20v-6h6" />
+                              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                            </svg>
+                          </button>
+                        )}
                       <button
                         type="button"
                         className={
@@ -654,6 +907,13 @@ export function NeonCollectionView({
                             isReorderMode={isRootReorderMode}
                             canEdit={canEdit}
                             onEdit={onEditNode}
+                            onRefresh={
+                              canEdit && propertiesFor(node).url
+                                ? () => void handleRefreshRootItem(node)
+                                : undefined
+                            }
+                            isRefreshing={refreshingRootId === node.id}
+                            isEnqueued={enqueuedRootIds.includes(node.id)}
                           />
                         ))}
                       </div>
