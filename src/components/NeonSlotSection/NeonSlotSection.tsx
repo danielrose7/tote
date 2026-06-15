@@ -1259,9 +1259,7 @@ export function NeonSlotSection({
             >
               {deleteAction === 'delete' || items.length === 0
                 ? 'Delete'
-                : deleteAction === 'ungrouped'
-                  ? 'Move & delete section'
-                  : 'Move & delete section'}
+                : 'Move & delete section'}
             </button>
           </div>
         </Dialog.Content>
