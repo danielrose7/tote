@@ -506,7 +506,7 @@ export function NeonEditNodeDialog({
                   type="button"
                   onClick={handleDelete}
                   disabled={deleteConfirmation.toLowerCase() !== deletePhrase}
-                  className={editStyles.dangerButton}
+                  className="btn btn-danger"
                 >
                   Delete Content
                 </button>
@@ -515,13 +515,13 @@ export function NeonEditNodeDialog({
 
             <div className={editStyles.actions}>
               <Dialog.Close asChild>
-                <button type="button" className={editStyles.cancelButton}>
+                <button type="button" className="btn btn-secondary">
                   Cancel
                 </button>
               </Dialog.Close>
               <button
                 type="submit"
-                className={editStyles.saveButton}
+                className="btn btn-primary"
                 disabled={!title.trim()}
               >
                 Save Changes

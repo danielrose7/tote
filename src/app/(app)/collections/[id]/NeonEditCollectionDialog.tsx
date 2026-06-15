@@ -323,7 +323,7 @@ export function NeonEditCollectionDialog({
 										type="button"
 										onClick={handleDelete}
 										disabled={deleteConfirmation.toLowerCase() !== deletePhrase}
-										className={editStyles.dangerButton}
+										className="btn btn-danger"
 									>
 										Delete Collection
 									</button>
@@ -333,13 +333,13 @@ export function NeonEditCollectionDialog({
 
 						<div className={editStyles.actions}>
 							<Dialog.Close asChild>
-								<button type="button" className={editStyles.cancelButton}>
+								<button type="button" className="btn btn-secondary">
 									Cancel
 								</button>
 							</Dialog.Close>
 							<button
 								type="submit"
-								className={editStyles.saveButton}
+								className="btn btn-primary"
 								disabled={!name.trim()}
 							>
 								Save Changes

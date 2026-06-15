@@ -120,7 +120,7 @@ export function ImportPageClient() {
 								Paste your payload, then submit to preview before importing.
 							</p>
 							<button
-								className={styles.parseButton}
+								className="btn btn-primary"
 								type="submit"
 								disabled={!json.trim()}
 							>
@@ -183,7 +183,7 @@ export function ImportPageClient() {
 
 							<div className={styles.actions}>
 								<button
-									className={styles.cancelButton}
+									className="btn btn-secondary"
 									onClick={() => {
 										setPreview(null);
 										setParseError(null);
@@ -193,7 +193,7 @@ export function ImportPageClient() {
 									Back
 								</button>
 								<button
-									className={styles.importButton}
+									className="btn btn-primary"
 									onClick={handleImport}
 									disabled={importing || !me.$isLoaded || !me.root}
 									type="button"

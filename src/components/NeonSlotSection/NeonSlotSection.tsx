@@ -935,14 +935,14 @@ export function NeonSlotSection({
               <button
                 type="button"
                 onClick={handleSaveEdit}
-                className={styles.saveButton}
+                className="btn btn-danger"
               >
                 Save
               </button>
               <button
                 type="button"
                 onClick={handleCancelEdit}
-                className={styles.cancelButton}
+                className="btn btn-secondary"
               >
                 Cancel
               </button>

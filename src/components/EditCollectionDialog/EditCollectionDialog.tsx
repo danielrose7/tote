@@ -218,7 +218,7 @@ export function EditCollectionDialog({
 								type="button"
 								onClick={handleSetAsDefault}
 								disabled={isDefault}
-								className={styles.defaultButton}
+								className="btn btn-primary btn-sm"
 							>
 								{isDefault ? "✓ Default" : "Set as Default"}
 							</button>
@@ -250,7 +250,7 @@ export function EditCollectionDialog({
 									type="button"
 									onClick={handleDelete}
 									disabled={deleteConfirmation.toLowerCase() !== confirmPhrase}
-									className={styles.dangerButton}
+									className="btn btn-danger"
 								>
 									Delete Collection
 								</button>
@@ -259,13 +259,13 @@ export function EditCollectionDialog({
 
 						<div className={styles.actions}>
 							<Dialog.Close asChild>
-								<button type="button" className={styles.cancelButton}>
+								<button type="button" className="btn btn-secondary">
 									Cancel
 								</button>
 							</Dialog.Close>
 							<button
 								type="submit"
-								className={styles.saveButton}
+								className="btn btn-primary"
 								disabled={!formik.values.name.trim() || formik.isSubmitting}
 							>
 								Save Changes

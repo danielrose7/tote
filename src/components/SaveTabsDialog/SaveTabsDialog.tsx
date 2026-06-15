@@ -304,7 +304,7 @@ export function SaveTabsDialog({
 								href={CHROME_WEB_STORE_URL}
 								target="_blank"
 								rel="noopener noreferrer"
-								className={styles.installButton}
+								className="btn btn-primary"
 							>
 								Install Extension
 							</a>
@@ -410,13 +410,13 @@ export function SaveTabsDialog({
 
 							<div className={styles.actions}>
 								<Dialog.Close asChild>
-									<button type="button" className={styles.cancelButton}>
+									<button type="button" className="btn btn-secondary">
 										Cancel
 									</button>
 								</Dialog.Close>
 								<button
 									type="button"
-									className={styles.saveButton}
+									className="btn btn-primary"
 									disabled={selectedTabIds.size === 0 || !selectedCollectionId}
 									onClick={handleSave}
 								>

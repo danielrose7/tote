@@ -190,13 +190,13 @@ export function NeonCreateCollectionDialog({
 
 						<div className={dialogStyles.actions}>
 							<Dialog.Close asChild>
-								<button type="button" className={dialogStyles.cancelButton}>
+								<button type="button" className="btn btn-secondary">
 									Cancel
 								</button>
 							</Dialog.Close>
 							<button
 								type="submit"
-								className={dialogStyles.saveButton}
+								className="btn btn-primary"
 								disabled={!name.trim()}
 							>
 								Create Collection

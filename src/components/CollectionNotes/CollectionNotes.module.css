@@ -220,27 +220,6 @@
   gap: var(--spacing-xs);
 }
 
-.saveButton {
-  font-size: 0.75rem;
-  font-weight: 500;
-  padding: 0.2rem 0.625rem;
-  background: var(--color-accent);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.cancelButton {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.625rem;
-  background: none;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
 /* Add note form */
 .addForm {
   display: flex;

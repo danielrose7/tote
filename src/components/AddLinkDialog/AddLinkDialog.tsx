@@ -308,7 +308,7 @@ export function AddLinkDialog({
 							<Dialog.Close asChild>
 								<button
 									type="button"
-									className={styles.cancelButton}
+									className="btn btn-secondary"
 									disabled={isLoading}
 								>
 									Cancel
@@ -316,7 +316,7 @@ export function AddLinkDialog({
 							</Dialog.Close>
 							<button
 								type="submit"
-								className={styles.saveButton}
+								className="btn btn-primary"
 								disabled={
 									isLoading || !formik.values.url || !formik.values.collectionId
 								}

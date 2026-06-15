@@ -169,14 +169,14 @@ export function CollectionNotes({
                   <div className={styles.editButtons}>
                     <button
                       type="button"
-                      className={styles.saveButton}
+                      className="btn btn-primary btn-sm"
                       onClick={() => handleSaveEdit(note)}
                     >
                       Save
                     </button>
                     <button
                       type="button"
-                      className={styles.cancelButton}
+                      className="btn btn-secondary btn-sm"
                       onClick={() => setEditingId(null)}
                     >
                       Cancel
@@ -254,7 +254,7 @@ export function CollectionNotes({
               />
               <button
                 type="submit"
-                className={styles.addButton}
+                className="btn btn-primary btn-sm"
                 disabled={!addText.trim()}
               >
                 Add

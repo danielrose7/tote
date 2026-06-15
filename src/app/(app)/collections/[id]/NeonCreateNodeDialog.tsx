@@ -377,7 +377,7 @@ export function NeonCreateNodeDialog({
                     type="button"
                     onClick={() => void handleFetchUrl()}
                     disabled={!url.trim() || isFetchingUrl}
-                    className={dialogStyles.saveButton}
+                    className="btn btn-secondary btn-sm"
                     style={{ flexShrink: 0 }}
                   >
                     {isFetchingUrl ? 'Fetching…' : 'Fetch'}
@@ -438,13 +438,13 @@ export function NeonCreateNodeDialog({
 
             <div className={dialogStyles.actions}>
               <Dialog.Close asChild>
-                <button type="button" className={dialogStyles.cancelButton}>
+                <button type="button" className="btn btn-secondary">
                   Cancel
                 </button>
               </Dialog.Close>
               <button
                 type="submit"
-                className={dialogStyles.saveButton}
+                className="btn btn-primary"
                 disabled={!title.trim()}
               >
                 Add Content

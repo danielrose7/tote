@@ -145,7 +145,7 @@ export default function SettingsPage() {
               </button>
             </div>
             <SignOutButton>
-              <button type="button" className={styles.logoutButton}>
+              <button type="button" className="btn btn-secondary">
                 Log out
               </button>
             </SignOutButton>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     onClick={syncMetadata}
-                    className={styles.retryButton}
+                    className="btn btn-secondary btn-sm"
                   >
                     Retry
                   </button>
@@ -214,7 +214,7 @@ export default function SettingsPage() {
                   />
                   <button
                     type="button"
-                    className={styles.deleteButton}
+                    className="btn btn-danger"
                     disabled={deleteConfirm !== 'delete my account' || deleting}
                     onClick={handleDeleteAccount}
                   >

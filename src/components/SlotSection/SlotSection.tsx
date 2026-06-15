@@ -241,14 +241,14 @@ export function SlotSection({
 							<button
 								type="button"
 								onClick={handleSaveEdit}
-								className={styles.saveButton}
+								className="btn btn-primary btn-sm"
 							>
 								Save
 							</button>
 							<button
 								type="button"
 								onClick={handleCancelEdit}
-								className={styles.cancelButton}
+								className="btn btn-secondary btn-sm"
 							>
 								Cancel
 							</button>

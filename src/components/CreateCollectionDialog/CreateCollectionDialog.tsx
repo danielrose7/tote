@@ -207,13 +207,13 @@ export function CreateCollectionDialog({
 
 						<div className={styles.actions}>
 							<Dialog.Close asChild>
-								<button type="button" className={styles.cancelButton}>
+								<button type="button" className="btn btn-secondary">
 									Cancel
 								</button>
 							</Dialog.Close>
 							<button
 								type="submit"
-								className={styles.saveButton}
+								className="btn btn-primary"
 								disabled={!formik.values.name.trim() || formik.isSubmitting}
 							>
 								Create Collection
