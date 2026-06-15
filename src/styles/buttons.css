@@ -4,75 +4,75 @@
  * ------------------------------------------------------------------ */
 
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all var(--transition-fast);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-xs);
+	padding: var(--spacing-sm) var(--spacing-md);
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	font-family: inherit;
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-medium);
+	line-height: 1;
+	white-space: nowrap;
+	cursor: pointer;
+	text-decoration: none;
+	transition: all var(--transition-fast);
 }
 
 .btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
+	opacity: 0.5;
+	cursor: not-allowed;
+	pointer-events: none;
 }
 
 /* Primary — accent purple, main call-to-action */
 .btn-primary {
-  background-color: var(--color-accent);
-  color: white;
+	background-color: var(--color-accent);
+	color: white;
 }
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--color-accent-hover);
+	background-color: var(--color-accent-hover);
 }
 .btn-primary:active:not(:disabled) {
-  background-color: var(--color-accent-active);
+	background-color: var(--color-accent-active);
 }
 
 /* Secondary — ghost with border, cancel / non-destructive secondary */
 .btn-secondary {
-  background-color: transparent;
-  color: var(--color-text-secondary);
-  border-color: var(--color-border);
+	background-color: transparent;
+	color: var(--color-text-secondary);
+	border-color: var(--color-border);
 }
 .btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-surface);
-  border-color: var(--color-text-tertiary);
+	background-color: var(--color-surface);
+	border-color: var(--color-text-tertiary);
 }
 
 /* Danger — destructive actions */
 .btn-danger {
-  background-color: var(--color-danger-solid);
-  color: white;
-  border-color: transparent;
+	background-color: var(--color-danger-solid);
+	color: white;
+	border-color: transparent;
 }
 .btn-danger:hover:not(:disabled) {
-  background-color: var(--color-danger-solid-hover);
+	background-color: var(--color-danger-solid-hover);
 }
 
 /* Danger ghost — less aggressive; used for text-only danger triggers */
 .btn-danger-ghost {
-  background-color: transparent;
-  color: var(--color-danger-solid);
-  border-color: var(--color-danger-solid);
+	background-color: transparent;
+	color: var(--color-danger-solid);
+	border-color: var(--color-danger-solid);
 }
 .btn-danger-ghost:hover:not(:disabled) {
-  background-color: var(--color-danger-solid);
-  color: white;
+	background-color: var(--color-danger-solid);
+	color: white;
 }
 
 /* Size modifier — compact inline contexts */
 .btn-sm {
-  padding: 5px var(--spacing-sm);
-  font-size: var(--font-size-xs);
+	padding: 5px var(--spacing-sm);
+	font-size: var(--font-size-xs);
 }

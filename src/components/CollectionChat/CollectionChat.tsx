@@ -280,7 +280,9 @@ function normalizeProductUrl(
 	}
 }
 
-function productIdentity(product: Pick<SuggestedProduct, "url" | "title">): string {
+function productIdentity(
+	product: Pick<SuggestedProduct, "url" | "title">,
+): string {
 	const url = normalizeProductUrl(product.url);
 	if (url) {
 		try {

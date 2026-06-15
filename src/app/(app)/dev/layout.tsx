@@ -1,20 +1,20 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 export default async function DevLayout({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  if (process.env.CURATOR_ENABLED === 'true') {
-    return <>{children}</>;
-  }
+	if (process.env.CURATOR_ENABLED === "true") {
+		return <>{children}</>;
+	}
 
-  const { userId } = await auth();
-  if (!userId) redirect('/');
+	const { userId } = await auth();
+	if (!userId) redirect("/");
 
-  const user = await currentUser();
-  if (user?.publicMetadata?.curator !== true) redirect('/');
+	const user = await currentUser();
+	if (user?.publicMetadata?.curator !== true) redirect("/");
 
-  return <>{children}</>;
+	return <>{children}</>;
 }

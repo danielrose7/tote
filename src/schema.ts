@@ -3,7 +3,7 @@
  * https://jazz.tools/docs/react/schemas/covalues
  */
 
-import { co, z } from 'jazz-tools';
+import { co, z } from "jazz-tools";
 
 // =============================================================================
 // Block-Based Schema (New)
@@ -11,82 +11,82 @@ import { co, z } from 'jazz-tools';
 
 /** Type-specific data schemas */
 const ProductData = z.object({
-  url: z.string(),
-  imageUrl: z.string().optional(),
-  images: z.array(z.string()).optional(),
-  price: z.string().optional(),
-  priceValue: z.number().optional(),
-  description: z.string().optional(),
-  notes: z.string().optional(),
+	url: z.string(),
+	imageUrl: z.string().optional(),
+	images: z.array(z.string()).optional(),
+	price: z.string().optional(),
+	priceValue: z.number().optional(),
+	description: z.string().optional(),
+	notes: z.string().optional(),
 });
 
 const CollectionData = z.object({
-  color: z.string().optional(),
-  description: z.string().optional(),
-  viewMode: z.enum(['grid', 'table']).optional(),
-  publicLayout: z.enum(['minimal', 'feature']).optional(),
-  budget: z.number().optional(),
-  allowCloning: z.boolean().optional(),
-  // Sharing fields for collaborator access
-  sharingGroupId: z.string().optional(), // Group ID for invite-based sharing
-  // Publishing fields for draft/publish workflow
-  publishedId: z.string().optional(), // ID of the published clone (on draft)
-  sourceId: z.string().optional(), // ID of the source draft (on published clone)
-  publishedAt: z.date().optional(), // When last published
-  childBlockIds: z.array(z.string()).optional(), // IDs of child blocks (for public view)
-  slug: z.string().optional(), // URL slug for friendly share links
-  // Curator provenance fields. These point back to the private Neon curator
-  // session that produced this editable Jazz collection.
-  curatorSessionId: z.string().optional(),
-  curatorTopic: z.string().optional(),
-  curatorBriefJson: z.string().optional(),
-  curatorImportedAt: z.string().optional(),
-  curatorVersion: z.number().optional(),
+	color: z.string().optional(),
+	description: z.string().optional(),
+	viewMode: z.enum(["grid", "table"]).optional(),
+	publicLayout: z.enum(["minimal", "feature"]).optional(),
+	budget: z.number().optional(),
+	allowCloning: z.boolean().optional(),
+	// Sharing fields for collaborator access
+	sharingGroupId: z.string().optional(), // Group ID for invite-based sharing
+	// Publishing fields for draft/publish workflow
+	publishedId: z.string().optional(), // ID of the published clone (on draft)
+	sourceId: z.string().optional(), // ID of the source draft (on published clone)
+	publishedAt: z.date().optional(), // When last published
+	childBlockIds: z.array(z.string()).optional(), // IDs of child blocks (for public view)
+	slug: z.string().optional(), // URL slug for friendly share links
+	// Curator provenance fields. These point back to the private Neon curator
+	// session that produced this editable Jazz collection.
+	curatorSessionId: z.string().optional(),
+	curatorTopic: z.string().optional(),
+	curatorBriefJson: z.string().optional(),
+	curatorImportedAt: z.string().optional(),
+	curatorVersion: z.number().optional(),
 });
 
 const SlotData = z.object({
-  budget: z.number().optional(),
-  maxSelections: z.number().optional(),
-  selectedProductIds: z.array(z.string()).optional(),
+	budget: z.number().optional(),
+	maxSelections: z.number().optional(),
+	selectedProductIds: z.array(z.string()).optional(),
 });
 
 const ProjectData = z.object({
-  budget: z.number().optional(),
-  targetDate: z.string().optional(),
-  description: z.string().optional(),
+	budget: z.number().optional(),
+	targetDate: z.string().optional(),
+	description: z.string().optional(),
 });
 
 /** Universal block primitive - everything is a Block */
 export const Block = co.map({
-  type: z.enum(['project', 'collection', 'slot', 'product']),
-  name: z.string(),
-  // Type-specific data - use the appropriate schema based on block type
-  productData: ProductData.optional(),
-  collectionData: CollectionData.optional(),
-  slotData: SlotData.optional(),
-  projectData: ProjectData.optional(),
-  // Nested children for collections/slots (proper Jazz pattern for sharing)
-  // Using getter to defer evaluation for recursive reference
-  get children() {
-    return BlockList.optional();
-  },
-  get notes() {
-    return CollectionNoteList.optional();
-  },
-  // Legacy flat storage (kept for backwards compatibility)
-  parentId: z.string().optional(),
-  sortOrder: z.number().optional(),
-  createdAt: z.date(),
+	type: z.enum(["project", "collection", "slot", "product"]),
+	name: z.string(),
+	// Type-specific data - use the appropriate schema based on block type
+	productData: ProductData.optional(),
+	collectionData: CollectionData.optional(),
+	slotData: SlotData.optional(),
+	projectData: ProjectData.optional(),
+	// Nested children for collections/slots (proper Jazz pattern for sharing)
+	// Using getter to defer evaluation for recursive reference
+	get children() {
+		return BlockList.optional();
+	},
+	get notes() {
+		return CollectionNoteList.optional();
+	},
+	// Legacy flat storage (kept for backwards compatibility)
+	parentId: z.string().optional(),
+	sortOrder: z.number().optional(),
+	createdAt: z.date(),
 });
 
 /** List of blocks - defined after Block */
 export const BlockList = co.list(Block);
 
 export const CollectionNote = co.map({
-  text: z.string(),
-  url: z.string().optional(),
-  done: z.boolean().optional(),
-  createdAt: z.date(),
+	text: z.string(),
+	url: z.string().optional(),
+	done: z.boolean().optional(),
+	createdAt: z.date(),
 });
 
 export const CollectionNoteList = co.list(CollectionNote);
@@ -97,11 +97,11 @@ export const CollectionNoteList = co.list(CollectionNote);
 
 /** Reference to a collection shared with the current user */
 export const SharedCollectionRef = co.map({
-  collectionId: z.string(),
-  role: z.enum(['reader', 'writer', 'admin']),
-  sharedBy: z.string(), // Account ID of the person who shared
-  sharedAt: z.date(),
-  name: z.string().optional(), // Cached name for display
+	collectionId: z.string(),
+	role: z.enum(["reader", "writer", "admin"]),
+	sharedBy: z.string(), // Account ID of the person who shared
+	sharedAt: z.date(),
+	name: z.string().optional(), // Cached name for display
 });
 
 /** List of collections shared with the current user */
@@ -110,76 +110,76 @@ export const SharedWithMeList = co.list(SharedCollectionRef);
 /** The account profile is an app-specific per-user public `CoMap`
  *  where you can store top-level objects for that user */
 export const JazzProfile = co.profile({
-  firstName: z.string(),
+	firstName: z.string(),
 });
 
 /** The account root is an app-specific per-user private `CoMap`
  *  where you can store top-level objects for that user */
 export const AccountRoot = co.map({
-  blocks: BlockList.optional(),
-  defaultBlockId: z.string().optional(),
-  clerkUserId: z.string().optional(),
-  sharedWithMe: SharedWithMeList.optional(), // Collections others have shared with this user
+	blocks: BlockList.optional(),
+	defaultBlockId: z.string().optional(),
+	clerkUserId: z.string().optional(),
+	sharedWithMe: SharedWithMeList.optional(), // Collections others have shared with this user
 });
 
 export const JazzAccount = co
-  .account({
-    profile: JazzProfile,
-    root: AccountRoot,
-  })
-  .withMigration(async (account) => {
-    /** The account migration is run on account creation and on every log-in.
-     *  You can use it to set up the account root and any other initial CoValues you need.
-     */
-    if (!account.$jazz.has('root')) {
-      // Start with an empty blocks list. Group.create requires Account.getMe()
-      // which isn't available inside withNewlyCreatedAccount, so we avoid it here.
-      // Collections with sharing groups are created by the user via the app UI.
-      const blocksList = BlockList.create([], account);
-      account.$jazz.set('root', { blocks: blocksList });
-    } else {
-      // Ensure blocks exists for existing accounts
-      const root = account.root;
-      if (root && root.$isLoaded) {
-        const hasBlocks =
-          root.blocks && root.blocks.$isLoaded && root.blocks.length > 0;
-        if (!hasBlocks) {
-          const childrenList = BlockList.create([], account);
+	.account({
+		profile: JazzProfile,
+		root: AccountRoot,
+	})
+	.withMigration(async (account) => {
+		/** The account migration is run on account creation and on every log-in.
+		 *  You can use it to set up the account root and any other initial CoValues you need.
+		 */
+		if (!account.$jazz.has("root")) {
+			// Start with an empty blocks list. Group.create requires Account.getMe()
+			// which isn't available inside withNewlyCreatedAccount, so we avoid it here.
+			// Collections with sharing groups are created by the user via the app UI.
+			const blocksList = BlockList.create([], account);
+			account.$jazz.set("root", { blocks: blocksList });
+		} else {
+			// Ensure blocks exists for existing accounts
+			const root = account.root;
+			if (root && root.$isLoaded) {
+				const hasBlocks =
+					root.blocks && root.blocks.$isLoaded && root.blocks.length > 0;
+				if (!hasBlocks) {
+					const childrenList = BlockList.create([], account);
 
-          const defaultCollection = Block.create(
-            {
-              type: 'collection',
-              name: 'My Links',
-              collectionData: {
-                color: '#6366f1',
-                description: 'Your personal collection of product links',
-                viewMode: 'grid',
-                publicLayout: 'minimal',
-                allowCloning: true,
-              },
-              children: childrenList,
-              createdAt: new Date(),
-            },
-            account,
-          );
+					const defaultCollection = Block.create(
+						{
+							type: "collection",
+							name: "My Links",
+							collectionData: {
+								color: "#6366f1",
+								description: "Your personal collection of product links",
+								viewMode: "grid",
+								publicLayout: "minimal",
+								allowCloning: true,
+							},
+							children: childrenList,
+							createdAt: new Date(),
+						},
+						account,
+					);
 
-          const blocksList = BlockList.create([defaultCollection], account);
-          root.$jazz.set('blocks', blocksList);
-          root.$jazz.set('defaultBlockId', defaultCollection.$jazz.id);
-        }
-      }
-    }
+					const blocksList = BlockList.create([defaultCollection], account);
+					root.$jazz.set("blocks", blocksList);
+					root.$jazz.set("defaultBlockId", defaultCollection.$jazz.id);
+				}
+			}
+		}
 
-    if (!account.$jazz.has('profile')) {
-      account.$jazz.set(
-        'profile',
-        JazzProfile.create(
-          {
-            name: 'Anonymous user',
-            firstName: '',
-          },
-          account,
-        ),
-      );
-    }
-  });
+		if (!account.$jazz.has("profile")) {
+			account.$jazz.set(
+				"profile",
+				JazzProfile.create(
+					{
+						name: "Anonymous user",
+						firstName: "",
+					},
+					account,
+				),
+			);
+		}
+	});

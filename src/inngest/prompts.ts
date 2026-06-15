@@ -1,127 +1,127 @@
-import { z } from 'zod';
-import type { BraveSearchResult } from './lib/braveSearch';
+import { z } from "zod";
+import type { BraveSearchResult } from "./lib/braveSearch";
 import type {
-  CategoryResearchBrief,
-  CollectionOutput,
-  CurationGap,
-  ExtractedSection,
-  FramingBrief,
-  InterviewQuestion,
-  MarketLandscape,
-  QueryType,
-  SectionPlan,
-} from './types';
-import { CURATOR_PERSONA } from './workspace/CURATOR';
+	CategoryResearchBrief,
+	CollectionOutput,
+	CurationGap,
+	ExtractedSection,
+	FramingBrief,
+	InterviewQuestion,
+	MarketLandscape,
+	QueryType,
+	SectionPlan,
+} from "./types";
+import { CURATOR_PERSONA } from "./workspace/CURATOR";
 
 export const CURATOR_SYSTEM_PROMPT = CURATOR_PERSONA;
 
 export const InterviewQuestionSchema = z.object({
-  id: z.string().describe('snake_case identifier'),
-  text: z.string().describe('The question text shown to the user'),
-  options: z
-    .array(
-      z.object({
-        value: z.string().describe('Short option label'),
-        description: z.string().describe('One-line explanation'),
-      }),
-    )
-    .min(2)
-    .max(6),
-  multi: z
-    .preprocess(
-      (v) =>
-        typeof v !== 'boolean'
-          ? [true, 1, 'true', 't', '1'].includes(v as never)
-          : v,
-      z.boolean(),
-    )
-    .describe('true if the user can select multiple options'),
+	id: z.string().describe("snake_case identifier"),
+	text: z.string().describe("The question text shown to the user"),
+	options: z
+		.array(
+			z.object({
+				value: z.string().describe("Short option label"),
+				description: z.string().describe("One-line explanation"),
+			}),
+		)
+		.min(2)
+		.max(6),
+	multi: z
+		.preprocess(
+			(v) =>
+				typeof v !== "boolean"
+					? [true, 1, "true", "t", "1"].includes(v as never)
+					: v,
+			z.boolean(),
+		)
+		.describe("true if the user can select multiple options"),
 });
 
 // Used for validation in the store and curate-collection function
 export const InterviewQuestionsSchema = z
-  .array(InterviewQuestionSchema)
-  .min(3)
-  .max(5);
+	.array(InterviewQuestionSchema)
+	.min(3)
+	.max(5);
 
 // Used in prompts — flexible count so the model isn't forced into a fixed number
 export const FollowUpQuestionsSchema = z.array(InterviewQuestionSchema).min(1);
 
 const followUpQuestionsJsonSchema = JSON.stringify(
-  z.toJSONSchema(FollowUpQuestionsSchema),
-  null,
-  2,
+	z.toJSONSchema(FollowUpQuestionsSchema),
+	null,
+	2,
 );
 
 export const CategoryResearchBriefSchema = z.object({
-  categorySummary: z.string(),
-  tradeoffs: z.array(z.string()).min(2).max(8),
-  pitfalls: z.array(z.string()).min(1).max(8),
-  giftingConsiderations: z.array(z.string()).max(6),
-  styleConsiderations: z.array(z.string()).max(6),
-  suggestedLenses: z.array(z.string()).min(1).max(4),
-  sectionHypotheses: z
-    .array(z.object({ title: z.string(), rationale: z.string() }))
-    .min(2)
-    .max(8),
-  followUpNeeded: z.boolean(),
-  followUpQuestionGoals: z.array(z.string()).max(3),
+	categorySummary: z.string(),
+	tradeoffs: z.array(z.string()).min(2).max(8),
+	pitfalls: z.array(z.string()).min(1).max(8),
+	giftingConsiderations: z.array(z.string()).max(6),
+	styleConsiderations: z.array(z.string()).max(6),
+	suggestedLenses: z.array(z.string()).min(1).max(4),
+	sectionHypotheses: z
+		.array(z.object({ title: z.string(), rationale: z.string() }))
+		.min(2)
+		.max(8),
+	followUpNeeded: z.boolean(),
+	followUpQuestionGoals: z.array(z.string()).max(3),
 });
 
 export const MarketLandscapeSchema = z.object({
-  sourceQueries: z.array(z.string()).min(2).max(8),
-  recurringProducts: z
-    .array(
-      z.object({
-        name: z.string(),
-        brand: z.string().optional(),
-        mentions: z.number().int().min(1).max(20),
-        useCases: z.array(z.string()).min(1).max(6),
-        possibleUrls: z.array(z.string()).max(6),
-      }),
-    )
-    .max(18),
-  recurringSections: z
-    .array(z.object({ label: z.string(), rationale: z.string() }))
-    .min(2)
-    .max(10),
-  tradeoffs: z.array(z.string()).min(2).max(10),
-  compatibilityGotchas: z.array(z.string()).max(10),
-  weakSignals: z.array(z.string()).max(8),
+	sourceQueries: z.array(z.string()).min(2).max(8),
+	recurringProducts: z
+		.array(
+			z.object({
+				name: z.string(),
+				brand: z.string().optional(),
+				mentions: z.number().int().min(1).max(20),
+				useCases: z.array(z.string()).min(1).max(6),
+				possibleUrls: z.array(z.string()).max(6),
+			}),
+		)
+		.max(18),
+	recurringSections: z
+		.array(z.object({ label: z.string(), rationale: z.string() }))
+		.min(2)
+		.max(10),
+	tradeoffs: z.array(z.string()).min(2).max(10),
+	compatibilityGotchas: z.array(z.string()).max(10),
+	weakSignals: z.array(z.string()).max(8),
 });
 
 export const FramingBriefSchema = z.object({
-  recipientContext: z.string(),
-  goal: z.string(),
-  constraints: z.array(z.string()).max(8),
-  tasteDirection: z.string(),
-  tradeoffs: z.array(z.string()).min(1).max(6),
-  successDefinition: z.string(),
-  avoid: z.array(z.string()).max(6),
-  planningNotes: z.array(z.string()).max(6),
-  correctionExample: z.string().optional(),
+	recipientContext: z.string(),
+	goal: z.string(),
+	constraints: z.array(z.string()).max(8),
+	tasteDirection: z.string(),
+	tradeoffs: z.array(z.string()).min(1).max(6),
+	successDefinition: z.string(),
+	avoid: z.array(z.string()).max(6),
+	planningNotes: z.array(z.string()).max(6),
+	correctionExample: z.string().optional(),
 });
 
 const categoryResearchJsonSchema = JSON.stringify(
-  z.toJSONSchema(CategoryResearchBriefSchema),
-  null,
-  2,
+	z.toJSONSchema(CategoryResearchBriefSchema),
+	null,
+	2,
 );
 
 const marketLandscapeJsonSchema = JSON.stringify(
-  z.toJSONSchema(MarketLandscapeSchema),
-  null,
-  2,
+	z.toJSONSchema(MarketLandscapeSchema),
+	null,
+	2,
 );
 
 const framingBriefJsonSchema = JSON.stringify(
-  z.toJSONSchema(FramingBriefSchema),
-  null,
-  2,
+	z.toJSONSchema(FramingBriefSchema),
+	null,
+	2,
 );
 
 export function buildQueryClassificationPrompt(topic: string): string {
-  return `Classify this product curation request into exactly one category.
+	return `Classify this product curation request into exactly one category.
 
 <topic>${topic}</topic>
 
@@ -135,35 +135,35 @@ Return ONLY valid JSON: { "type": "gift" | "apparel" | "project" | "general", "s
 }
 
 const queryTypeRules: Record<QueryType, string> = {
-  gift: `
+	gift: `
 <query_type>gift</query_type>
 <type_rules>
 - Always include a recipient life-stage question with options: infant/toddler, child, teen, young adult, middle-aged adult, older adult/senior — this prevents product suggestions appropriate for the wrong life stage (e.g. baby gear for a grandmother)
 - Always include a question about the gift-giver's familiarity with the recipient's taste (know well / somewhat / not at all)
 - Frame every question from the gift-giver's perspective — they are selecting products for someone else, not using them
 </type_rules>`,
-  apparel: `
+	apparel: `
 <query_type>apparel</query_type>
 <type_rules>
 - Always include an aesthetic direction question covering color palette (neutrals/earth tones, muted pastels, bold/saturated, black/white only, no preference) and style vibe (minimal/clean, sporty/athletic, classic/preppy, streetwear/casual, outdoorsy) — style-blind search finds technically correct items that clash with the wearer's aesthetic
 - This question is required even if the topic already names a specific garment
 - Ask about fit preference if relevant (relaxed/oversized, fitted, performance/compression)
 </type_rules>`,
-  project: `
+	project: `
 <query_type>project</query_type>
 <type_rules>
 - Always include a skill level question (beginner, intermediate, experienced, professional)
 - Always include an "existing setup" question about what they already have (nothing/starting fresh, basic setup, intermediate gear, well-equipped)
 - Focus constraints question on budget AND compatibility with existing setup
 </type_rules>`,
-  general: '',
+	general: "",
 };
 
 export function buildRound1QuestionsPrompt(
-  topic: string,
-  queryType: QueryType = 'general',
+	topic: string,
+	queryType: QueryType = "general",
 ): string {
-  return `Generate 2-4 focused Round 1 interview questions to help curate a product collection.
+	return `Generate 2-4 focused Round 1 interview questions to help curate a product collection.
 
 <topic>${topic}</topic>
 ${queryTypeRules[queryType]}
@@ -183,30 +183,30 @@ ${followUpQuestionsJsonSchema}`;
 }
 
 const categoryResearchTypeRules: Record<QueryType, string> = {
-  gift: `
+	gift: `
 <type_rules>
 Identify the gift recipient's life stage from the interview answers. Models default to associating role words (e.g. "grandmother") with the most common context where that role appears (e.g. a new grandmother around an infant), which causes new-parent products to appear in collections for senior women. Break this association explicitly: if the recipient is a senior adult, add as the FIRST pitfall entry: "[recipient role] is an adult recipient — exclude baby/infant care, nursing, and new-parent products."
 Populate giftingConsiderations with occasion-appropriate and recipient-appropriate signals.
 </type_rules>`,
-  apparel: `
+	apparel: `
 <type_rules>
 Apparel searches without aesthetic direction find technically correct items that clash with the wearer's style — a running jacket in the wrong color palette is still a miss. Set followUpNeeded: true and add "nail down color palette and style direction before building" as the first followUpQuestionGoal whenever styleConsiderations is non-empty (which it always will be for clothing).
 </type_rules>`,
-  project: `
+	project: `
 <type_rules>
 Populate compatibilityGotchas with at least 3 items specific to the user's stated skill level and existing setup — generic compatibility warnings are not useful here.
 Add skill-level-appropriate pitfalls (e.g. "beginners often buy pro-grade tools they can't use safely").
 </type_rules>`,
-  general: '',
+	general: "",
 };
 
 export function buildCategoryResearchPrompt(
-  topic: string,
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
-  queryType: QueryType = 'general',
+	topic: string,
+	questions: InterviewQuestion[],
+	answers: Record<string, string>,
+	queryType: QueryType = "general",
 ): string {
-  return `Research the category behind this curation request before planning the collection.
+	return `Research the category behind this curation request before planning the collection.
 
 <topic>${topic}</topic>
 
@@ -232,12 +232,12 @@ ${categoryResearchJsonSchema}`;
 }
 
 export function buildMarketLandscapePrompt(
-  topic: string,
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
-  research: CategoryResearchBrief,
+	topic: string,
+	questions: InterviewQuestion[],
+	answers: Record<string, string>,
+	research: CategoryResearchBrief,
 ): string {
-  return `Build a source-seeded market landscape for this product curation request.
+	return `Build a source-seeded market landscape for this product curation request.
 
 <topic>${topic}</topic>
 
@@ -273,12 +273,12 @@ ${marketLandscapeJsonSchema}`;
 }
 
 export function buildRound2QuestionsPrompt(
-  topic: string,
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
-  research: CategoryResearchBrief,
+	topic: string,
+	questions: InterviewQuestion[],
+	answers: Record<string, string>,
+	research: CategoryResearchBrief,
 ): string {
-  return `Generate targeted Round 2 follow-up questions for this curation.
+	return `Generate targeted Round 2 follow-up questions for this curation.
 
 <topic>${topic}</topic>
 
@@ -302,26 +302,26 @@ ${followUpQuestionsJsonSchema}`;
 }
 
 function formatFramingBrief(brief: FramingBrief): string {
-  return JSON.stringify(brief, null, 2);
+	return JSON.stringify(brief, null, 2);
 }
 
 function formatMarketLandscape(landscape?: MarketLandscape): string {
-  if (!landscape) return 'No market landscape available.';
-  return JSON.stringify(
-    {
-      recurringProducts: landscape.recurringProducts.slice(0, 12),
-      recurringSections: landscape.recurringSections,
-      tradeoffs: landscape.tradeoffs,
-      compatibilityGotchas: landscape.compatibilityGotchas,
-      weakSignals: landscape.weakSignals,
-    },
-    null,
-    2,
-  );
+	if (!landscape) return "No market landscape available.";
+	return JSON.stringify(
+		{
+			recurringProducts: landscape.recurringProducts.slice(0, 12),
+			recurringSections: landscape.recurringSections,
+			tradeoffs: landscape.tradeoffs,
+			compatibilityGotchas: landscape.compatibilityGotchas,
+			weakSignals: landscape.weakSignals,
+		},
+		null,
+		2,
+	);
 }
 
 const framingTypeRules: Record<QueryType, string> = {
-  gift: `
+	gift: `
 <type_rules>
 - recipientContext must state the recipient's age range or life stage explicitly
 - avoid must list the demographic mismatches that would produce wrong-life-stage products — if the recipient is a senior, include "baby/infant products, nursing/breastfeeding products, new-parent products"; if an adult, include "children's products"
@@ -335,41 +335,41 @@ Good avoid entry: "baby/infant products, nursing pillows, new-parent items — r
 Bad avoid entry: "inappropriate items"
 </example>
 </type_rules>`,
-  apparel: `
+	apparel: `
 <type_rules>
 - tasteDirection must include a specific color palette direction and style vocabulary (e.g. "earth tones and muted neutrals, minimalist silhouettes, no logos or loud graphics")
 - Populate tasteDirection from the interview answers; leave blank only if the user explicitly said they have no aesthetic preference
 - constraints should capture fit/sizing preferences if stated
 </type_rules>`,
-  project: `
+	project: `
 <type_rules>
 - planningNotes must include compatibility requirements and skill-appropriate complexity notes
 - avoid should list items that are either overkill for the stated skill level or incompatible with their existing setup
 </type_rules>`,
-  general: '',
+	general: "",
 };
 
 export function buildFramingPrompt(
-  topic: string,
-  round1Questions: InterviewQuestion[],
-  round1Answers: Record<string, string>,
-  research: CategoryResearchBrief,
-  round2Questions: InterviewQuestion[] = [],
-  round2Answers: Record<string, string> = {},
-  marketLandscape?: MarketLandscape,
-  queryType: QueryType = 'general',
-  correction?: string,
+	topic: string,
+	round1Questions: InterviewQuestion[],
+	round1Answers: Record<string, string>,
+	research: CategoryResearchBrief,
+	round2Questions: InterviewQuestion[] = [],
+	round2Answers: Record<string, string> = {},
+	marketLandscape?: MarketLandscape,
+	queryType: QueryType = "general",
+	correction?: string,
 ): string {
-  const round2Block =
-    round2Questions.length > 0
-      ? `\n\n<round_2>\n${formatAnswers(round2Questions, round2Answers)}\n</round_2>`
-      : '';
+	const round2Block =
+		round2Questions.length > 0
+			? `\n\n<round_2>\n${formatAnswers(round2Questions, round2Answers)}\n</round_2>`
+			: "";
 
-  const correctionBlock = correction
-    ? `\n\n<user_correction>${correction}</user_correction>\nThe user reviewed a previous draft of this brief and provided the above correction. Incorporate it — update the relevant fields (recipientContext, avoid, constraints, tasteDirection, planningNotes) to reflect the correction.`
-    : '';
+	const correctionBlock = correction
+		? `\n\n<user_correction>${correction}</user_correction>\nThe user reviewed a previous draft of this brief and provided the above correction. Incorporate it — update the relevant fields (recipientContext, avoid, constraints, tasteDirection, planningNotes) to reflect the correction.`
+		: "";
 
-  return `Build a concise curatorial brief for the planner and curator to follow.
+	return `Build a concise curatorial brief for the planner and curator to follow.
 
 <topic>${topic}</topic>
 
@@ -404,43 +404,43 @@ ${framingBriefJsonSchema}`;
 }
 
 function formatAnswers(
-  questions: InterviewQuestion[],
-  answers: Record<string, string>,
+	questions: InterviewQuestion[],
+	answers: Record<string, string>,
 ): string {
-  return questions
-    .map((q) => `${q.text}\n→ ${answers[q.id] ?? '(no answer)'}`)
-    .join('\n\n');
+	return questions
+		.map((q) => `${q.text}\n→ ${answers[q.id] ?? "(no answer)"}`)
+		.join("\n\n");
 }
 
 // Slim framing brief for URL discovery — omits curation-only fields
 function formatUrlDiscoveryBrief(brief: FramingBrief): string {
-  return JSON.stringify({
-    goal: brief.goal,
-    recipientContext: brief.recipientContext,
-    constraints: brief.constraints,
-    avoid: brief.avoid,
-  });
+	return JSON.stringify({
+		goal: brief.goal,
+		recipientContext: brief.recipientContext,
+		constraints: brief.constraints,
+		avoid: brief.avoid,
+	});
 }
 
-type SearchResult = Pick<BraveSearchResult, 'title' | 'url' | 'description'>;
+type SearchResult = Pick<BraveSearchResult, "title" | "url" | "description">;
 type ResultSet = { query: string; results: SearchResult[] };
 
 function formatResultSets(resultSets: ResultSet[]): string {
-  return JSON.stringify(
-    resultSets.map((r) => ({
-      query: r.query,
-      results: r.results.map((s) => ({
-        title: s.title,
-        url: s.url,
-        description: s.description,
-      })),
-    })),
-  );
+	return JSON.stringify(
+		resultSets.map((r) => ({
+			query: r.query,
+			results: r.results.map((s) => ({
+				title: s.title,
+				url: s.url,
+				description: s.description,
+			})),
+		})),
+	);
 }
 
 export function buildUrlQueryGenSystemPrompt(): string {
-  const now = new Date();
-  return `You are a search query planner for a product curation tool. Current month: ${now.toLocaleString('en-US', { month: 'long' })} ${now.getFullYear()}.
+	const now = new Date();
+	return `You are a search query planner for a product curation tool. Current month: ${now.toLocaleString("en-US", { month: "long" })} ${now.getFullYear()}.
 
 Generate queries that surface individual product pages on brand-direct and specialty retailer sites.
 - Each query should target a different angle: material, use case, price tier, style, or construction
@@ -451,13 +451,13 @@ Return ONLY valid JSON: { "queries": ["query1", ...] }`;
 }
 
 export function buildUrlQueryGenPrompt(
-  section: SectionPlan,
-  topic: string,
-  brief: FramingBrief,
-  marketLandscape?: MarketLandscape,
+	section: SectionPlan,
+	topic: string,
+	brief: FramingBrief,
+	marketLandscape?: MarketLandscape,
 ): string {
-  const candidateTarget = section.targetCount * 2 + 2;
-  return `Generate 7 search queries to find individual product page URLs for the "${section.title}" section.
+	const candidateTarget = section.targetCount * 2 + 2;
+	return `Generate 7 search queries to find individual product page URLs for the "${section.title}" section.
 
 <topic>${topic}</topic>
 
@@ -477,7 +477,7 @@ Return ONLY valid JSON: { "queries": ["q1", "q2", "q3", "q4", "q5", "q6", "q7"] 
 }
 
 export function buildUrlExtractionSystemPrompt(): string {
-  return `You are a product URL extractor. Given search results, identify individual product page URLs that match the brief.
+	return `You are a product URL extractor. Given search results, identify individual product page URLs that match the brief.
 - Include only individual product pages — not category, collection, or search result pages
 - Prefer brand-direct sites and independent specialty retailers — exclude Amazon and generic marketplaces
 - Apply all constraints from the brief
@@ -486,13 +486,13 @@ Return ONLY valid JSON: { "urls": ["https://...", ...] }`;
 }
 
 export function buildUrlExtractionPrompt(
-  section: SectionPlan,
-  resultSets: ResultSet[],
-  brief: FramingBrief,
-  marketLandscape?: MarketLandscape,
+	section: SectionPlan,
+	resultSets: ResultSet[],
+	brief: FramingBrief,
+	marketLandscape?: MarketLandscape,
 ): string {
-  const candidateTarget = section.targetCount * 2 + 2;
-  return `Extract individual product page URLs for the "${section.title}" section from these search results.
+	const candidateTarget = section.targetCount * 2 + 2;
+	return `Extract individual product page URLs for the "${section.title}" section from these search results.
 
 <brief>${formatUrlDiscoveryBrief(brief)}</brief>
 
@@ -506,11 +506,11 @@ Target ${candidateTarget} URLs across different brands. Return ONLY valid JSON: 
 }
 
 export function buildRefinementQueryGenPrompt(
-  gap: CurationGap,
-  topic: string,
-  brief: FramingBrief,
+	gap: CurationGap,
+	topic: string,
+	brief: FramingBrief,
 ): string {
-  return `Generate 5 search queries to find product page URLs that address this curation gap.
+	return `Generate 5 search queries to find product page URLs that address this curation gap.
 
 <topic>${topic}</topic>
 
@@ -527,11 +527,11 @@ Use the search hint as a starting point. Return ONLY valid JSON: { "queries": ["
 }
 
 export function buildRefinementExtractionPrompt(
-  gap: CurationGap,
-  resultSets: ResultSet[],
-  brief: FramingBrief,
+	gap: CurationGap,
+	resultSets: ResultSet[],
+	brief: FramingBrief,
 ): string {
-  return `Extract product page URLs that address this curation gap.
+	return `Extract product page URLs that address this curation gap.
 
 <gap>
 Type: ${gap.kind}
@@ -547,11 +547,11 @@ Target 4-8 URLs. Return ONLY valid JSON: { "urls": ["https://...", ...] }`;
 }
 
 export function buildPlanPrompt(
-  topic: string,
-  brief: FramingBrief,
-  marketLandscape?: MarketLandscape,
+	topic: string,
+	brief: FramingBrief,
+	marketLandscape?: MarketLandscape,
 ): string {
-  return `Plan a focused product collection.
+	return `Plan a focused product collection.
 
 <topic>${topic}</topic>
 
@@ -583,19 +583,19 @@ Return only valid JSON:
 }
 
 export function buildCuratePrompt(
-  planTitle: string,
-  planIntro: string,
-  extractedSections: ExtractedSection[],
-  brief: FramingBrief,
+	planTitle: string,
+	planIntro: string,
+	extractedSections: ExtractedSection[],
+	brief: FramingBrief,
 ): string {
-  const sectionsJson = JSON.stringify(
-    extractedSections.map((s) => ({
-      title: s.title,
-      items: s.items,
-    })),
-  );
+	const sectionsJson = JSON.stringify(
+		extractedSections.map((s) => ({
+			title: s.title,
+			items: s.items,
+		})),
+	);
 
-  return `Curate a tight shortlist from extracted product page data for "${planTitle}".
+	return `Curate a tight shortlist from extracted product page data for "${planTitle}".
 
 <framing_brief>
 ${formatFramingBrief(brief)}
@@ -640,10 +640,10 @@ Return only valid JSON matching the schema in your system prompt.`;
 }
 
 export function buildHospitalityPassPrompt(
-  collection: CollectionOutput,
-  brief: FramingBrief,
+	collection: CollectionOutput,
+	brief: FramingBrief,
 ): string {
-  return `Apply a hospitality pass to make this collection feel made for this person, not just well-curated.
+	return `Apply a hospitality pass to make this collection feel made for this person, not just well-curated.
 
 Getting the products right is service. This pass adds color — the 1–2 touches that make the person feel seen.
 
@@ -670,12 +670,12 @@ Return only valid JSON matching the schema in your system prompt.`;
 }
 
 export function buildGapsPrompt(collection: CollectionOutput): string {
-  return `Review a curated product collection for actionable gaps.
+	return `Review a curated product collection for actionable gaps.
 
 <collection_title>${collection.title}</collection_title>
 
 <warnings>
-${collection.warnings.map((w, i) => `${i + 1}. ${w.text}${w.url ? ` (${w.url})` : ''}`).join('\n')}
+${collection.warnings.map((w, i) => `${i + 1}. ${w.text}${w.url ? ` (${w.url})` : ""}`).join("\n")}
 </warnings>
 
 <task>
@@ -702,11 +702,11 @@ Return only valid JSON array — no markdown, no explanation:
 }
 
 export function buildRefinementUrlPrompt(
-  gap: CurationGap,
-  topic: string,
-  brief: FramingBrief,
+	gap: CurationGap,
+	topic: string,
+	brief: FramingBrief,
 ): string {
-  return `Find 4-8 candidate product page URLs to address this gap.
+	return `Find 4-8 candidate product page URLs to address this gap.
 
 <topic>${topic}</topic>
 
@@ -735,26 +735,26 @@ Output ONLY valid JSON when done: { "urls": ["https://...", ...] }`;
 }
 
 export function buildRefinementCuratePrompt(
-  existing: CollectionOutput,
-  newSections: ExtractedSection[],
-  gaps: CurationGap[],
-  brief: FramingBrief,
+	existing: CollectionOutput,
+	newSections: ExtractedSection[],
+	gaps: CurationGap[],
+	brief: FramingBrief,
 ): string {
-  return `Refine an existing curated collection by addressing identified gaps.
+	return `Refine an existing curated collection by addressing identified gaps.
 
 <existing_collection>
 ${JSON.stringify({ title: existing.title, intro: existing.intro, sections: existing.sections }, null, 2)}
 </existing_collection>
 
 <gaps_to_address>
-${gaps.map((g) => `- [${g.kind}] ${g.sectionTitle}: ${g.description}`).join('\n')}
+${gaps.map((g) => `- [${g.kind}] ${g.sectionTitle}: ${g.description}`).join("\n")}
 </gaps_to_address>
 
 <new_extracted_data>
 ${JSON.stringify(
-  newSections.map((s) => ({ title: s.title, items: s.items })),
-  null,
-  2,
+	newSections.map((s) => ({ title: s.title, items: s.items })),
+	null,
+	2,
 )}
 </new_extracted_data>
 

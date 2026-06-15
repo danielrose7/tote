@@ -1,245 +1,245 @@
-import { useAuth, useUser } from '@clerk/expo';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import { useAuth, useUser } from "@clerk/expo";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import type { RootStackParamList } from '../navigation/types';
+	ActivityIndicator,
+	Alert,
+	ScrollView,
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
+} from "react-native";
+import type { RootStackParamList } from "../navigation/types";
 
-const API_BASE_URL = 'https://tote.tools';
+const API_BASE_URL = "https://tote.tools";
 
-type Props = NativeStackScreenProps<RootStackParamList, 'AccountSettings'>;
+type Props = NativeStackScreenProps<RootStackParamList, "AccountSettings">;
 
 export function AccountSettingsScreen({ navigation }: Props) {
-  const { user } = useUser();
-  const { signOut, getToken } = useAuth();
+	const { user } = useUser();
+	const { signOut, getToken } = useAuth();
 
-  const [firstName, setFirstName] = useState(user?.firstName ?? '');
-  const [lastName, setLastName] = useState(user?.lastName ?? '');
-  const [username, setUsername] = useState(user?.username ?? '');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
+	const [firstName, setFirstName] = useState(user?.firstName ?? "");
+	const [lastName, setLastName] = useState(user?.lastName ?? "");
+	const [username, setUsername] = useState(user?.username ?? "");
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [deleting, setDeleting] = useState(false);
 
-  async function handleSave() {
-    if (!user) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await user.update({
-        firstName,
-        lastName,
-        username: username.trim() || undefined,
-      });
-      navigation.goBack();
-    } catch (e: any) {
-      setError(e?.errors?.[0]?.message ?? 'Failed to save. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
+	async function handleSave() {
+		if (!user) return;
+		setSaving(true);
+		setError(null);
+		try {
+			await user.update({
+				firstName,
+				lastName,
+				username: username.trim() || undefined,
+			});
+			navigation.goBack();
+		} catch (e: any) {
+			setError(e?.errors?.[0]?.message ?? "Failed to save. Please try again.");
+		} finally {
+			setSaving(false);
+		}
+	}
 
-  async function handleSignOut() {
-    try {
-      await signOut();
-    } catch (e: any) {
-      const message = e?.message ?? '';
-      if (!message.includes('No active account')) {
-        console.error('Sign out error:', e);
-      }
-    }
-  }
+	async function handleSignOut() {
+		try {
+			await signOut();
+		} catch (e: any) {
+			const message = e?.message ?? "";
+			if (!message.includes("No active account")) {
+				console.error("Sign out error:", e);
+			}
+		}
+	}
 
-  function handleDeleteAccount() {
-    Alert.alert(
-      'Delete account',
-      'This will permanently delete your account, all collections, saved products, and usage history. This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete account',
-          style: 'destructive',
-          onPress: confirmDeleteAccount,
-        },
-      ],
-    );
-  }
+	function handleDeleteAccount() {
+		Alert.alert(
+			"Delete account",
+			"This will permanently delete your account, all collections, saved products, and usage history. This cannot be undone.",
+			[
+				{ text: "Cancel", style: "cancel" },
+				{
+					text: "Delete account",
+					style: "destructive",
+					onPress: confirmDeleteAccount,
+				},
+			],
+		);
+	}
 
-  async function confirmDeleteAccount() {
-    setDeleting(true);
-    try {
-      const token = await getToken();
-      const res = await fetch(`${API_BASE_URL}/api/user/delete`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        Alert.alert(
-          'Error',
-          data.error ?? 'Failed to delete account. Please try again.',
-        );
-        return;
-      }
-      await signOut();
-    } catch {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
-      setDeleting(false);
-    }
-  }
+	async function confirmDeleteAccount() {
+		setDeleting(true);
+		try {
+			const token = await getToken();
+			const res = await fetch(`${API_BASE_URL}/api/user/delete`, {
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				Alert.alert(
+					"Error",
+					data.error ?? "Failed to delete account. Please try again.",
+				);
+				return;
+			}
+			await signOut();
+		} catch {
+			Alert.alert("Error", "Something went wrong. Please try again.");
+		} finally {
+			setDeleting(false);
+		}
+	}
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.fieldLabel}>First name</Text>
-      <TextInput
-        style={styles.fieldInput}
-        value={firstName}
-        onChangeText={setFirstName}
-        placeholder="First name"
-        autoCorrect={false}
-      />
+	return (
+		<ScrollView style={styles.container} contentContainerStyle={styles.content}>
+			<Text style={styles.fieldLabel}>First name</Text>
+			<TextInput
+				style={styles.fieldInput}
+				value={firstName}
+				onChangeText={setFirstName}
+				placeholder="First name"
+				autoCorrect={false}
+			/>
 
-      <Text style={styles.fieldLabel}>Last name</Text>
-      <TextInput
-        style={styles.fieldInput}
-        value={lastName}
-        onChangeText={setLastName}
-        placeholder="Last name"
-        autoCorrect={false}
-      />
+			<Text style={styles.fieldLabel}>Last name</Text>
+			<TextInput
+				style={styles.fieldInput}
+				value={lastName}
+				onChangeText={setLastName}
+				placeholder="Last name"
+				autoCorrect={false}
+			/>
 
-      <Text style={styles.fieldLabel}>Username</Text>
-      <TextInput
-        style={styles.fieldInput}
-        value={username}
-        onChangeText={setUsername}
-        placeholder="username"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      <Text style={styles.hint}>
-        Used for public collection links: tote.tools/s/{username || 'username'}
-        /...
-      </Text>
+			<Text style={styles.fieldLabel}>Username</Text>
+			<TextInput
+				style={styles.fieldInput}
+				value={username}
+				onChangeText={setUsername}
+				placeholder="username"
+				autoCapitalize="none"
+				autoCorrect={false}
+			/>
+			<Text style={styles.hint}>
+				Used for public collection links: tote.tools/s/{username || "username"}
+				/...
+			</Text>
 
-      {error && <Text style={styles.error}>{error}</Text>}
+			{error && <Text style={styles.error}>{error}</Text>}
 
-      <TouchableOpacity
-        style={styles.saveBtn}
-        onPress={handleSave}
-        disabled={saving}
-      >
-        {saving ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.saveBtnText}>Save</Text>
-        )}
-      </TouchableOpacity>
+			<TouchableOpacity
+				style={styles.saveBtn}
+				onPress={handleSave}
+				disabled={saving}
+			>
+				{saving ? (
+					<ActivityIndicator color="#fff" />
+				) : (
+					<Text style={styles.saveBtnText}>Save</Text>
+				)}
+			</TouchableOpacity>
 
-      <View style={styles.divider} />
+			<View style={styles.divider} />
 
-      <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
+			<TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
+				<Text style={styles.signOutText}>Sign Out</Text>
+			</TouchableOpacity>
 
-      <Text style={styles.email}>
-        {user?.primaryEmailAddress?.emailAddress}
-      </Text>
+			<Text style={styles.email}>
+				{user?.primaryEmailAddress?.emailAddress}
+			</Text>
 
-      <View style={styles.dangerDivider} />
+			<View style={styles.dangerDivider} />
 
-      <TouchableOpacity
-        style={styles.deleteBtn}
-        onPress={handleDeleteAccount}
-        disabled={deleting}
-      >
-        {deleting ? (
-          <ActivityIndicator color="#ef4444" />
-        ) : (
-          <Text style={styles.deleteText}>Delete account</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
-  );
+			<TouchableOpacity
+				style={styles.deleteBtn}
+				onPress={handleDeleteAccount}
+				disabled={deleting}
+			>
+				{deleting ? (
+					<ActivityIndicator color="#ef4444" />
+				) : (
+					<Text style={styles.deleteText}>Delete account</Text>
+				)}
+			</TouchableOpacity>
+		</ScrollView>
+	);
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 20, paddingBottom: 60 },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-    marginBottom: 6,
-    marginTop: 20,
-  },
-  fieldInput: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#111',
-  },
-  hint: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginTop: 6,
-  },
-  error: {
-    fontSize: 13,
-    color: '#ef4444',
-    marginTop: 12,
-  },
-  saveBtn: {
-    backgroundColor: '#6366f1',
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: 'center',
-    marginTop: 28,
-  },
-  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#e5e7eb',
-    marginVertical: 32,
-  },
-  signOutBtn: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  signOutText: { fontSize: 15, color: '#ef4444', fontWeight: '600' },
-  email: {
-    textAlign: 'center',
-    fontSize: 13,
-    color: '#9ca3af',
-    marginTop: 16,
-  },
-  dangerDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#fee2e2',
-    marginVertical: 32,
-  },
-  deleteBtn: {
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  deleteText: {
-    fontSize: 14,
-    color: '#ef4444',
-  },
+	container: { flex: 1, backgroundColor: "#fff" },
+	content: { padding: 20, paddingBottom: 60 },
+	fieldLabel: {
+		fontSize: 12,
+		fontWeight: "600",
+		color: "#6b7280",
+		textTransform: "uppercase",
+		letterSpacing: 0.4,
+		marginBottom: 6,
+		marginTop: 20,
+	},
+	fieldInput: {
+		borderWidth: 1,
+		borderColor: "#e5e7eb",
+		borderRadius: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 10,
+		fontSize: 15,
+		color: "#111",
+	},
+	hint: {
+		fontSize: 12,
+		color: "#9ca3af",
+		marginTop: 6,
+	},
+	error: {
+		fontSize: 13,
+		color: "#ef4444",
+		marginTop: 12,
+	},
+	saveBtn: {
+		backgroundColor: "#6366f1",
+		borderRadius: 10,
+		paddingVertical: 13,
+		alignItems: "center",
+		marginTop: 28,
+	},
+	saveBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+	divider: {
+		height: StyleSheet.hairlineWidth,
+		backgroundColor: "#e5e7eb",
+		marginVertical: 32,
+	},
+	signOutBtn: {
+		borderWidth: 1,
+		borderColor: "#e5e7eb",
+		borderRadius: 10,
+		paddingVertical: 13,
+		alignItems: "center",
+	},
+	signOutText: { fontSize: 15, color: "#ef4444", fontWeight: "600" },
+	email: {
+		textAlign: "center",
+		fontSize: 13,
+		color: "#9ca3af",
+		marginTop: 16,
+	},
+	dangerDivider: {
+		height: StyleSheet.hairlineWidth,
+		backgroundColor: "#fee2e2",
+		marginVertical: 32,
+	},
+	deleteBtn: {
+		paddingVertical: 13,
+		alignItems: "center",
+	},
+	deleteText: {
+		fontSize: 14,
+		color: "#ef4444",
+	},
 });

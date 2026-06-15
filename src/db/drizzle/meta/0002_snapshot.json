@@ -1,1223 +1,1158 @@
 {
-  "id": "036b164e-3684-4ad6-ab39-c9d752e16141",
-  "prevId": "306dd8fe-9c5a-4f15-8e6d-77c1b6b829ef",
-  "version": "7",
-  "dialect": "postgresql",
-  "tables": {
-    "public.collection_lineage": {
-      "name": "collection_lineage",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "child_collection_id": {
-          "name": "child_collection_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "relationship": {
-          "name": "relationship",
-          "type": "collection_lineage_relationship",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_collection_id": {
-          "name": "source_collection_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_publication_id": {
-          "name": "source_publication_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_owner_user_id": {
-          "name": "source_owner_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_version": {
-          "name": "source_version",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_name_snapshot": {
-          "name": "source_name_snapshot",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_ref": {
-          "name": "source_ref",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_by_user_id": {
-          "name": "created_by_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "collection_lineage_child_idx": {
-          "name": "collection_lineage_child_idx",
-          "columns": [
-            {
-              "expression": "child_collection_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "collection_lineage_source_idx": {
-          "name": "collection_lineage_source_idx",
-          "columns": [
-            {
-              "expression": "source_collection_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "collection_lineage_child_collection_id_collections_id_fk": {
-          "name": "collection_lineage_child_collection_id_collections_id_fk",
-          "tableFrom": "collection_lineage",
-          "tableTo": "collections",
-          "columnsFrom": [
-            "child_collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "collection_lineage_source_collection_id_collections_id_fk": {
-          "name": "collection_lineage_source_collection_id_collections_id_fk",
-          "tableFrom": "collection_lineage",
-          "tableTo": "collections",
-          "columnsFrom": [
-            "source_collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "collection_lineage_not_self": {
-          "name": "collection_lineage_not_self",
-          "value": "\"collection_lineage\".\"source_collection_id\" IS NULL OR \"collection_lineage\".\"source_collection_id\" <> \"collection_lineage\".\"child_collection_id\""
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.collection_members": {
-      "name": "collection_members",
-      "schema": "",
-      "columns": {
-        "collection_id": {
-          "name": "collection_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "role": {
-          "name": "role",
-          "type": "collection_role",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "revoked_at": {
-          "name": "revoked_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "collection_members_user_active_idx": {
-          "name": "collection_members_user_active_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "collection_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"collection_members\".\"revoked_at\" IS NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "collection_members_collection_id_collections_id_fk": {
-          "name": "collection_members_collection_id_collections_id_fk",
-          "tableFrom": "collection_members",
-          "tableTo": "collections",
-          "columnsFrom": [
-            "collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "collection_members_collection_id_user_id_pk": {
-          "name": "collection_members_collection_id_user_id_pk",
-          "columns": [
-            "collection_id",
-            "user_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.collection_nodes": {
-      "name": "collection_nodes",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "collection_id": {
-          "name": "collection_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "type": {
-          "name": "type",
-          "type": "collection_node_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "properties": {
-          "name": "properties",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "position_key": {
-          "name": "position_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "version": {
-          "name": "version",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "created_by_user_id": {
-          "name": "created_by_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "collection_nodes_collection_parent_position_idx": {
-          "name": "collection_nodes_collection_parent_position_idx",
-          "columns": [
-            {
-              "expression": "collection_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "collection_nodes_collection_type_idx": {
-          "name": "collection_nodes_collection_type_idx",
-          "columns": [
-            {
-              "expression": "collection_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "collection_nodes_parent_idx": {
-          "name": "collection_nodes_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "collection_nodes_collection_id_collections_id_fk": {
-          "name": "collection_nodes_collection_id_collections_id_fk",
-          "tableFrom": "collection_nodes",
-          "tableTo": "collections",
-          "columnsFrom": [
-            "collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "collection_nodes_parent_id_collection_nodes_id_fk": {
-          "name": "collection_nodes_parent_id_collection_nodes_id_fk",
-          "tableFrom": "collection_nodes",
-          "tableTo": "collection_nodes",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "collection_nodes_parent_shape": {
-          "name": "collection_nodes_parent_shape",
-          "value": "\"collection_nodes\".\"type\" <> 'section' OR \"collection_nodes\".\"parent_id\" IS NULL"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.collections": {
-      "name": "collections",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "owner_user_id": {
-          "name": "owner_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "color": {
-          "name": "color",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "budget_cents": {
-          "name": "budget_cents",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "default_view_mode": {
-          "name": "default_view_mode",
-          "type": "collection_view_mode",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "public_layout": {
-          "name": "public_layout",
-          "type": "collection_public_layout",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'minimal'"
-        },
-        "copy_policy": {
-          "name": "copy_policy",
-          "type": "collection_copy_policy",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'disabled'"
-        },
-        "item_count": {
-          "name": "item_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "position_key": {
-          "name": "position_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "origin_type": {
-          "name": "origin_type",
-          "type": "collection_origin_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'manual'"
-        },
-        "legacy_jazz_id": {
-          "name": "legacy_jazz_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "version": {
-          "name": "version",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "collections_owner_position_idx": {
-          "name": "collections_owner_position_idx",
-          "columns": [
-            {
-              "expression": "owner_user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "position_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "collections_owner_updated_idx": {
-          "name": "collections_owner_updated_idx",
-          "columns": [
-            {
-              "expression": "owner_user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "collections_legacy_jazz_id_uidx": {
-          "name": "collections_legacy_jazz_id_uidx",
-          "columns": [
-            {
-              "expression": "legacy_jazz_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"collections\".\"legacy_jazz_id\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "collections_item_count_nonnegative": {
-          "name": "collections_item_count_nonnegative",
-          "value": "\"collections\".\"item_count\" >= 0"
-        },
-        "collections_budget_cents_nonnegative": {
-          "name": "collections_budget_cents_nonnegative",
-          "value": "\"collections\".\"budget_cents\" IS NULL OR \"collections\".\"budget_cents\" >= 0"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.account_collection_migrations": {
-      "name": "account_collection_migrations",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "migration_version": {
-          "name": "migration_version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "data_migration_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "source_collection_count": {
-          "name": "source_collection_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_item_count": {
-          "name": "source_item_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "imported_collection_count": {
-          "name": "imported_collection_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "imported_item_count": {
-          "name": "imported_item_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_fingerprint": {
-          "name": "source_fingerprint",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "import_fingerprint": {
-          "name": "import_fingerprint",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "error": {
-          "name": "error",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "started_at": {
-          "name": "started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "completed_at": {
-          "name": "completed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "account_collection_migrations_status_idx": {
-          "name": "account_collection_migrations_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "account_collection_migrations_user_id_migration_version_pk": {
-          "name": "account_collection_migrations_user_id_migration_version_pk",
-          "columns": [
-            "user_id",
-            "migration_version"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "account_collection_migrations_nonnegative_counts": {
-          "name": "account_collection_migrations_nonnegative_counts",
-          "value": "(\"account_collection_migrations\".\"source_collection_count\" IS NULL OR \"account_collection_migrations\".\"source_collection_count\" >= 0)\n\t\t\t\tAND (\"account_collection_migrations\".\"source_item_count\" IS NULL OR \"account_collection_migrations\".\"source_item_count\" >= 0)\n\t\t\t\tAND (\"account_collection_migrations\".\"imported_collection_count\" IS NULL OR \"account_collection_migrations\".\"imported_collection_count\" >= 0)\n\t\t\t\tAND (\"account_collection_migrations\".\"imported_item_count\" IS NULL OR \"account_collection_migrations\".\"imported_item_count\" >= 0)"
-        },
-        "account_collection_migrations_completed_receipt": {
-          "name": "account_collection_migrations_completed_receipt",
-          "value": "\"account_collection_migrations\".\"status\" <> 'completed' OR (\n\t\t\t\t\"account_collection_migrations\".\"source_collection_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"source_item_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"imported_collection_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"imported_item_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"source_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"import_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"completed_at\" IS NOT NULL\n\t\t\t)"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.account_data_sources": {
-      "name": "account_data_sources",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "data_source": {
-          "name": "data_source",
-          "type": "account_data_source",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'classic_jazz'"
-        },
-        "migration_version": {
-          "name": "migration_version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "cutover_at": {
-          "name": "cutover_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "rollback_expires_at": {
-          "name": "rollback_expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_verified_at": {
-          "name": "last_verified_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "account_data_sources_state_idx": {
-          "name": "account_data_sources_state_idx",
-          "columns": [
-            {
-              "expression": "data_source",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "account_data_sources_neon_cutover": {
-          "name": "account_data_sources_neon_cutover",
-          "value": "\"account_data_sources\".\"data_source\" <> 'neon' OR (\"account_data_sources\".\"cutover_at\" IS NOT NULL AND \"account_data_sources\".\"rollback_expires_at\" IS NOT NULL AND \"account_data_sources\".\"last_verified_at\" IS NOT NULL)"
-        },
-        "account_data_sources_rollback_after_cutover": {
-          "name": "account_data_sources_rollback_after_cutover",
-          "value": "\"account_data_sources\".\"rollback_expires_at\" IS NULL OR \"account_data_sources\".\"cutover_at\" IS NULL OR \"account_data_sources\".\"rollback_expires_at\" > \"account_data_sources\".\"cutover_at\""
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.collection_mutation_receipts": {
-      "name": "collection_mutation_receipts",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "mutation_id": {
-          "name": "mutation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "operation": {
-          "name": "operation",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "request_fingerprint": {
-          "name": "request_fingerprint",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "response": {
-          "name": "response",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "collection_mutation_receipts_expires_idx": {
-          "name": "collection_mutation_receipts_expires_idx",
-          "columns": [
-            {
-              "expression": "expires_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "collection_mutation_receipts_user_id_mutation_id_pk": {
-          "name": "collection_mutation_receipts_user_id_mutation_id_pk",
-          "columns": [
-            "user_id",
-            "mutation_id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "collection_mutation_receipts_expiry_after_creation": {
-          "name": "collection_mutation_receipts_expiry_after_creation",
-          "value": "\"collection_mutation_receipts\".\"expires_at\" > \"collection_mutation_receipts\".\"created_at\""
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.publication_snapshot_migrations": {
-      "name": "publication_snapshot_migrations",
-      "schema": "",
-      "columns": {
-        "legacy_publication_id": {
-          "name": "legacy_publication_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "source_jazz_id": {
-          "name": "source_jazz_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_collection_id": {
-          "name": "source_collection_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "migration_version": {
-          "name": "migration_version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "target_schema_version": {
-          "name": "target_schema_version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "data_migration_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "source_node_count": {
-          "name": "source_node_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "imported_node_count": {
-          "name": "imported_node_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_fingerprint": {
-          "name": "source_fingerprint",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "import_fingerprint": {
-          "name": "import_fingerprint",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "error": {
-          "name": "error",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "started_at": {
-          "name": "started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "completed_at": {
-          "name": "completed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "publication_snapshot_migrations_source_jazz_uidx": {
-          "name": "publication_snapshot_migrations_source_jazz_uidx",
-          "columns": [
-            {
-              "expression": "source_jazz_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "publication_snapshot_migrations_source_collection_idx": {
-          "name": "publication_snapshot_migrations_source_collection_idx",
-          "columns": [
-            {
-              "expression": "source_collection_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "publication_snapshot_migrations_status_idx": {
-          "name": "publication_snapshot_migrations_status_idx",
-          "columns": [
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "publication_snapshot_migrations_source_collection_id_collections_id_fk": {
-          "name": "publication_snapshot_migrations_source_collection_id_collections_id_fk",
-          "tableFrom": "publication_snapshot_migrations",
-          "tableTo": "collections",
-          "columnsFrom": [
-            "source_collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "publication_snapshot_migrations_positive_versions": {
-          "name": "publication_snapshot_migrations_positive_versions",
-          "value": "\"publication_snapshot_migrations\".\"migration_version\" > 0 AND \"publication_snapshot_migrations\".\"target_schema_version\" > 0"
-        },
-        "publication_snapshot_migrations_nonnegative_counts": {
-          "name": "publication_snapshot_migrations_nonnegative_counts",
-          "value": "(\"publication_snapshot_migrations\".\"source_node_count\" IS NULL OR \"publication_snapshot_migrations\".\"source_node_count\" >= 0)\n\t\t\t\tAND (\"publication_snapshot_migrations\".\"imported_node_count\" IS NULL OR \"publication_snapshot_migrations\".\"imported_node_count\" >= 0)"
-        },
-        "publication_snapshot_migrations_completed_receipt": {
-          "name": "publication_snapshot_migrations_completed_receipt",
-          "value": "\"publication_snapshot_migrations\".\"status\" <> 'completed' OR (\n\t\t\t\t\"publication_snapshot_migrations\".\"source_node_count\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"imported_node_count\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"source_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"import_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"completed_at\" IS NOT NULL\n\t\t\t)"
-        }
-      },
-      "isRLSEnabled": false
-    }
-  },
-  "enums": {
-    "public.collection_copy_policy": {
-      "name": "collection_copy_policy",
-      "schema": "public",
-      "values": [
-        "disabled",
-        "members",
-        "public"
-      ]
-    },
-    "public.collection_lineage_relationship": {
-      "name": "collection_lineage_relationship",
-      "schema": "public",
-      "values": [
-        "copied",
-        "imported",
-        "curated",
-        "templated"
-      ]
-    },
-    "public.collection_node_type": {
-      "name": "collection_node_type",
-      "schema": "public",
-      "values": [
-        "section",
-        "product",
-        "link",
-        "photo",
-        "note",
-        "text"
-      ]
-    },
-    "public.collection_origin_type": {
-      "name": "collection_origin_type",
-      "schema": "public",
-      "values": [
-        "manual",
-        "import",
-        "curator",
-        "copy"
-      ]
-    },
-    "public.collection_public_layout": {
-      "name": "collection_public_layout",
-      "schema": "public",
-      "values": [
-        "minimal",
-        "feature"
-      ]
-    },
-    "public.collection_role": {
-      "name": "collection_role",
-      "schema": "public",
-      "values": [
-        "owner",
-        "admin",
-        "editor",
-        "viewer"
-      ]
-    },
-    "public.collection_view_mode": {
-      "name": "collection_view_mode",
-      "schema": "public",
-      "values": [
-        "grid",
-        "table"
-      ]
-    },
-    "public.account_data_source": {
-      "name": "account_data_source",
-      "schema": "public",
-      "values": [
-        "classic_jazz",
-        "migrating",
-        "neon_verifying",
-        "neon",
-        "migration_failed"
-      ]
-    },
-    "public.data_migration_status": {
-      "name": "data_migration_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "exporting",
-        "importing",
-        "verifying",
-        "completed",
-        "failed"
-      ]
-    }
-  },
-  "schemas": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
-  "views": {},
-  "_meta": {
-    "columns": {},
-    "schemas": {},
-    "tables": {}
-  }
+	"id": "036b164e-3684-4ad6-ab39-c9d752e16141",
+	"prevId": "306dd8fe-9c5a-4f15-8e6d-77c1b6b829ef",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.collection_lineage": {
+			"name": "collection_lineage",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"child_collection_id": {
+					"name": "child_collection_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"relationship": {
+					"name": "relationship",
+					"type": "collection_lineage_relationship",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"source_collection_id": {
+					"name": "source_collection_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_publication_id": {
+					"name": "source_publication_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_owner_user_id": {
+					"name": "source_owner_user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_version": {
+					"name": "source_version",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_name_snapshot": {
+					"name": "source_name_snapshot",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"source_ref": {
+					"name": "source_ref",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_by_user_id": {
+					"name": "created_by_user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"collection_lineage_child_idx": {
+					"name": "collection_lineage_child_idx",
+					"columns": [
+						{
+							"expression": "child_collection_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"collection_lineage_source_idx": {
+					"name": "collection_lineage_source_idx",
+					"columns": [
+						{
+							"expression": "source_collection_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"collection_lineage_child_collection_id_collections_id_fk": {
+					"name": "collection_lineage_child_collection_id_collections_id_fk",
+					"tableFrom": "collection_lineage",
+					"tableTo": "collections",
+					"columnsFrom": ["child_collection_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"collection_lineage_source_collection_id_collections_id_fk": {
+					"name": "collection_lineage_source_collection_id_collections_id_fk",
+					"tableFrom": "collection_lineage",
+					"tableTo": "collections",
+					"columnsFrom": ["source_collection_id"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"collection_lineage_not_self": {
+					"name": "collection_lineage_not_self",
+					"value": "\"collection_lineage\".\"source_collection_id\" IS NULL OR \"collection_lineage\".\"source_collection_id\" <> \"collection_lineage\".\"child_collection_id\""
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.collection_members": {
+			"name": "collection_members",
+			"schema": "",
+			"columns": {
+				"collection_id": {
+					"name": "collection_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"role": {
+					"name": "role",
+					"type": "collection_role",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"revoked_at": {
+					"name": "revoked_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"collection_members_user_active_idx": {
+					"name": "collection_members_user_active_idx",
+					"columns": [
+						{
+							"expression": "user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "collection_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"where": "\"collection_members\".\"revoked_at\" IS NULL",
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"collection_members_collection_id_collections_id_fk": {
+					"name": "collection_members_collection_id_collections_id_fk",
+					"tableFrom": "collection_members",
+					"tableTo": "collections",
+					"columnsFrom": ["collection_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {
+				"collection_members_collection_id_user_id_pk": {
+					"name": "collection_members_collection_id_user_id_pk",
+					"columns": ["collection_id", "user_id"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.collection_nodes": {
+			"name": "collection_nodes",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"collection_id": {
+					"name": "collection_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"parent_id": {
+					"name": "parent_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"type": {
+					"name": "type",
+					"type": "collection_node_type",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"title": {
+					"name": "title",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"properties": {
+					"name": "properties",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'{}'::jsonb"
+				},
+				"position_key": {
+					"name": "position_key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"version": {
+					"name": "version",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 1
+				},
+				"created_by_user_id": {
+					"name": "created_by_user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"deleted_at": {
+					"name": "deleted_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"collection_nodes_collection_parent_position_idx": {
+					"name": "collection_nodes_collection_parent_position_idx",
+					"columns": [
+						{
+							"expression": "collection_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "parent_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "position_key",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"collection_nodes_collection_type_idx": {
+					"name": "collection_nodes_collection_type_idx",
+					"columns": [
+						{
+							"expression": "collection_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "type",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"collection_nodes_parent_idx": {
+					"name": "collection_nodes_parent_idx",
+					"columns": [
+						{
+							"expression": "parent_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"collection_nodes_collection_id_collections_id_fk": {
+					"name": "collection_nodes_collection_id_collections_id_fk",
+					"tableFrom": "collection_nodes",
+					"tableTo": "collections",
+					"columnsFrom": ["collection_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				},
+				"collection_nodes_parent_id_collection_nodes_id_fk": {
+					"name": "collection_nodes_parent_id_collection_nodes_id_fk",
+					"tableFrom": "collection_nodes",
+					"tableTo": "collection_nodes",
+					"columnsFrom": ["parent_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"collection_nodes_parent_shape": {
+					"name": "collection_nodes_parent_shape",
+					"value": "\"collection_nodes\".\"type\" <> 'section' OR \"collection_nodes\".\"parent_id\" IS NULL"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.collections": {
+			"name": "collections",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true,
+					"default": "gen_random_uuid()"
+				},
+				"owner_user_id": {
+					"name": "owner_user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"color": {
+					"name": "color",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"budget_cents": {
+					"name": "budget_cents",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"default_view_mode": {
+					"name": "default_view_mode",
+					"type": "collection_view_mode",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"public_layout": {
+					"name": "public_layout",
+					"type": "collection_public_layout",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'minimal'"
+				},
+				"copy_policy": {
+					"name": "copy_policy",
+					"type": "collection_copy_policy",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'disabled'"
+				},
+				"item_count": {
+					"name": "item_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"position_key": {
+					"name": "position_key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"origin_type": {
+					"name": "origin_type",
+					"type": "collection_origin_type",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'manual'"
+				},
+				"legacy_jazz_id": {
+					"name": "legacy_jazz_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"version": {
+					"name": "version",
+					"type": "bigint",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 1
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"deleted_at": {
+					"name": "deleted_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				}
+			},
+			"indexes": {
+				"collections_owner_position_idx": {
+					"name": "collections_owner_position_idx",
+					"columns": [
+						{
+							"expression": "owner_user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "position_key",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"collections_owner_updated_idx": {
+					"name": "collections_owner_updated_idx",
+					"columns": [
+						{
+							"expression": "owner_user_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "updated_at",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"collections_legacy_jazz_id_uidx": {
+					"name": "collections_legacy_jazz_id_uidx",
+					"columns": [
+						{
+							"expression": "legacy_jazz_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"where": "\"collections\".\"legacy_jazz_id\" IS NOT NULL",
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"collections_item_count_nonnegative": {
+					"name": "collections_item_count_nonnegative",
+					"value": "\"collections\".\"item_count\" >= 0"
+				},
+				"collections_budget_cents_nonnegative": {
+					"name": "collections_budget_cents_nonnegative",
+					"value": "\"collections\".\"budget_cents\" IS NULL OR \"collections\".\"budget_cents\" >= 0"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.account_collection_migrations": {
+			"name": "account_collection_migrations",
+			"schema": "",
+			"columns": {
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"migration_version": {
+					"name": "migration_version",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "data_migration_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'pending'"
+				},
+				"source_collection_count": {
+					"name": "source_collection_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_item_count": {
+					"name": "source_item_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"imported_collection_count": {
+					"name": "imported_collection_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"imported_item_count": {
+					"name": "imported_item_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_fingerprint": {
+					"name": "source_fingerprint",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"import_fingerprint": {
+					"name": "import_fingerprint",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"error": {
+					"name": "error",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"started_at": {
+					"name": "started_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"completed_at": {
+					"name": "completed_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"account_collection_migrations_status_idx": {
+					"name": "account_collection_migrations_status_idx",
+					"columns": [
+						{
+							"expression": "status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {
+				"account_collection_migrations_user_id_migration_version_pk": {
+					"name": "account_collection_migrations_user_id_migration_version_pk",
+					"columns": ["user_id", "migration_version"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"account_collection_migrations_nonnegative_counts": {
+					"name": "account_collection_migrations_nonnegative_counts",
+					"value": "(\"account_collection_migrations\".\"source_collection_count\" IS NULL OR \"account_collection_migrations\".\"source_collection_count\" >= 0)\n\t\t\t\tAND (\"account_collection_migrations\".\"source_item_count\" IS NULL OR \"account_collection_migrations\".\"source_item_count\" >= 0)\n\t\t\t\tAND (\"account_collection_migrations\".\"imported_collection_count\" IS NULL OR \"account_collection_migrations\".\"imported_collection_count\" >= 0)\n\t\t\t\tAND (\"account_collection_migrations\".\"imported_item_count\" IS NULL OR \"account_collection_migrations\".\"imported_item_count\" >= 0)"
+				},
+				"account_collection_migrations_completed_receipt": {
+					"name": "account_collection_migrations_completed_receipt",
+					"value": "\"account_collection_migrations\".\"status\" <> 'completed' OR (\n\t\t\t\t\"account_collection_migrations\".\"source_collection_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"source_item_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"imported_collection_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"imported_item_count\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"source_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"import_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"account_collection_migrations\".\"completed_at\" IS NOT NULL\n\t\t\t)"
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.account_data_sources": {
+			"name": "account_data_sources",
+			"schema": "",
+			"columns": {
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"data_source": {
+					"name": "data_source",
+					"type": "account_data_source",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'classic_jazz'"
+				},
+				"migration_version": {
+					"name": "migration_version",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"cutover_at": {
+					"name": "cutover_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"rollback_expires_at": {
+					"name": "rollback_expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"last_verified_at": {
+					"name": "last_verified_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"account_data_sources_state_idx": {
+					"name": "account_data_sources_state_idx",
+					"columns": [
+						{
+							"expression": "data_source",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"account_data_sources_neon_cutover": {
+					"name": "account_data_sources_neon_cutover",
+					"value": "\"account_data_sources\".\"data_source\" <> 'neon' OR (\"account_data_sources\".\"cutover_at\" IS NOT NULL AND \"account_data_sources\".\"rollback_expires_at\" IS NOT NULL AND \"account_data_sources\".\"last_verified_at\" IS NOT NULL)"
+				},
+				"account_data_sources_rollback_after_cutover": {
+					"name": "account_data_sources_rollback_after_cutover",
+					"value": "\"account_data_sources\".\"rollback_expires_at\" IS NULL OR \"account_data_sources\".\"cutover_at\" IS NULL OR \"account_data_sources\".\"rollback_expires_at\" > \"account_data_sources\".\"cutover_at\""
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.collection_mutation_receipts": {
+			"name": "collection_mutation_receipts",
+			"schema": "",
+			"columns": {
+				"user_id": {
+					"name": "user_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"mutation_id": {
+					"name": "mutation_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"operation": {
+					"name": "operation",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"request_fingerprint": {
+					"name": "request_fingerprint",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"response": {
+					"name": "response",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"expires_at": {
+					"name": "expires_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true
+				}
+			},
+			"indexes": {
+				"collection_mutation_receipts_expires_idx": {
+					"name": "collection_mutation_receipts_expires_idx",
+					"columns": [
+						{
+							"expression": "expires_at",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {
+				"collection_mutation_receipts_user_id_mutation_id_pk": {
+					"name": "collection_mutation_receipts_user_id_mutation_id_pk",
+					"columns": ["user_id", "mutation_id"]
+				}
+			},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"collection_mutation_receipts_expiry_after_creation": {
+					"name": "collection_mutation_receipts_expiry_after_creation",
+					"value": "\"collection_mutation_receipts\".\"expires_at\" > \"collection_mutation_receipts\".\"created_at\""
+				}
+			},
+			"isRLSEnabled": false
+		},
+		"public.publication_snapshot_migrations": {
+			"name": "publication_snapshot_migrations",
+			"schema": "",
+			"columns": {
+				"legacy_publication_id": {
+					"name": "legacy_publication_id",
+					"type": "uuid",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"source_jazz_id": {
+					"name": "source_jazz_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"source_collection_id": {
+					"name": "source_collection_id",
+					"type": "uuid",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"migration_version": {
+					"name": "migration_version",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"target_schema_version": {
+					"name": "target_schema_version",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"status": {
+					"name": "status",
+					"type": "data_migration_status",
+					"typeSchema": "public",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'pending'"
+				},
+				"source_node_count": {
+					"name": "source_node_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"imported_node_count": {
+					"name": "imported_node_count",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source_fingerprint": {
+					"name": "source_fingerprint",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"import_fingerprint": {
+					"name": "import_fingerprint",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"error": {
+					"name": "error",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"started_at": {
+					"name": "started_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"completed_at": {
+					"name": "completed_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp with time zone",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {
+				"publication_snapshot_migrations_source_jazz_uidx": {
+					"name": "publication_snapshot_migrations_source_jazz_uidx",
+					"columns": [
+						{
+							"expression": "source_jazz_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"publication_snapshot_migrations_source_collection_idx": {
+					"name": "publication_snapshot_migrations_source_collection_idx",
+					"columns": [
+						{
+							"expression": "source_collection_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"publication_snapshot_migrations_status_idx": {
+					"name": "publication_snapshot_migrations_status_idx",
+					"columns": [
+						{
+							"expression": "status",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"publication_snapshot_migrations_source_collection_id_collections_id_fk": {
+					"name": "publication_snapshot_migrations_source_collection_id_collections_id_fk",
+					"tableFrom": "publication_snapshot_migrations",
+					"tableTo": "collections",
+					"columnsFrom": ["source_collection_id"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "no action"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {
+				"publication_snapshot_migrations_positive_versions": {
+					"name": "publication_snapshot_migrations_positive_versions",
+					"value": "\"publication_snapshot_migrations\".\"migration_version\" > 0 AND \"publication_snapshot_migrations\".\"target_schema_version\" > 0"
+				},
+				"publication_snapshot_migrations_nonnegative_counts": {
+					"name": "publication_snapshot_migrations_nonnegative_counts",
+					"value": "(\"publication_snapshot_migrations\".\"source_node_count\" IS NULL OR \"publication_snapshot_migrations\".\"source_node_count\" >= 0)\n\t\t\t\tAND (\"publication_snapshot_migrations\".\"imported_node_count\" IS NULL OR \"publication_snapshot_migrations\".\"imported_node_count\" >= 0)"
+				},
+				"publication_snapshot_migrations_completed_receipt": {
+					"name": "publication_snapshot_migrations_completed_receipt",
+					"value": "\"publication_snapshot_migrations\".\"status\" <> 'completed' OR (\n\t\t\t\t\"publication_snapshot_migrations\".\"source_node_count\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"imported_node_count\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"source_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"import_fingerprint\" IS NOT NULL\n\t\t\t\tAND \"publication_snapshot_migrations\".\"completed_at\" IS NOT NULL\n\t\t\t)"
+				}
+			},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {
+		"public.collection_copy_policy": {
+			"name": "collection_copy_policy",
+			"schema": "public",
+			"values": ["disabled", "members", "public"]
+		},
+		"public.collection_lineage_relationship": {
+			"name": "collection_lineage_relationship",
+			"schema": "public",
+			"values": ["copied", "imported", "curated", "templated"]
+		},
+		"public.collection_node_type": {
+			"name": "collection_node_type",
+			"schema": "public",
+			"values": ["section", "product", "link", "photo", "note", "text"]
+		},
+		"public.collection_origin_type": {
+			"name": "collection_origin_type",
+			"schema": "public",
+			"values": ["manual", "import", "curator", "copy"]
+		},
+		"public.collection_public_layout": {
+			"name": "collection_public_layout",
+			"schema": "public",
+			"values": ["minimal", "feature"]
+		},
+		"public.collection_role": {
+			"name": "collection_role",
+			"schema": "public",
+			"values": ["owner", "admin", "editor", "viewer"]
+		},
+		"public.collection_view_mode": {
+			"name": "collection_view_mode",
+			"schema": "public",
+			"values": ["grid", "table"]
+		},
+		"public.account_data_source": {
+			"name": "account_data_source",
+			"schema": "public",
+			"values": [
+				"classic_jazz",
+				"migrating",
+				"neon_verifying",
+				"neon",
+				"migration_failed"
+			]
+		},
+		"public.data_migration_status": {
+			"name": "data_migration_status",
+			"schema": "public",
+			"values": [
+				"pending",
+				"exporting",
+				"importing",
+				"verifying",
+				"completed",
+				"failed"
+			]
+		}
+	},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
 }

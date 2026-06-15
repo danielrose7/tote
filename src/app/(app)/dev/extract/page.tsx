@@ -1,5 +1,5 @@
-import { ExtractDashboardClient } from './ExtractDashboardClient';
+import { ExtractDashboardClient } from "./ExtractDashboardClient";
 
 export default function ExtractPage() {
-  return <ExtractDashboardClient />;
+	return <ExtractDashboardClient />;
 }

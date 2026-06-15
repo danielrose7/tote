@@ -1,18 +1,18 @@
 {
-  "name": "tote-extractor",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
-    "deploy:dry": "wrangler deploy --dry-run"
-  },
-  "dependencies": {
-    "@cloudflare/puppeteer": "^1.1.0"
-  },
-  "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240529.0",
-    "typescript": "^5.4.5",
-    "wrangler": "^4.0.0"
-  }
+	"name": "tote-extractor",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"deploy:dry": "wrangler deploy --dry-run"
+	},
+	"dependencies": {
+		"@cloudflare/puppeteer": "^1.1.0"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20240529.0",
+		"typescript": "^5.4.5",
+		"wrangler": "^4.0.0"
+	}
 }

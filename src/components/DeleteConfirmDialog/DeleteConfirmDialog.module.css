@@ -1,82 +1,82 @@
 .overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 1000;
-  animation: fadeIn var(--transition-fast);
+	position: fixed;
+	inset: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(4px);
+	z-index: 1000;
+	animation: fadeIn var(--transition-fast);
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .content {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: var(--color-background);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  width: 90%;
-  max-width: 450px;
-  box-shadow: var(--shadow-xl);
-  z-index: 1001;
-  animation: slideIn var(--transition-normal);
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: var(--color-background);
+	border-radius: var(--radius-lg);
+	padding: var(--spacing-xl);
+	width: 90%;
+	max-width: 450px;
+	box-shadow: var(--shadow-xl);
+	z-index: 1001;
+	animation: slideIn var(--transition-normal);
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -48%);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
+	from {
+		opacity: 0;
+		transform: translate(-50%, -48%);
+	}
+	to {
+		opacity: 1;
+		transform: translate(-50%, -50%);
+	}
 }
 
 .title {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
-  margin: 0 0 var(--spacing-md) 0;
+	font-size: var(--font-size-xl);
+	font-weight: var(--font-weight-bold);
+	color: var(--color-text-primary);
+	margin: 0 0 var(--spacing-md) 0;
 }
 
 .description {
-  font-size: var(--font-size-base);
-  color: var(--color-text-secondary);
-  line-height: 1.6;
-  margin: 0 0 var(--spacing-xl) 0;
+	font-size: var(--font-size-base);
+	color: var(--color-text-secondary);
+	line-height: 1.6;
+	margin: 0 0 var(--spacing-xl) 0;
 }
 
 .description strong {
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-semibold);
+	color: var(--color-text-primary);
+	font-weight: var(--font-weight-semibold);
 }
 
 .actions {
-  display: flex;
-  gap: var(--spacing-md);
-  justify-content: flex-end;
+	display: flex;
+	gap: var(--spacing-md);
+	justify-content: flex-end;
 }
 
 @media (max-width: 480px) {
-  .content {
-    padding: var(--spacing-lg);
-  }
+	.content {
+		padding: var(--spacing-lg);
+	}
 
-  .actions {
-    flex-direction: column-reverse;
-  }
+	.actions {
+		flex-direction: column-reverse;
+	}
 
-  .actions button {
-    width: 100%;
-  }
+	.actions button {
+		width: 100%;
+	}
 }

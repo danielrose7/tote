@@ -1,10 +1,10 @@
 module.exports = (api) => {
-  api.cache(true);
+	api.cache(true);
 
-  return {
-    presets: [
-      ['babel-preset-expo', { unstable_transformProfile: 'hermes-v0' }],
-    ],
-    plugins: ['react-native-worklets/plugin'],
-  };
+	return {
+		presets: [
+			["babel-preset-expo", { unstable_transformProfile: "hermes-v0" }],
+		],
+		plugins: ["react-native-worklets/plugin"],
+	};
 };
