@@ -137,6 +137,7 @@ function SortableSectionWrapper({
   id,
   section,
   items,
+  otherSections,
   collectionId,
   canEdit,
   isSectionReorderMode,
@@ -145,6 +146,7 @@ function SortableSectionWrapper({
   id: string;
   section: CollectionNode;
   items: CollectionNode[];
+  otherSections: CollectionNode[];
   collectionId: string;
   canEdit: boolean;
   isSectionReorderMode: boolean;
@@ -167,6 +169,7 @@ function SortableSectionWrapper({
       <NeonSlotSection
         section={section}
         items={items}
+        otherSections={otherSections}
         collectionId={collectionId}
         canEdit={canEdit}
         onEditItem={onEditItem}
@@ -773,6 +776,9 @@ export function NeonCollectionView({
                         id={section.id}
                         section={section}
                         items={childrenByParent.get(section.id) ?? []}
+                        otherSections={sections.filter(
+                          (s) => s.id !== section.id,
+                        )}
                         collectionId={collection.id}
                         canEdit={canEdit}
                         isSectionReorderMode={isSectionReorderMode}

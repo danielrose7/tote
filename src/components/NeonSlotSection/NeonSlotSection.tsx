@@ -17,6 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { CollectionNode } from '../../db/schema';
@@ -394,6 +395,7 @@ function NeonSortableItem({
 export interface NeonSlotSectionProps {
   section: CollectionNode;
   items: CollectionNode[];
+  otherSections: CollectionNode[];
   collectionId: string;
   canEdit: boolean;
   onEditItem?: (node: CollectionNode) => void;
@@ -405,6 +407,7 @@ export interface NeonSlotSectionProps {
 export function NeonSlotSection({
   section,
   items,
+  otherSections,
   collectionId,
   canEdit,
   onEditItem,
@@ -440,6 +443,11 @@ export function NeonSlotSection({
     current: number;
     total: number;
   } | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteAction, setDeleteAction] = useState<
+    'delete' | 'ungrouped' | 'section'
+  >('delete');
+  const [moveToSectionId, setMoveToSectionId] = useState('');
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -714,20 +722,82 @@ export function NeonSlotSection({
   };
 
   const handleDelete = () => {
-    const itemWord = items.length === 1 ? 'item' : 'items';
-    const msg =
-      items.length > 0
-        ? `Delete "${section.title}"? All ${items.length} ${itemWord} in this section will also be deleted.`
-        : `Delete "${section.title}"?`;
-    if (!window.confirm(msg)) return;
-    deleteSection.mutate({
-      collectionId,
-      nodeId: section.id,
-      input: {
-        expectedVersion: section.version,
-        mutationId: crypto.randomUUID(),
+    setDeleteAction('delete');
+    setMoveToSectionId('');
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteDialog(false);
+
+    if (deleteAction === 'delete' || items.length === 0) {
+      deleteSection.mutate({
+        collectionId,
+        nodeId: section.id,
+        input: {
+          expectedVersion: section.version,
+          mutationId: crypto.randomUUID(),
+        },
+      });
+      return;
+    }
+
+    const targetParentId =
+      deleteAction === 'section' ? moveToSectionId || null : null;
+
+    // Optimistically move items and remove section from cache
+    queryClient.setQueryData<CollectionDetail>(
+      collectionQueryKeys.detail(collectionId),
+      (current) => {
+        if (!current) return current;
+        const movedItemIds = new Set(items.map((n) => n.id));
+        return {
+          ...current,
+          nodes: current.nodes
+            .filter((n) => n.id !== section.id)
+            .map((n) =>
+              movedItemIds.has(n.id)
+                ? { ...n, parentId: targetParentId, version: n.version + 1 }
+                : n,
+            ),
+        };
       },
-    });
+    );
+
+    try {
+      // Move all items first (in parallel)
+      await Promise.all(
+        items.map((item) =>
+          updateCollectionNodeMutation({
+            collectionId,
+            nodeId: item.id,
+            input: {
+              expectedVersion: item.version,
+              mutationId: crypto.randomUUID(),
+              parentId: targetParentId,
+            },
+          }),
+        ),
+      );
+      // Then delete the now-empty section
+      await deleteCollectionNodeMutation({
+        collectionId,
+        nodeId: section.id,
+        input: {
+          expectedVersion: section.version,
+          mutationId: crypto.randomUUID(),
+        },
+      });
+    } catch (err) {
+      showToast({
+        title: 'Failed to delete section',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'error',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: collectionQueryKeys.detail(collectionId),
+      });
+    }
   };
 
   const handleProductDragEnd = ({ active, over }: DragEndEvent) => {
@@ -1062,5 +1132,140 @@ export function NeonSlotSection({
         </div>
       )}
     </section>
+
+    <Dialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <Dialog.Portal>
+        <Dialog.Overlay
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 50,
+          }}
+        />
+        <Dialog.Content
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'var(--color-background)',
+            border: '1px solid var(--color-border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '24px',
+            width: '360px',
+            maxWidth: '90vw',
+            zIndex: 51,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+          }}
+        >
+          <Dialog.Title
+            style={{ fontWeight: 600, fontSize: 'var(--font-size-base)', margin: 0 }}
+          >
+            Delete &ldquo;{section.title || 'section'}&rdquo;?
+          </Dialog.Title>
+
+          {items.length === 0 ? (
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', margin: 0 }}>
+              This section is empty and will be permanently removed.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', margin: 0 }}>
+                This section has {items.length} {items.length === 1 ? 'item' : 'items'}. What should happen to them?
+              </p>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-sm)', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="deleteAction"
+                  value="delete"
+                  checked={deleteAction === 'delete'}
+                  onChange={() => setDeleteAction('delete')}
+                />
+                Remove all {items.length} {items.length === 1 ? 'item' : 'items'} from the collection
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-sm)', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="deleteAction"
+                  value="ungrouped"
+                  checked={deleteAction === 'ungrouped'}
+                  onChange={() => setDeleteAction('ungrouped')}
+                />
+                Move items to ungrouped
+              </label>
+              {otherSections.length > 0 && (
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: 'var(--font-size-sm)', cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="deleteAction"
+                    value="section"
+                    checked={deleteAction === 'section'}
+                    onChange={() => {
+                      setDeleteAction('section');
+                      if (!moveToSectionId) setMoveToSectionId(otherSections[0].id);
+                    }}
+                  />
+                  Move items to another section
+                  {deleteAction === 'section' && (
+                    <select
+                      value={moveToSectionId}
+                      onChange={(e) => setMoveToSectionId(e.target.value)}
+                      style={{ marginLeft: '4px', fontSize: 'var(--font-size-sm)' }}
+                    >
+                      {otherSections.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.title || 'Untitled section'}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </label>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <Dialog.Close asChild>
+              <button
+                type="button"
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-border)',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  fontSize: 'var(--font-size-sm)',
+                }}
+              >
+                Cancel
+              </button>
+            </Dialog.Close>
+            <button
+              type="button"
+              onClick={() => void handleConfirmDelete()}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-sm)',
+                border: 'none',
+                background: 'var(--color-danger, #ef4444)',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: 'var(--font-size-sm)',
+                fontWeight: 500,
+              }}
+            >
+              {deleteAction === 'delete' || items.length === 0
+                ? 'Delete'
+                : deleteAction === 'ungrouped'
+                  ? 'Move & delete section'
+                  : 'Move & delete section'}
+            </button>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
