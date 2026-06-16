@@ -16,6 +16,7 @@ import { MaintenanceBanner } from "../components/MaintenanceBanner/MaintenanceBa
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ToastProvider } from "../components/ToastNotification";
 import {
+	CollectionRequestError,
 	createCollectionInviteMutation,
 	createCollectionMutation,
 	createCollectionNodeMutation,
@@ -60,6 +61,14 @@ function AccountQueryProvider({
 					},
 					mutations: {
 						networkMode: "online",
+						retry: (failureCount, error) => {
+							if (error instanceof CollectionRequestError) {
+								const nonRetryable = [400, 401, 403, 404, 409];
+								if (nonRetryable.includes(error.status)) return false;
+							}
+							return failureCount < 3;
+						},
+						retryDelay: (attemptIndex) => 2000 * 2 ** attemptIndex,
 					},
 				},
 			}),
