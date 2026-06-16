@@ -2,7 +2,11 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useIsMutating } from "@tanstack/react-query";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect, useRef, useState } from "react";
+
+dayjs.extend(relativeTime);
 import {
 	type CollectionSyncIssue,
 	dismissCollectionSyncIssue,
@@ -40,26 +44,25 @@ function useCollectionSyncIssues(userId: string | null) {
 	return issues;
 }
 
-function formatRelativeTime(date: Date): string {
-	const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-	if (seconds < 60) return "just now";
-	const minutes = Math.floor(seconds / 60);
-	if (minutes < 60) return `${minutes} min ago`;
-	const hours = Math.floor(minutes / 60);
-	if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-	const days = Math.floor(hours / 24);
-	return `${days} day${days === 1 ? "" : "s"} ago`;
-}
-
-export function SyncStatus({ collectionId: _collectionId }: { collectionId: string }) {
+export function SyncStatus({
+	collectionId: _collectionId,
+	initialSavedAt,
+}: {
+	collectionId: string;
+	initialSavedAt?: string | Date | null;
+}) {
 	const { userId } = useAuth();
 	const issues = useCollectionSyncIssues(userId);
 	const isMutating = useIsMutating({
 		mutationKey: ["collections", "nodes"],
 		exact: false,
 	});
-	const [status, setStatus] = useState<Status>("idle");
-	const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+	const [status, setStatus] = useState<Status>(() =>
+		initialSavedAt ? "stable" : "idle",
+	);
+	const [lastSavedAt, setLastSavedAt] = useState<Date | null>(() =>
+		initialSavedAt ? new Date(initialSavedAt) : null,
+	);
 	const [, setTick] = useState(0);
 	const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const prevMutating = useRef(0);
@@ -157,7 +160,7 @@ export function SyncStatus({ collectionId: _collectionId }: { collectionId: stri
 				>
 					<polyline points="20 6 9 17 4 12" />
 				</svg>
-				Saved {formatRelativeTime(lastSavedAt)}
+				Saved {dayjs(lastSavedAt).fromNow()}
 			</span>
 		);
 	}
@@ -165,7 +168,7 @@ export function SyncStatus({ collectionId: _collectionId }: { collectionId: stri
 	if (status === "stable" && lastSavedAt) {
 		return (
 			<span className={`${styles.status} ${styles.stable}`}>
-				Last saved {formatRelativeTime(lastSavedAt)}
+				Last saved {dayjs(lastSavedAt).fromNow()}
 			</span>
 		);
 	}

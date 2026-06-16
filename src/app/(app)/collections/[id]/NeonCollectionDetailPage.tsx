@@ -75,7 +75,10 @@ export function NeonCollectionDetailPage({
 									}}
 								/>
 								<h1 className={styles.title}>{collection.name}</h1>
-								<SyncStatus collectionId={collectionId} />
+								<SyncStatus
+								collectionId={collectionId}
+								initialSavedAt={collection.updatedAt}
+							/>
 							</div>
 							{canCopy && (
 								<button
