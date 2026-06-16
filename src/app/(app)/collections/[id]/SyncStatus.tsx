@@ -40,8 +40,15 @@ function useCollectionSyncIssues(userId: string | null) {
 	return issues;
 }
 
-function formatTime(date: Date): string {
-	return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+function formatRelativeTime(date: Date): string {
+	const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+	if (seconds < 60) return "just now";
+	const minutes = Math.floor(seconds / 60);
+	if (minutes < 60) return `${minutes} min ago`;
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+	const days = Math.floor(hours / 24);
+	return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
 export function SyncStatus({ collectionId: _collectionId }: { collectionId: string }) {
@@ -53,8 +60,15 @@ export function SyncStatus({ collectionId: _collectionId }: { collectionId: stri
 	});
 	const [status, setStatus] = useState<Status>("idle");
 	const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+	const [, setTick] = useState(0);
 	const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const prevMutating = useRef(0);
+
+	useEffect(() => {
+		if (status !== "stable" || !lastSavedAt) return;
+		const interval = setInterval(() => setTick((t) => t + 1), 60_000);
+		return () => clearInterval(interval);
+	}, [status, lastSavedAt]);
 
 	useEffect(() => {
 		if (isMutating > 0) {
@@ -143,7 +157,7 @@ export function SyncStatus({ collectionId: _collectionId }: { collectionId: stri
 				>
 					<polyline points="20 6 9 17 4 12" />
 				</svg>
-				Saved at {formatTime(lastSavedAt)}
+				Saved {formatRelativeTime(lastSavedAt)}
 			</span>
 		);
 	}
@@ -151,7 +165,7 @@ export function SyncStatus({ collectionId: _collectionId }: { collectionId: stri
 	if (status === "stable" && lastSavedAt) {
 		return (
 			<span className={`${styles.status} ${styles.stable}`}>
-				Last saved {formatTime(lastSavedAt)}
+				Last saved {formatRelativeTime(lastSavedAt)}
 			</span>
 		);
 	}
