@@ -75,6 +75,10 @@ export function NeonCollectionDetailPage({
 									}}
 								/>
 								<h1 className={styles.title}>{collection.name}</h1>
+								<SyncStatus
+								collectionId={collectionId}
+								initialSavedAt={collection.updatedAt}
+							/>
 							</div>
 							{canCopy && (
 								<button
@@ -180,7 +184,6 @@ export function NeonCollectionDetailPage({
 							{role !== "owner" && (
 								<span className={styles.roleBadge}>{role}</span>
 							)}
-							<SyncStatus collectionId={collectionId} />
 							{primaryLineage &&
 								(primaryLineage.sourceCollectionId ? (
 									<Link

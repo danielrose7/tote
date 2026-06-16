@@ -2,13 +2,42 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
-	font-size: var(--font-size-xs);
+	font-size: var(--font-size-sm);
 	color: var(--color-text-tertiary);
+	white-space: nowrap;
 	transition: opacity 0.3s ease;
+	font-weight: var(--font-weight-normal);
+	margin-left: var(--spacing-xs);
+	line-height: 1;
 }
 
 .saved {
-	color: var(--color-success, #22c55e);
+	color: var(--color-text-tertiary);
+}
+
+.stable {
+	font-size: var(--font-size-xs);
+	color: var(--color-text-tertiary);
+}
+
+.error {
+	color: var(--color-error, #ef4444);
+}
+
+.dismissButton {
+	background: none;
+	border: none;
+	padding: 0 2px;
+	margin-left: 2px;
+	cursor: pointer;
+	color: inherit;
+	font-size: var(--font-size-base);
+	line-height: 1;
+	opacity: 0.6;
+}
+
+.dismissButton:hover {
+	opacity: 1;
 }
 
 @keyframes spin {
