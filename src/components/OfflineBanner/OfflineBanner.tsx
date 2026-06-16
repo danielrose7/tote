@@ -2,7 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useMutationState } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { collectionQueryKeys } from "../../lib/collections/queryKeys";
 import {
@@ -51,28 +51,12 @@ export function OfflineBanner() {
 		select: (mutation) => mutation.state.isPaused,
 	});
 	const issues = useCollectionSyncIssues(userId);
-	const previousPending = useRef(0);
-	const [showSynced, setShowSynced] = useState(false);
 	const [mounted, setMounted] = useState(false);
 	const pendingCount = pausedStates.length;
-	const pausedCount = pausedStates.filter(Boolean).length;
 
 	useEffect(() => {
 		setMounted(true);
 	}, []);
-
-	useEffect(() => {
-		const didFinish =
-			previousPending.current > 0 &&
-			pendingCount === 0 &&
-			issues.length === 0 &&
-			isOnline;
-		previousPending.current = pendingCount;
-		if (!didFinish) return;
-		setShowSynced(true);
-		const timeout = window.setTimeout(() => setShowSynced(false), 2_500);
-		return () => window.clearTimeout(timeout);
-	}, [isOnline, issues.length, pendingCount]);
 
 	if (!mounted) return null;
 
@@ -113,30 +97,6 @@ export function OfflineBanner() {
 								} saved on this device.`
 							: " Cached collections remain available."}
 					</span>
-				</div>
-			</div>
-		);
-	}
-
-	if (pendingCount > 0) {
-		const queued = pausedCount === pendingCount;
-		return (
-			<div className={`${styles.banner} ${styles.syncing}`}>
-				<div className={styles.content}>
-					<span>
-						{queued ? "Waiting to sync" : "Syncing"} {pendingCount}{" "}
-						{pendingCount === 1 ? "change" : "changes"}...
-					</span>
-				</div>
-			</div>
-		);
-	}
-
-	if (showSynced) {
-		return (
-			<div className={`${styles.banner} ${styles.synced}`}>
-				<div className={styles.content}>
-					<span>All changes synced.</span>
 				</div>
 			</div>
 		);

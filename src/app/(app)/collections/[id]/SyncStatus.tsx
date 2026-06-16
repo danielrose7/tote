@@ -48,7 +48,7 @@ export function SyncStatus({ collectionId }: { collectionId: string }) {
 				>
 					<path d="M21 12a9 9 0 1 1-6.219-8.56" />
 				</svg>
-				Syncing
+				Saving...
 			</span>
 		);
 	}
@@ -65,7 +65,7 @@ export function SyncStatus({ collectionId }: { collectionId: string }) {
 			>
 				<polyline points="20 6 9 17 4 12" />
 			</svg>
-			Saved
+			All changes saved
 		</span>
 	);
 }

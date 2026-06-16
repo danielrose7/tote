@@ -11,14 +11,6 @@
 	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
-.syncing {
-	background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
-}
-
-.synced {
-	background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-}
-
 .error {
 	background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
 }
