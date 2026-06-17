@@ -1,8 +1,6 @@
 import { useAuth, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { type Block, JazzAccount } from "@tote/schema";
 import * as Clipboard from "expo-clipboard";
-import { useAccount } from "jazz-tools/expo";
 import { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
@@ -17,22 +15,20 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import type { Collection, PublicationStatus } from "../lib/api";
 import {
-	generateCollectionInviteLink,
-	getShareUrl,
-	parameterize,
-	publishCollection,
-	removePublishedFromClerk,
-	republishCollection,
-	type SharingRole,
-	syncPublishedToClerk,
-	unpublishCollection,
-} from "../lib/shareCollection";
+	createInvite,
+	getPublicationStatus,
+	publishCollection as apiPublishCollection,
+	unpublishCollection as apiUnpublishCollection,
+} from "../lib/api";
+import { parameterize } from "../lib/shareCollection";
 
 type Tab = "invite" | "public" | "reuse";
+type SharingRole = "editor" | "viewer";
 
 interface Props {
-	collection: typeof Block.prototype;
+	collection: Collection;
 	visible: boolean;
 	onClose: () => void;
 }
@@ -40,64 +36,73 @@ interface Props {
 export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 	const { getToken } = useAuth();
 	const { user } = useUser();
-	const me = useAccount(JazzAccount, { resolve: { root: { blocks: true } } });
 
 	const [activeTab, setActiveTab] = useState<Tab>("invite");
 
 	// Invite state
-	const [selectedRole, setSelectedRole] = useState<SharingRole>("reader");
+	const [selectedRole, setSelectedRole] = useState<SharingRole>("viewer");
 	const [inviteLink, setInviteLink] = useState<string | null>(null);
 	const [isGeneratingInvite, setIsGeneratingInvite] = useState(false);
 	const [inviteCopied, setInviteCopied] = useState(false);
 
 	// Public state
+	const [publication, setPublication] = useState<PublicationStatus>(null);
 	const [loading, setLoading] = useState(false);
-	const [isRepublishing, setIsRepublishing] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [editingSlug, setEditingSlug] = useState(false);
 	const [slugInput, setSlugInput] = useState("");
 	const [isSavingSlug, setIsSavingSlug] = useState(false);
-	const [description, setDescription] = useState("");
 
-	const publishedId = collection.collectionData?.publishedId;
-	const isPublished = !!publishedId;
-	const shareUrl = getShareUrl(collection, user?.username);
-	const currentSlug = collection.collectionData?.slug;
-	const defaultSlug = parameterize(collection.name ?? "");
-	const normalizedSlugInput = parameterize(slugInput);
-	const isDefaultSlug = normalizedSlugInput === defaultSlug;
+	// Reuse state
+	const [isUpdatingCloning, setIsUpdatingCloning] = useState(false);
 
 	useEffect(() => {
-		setSlugInput(currentSlug || defaultSlug);
-	}, [currentSlug, collection.name]);
+		if (!visible) return;
+		loadPublication();
+	}, [visible, collection.id]);
 
 	useEffect(() => {
-		setDescription(collection.collectionData?.description || "");
-	}, [collection.collectionData?.description]);
-
-	// Reset invite link when role changes
-	useEffect(() => {
+		// Reset invite link when role changes
 		setInviteLink(null);
 	}, [selectedRole]);
 
+	async function loadPublication() {
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const status = await getPublicationStatus(token, collection.id);
+			setPublication(status);
+			if (status?.slug) {
+				setSlugInput(status.slug);
+			} else {
+				setSlugInput(parameterize(collection.name ?? ""));
+			}
+		} catch {
+			setPublication(null);
+		}
+	}
+
+	const isPublished = !!publication;
+	const shareUrl = publication?.shareUrl ?? null;
+	const currentSlug = publication?.slug;
+	const defaultSlug = parameterize(collection.name ?? "");
+	const normalizedSlugInput = parameterize(slugInput);
+	const isDefaultSlug = normalizedSlugInput === defaultSlug;
+	const allowCloning = publication?.allowCloning ?? true;
+	const currentLayout = publication?.layout ?? "minimal";
+
 	async function handlePublish() {
-		if (!me) return;
 		setLoading(true);
 		try {
-			const createdBlocks = publishCollection(collection, me);
-			if (me.root?.blocks?.$isLoaded) {
-				for (const block of createdBlocks) {
-					me.root.blocks.$jazz.push(block);
-				}
-			}
-			const slug = collection.collectionData?.slug;
-			const pid = collection.collectionData?.publishedId;
-			if (slug && pid) {
-				const token = await getToken();
-				if (token) {
-					await syncPublishedToClerk(slug, pid, collection.name ?? "", token);
-				}
-			}
+			const token = await getToken();
+			if (!token) return;
+			const slug = slugInput.trim() ? normalizedSlugInput : defaultSlug;
+			const status = await apiPublishCollection(token, collection.id, {
+				slug,
+				layout: "minimal",
+				allowCloning: true,
+			});
+			setPublication(status);
 		} catch (e) {
 			console.error("Publish error:", e);
 		} finally {
@@ -108,12 +113,10 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 	async function handleUnpublish() {
 		setLoading(true);
 		try {
-			const slug = collection.collectionData?.slug;
-			unpublishCollection(collection);
-			if (slug) {
-				const token = await getToken();
-				if (token) await removePublishedFromClerk(slug, token);
-			}
+			const token = await getToken();
+			if (!token) return;
+			await apiUnpublishCollection(token, collection.id);
+			setPublication(null);
 		} catch (e) {
 			console.error("Unpublish error:", e);
 		} finally {
@@ -121,30 +124,64 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 		}
 	}
 
-	async function handleRepublish() {
-		if (!me) return;
-		setIsRepublishing(true);
+	async function handleSaveSlug() {
+		const newSlug = normalizedSlugInput;
+		if (!newSlug || newSlug === currentSlug) {
+			setEditingSlug(false);
+			return;
+		}
+		setIsSavingSlug(true);
 		try {
-			const allBlocks: (typeof Block.prototype | null)[] = [];
-			if (me.root?.blocks?.$isLoaded) {
-				for (let i = 0; i < me.root.blocks.length; i++) {
-					allBlocks.push(me.root.blocks[i]);
-				}
-			}
-			republishCollection(collection, me, allBlocks);
-
-			const slug = collection.collectionData?.slug;
-			const pid = collection.collectionData?.publishedId;
-			if (slug && pid) {
-				const token = await getToken();
-				if (token) {
-					await syncPublishedToClerk(slug, pid, collection.name ?? "", token);
-				}
-			}
+			const token = await getToken();
+			if (!token) return;
+			// Republish with new slug
+			const status = await apiPublishCollection(token, collection.id, {
+				slug: newSlug,
+				layout: currentLayout,
+				allowCloning,
+			});
+			setPublication(status);
+			setSlugInput(newSlug);
+			setEditingSlug(false);
 		} catch (e) {
-			console.error("Republish error:", e);
+			console.error("Failed to save slug", e);
 		} finally {
-			setIsRepublishing(false);
+			setIsSavingSlug(false);
+		}
+	}
+
+	async function handleLayoutChange(layout: "minimal" | "feature") {
+		if (!publication) return;
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const status = await apiPublishCollection(token, collection.id, {
+				slug: currentSlug ?? defaultSlug,
+				layout,
+				allowCloning,
+			});
+			setPublication(status);
+		} catch (e) {
+			console.error("Layout change error:", e);
+		}
+	}
+
+	async function handleToggleCloning(value: boolean) {
+		if (!publication) return;
+		setIsUpdatingCloning(true);
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const status = await apiPublishCollection(token, collection.id, {
+				slug: currentSlug ?? defaultSlug,
+				layout: currentLayout,
+				allowCloning: value,
+			});
+			setPublication(status);
+		} catch (e) {
+			console.error("Toggle cloning error:", e);
+		} finally {
+			setIsUpdatingCloning(false);
 		}
 	}
 
@@ -167,68 +204,14 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 		await Linking.openURL(`sms:?body=${encodeURIComponent(body)}`);
 	}
 
-	async function handleSaveSlug() {
-		const newSlug = normalizedSlugInput;
-		if (!newSlug || newSlug === currentSlug) {
-			setEditingSlug(false);
-			return;
-		}
-		setIsSavingSlug(true);
-		try {
-			const oldSlug = currentSlug;
-			collection.$jazz.set("collectionData", {
-				...collection.collectionData,
-				slug: newSlug,
-			});
-			const token = await getToken();
-			if (token) {
-				if (oldSlug) await removePublishedFromClerk(oldSlug, token);
-				const pid = collection.collectionData?.publishedId;
-				if (pid) {
-					await syncPublishedToClerk(
-						newSlug,
-						pid,
-						collection.name ?? "",
-						token,
-					);
-				}
-			}
-			setSlugInput(newSlug);
-			setEditingSlug(false);
-		} catch (e) {
-			console.error("Failed to save slug", e);
-		} finally {
-			setIsSavingSlug(false);
-		}
-	}
-
-	function handleDescriptionChange(value: string) {
-		setDescription(value);
-		collection.$jazz.set("collectionData", {
-			...collection.collectionData,
-			description: value.trim() || undefined,
-		});
-	}
-
-	function handleLayoutChange(layout: "minimal" | "feature") {
-		collection.$jazz.set("collectionData", {
-			...collection.collectionData,
-			publicLayout: layout,
-		});
-	}
-
-	function handleToggleCloning(value: boolean) {
-		collection.$jazz.set("collectionData", {
-			...collection.collectionData,
-			allowCloning: value,
-		});
-	}
-
 	async function handleGenerateInvite() {
 		setIsGeneratingInvite(true);
 		setInviteLink(null);
 		try {
-			const link = generateCollectionInviteLink(collection, selectedRole);
+			const token = await getToken();
+			if (!token) return;
+			const result = await createInvite(token, collection.id, selectedRole);
+			const link = `https://tote.tools/invite/${result.token}`;
 			setInviteLink(link);
 		} catch (e) {
 			console.error("Failed to generate invite:", e);
@@ -243,9 +226,6 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 		setInviteCopied(true);
 		setTimeout(() => setInviteCopied(false), 2000);
 	}
-
-	const currentLayout = collection.collectionData?.publicLayout ?? "minimal";
-	const allowCloning = collection.collectionData?.allowCloning ?? true;
 
 	return (
 		<Modal
@@ -308,10 +288,9 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 								<View style={styles.roleRow}>
 									{(
 										[
-											{ role: "reader", label: "Can view" },
-											{ role: "writer", label: "Can edit" },
-											{ role: "admin", label: "Admin" },
-										] as { role: SharingRole; label: string }[]
+											{ role: "viewer" as SharingRole, label: "Can view" },
+											{ role: "editor" as SharingRole, label: "Can edit" },
+										]
 									).map(({ role, label }) => (
 										<TouchableOpacity
 											key={role}
@@ -537,22 +516,6 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 											</TouchableOpacity>
 										</View>
 
-										{/* Description */}
-										<Text style={styles.fieldLabel}>Public Intro</Text>
-										<TextInput
-											style={styles.textarea}
-											value={description}
-											onChangeText={handleDescriptionChange}
-											placeholder="A lightweight setup for everyday training and travel."
-											placeholderTextColor="#9ca3af"
-											multiline
-											numberOfLines={3}
-											maxLength={200}
-										/>
-										<Text style={styles.fieldHint}>
-											Shown at the top of the public page.
-										</Text>
-
 										{/* Layout picker */}
 										<Text style={styles.fieldLabel}>Layout</Text>
 										<View style={styles.layoutRow}>
@@ -595,24 +558,6 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 												</TouchableOpacity>
 											))}
 										</View>
-
-										{/* Update public version */}
-										<TouchableOpacity
-											style={styles.updateBtn}
-											onPress={handleRepublish}
-											disabled={isRepublishing}
-										>
-											{isRepublishing ? (
-												<ActivityIndicator color="#6366f1" size="small" />
-											) : (
-												<Text style={styles.updateBtnText}>
-													Update Public Version
-												</Text>
-											)}
-										</TouchableOpacity>
-										<Text style={styles.fieldHint}>
-											Pushes your latest changes to the public page.
-										</Text>
 									</>
 								)}
 							</View>
@@ -637,10 +582,16 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 									<Switch
 										value={allowCloning}
 										onValueChange={handleToggleCloning}
+										disabled={isUpdatingCloning || !isPublished}
 										trackColor={{ false: "#e5e7eb", true: "#6366f1" }}
 										thumbColor="#fff"
 									/>
 								</View>
+								{!isPublished && (
+									<Text style={styles.fieldHint}>
+										Publish a public page first to configure reuse settings.
+									</Text>
+								)}
 							</View>
 						)}
 					</ScrollView>
@@ -786,16 +737,6 @@ const styles = StyleSheet.create({
 		marginTop: 4,
 	},
 	primaryBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-	updateBtn: {
-		alignItems: "center",
-		justifyContent: "center",
-		borderWidth: 1,
-		borderColor: "#6366f1",
-		borderRadius: 10,
-		paddingVertical: 11,
-		marginTop: 4,
-	},
-	updateBtnText: { fontSize: 14, color: "#6366f1", fontWeight: "600" },
 	inlineEditBtn: {
 		flexDirection: "row",
 		alignItems: "center",
@@ -851,17 +792,6 @@ const styles = StyleSheet.create({
 	},
 	slugResetBtnText: { color: "#4b5563", fontSize: 13, fontWeight: "600" },
 	slugCancelBtn: { padding: 2 },
-
-	// Description
-	textarea: {
-		backgroundColor: "#f9fafb",
-		borderRadius: 8,
-		padding: 10,
-		fontSize: 14,
-		color: "#374151",
-		minHeight: 72,
-		textAlignVertical: "top",
-	},
 
 	// Layout picker
 	layoutRow: { flexDirection: "row", gap: 10 },

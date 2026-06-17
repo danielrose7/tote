@@ -1,6 +1,4 @@
-import { Block, BlockList, JazzAccount } from "@tote/schema";
-import { Group } from "jazz-tools";
-import { useAccount } from "jazz-tools/expo";
+import { useAuth } from "@clerk/expo";
 import React, { useEffect, useRef, useState } from "react";
 import {
 	ActivityIndicator,
@@ -14,6 +12,14 @@ import {
 	View,
 } from "react-native";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
+import type { Collection, CollectionNode } from "../lib/api";
+import {
+	captureUrl,
+	createCollection,
+	createNode,
+	fetchCollectionDetail,
+	fetchCollections,
+} from "../lib/api";
 import { extractorScript } from "../lib/extractorScript";
 import { formatPrice } from "../lib/formatPrice";
 import { normalizeUrl } from "../lib/normalizeUrl";
@@ -49,24 +55,17 @@ export function SaveProductSheet({
 	onApplyCollectionToRemaining,
 	autoApplyCollectionId,
 }: Props) {
+	const { getToken } = useAuth();
 	const [stage, setStage] = useState<Stage>("loading");
 	const [metadata, setMetadata] = useState<Metadata | null>(null);
 	const [applyToRemaining, setApplyToRemaining] = useState(false);
+	const [collections, setCollections] = useState<Collection[]>([]);
+	const [sections, setSections] = useState<Record<string, CollectionNode[]>>({});
 	const webViewRef = useRef<WebView>(null);
 	const hasAutoSavedRef = useRef<string | null>(null);
 
-	const me = useAccount(JazzAccount, {
-		resolve: {
-			root: { blocks: { $each: { children: { $each: { children: true } } } } },
-		},
-	});
-
-	const collections =
-		me?.root?.blocks?.filter((b) => b !== null && b.type === "collection") ??
-		[];
 	const autoApplyCollection = autoApplyCollectionId
-		? (collections.find((item) => item?.$jazz.id === autoApplyCollectionId) ??
-			null)
+		? (collections.find((item) => item.id === autoApplyCollectionId) ?? null)
 		: null;
 
 	useEffect(() => {
@@ -74,12 +73,40 @@ export function SaveProductSheet({
 		setMetadata(null);
 		setApplyToRemaining(!!autoApplyCollectionId && queueRemaining > 0);
 		hasAutoSavedRef.current = null;
+		loadCollections();
 	}, [url]);
+
+	async function loadCollections() {
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const cols = await fetchCollections(token);
+			setCollections(cols);
+			// Load sections for each collection lazily — fetch details in parallel
+			const token2 = await getToken();
+			if (!token2) return;
+			const sectionMap: Record<string, CollectionNode[]> = {};
+			await Promise.all(
+				cols.map(async (col) => {
+					try {
+						const t = await getToken();
+						if (!t) return;
+						const detail = await fetchCollectionDetail(t, col.id);
+						sectionMap[col.id] = detail.nodes.filter(
+							(n) => n.type === "section" && !n.parentId,
+						);
+					} catch {}
+				}),
+			);
+			setSections(sectionMap);
+		} catch (e) {
+			console.warn("SaveProductSheet loadCollections error:", e);
+		}
+	}
 
 	useEffect(() => {
 		if (stage !== "preview" || !metadata || !autoApplyCollectionId) return;
 		if (hasAutoSavedRef.current === url) return;
-
 		if (!autoApplyCollection) return;
 
 		hasAutoSavedRef.current = url;
@@ -93,7 +120,6 @@ export function SaveProductSheet({
 				setMetadata(msg.data);
 				setStage("preview");
 			} else {
-				// Error — still move to preview with just the URL
 				setMetadata({ url });
 				setStage("preview");
 			}
@@ -108,56 +134,30 @@ export function SaveProductSheet({
 	}
 
 	async function handleSave(
-		collection: typeof Block.prototype,
-		slot?: typeof Block.prototype,
+		collection: Collection,
+		slot?: CollectionNode,
 		nextApplyCollectionId?: string | null,
 	) {
-		if (!me || !metadata) return;
+		if (!metadata) return;
 		setStage("saving");
 
 		try {
-			const target = slot ?? collection;
-
-			// Initialise children list if the slot/collection never had one
-			if (!target.children) {
-				target.$jazz.set("children", BlockList.create([], { owner: me }));
-			}
-
-			if (!target.children.$isLoaded) {
-				console.warn("children not loaded yet, retrying...");
+			const token = await getToken();
+			if (!token) {
 				setStage("preview");
 				return;
 			}
 
-			// Use the collection's sharing group as owner so shared members can access the product
-			let ownerGroup: Group | null = null;
-			const sharingGroupId = collection.collectionData?.sharingGroupId;
-			if (sharingGroupId) {
-				ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
-			}
+			await captureUrl(token, {
+				collectionId: collection.id,
+				sectionId: slot?.id,
+				url: normalizeUrl(metadata.url),
+				title: metadata.title,
+				imageUrl: metadata.imageUrl,
+				price: metadata.price,
+				description: metadata.description,
+			});
 
-			const priceValue = metadata.price
-				? parseFloat(metadata.price)
-				: undefined;
-
-			const product = Block.create(
-				{
-					type: "product",
-					name: metadata.title ?? metadata.url,
-					productData: {
-						url: normalizeUrl(metadata.url),
-						imageUrl: metadata.imageUrl,
-						price: metadata.price,
-						priceValue:
-							priceValue != null && !isNaN(priceValue) ? priceValue : undefined,
-						description: metadata.description,
-					},
-					createdAt: new Date(),
-				},
-				ownerGroup ? { owner: ownerGroup } : { owner: me },
-			);
-
-			target.children.$jazz.push(product);
 			if (nextApplyCollectionId !== undefined) {
 				onApplyCollectionToRemaining?.(nextApplyCollectionId);
 			}
@@ -169,69 +169,63 @@ export function SaveProductSheet({
 		}
 	}
 
-	async function handleCreateSlot(
-		collection: typeof Block.prototype,
-		slotName: string,
-	) {
-		if (!me) return;
+	async function handleCreateSlot(collection: Collection, slotName: string) {
 		try {
-			// Get the collection's sharing group for proper ownership
-			let ownerGroup: Group | null = null;
-			const sharingGroupId = collection.collectionData?.sharingGroupId;
-			if (sharingGroupId) {
-				ownerGroup = await Group.load(sharingGroupId as `co_z${string}`, {});
-			}
-			const owner = ownerGroup ? { owner: ownerGroup } : { owner: me };
-
-			if (!collection.children) {
-				collection.$jazz.set("children", BlockList.create([], owner));
-			}
-
-			// Create the slot with its children list pre-initialized so
-			// handleSave can immediately push a product onto it
-			const slotChildren = BlockList.create([], owner);
-			const slot = Block.create(
-				{
-					type: "slot",
-					name: slotName,
-					children: slotChildren,
-					createdAt: new Date(),
-				},
-				owner,
-			);
-
-			collection.children.$jazz.push(slot);
-			handleSave(collection, slot);
+			const token = await getToken();
+			if (!token) return;
+			// Determine position key based on current section count
+			const existingSections = sections[collection.id] ?? [];
+			const positionKey = String(existingSections.length + 1).padStart(8, "0");
+			const result = await createNode(token, collection.id, {
+				type: "section",
+				title: slotName,
+				positionKey,
+				parentId: null,
+			});
+			// Update local sections state optimistically
+			const newSlot: CollectionNode = {
+				id: result.id,
+				collectionId: collection.id,
+				parentId: null,
+				type: "section",
+				title: slotName,
+				properties: {},
+				positionKey,
+				version: 1,
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+			};
+			setSections((prev) => ({
+				...prev,
+				[collection.id]: [...(prev[collection.id] ?? []), newSlot],
+			}));
+			handleSave(collection, newSlot);
 		} catch (e) {
 			console.error("Create slot error:", e);
 			setStage("preview");
 		}
 	}
 
-	function handleCreateCollection(name: string) {
-		if (!me?.root) return;
-
-		// Create a Group for this collection to enable future sharing
-		const ownerGroup = Group.create({ owner: me });
-		ownerGroup.addMember(me, "admin");
-
-		const childrenList = BlockList.create([], { owner: ownerGroup });
-		const collection = Block.create(
-			{
-				type: "collection",
+	async function handleCreateCollection(name: string) {
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const result = await createCollection(token, { name, color: "#6366f1" });
+			const newCollection: Collection = {
+				id: result.id,
 				name,
-				collectionData: {
-					color: "#6366f1",
-					viewMode: "grid",
-					sharingGroupId: ownerGroup.$jazz.id,
-				},
-				children: childrenList,
-				createdAt: new Date(),
-			},
-			{ owner: ownerGroup },
-		);
-
-		me.root.blocks?.$jazz.push(collection);
+				color: "#6366f1",
+				description: null,
+				itemCount: 0,
+				positionKey: String(collections.length + 1).padStart(8, "0"),
+				role: "owner",
+				ownerUserId: "",
+				updatedAt: new Date().toISOString(),
+			};
+			setCollections((prev) => [...prev, newCollection]);
+		} catch (e) {
+			console.error("Create collection error:", e);
+		}
 	}
 
 	return (
@@ -292,7 +286,6 @@ export function SaveProductSheet({
 							onMessage={handleMessage}
 							javaScriptEnabled
 							domStorageEnabled
-							// Identify as a real browser so sites don't block us
 							userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
 						/>
 					</View>
@@ -333,13 +326,14 @@ export function SaveProductSheet({
 							{/* Collection picker */}
 							{stage === "preview" && !autoApplyCollection && (
 								<CollectionPicker
-									collections={collections as any}
+									collections={collections}
+									sections={sections}
 									onSelect={({ collection, slot }) =>
 										handleSave(
 											collection,
 											slot,
 											applyToRemaining && queueRemaining > 0
-												? collection.$jazz.id
+												? collection.id
 												: null,
 										)
 									}

@@ -5,12 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Block, BlockList, JazzAccount } from "@tote/schema";
 import * as AuthSession from "expo-auth-session";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
-import { Group } from "jazz-tools";
-import { useAccount } from "jazz-tools/expo";
 import { useEffect, useRef, useState } from "react";
 import {
 	ActivityIndicator,
@@ -33,13 +30,22 @@ import { AcceptInviteSheet } from "./src/components/AcceptInviteSheet";
 import { SaveProductSheet } from "./src/components/SaveProductSheet";
 import { useInviteLink } from "./src/hooks/useInviteLink";
 import { usePendingUrl } from "./src/hooks/usePendingUrl";
-import { cleanupPublishedClonesFromRoot } from "./src/lib/shareCollection";
+import type { Collection } from "./src/lib/api";
+import { createCollection, fetchCollections } from "./src/lib/api";
+import {
+	getCachedCollections,
+	setupDatabase,
+	upsertCollections,
+} from "./src/lib/localDb";
 import type { RootStackParamList } from "./src/navigation/types";
 import { Providers } from "./src/providers";
 import { AccountSettingsScreen } from "./src/screens/AccountSettingsScreen";
 import { CollectionDetailScreen } from "./src/screens/CollectionDetailScreen";
 
 WebBrowser.maybeCompleteAuthSession();
+
+// Initialize SQLite on startup
+setupDatabase().catch((e) => console.warn("DB setup error:", e));
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const onboardingKey = (userId: string) => `tote_onboarding_complete_${userId}`;
@@ -285,7 +291,7 @@ function SignInScreen() {
 					return;
 				}
 
-				Alert.alert("Email sign in didn’t finish", "Please try again.");
+				Alert.alert("Email sign in didn't finish", "Please try again.");
 				return;
 			}
 
@@ -487,11 +493,12 @@ function CollectionCard({
 	columnWidth,
 	onPress,
 }: {
-	item: typeof Block.prototype;
+	item: Collection;
 	columnWidth: number;
 	onPress: () => void;
 }) {
-	const { imageUrl, itemCount } = getCollectionPreview(item);
+	const itemCount = item.itemCount;
+	const imageUrl: string | undefined = undefined;
 	const [imageHeight, setImageHeight] = useState(
 		Math.round(columnWidth * 0.82),
 	);
@@ -528,7 +535,7 @@ function CollectionCard({
 							styles.collectionPreviewPlaceholder,
 							{
 								backgroundColor:
-									item.collectionData?.color ?? "rgba(99, 102, 241, 0.16)",
+									item.color ?? "rgba(99, 102, 241, 0.16)",
 							},
 						]}
 					>
@@ -545,39 +552,15 @@ function CollectionCard({
 				<View
 					style={[
 						styles.collectionColorDot,
-						{ backgroundColor: item.collectionData?.color ?? "#6366f1" },
+						{ backgroundColor: item.color ?? "#6366f1" },
 					]}
 				/>
 				<Text style={styles.collectionName} numberOfLines={2}>
-					{item?.name}
+					{item.name}
 				</Text>
 			</View>
 		</TouchableOpacity>
 	);
-}
-
-function getCollectionPreview(collection: typeof Block.prototype) {
-	let itemCount = 0;
-	let imageUrl: string | undefined;
-
-	if (collection.children?.$isLoaded) {
-		for (const child of collection.children) {
-			if (!child?.$isLoaded) continue;
-			if (child.type === "product") {
-				itemCount += 1;
-				imageUrl ??= child.productData?.imageUrl;
-			} else if (child.type === "slot" && child.children?.$isLoaded) {
-				for (const product of child.children) {
-					if (product?.$isLoaded && product.type === "product") {
-						itemCount += 1;
-						imageUrl ??= product.productData?.imageUrl;
-					}
-				}
-			}
-		}
-	}
-
-	return { imageUrl, itemCount };
 }
 
 function CollectionSkeleton({ height }: { height: number }) {
@@ -700,58 +683,79 @@ function CollectionListContent({
 	onRefresh: () => void;
 	autoAdd: boolean;
 }) {
-	const me = useAccount(JazzAccount, {
-		resolve: {
-			root: {
-				blocks: {
-					$each: {
-						children: { $each: { children: { $each: true } } },
-					},
-				},
-			},
-		},
-	});
+	const { getToken } = useAuth();
 	const { user } = useUser();
+	const [collections, setCollections] = useState<Collection[]>([]);
+	const [loaded, setLoaded] = useState(false);
 	const [showAddCollection, setShowAddCollection] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
-	useEffect(() => {
-		if (!me) return;
-		cleanupPublishedClonesFromRoot(me.root?.blocks);
-	}, [me, me?.root?.blocks]);
-
 	const autoAddTriggered = useRef(false);
+
+	async function loadCollections(force = false) {
+		// 1. Load from cache first (fast path)
+		if (!force) {
+			try {
+				const cached = await getCachedCollections();
+				if (cached.length > 0) {
+					setCollections(cached);
+					setLoaded(true);
+				}
+			} catch {}
+		}
+		// 2. Fetch from API
+		try {
+			const token = await getToken();
+			if (!token) {
+				setLoaded(true);
+				return;
+			}
+			const result = await fetchCollections(token);
+			await upsertCollections(result);
+			setCollections(result);
+			setLoaded(true);
+		} catch (e) {
+			console.warn("loadCollections error:", e);
+			setLoaded(true); // show whatever we have from cache
+		}
+	}
+
 	useEffect(() => {
-		if (!autoAdd || autoAddTriggered.current) return;
-		if (!me?.root?.blocks) return;
-		const collections =
-			me.root.blocks.filter(
-				(b: typeof Block.prototype | null) =>
-					b?.type === "collection" && !b?.collectionData?.sourceId,
-			) ?? [];
+		loadCollections();
+	}, []);
+
+	// When parent triggers refresh
+	useEffect(() => {
+		if (refreshing) loadCollections(true);
+	}, [refreshing]);
+
+	useEffect(() => {
+		if (!autoAdd || autoAddTriggered.current || !loaded) return;
 		if (collections.length === 0) {
 			autoAddTriggered.current = true;
 			setShowAddCollection(true);
 		}
-	}, [autoAdd, me?.root?.blocks]);
+	}, [autoAdd, collections.length, loaded]);
 
-	if (!me) {
-		return (
-			<View style={styles.centered}>
-				<ActivityIndicator size="large" color="#6366f1" />
-			</View>
-		);
+	async function handleAddCollection(name: string, color: string) {
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const result = await createCollection(token, { name, color });
+			await loadCollections(true);
+			navigation.navigate("CollectionDetail", {
+				collectionId: result.id,
+				collectionName: name,
+			});
+		} catch (e) {
+			Alert.alert("Could not create collection", "Please try again.");
+		}
 	}
 
-	const blocksLoaded = me.root?.blocks != null;
-	const collections = (me?.root?.blocks?.filter(
-		(b: typeof Block.prototype | null) =>
-			b?.type === "collection" && !b?.collectionData?.sourceId,
-	) ?? []) as (typeof Block.prototype)[];
 	const normalizedSearch = searchQuery.trim().toLocaleLowerCase();
 	const filteredCollections = normalizedSearch
-		? collections.filter((collection: typeof Block.prototype | null) =>
-				(collection?.name ?? "").toLocaleLowerCase().includes(normalizedSearch),
+		? collections.filter((collection) =>
+				(collection.name ?? "").toLocaleLowerCase().includes(normalizedSearch),
 			)
 		: collections;
 	const collectionColumnWidth = Math.floor(
@@ -763,32 +767,6 @@ function CollectionListContent({
 	const rightCollections = filteredCollections.filter(
 		(_collection, index) => index % 2 === 1,
 	);
-
-	function handleAddCollection(name: string, color: string) {
-		if (!me?.root) return;
-		const ownerGroup = Group.create({ owner: me });
-		ownerGroup.addMember(me, "admin");
-		const childrenList = BlockList.create([], { owner: ownerGroup });
-		const collection = Block.create(
-			{
-				type: "collection",
-				name,
-				collectionData: {
-					color,
-					viewMode: "grid",
-					sharingGroupId: ownerGroup.$jazz.id,
-				},
-				children: childrenList,
-				createdAt: new Date(),
-			},
-			{ owner: ownerGroup },
-		);
-		me.root.blocks?.$jazz.push(collection);
-		navigation.navigate("CollectionDetail", {
-			collectionId: collection.$jazz.id,
-			collectionName: name,
-		});
-	}
 
 	return (
 		<View style={styles.container}>
@@ -818,7 +796,7 @@ function CollectionListContent({
 					/>
 				}
 			>
-				{!blocksLoaded ? (
+				{!loaded ? (
 					<View style={styles.masonryColumns}>
 						<View style={{ width: collectionColumnWidth }}>
 							<CollectionSkeleton height={190} />
@@ -839,12 +817,12 @@ function CollectionListContent({
 								>
 									{columnCollections.map((item) => (
 										<CollectionCard
-											key={item.$jazz.id}
+											key={item.id}
 											item={item}
 											columnWidth={collectionColumnWidth}
 											onPress={() =>
 												navigation.navigate("CollectionDetail", {
-													collectionId: item.$jazz.id,
+													collectionId: item.id,
 													collectionName: item.name ?? "Collection",
 												})
 											}
@@ -994,10 +972,6 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
 	);
 }
 
-function JazzAppShell({ autoAdd }: { autoAdd: boolean }) {
-	return <AppScreens autoAdd={autoAdd} />;
-}
-
 function AuthScreen() {
 	const { isLoaded, userId } = useAuth();
 	const { user } = useUser();
@@ -1035,7 +1009,7 @@ function AuthScreen() {
 		);
 	}
 
-	return <JazzAppShell autoAdd={autoAdd} />;
+	return <AppScreens autoAdd={autoAdd} />;
 }
 
 export default function App() {

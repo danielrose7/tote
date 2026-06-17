@@ -1,8 +1,7 @@
+import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { Block, JazzAccount } from "@tote/schema";
 import * as WebBrowser from "expo-web-browser";
-import { useAccount, useCoState } from "jazz-tools/expo";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -38,18 +37,25 @@ import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { SaveProductSheet } from "../components/SaveProductSheet";
 import { ShareCollectionSheet } from "../components/ShareCollectionSheet";
 import { useViewMode } from "../hooks/useViewMode";
+import type { Collection, CollectionDetail, CollectionNode } from "../lib/api";
+import {
+	captureUrl,
+	deleteCollection,
+	deleteNode,
+	reorderNodes,
+	updateCollection,
+	updateNode,
+	fetchCollectionDetail,
+} from "../lib/api";
 import { extractorScript } from "../lib/extractorScript";
 import { formatPrice } from "../lib/formatPrice";
-import {
-	applySubsetOrderByIds,
-	reorderIdsFromPositions,
-} from "../lib/reorderBlocks";
+import { getCachedNodes, upsertNodes } from "../lib/localDb";
 import type { RootStackParamList } from "../navigation/types";
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
 
 type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
-type ProductItem = typeof Block.prototype;
+type ProductItem = CollectionNode;
 
 type Section = {
 	title: string | null;
@@ -71,13 +77,17 @@ type ReorderableBlockItem = {
 
 function ProductRefresher({
 	item,
+	collectionId,
+	getToken,
 	onDone,
 }: {
 	item: ProductItem;
-	onDone: () => void;
+	collectionId: string;
+	getToken: () => Promise<string | null>;
+	onDone: (updated?: Partial<CollectionNode>) => void;
 }) {
 	const webViewRef = useRef<WebView>(null);
-	const url = item.productData?.url;
+	const url = item.properties.url;
 
 	if (!url) {
 		onDone();
@@ -88,24 +98,30 @@ function ProductRefresher({
 		webViewRef.current?.injectJavaScript(extractorScript);
 	}
 
-	function handleMessage(event: WebViewMessageEvent) {
+	async function handleMessage(event: WebViewMessageEvent) {
 		try {
 			const msg = JSON.parse(event.nativeEvent.data);
 			if (msg.type === "METADATA_RESULT") {
 				const d = msg.data;
-				if (d.title) item.$jazz.set("name", d.title);
-				item.$jazz.set("productData", {
-					...item.productData,
+				const updatedProperties = {
+					...item.properties,
 					url,
 					...(d.imageUrl ? { imageUrl: d.imageUrl } : {}),
 					...(d.price ? { price: d.price } : {}),
-					...(d.price
-						? {
-								priceValue: parseFloat(d.price) || item.productData?.priceValue,
-							}
-						: {}),
 					...(d.description ? { description: d.description } : {}),
-				});
+				};
+				const updatedTitle = d.title || item.title;
+				try {
+					const token = await getToken();
+					if (token) {
+						await updateNode(token, collectionId, item.id, {
+							title: updatedTitle,
+							properties: updatedProperties,
+						});
+						onDone({ title: updatedTitle, properties: updatedProperties });
+						return;
+					}
+				} catch {}
 			}
 		} catch {}
 		onDone();
@@ -213,9 +229,9 @@ function ProductRow({
 				activeOpacity={0.7}
 			>
 				<View>
-					{item.productData?.imageUrl ? (
+					{item.properties.imageUrl ? (
 						<Image
-							source={{ uri: item.productData.imageUrl }}
+							source={{ uri: item.properties.imageUrl }}
 							style={[
 								styles.thumbnail,
 								(isRefreshing || isQueued) && styles.thumbnailRefreshing,
@@ -238,11 +254,11 @@ function ProductRow({
 				</View>
 				<View style={styles.productInfo}>
 					<Text style={styles.productName} numberOfLines={2}>
-						{item.name ?? "Untitled"}
+						{item.title ?? "Untitled"}
 					</Text>
-					{item.productData?.price ? (
+					{item.properties.price ? (
 						<Text style={styles.productPrice}>
-							{formatPrice(item.productData.price)}
+							{formatPrice(item.properties.price)}
 						</Text>
 					) : null}
 				</View>
@@ -267,22 +283,19 @@ function EditProductModal({
 	item,
 	visible,
 	onClose,
+	onSave,
 }: {
 	item: ProductItem;
 	visible: boolean;
 	onClose: () => void;
+	onSave: (title: string, price: string, notes: string) => void;
 }) {
-	const [name, setName] = useState(item.name ?? "");
-	const [price, setPrice] = useState(item.productData?.price ?? "");
-	const [notes, setNotes] = useState(item.productData?.notes ?? "");
+	const [name, setName] = useState(item.title ?? "");
+	const [price, setPrice] = useState(item.properties.price ?? "");
+	const [notes, setNotes] = useState(item.properties.notes ?? "");
 
 	function handleSave() {
-		item.$jazz.set("name", name.trim() || item.name);
-		item.$jazz.set("productData", {
-			...item.productData,
-			price: price.trim() || undefined,
-			notes: notes.trim() || undefined,
-		});
+		onSave(name.trim(), price.trim(), notes.trim());
 		onClose();
 	}
 
@@ -352,19 +365,23 @@ function SlotEditModal({
 	slot,
 	visible,
 	onClose,
+	onSave,
 	onDelete,
 }: {
 	slot: ProductItem;
 	visible: boolean;
 	onClose: () => void;
+	onSave: (name: string, maxSelections: string, budget: string) => void;
 	onDelete: () => void;
 }) {
-	const [name, setName] = useState(slot.name ?? "");
+	const [name, setName] = useState(slot.title ?? "");
 	const [maxSelections, setMaxSelections] = useState(
-		slot.slotData?.maxSelections?.toString() ?? "",
+		slot.properties.maxSelections?.toString() ?? "",
 	);
 	const [budget, setBudget] = useState(
-		slot.slotData?.budget ? (slot.slotData.budget / 100).toString() : "",
+		slot.properties.budget
+			? (slot.properties.budget / 100).toString()
+			: "",
 	);
 	const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -385,12 +402,7 @@ function SlotEditModal({
 	}, [visible]);
 
 	function handleSave() {
-		slot.$jazz.set("name", name.trim() || slot.name);
-		slot.$jazz.set("slotData", {
-			...slot.slotData,
-			maxSelections: maxSelections ? parseInt(maxSelections, 10) : undefined,
-			budget: budget ? Math.round(parseFloat(budget) * 100) : undefined,
-		});
+		onSave(name.trim(), maxSelections, budget);
 		onClose();
 	}
 
@@ -399,7 +411,6 @@ function SlotEditModal({
 			setConfirmingDelete(true);
 			return;
 		}
-
 		onDelete();
 	}
 
@@ -485,10 +496,14 @@ function SlotEditModal({
 function SlotHeader({
 	slot,
 	title,
+	localNodes,
+	onSave,
 	onDelete,
 }: {
 	slot: ProductItem | null;
 	title: string;
+	localNodes: CollectionNode[];
+	onSave: (name: string, maxSelections: string, budget: string) => void;
 	onDelete: () => void;
 }) {
 	const [editing, setEditing] = useState(false);
@@ -501,22 +516,21 @@ function SlotHeader({
 		);
 	}
 
-	const selectedIds = slot.slotData?.selectedProductIds ?? [];
-	const maxSelections = slot.slotData?.maxSelections;
-	const budget = slot.slotData?.budget;
+	const selectedIds =
+		(slot.properties.selectedProductIds as string[] | undefined) ?? [];
+	const maxSelections = slot.properties.maxSelections;
+	const budget = slot.properties.budget;
 
-	const products = slot.children?.filter((b) => b?.type === "product") ?? [];
-	const selectedProducts = products.filter(
-		(p) => p && selectedIds.includes(p.$jazz.id),
+	const products = localNodes.filter(
+		(n) => n.parentId === slot.id && n.type !== "section",
 	);
+	const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
 	const selectedTotal = selectedProducts.reduce((sum, p) => {
-		const rawPrice = p?.productData?.price;
+		const rawPrice = p.properties.price;
 		const parsedPrice = rawPrice
 			? parseFloat(rawPrice.replace(/[^0-9.]/g, ""))
 			: NaN;
-		const numericPrice = Number.isFinite(parsedPrice)
-			? parsedPrice
-			: (p?.productData?.priceValue ?? 0);
+		const numericPrice = Number.isFinite(parsedPrice) ? parsedPrice : 0;
 		return sum + numericPrice;
 	}, 0);
 	const formattedSelectedTotal =
@@ -531,7 +545,7 @@ function SlotHeader({
 		<>
 			<View style={styles.sectionHeader}>
 				<View style={styles.sectionHeaderLeft}>
-					<Text style={styles.sectionTitle}>{slot.name ?? title}</Text>
+					<Text style={styles.sectionTitle}>{slot.title ?? title}</Text>
 					{hasProgress && (
 						<View style={styles.slotProgress}>
 							{maxSelections ? (
@@ -558,6 +572,10 @@ function SlotHeader({
 				slot={slot}
 				visible={editing}
 				onClose={() => setEditing(false)}
+				onSave={(name, maxSel, bud) => {
+					onSave(name, maxSel, bud);
+					setEditing(false);
+				}}
 				onDelete={() => {
 					setEditing(false);
 					onDelete();
@@ -584,22 +602,18 @@ function EditCollectionModal({
 	collection,
 	visible,
 	onClose,
+	onSave,
 }: {
-	collection: ProductItem;
+	collection: Collection;
 	visible: boolean;
 	onClose: () => void;
+	onSave: (name: string, color: string) => void;
 }) {
 	const [name, setName] = useState(collection.name ?? "");
-	const [color, setColor] = useState(
-		collection.collectionData?.color ?? PRESET_COLORS[0],
-	);
+	const [color, setColor] = useState(collection.color ?? PRESET_COLORS[0]);
 
 	function handleSave() {
-		collection.$jazz.set("name", name.trim() || collection.name);
-		collection.$jazz.set("collectionData", {
-			...collection.collectionData,
-			color,
-		});
+		onSave(name.trim() || collection.name, color);
 		onClose();
 	}
 
@@ -742,7 +756,7 @@ function ProductGridCard({
 	onPress: () => void;
 }) {
 	const [imageHeight, setImageHeight] = useState(150);
-	const imageUrl = item.productData?.imageUrl;
+	const imageUrl = item.properties.imageUrl;
 
 	useEffect(() => {
 		if (!imageUrl) return;
@@ -772,11 +786,11 @@ function ProductGridCard({
 			)}
 			<View style={styles.gridCardInfo}>
 				<Text style={styles.gridCardName} numberOfLines={3}>
-					{item.name ?? "Untitled"}
+					{item.title ?? "Untitled"}
 				</Text>
-				{item.productData?.price ? (
+				{item.properties.price ? (
 					<Text style={styles.gridCardPrice}>
-						{formatPrice(item.productData.price)}
+						{formatPrice(item.properties.price)}
 					</Text>
 				) : null}
 			</View>
@@ -788,9 +802,9 @@ function ReorderProductRow({ item }: { item: ProductItem }) {
 	return (
 		<SortableItem.Handle style={styles.reorderWholeHandle}>
 			<View style={styles.reorderRow}>
-				{item.productData?.imageUrl ? (
+				{item.properties.imageUrl ? (
 					<Image
-						source={{ uri: item.productData.imageUrl }}
+						source={{ uri: item.properties.imageUrl }}
 						style={styles.reorderThumbnail}
 						resizeMode="cover"
 					/>
@@ -801,11 +815,11 @@ function ReorderProductRow({ item }: { item: ProductItem }) {
 				)}
 				<View style={styles.reorderRowMeta}>
 					<Text style={styles.reorderRowTitle} numberOfLines={2}>
-						{item.name ?? "Untitled"}
+						{item.title ?? "Untitled"}
 					</Text>
-					{item.productData?.price ? (
+					{item.properties.price ? (
 						<Text style={styles.reorderRowSubtitle}>
-							{formatPrice(item.productData.price)}
+							{formatPrice(item.properties.price)}
 						</Text>
 					) : null}
 				</View>
@@ -826,9 +840,9 @@ function ReorderGridCard({ item, size }: { item: ProductItem; size: number }) {
 			style={[styles.reorderGridCard, { width: size, minHeight: cardHeight }]}
 		>
 			<View style={[styles.reorderGridMedia, { height: imageHeight }]}>
-				{item.productData?.imageUrl ? (
+				{item.properties.imageUrl ? (
 					<Image
-						source={{ uri: item.productData.imageUrl }}
+						source={{ uri: item.properties.imageUrl }}
 						style={styles.reorderGridImage}
 						resizeMode="cover"
 					/>
@@ -838,12 +852,12 @@ function ReorderGridCard({ item, size }: { item: ProductItem; size: number }) {
 			</View>
 			<View style={styles.reorderGridInfo}>
 				<Text style={styles.reorderGridTitle} numberOfLines={3}>
-					{item.name ?? "Untitled"}
+					{item.title ?? "Untitled"}
 				</Text>
 				<View style={styles.reorderGridFooter}>
-					{item.productData?.price ? (
+					{item.properties.price ? (
 						<Text style={styles.reorderGridPrice}>
-							{formatPrice(item.productData.price)}
+							{formatPrice(item.properties.price)}
 						</Text>
 					) : (
 						<View />
@@ -855,16 +869,23 @@ function ReorderGridCard({ item, size }: { item: ProductItem; size: number }) {
 	);
 }
 
-function ReorderSlotCard({ slot }: { slot: ProductItem }) {
-	const itemCount =
-		slot.children?.filter((child) => child?.type === "product").length ?? 0;
+function ReorderSlotCard({
+	slot,
+	localNodes,
+}: {
+	slot: ProductItem;
+	localNodes: CollectionNode[];
+}) {
+	const itemCount = localNodes.filter(
+		(n) => n.parentId === slot.id && n.type !== "section",
+	).length;
 
 	return (
 		<SortableItem.Handle style={styles.reorderWholeHandle}>
 			<View style={styles.reorderSlotCard}>
 				<View>
 					<Text style={styles.reorderSlotEyebrow}>Slot</Text>
-					<Text style={styles.reorderSlotTitle}>{slot.name ?? "Untitled"}</Text>
+					<Text style={styles.reorderSlotTitle}>{slot.title ?? "Untitled"}</Text>
 					<Text style={styles.reorderSlotSubtitle}>{itemCount} items</Text>
 				</View>
 				<View style={styles.reorderSlotHandle}>
@@ -891,7 +912,7 @@ function MasonryGrid({
 	refreshing?: boolean;
 }) {
 	const screenWidth = Dimensions.get("window").width;
-	const columnWidth = Math.floor((screenWidth - 48) / 2); // 20+20 padding + 8 gap
+	const columnWidth = Math.floor((screenWidth - 48) / 2);
 
 	const leftItems = items.filter((_, i) => i % 2 === 0);
 	const rightItems = items.filter((_, i) => i % 2 === 1);
@@ -917,7 +938,7 @@ function MasonryGrid({
 				<View style={{ width: columnWidth }}>
 					{leftItems.map((item) => (
 						<ProductGridCard
-							key={item.$jazz.id}
+							key={item.id}
 							item={item}
 							columnWidth={columnWidth}
 							onPress={() => onPress(item)}
@@ -927,7 +948,7 @@ function MasonryGrid({
 				<View style={{ width: columnWidth }}>
 					{rightItems.map((item) => (
 						<ProductGridCard
-							key={item.$jazz.id}
+							key={item.id}
 							item={item}
 							columnWidth={columnWidth}
 							onPress={() => onPress(item)}
@@ -941,6 +962,7 @@ function MasonryGrid({
 
 export function CollectionDetailScreen({ route, navigation }: Props) {
 	const { collectionId, collectionName } = route.params;
+	const { getToken } = useAuth();
 	const insets = useSafeAreaInsets();
 	const [addingProduct, setAddingProduct] = useState(false);
 	const [pendingUrl, setPendingUrl] = useState<string | null>(null);
@@ -956,39 +978,308 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 	const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
 	const { viewMode, setViewMode } = useViewMode();
 	const scrollY = useRef(new Animated.Value(0)).current;
-	const me = useAccount(JazzAccount, {
-		resolve: { root: { blocks: true } },
-	});
 
-	const collection = useCoState(Block, collectionId, {
-		resolve: { children: { $each: { children: { $each: true } } } },
-	});
+	const [detail, setDetail] = useState<CollectionDetail | null>(null);
+	const [localNodes, setLocalNodes] = useState<CollectionNode[]>([]);
+
+	useEffect(() => {
+		// Load cached nodes immediately for fast display
+		getCachedNodes(collectionId).then((cached) => {
+			if (cached.length > 0) setLocalNodes(cached);
+		});
+		// Fetch from API
+		refresh();
+	}, [collectionId]);
+
+	async function refresh() {
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const d = await fetchCollectionDetail(token, collectionId);
+			setDetail(d);
+			setLocalNodes(d.nodes);
+			upsertNodes(d.nodes).catch(() => {}); // background cache update
+		} catch (e) {
+			console.warn("CollectionDetail refresh error:", e);
+		}
+	}
+
+	// Derived data from localNodes
+	const sectionNodes = localNodes
+		.filter((n) => n.type === "section" && !n.parentId)
+		.sort((a, b) => a.positionKey.localeCompare(b.positionKey));
+
+	const directItems = localNodes
+		.filter((n) => n.type !== "section" && !n.parentId)
+		.sort((a, b) => a.positionKey.localeCompare(b.positionKey));
+
+	const sections: Section[] = [
+		...sectionNodes
+			.map((slot) => ({
+				title: slot.title ?? "Untitled",
+				slot,
+				data: localNodes
+					.filter((n) => n.parentId === slot.id)
+					.sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
+			}))
+			.filter((s) => s.data.length > 0),
+		...(directItems.length > 0
+			? [
+					{
+						title: sectionNodes.length > 0 ? "Ungrouped" : null,
+						slot: null as ProductItem | null,
+						data: directItems,
+					},
+				]
+			: []),
+	];
+
+	const totalItems = localNodes.filter((n) => n.type !== "section").length;
+	const childrenLoading = localNodes.length === 0 && detail === null;
+	const displayTitle =
+		detail?.collection.name ?? collectionName ?? route.params.collectionName;
+	const collectionColor = detail?.collection.color ?? "#6366f1";
+	const collectionVersion = detail?.collection.version ?? 1;
+
+	const topBarTop = insets.top + 8;
+	const pageHeaderTopPadding = topBarTop + 72;
+	const titleFadeStyle = {
+		opacity: scrollY.interpolate({
+			inputRange: [0, 28, 72],
+			outputRange: [1, 0.9, 0.08],
+			extrapolate: "clamp",
+		}),
+		transform: [
+			{
+				translateY: scrollY.interpolate({
+					inputRange: [0, 72],
+					outputRange: [0, -22],
+					extrapolate: "clamp",
+				}),
+			},
+		],
+	};
+	const metaFadeStyle = {
+		opacity: scrollY.interpolate({
+			inputRange: [0, 22, 54],
+			outputRange: [1, 0.72, 0],
+			extrapolate: "clamp",
+		}),
+	};
+	const handleScroll = Animated.event(
+		[{ nativeEvent: { contentOffset: { y: scrollY } } }],
+		{ useNativeDriver: true },
+	);
+
+	const reorderSections: ReorderSectionTarget[] = [
+		...sectionNodes.map((slot) => ({
+			id: slot.id,
+			title: slot.title ?? "Untitled",
+			slot,
+			items: localNodes
+				.filter((n) => n.parentId === slot.id)
+				.sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
+		})),
+		...(directItems.length > 0 || sectionNodes.length === 0
+			? [
+					{
+						id: "ungrouped",
+						title: sectionNodes.length > 0 ? "Ungrouped" : "Items",
+						slot: null as ProductItem | null,
+						items: directItems,
+					},
+				]
+			: []),
+	];
+
+	useEffect(() => {
+		const validTargets = [
+			...(sectionNodes.length > 1 ? ["slots"] : []),
+			...reorderSections.map((section) => section.id),
+		];
+		if (!validTargets.includes(activeReorderTargetId)) {
+			setActiveReorderTargetId(validTargets[0] ?? "ungrouped");
+		}
+	}, [activeReorderTargetId, reorderSections, sectionNodes.length]);
+
+	function openProduct(item: ProductItem) {
+		const url = item.properties.url;
+		if (url) WebBrowser.openBrowserAsync(url);
+	}
+
+	async function toggleSelected(item: ProductItem, slot: ProductItem) {
+		const selectedIds =
+			(slot.properties.selectedProductIds as string[] | undefined) ?? [];
+		const id = item.id;
+		const isSelected = selectedIds.includes(id);
+		const maxSelections = slot.properties.maxSelections;
+
+		if (!isSelected && maxSelections && selectedIds.length >= maxSelections)
+			return;
+
+		const newSelectedIds = isSelected
+			? selectedIds.filter((sid) => sid !== id)
+			: [...selectedIds, id];
+
+		// Optimistic update
+		setLocalNodes((prev) =>
+			prev.map((n) =>
+				n.id === slot.id
+					? {
+							...n,
+							properties: {
+								...n.properties,
+								selectedProductIds: newSelectedIds,
+							},
+						}
+					: n,
+			),
+		);
+
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await updateNode(token, collectionId, slot.id, {
+				properties: { ...slot.properties, selectedProductIds: newSelectedIds },
+			});
+		} catch {
+			await refresh();
+		}
+	}
+
+	function startBulkRefresh() {
+		const allProducts = localNodes.filter(
+			(n) => n.type !== "section" && n.properties.url,
+		);
+		if (allProducts.length > 0) setRefreshQueue(allProducts);
+	}
+
+	async function deleteSlot(slot: ProductItem) {
+		// Optimistic: remove slot and its children
+		setLocalNodes((prev) =>
+			prev.filter((n) => n.id !== slot.id && n.parentId !== slot.id),
+		);
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await deleteNode(token, collectionId, slot.id, slot.version);
+		} catch {
+			await refresh();
+		}
+	}
+
+	async function deleteProduct(item: ProductItem) {
+		// Optimistic update
+		setLocalNodes((prev) => prev.filter((n) => n.id !== item.id));
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await deleteNode(token, collectionId, item.id, item.version);
+		} catch {
+			await refresh();
+		}
+	}
+
+	async function handleUpdateProduct(
+		item: ProductItem,
+		title: string,
+		price: string,
+		notes: string,
+	) {
+		const updatedTitle = title || item.title;
+		const updatedProperties = {
+			...item.properties,
+			price: price || undefined,
+			notes: notes || undefined,
+		};
+		// Optimistic update
+		setLocalNodes((prev) =>
+			prev.map((n) =>
+				n.id === item.id
+					? { ...n, title: updatedTitle, properties: updatedProperties }
+					: n,
+			),
+		);
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await updateNode(token, collectionId, item.id, {
+				title: updatedTitle ?? undefined,
+				properties: updatedProperties,
+			});
+		} catch {
+			await refresh();
+		}
+	}
+
+	async function handleUpdateSlot(
+		slot: ProductItem,
+		name: string,
+		maxSelectionsStr: string,
+		budgetStr: string,
+	) {
+		const updatedTitle = name || slot.title;
+		const updatedProperties = {
+			...slot.properties,
+			maxSelections: maxSelectionsStr
+				? parseInt(maxSelectionsStr, 10)
+				: undefined,
+			budget: budgetStr
+				? Math.round(parseFloat(budgetStr) * 100)
+				: undefined,
+		};
+		// Optimistic update
+		setLocalNodes((prev) =>
+			prev.map((n) =>
+				n.id === slot.id
+					? { ...n, title: updatedTitle, properties: updatedProperties }
+					: n,
+			),
+		);
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await updateNode(token, collectionId, slot.id, {
+				title: updatedTitle ?? undefined,
+				properties: updatedProperties,
+			});
+		} catch {
+			await refresh();
+		}
+	}
+
+	async function handleUpdateCollection(name: string, color: string) {
+		// Optimistic: update detail
+		if (detail) {
+			setDetail({
+				...detail,
+				collection: { ...detail.collection, name, color },
+			});
+		}
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await updateCollection(token, collectionId, { name, color });
+			await refresh();
+		} catch {
+			await refresh();
+		}
+	}
 
 	function confirmDeleteCollection() {
 		Alert.alert(
 			"Delete collection?",
-			`"${collectionName}" and its contents will be removed from Tote.`,
+			`"${displayTitle}" and its contents will be removed from Tote.`,
 			[
 				{ text: "Cancel", style: "cancel" },
 				{
 					text: "Delete",
 					style: "destructive",
-					onPress: () => {
+					onPress: async () => {
 						try {
-							const blocks = me?.root?.blocks;
-							if (!blocks) {
-								throw new Error("Collections are still loading.");
-							}
-
-							const index = blocks.findIndex(
-								(block: { $jazz?: { id?: string } } | null) =>
-									block?.$jazz?.id === collectionId,
-							);
-							if (index === -1) {
-								throw new Error("Collection was not found.");
-							}
-
-							blocks.$jazz.splice(index, 1);
+							const token = await getToken();
+							if (!token) throw new Error("Not authenticated");
+							await deleteCollection(token, collectionId, collectionVersion);
 							navigation.reset({
 								index: 0,
 								routes: [{ name: "CollectionList" }],
@@ -1060,161 +1351,6 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 		);
 	}
 
-	if (!collection) {
-		return (
-			<View style={styles.centered}>
-				<Text style={styles.empty}>Loading…</Text>
-			</View>
-		);
-	}
-
-	const children = collection.children ?? [];
-	// null items mean Jazz is still streaming coValues — don't show empty state yet
-	const childrenLoading = children.some((c) => c === null);
-	const directProducts = children.filter(
-		(b): b is ProductItem => b?.type === "product",
-	);
-	const slots = children.filter((b): b is ProductItem => b?.type === "slot");
-
-	const sections: Section[] = [];
-
-	for (const slot of slots) {
-		const slotProducts =
-			slot.children?.filter((b): b is ProductItem => b?.type === "product") ??
-			[];
-		if (slotProducts.length > 0) {
-			sections.push({
-				title: slot.name ?? "Untitled",
-				slot,
-				data: slotProducts,
-			});
-		}
-	}
-
-	if (directProducts.length > 0) {
-		sections.push({
-			title: slots.length > 0 ? "Ungrouped" : null,
-			slot: null,
-			data: directProducts,
-		});
-	}
-
-	const totalItems =
-		directProducts.length +
-		slots.reduce((sum, s) => sum + (s.children?.length ?? 0), 0);
-	const displayTitle = collection.name ?? route.params.collectionName;
-	const topBarTop = insets.top + 8;
-	const pageHeaderTopPadding = topBarTop + 72;
-	const titleFadeStyle = {
-		opacity: scrollY.interpolate({
-			inputRange: [0, 28, 72],
-			outputRange: [1, 0.9, 0.08],
-			extrapolate: "clamp",
-		}),
-		transform: [
-			{
-				translateY: scrollY.interpolate({
-					inputRange: [0, 72],
-					outputRange: [0, -22],
-					extrapolate: "clamp",
-				}),
-			},
-		],
-	};
-	const metaFadeStyle = {
-		opacity: scrollY.interpolate({
-			inputRange: [0, 22, 54],
-			outputRange: [1, 0.72, 0],
-			extrapolate: "clamp",
-		}),
-	};
-	const handleScroll = Animated.event(
-		[{ nativeEvent: { contentOffset: { y: scrollY } } }],
-		{ useNativeDriver: true },
-	);
-
-	const reorderSections: ReorderSectionTarget[] = [
-		...slots.map((slot) => ({
-			id: slot.$jazz.id,
-			title: slot.name ?? "Untitled",
-			slot,
-			items:
-				slot.children?.filter((b): b is ProductItem => b?.type === "product") ??
-				[],
-		})),
-		...(directProducts.length > 0 || slots.length === 0
-			? [
-					{
-						id: "ungrouped",
-						title: slots.length > 0 ? "Ungrouped" : "Items",
-						slot: null,
-						items: directProducts,
-					},
-				]
-			: []),
-	];
-
-	useEffect(() => {
-		const validTargets = [
-			...(slots.length > 1 ? ["slots"] : []),
-			...reorderSections.map((section) => section.id),
-		];
-		if (!validTargets.includes(activeReorderTargetId)) {
-			setActiveReorderTargetId(validTargets[0] ?? "ungrouped");
-		}
-	}, [activeReorderTargetId, reorderSections, slots.length]);
-
-	function openProduct(item: ProductItem) {
-		const url = item.productData?.url;
-		if (url) WebBrowser.openBrowserAsync(url);
-	}
-
-	function toggleSelected(item: ProductItem, slot: ProductItem) {
-		const selectedIds = slot.slotData?.selectedProductIds ?? [];
-		const id = item.$jazz.id;
-		const isSelected = selectedIds.includes(id);
-		const maxSelections = slot.slotData?.maxSelections;
-
-		if (!isSelected && maxSelections && selectedIds.length >= maxSelections)
-			return;
-
-		slot.$jazz.set("slotData", {
-			...slot.slotData,
-			selectedProductIds: isSelected
-				? selectedIds.filter((sid) => sid !== id)
-				: [...selectedIds, id],
-		});
-	}
-
-	function startBulkRefresh() {
-		const allProducts = [
-			...slots.flatMap(
-				(s) =>
-					s.children?.filter((b): b is ProductItem => b?.type === "product") ??
-					[],
-			),
-			...directProducts,
-		].filter((p) => p.productData?.url);
-		if (allProducts.length > 0) setRefreshQueue(allProducts);
-	}
-
-	function deleteSlot(slot: ProductItem) {
-		const list = collection.children;
-		if (!list) return;
-		const idx = list.findIndex((c) => c?.$jazz?.id === slot.$jazz.id);
-		if (idx !== -1) list.$jazz.splice(idx, 1);
-	}
-
-	function deleteProduct(item: ProductItem) {
-		const parent = slots.find((s) =>
-			s.children?.some((c) => c?.$jazz?.id === item.$jazz.id),
-		);
-		const list = parent ? parent.children : collection.children;
-		if (!list) return;
-		const idx = list.findIndex((c) => c?.$jazz?.id === item.$jazz.id);
-		if (idx !== -1) list.$jazz.splice(idx, 1);
-	}
-
 	function renderProduct({
 		item,
 		section,
@@ -1223,18 +1359,18 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 		section: Section;
 	}) {
 		const slot = section.slot;
-		const isSelected = slot
-			? (slot.slotData?.selectedProductIds ?? []).includes(item.$jazz.id)
-			: false;
+		const selectedIds =
+			slot
+				? ((slot.properties.selectedProductIds as string[] | undefined) ?? [])
+				: [];
+		const isSelected = selectedIds.includes(item.id);
 
 		return (
 			<ProductRow
 				item={item}
 				isSelected={isSelected}
-				isRefreshing={refreshQueue[0]?.$jazz?.id === item.$jazz.id}
-				isQueued={refreshQueue
-					.slice(1)
-					.some((q) => q.$jazz?.id === item.$jazz.id)}
+				isRefreshing={refreshQueue[0]?.id === item.id}
+				isQueued={refreshQueue.slice(1).some((q) => q.id === item.id)}
 				onOpen={() => openProduct(item)}
 				onToggleSelected={slot ? () => toggleSelected(item, slot) : null}
 				onDelete={() => deleteProduct(item)}
@@ -1247,15 +1383,15 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 	const activeReorderSection =
 		reorderSections.find((section) => section.id === activeReorderTargetId) ??
 		reorderSections[0];
-	const hasMultipleSlots = slots.length > 1;
+	const hasMultipleSlots = sectionNodes.length > 1;
 	const gridItemSize = Math.floor((Dimensions.get("window").width - 64) / 2);
-	const reorderSlotItems: ReorderableBlockItem[] = slots.map((slot) => ({
-		id: slot.$jazz.id,
+	const reorderSlotItems: ReorderableBlockItem[] = sectionNodes.map((slot) => ({
+		id: slot.id,
 		block: slot,
 	}));
 	const activeReorderItems: ReorderableBlockItem[] =
 		activeReorderSection?.items.map((item) => ({
-			id: item.$jazz.id,
+			id: item.id,
 			block: item,
 		})) ?? [];
 	const reorderGridHeight =
@@ -1285,51 +1421,74 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 		};
 	}, [isReorderMode, viewMode, reorderGridKey, activeReorderItems.length]);
 
-	function handleSlotDrop(
+	async function handleSlotDrop(
 		_: string,
 		__: number,
 		positions?: Record<string, number>,
 	) {
-		if (!collection.children) return;
-
-		const orderedIds = reorderSlotItems
+		const orderedItems = reorderSlotItems
 			.slice()
-			.sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0))
-			.map((item) => item.id);
-		applySubsetOrderByIds(
-			collection.children as never,
-			orderedIds,
-			(item) => item?.type === "slot",
-		);
+			.sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0));
+
+		const reorderPayload = orderedItems.map((item, i) => ({
+			id: item.id,
+			positionKey: String(i + 1).padStart(8, "0"),
+			parentId: null as string | null,
+		}));
+
+		// Optimistic update
+		setLocalNodes((prev) => {
+			const updated = [...prev];
+			reorderPayload.forEach(({ id, positionKey }) => {
+				const idx = updated.findIndex((n) => n.id === id);
+				if (idx !== -1) updated[idx] = { ...updated[idx], positionKey };
+			});
+			return updated;
+		});
+
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await reorderNodes(token, collectionId, reorderPayload);
+		} catch {
+			await refresh();
+		}
 	}
 
-	function handleActiveSectionDrop(
+	async function handleActiveSectionDrop(
 		_: string,
 		__: number,
 		positions?: Record<string, number>,
 	) {
 		if (!activeReorderSection) return;
 
-		const orderedIds = activeReorderItems
+		const orderedItems = activeReorderItems
 			.slice()
-			.sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0))
-			.map((item) => item.id);
+			.sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0));
 
-		if (activeReorderSection.slot?.children) {
-			applySubsetOrderByIds(
-				activeReorderSection.slot.children as never,
-				orderedIds,
-				(item) => item?.type === "product",
-			);
-			return;
-		}
+		const parentId = activeReorderSection.slot?.id ?? null;
+		const reorderPayload = orderedItems.map((item, i) => ({
+			id: item.id,
+			positionKey: String(i + 1).padStart(8, "0"),
+			parentId,
+		}));
 
-		if (collection.children) {
-			applySubsetOrderByIds(
-				collection.children as never,
-				orderedIds,
-				(item) => item?.type === "product",
-			);
+		// Optimistic update
+		setLocalNodes((prev) => {
+			const updated = [...prev];
+			reorderPayload.forEach(({ id, positionKey }) => {
+				const idx = updated.findIndex((n) => n.id === id);
+				if (idx !== -1) updated[idx] = { ...updated[idx], positionKey };
+			});
+			return updated;
+		});
+
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await reorderNodes(token, collectionId, reorderPayload);
+		} catch {
+			await refresh();
 		}
 	}
 
@@ -1346,7 +1505,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 				onDrop={handleSlotDrop}
 				{...rest}
 			>
-				<ReorderSlotCard slot={item.block} />
+				<ReorderSlotCard slot={item.block} localNodes={localNodes} />
 			</SortableItem>
 		);
 	}
@@ -1402,7 +1561,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 						style={[
 							styles.colorDot,
 							{
-								backgroundColor: collection.collectionData?.color ?? "#6366f1",
+								backgroundColor: collectionColor,
 							},
 						]}
 					/>
@@ -1567,7 +1726,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 								<View style={styles.reorderPanelHeader}>
 									<Text style={styles.reorderPanelTitle}>Slots</Text>
 									<Text style={styles.reorderPanelMeta}>
-										{slots.length} slots
+										{sectionNodes.length} slots
 									</Text>
 								</View>
 								<Sortable
@@ -1648,15 +1807,9 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 					onScroll={handleScroll}
 					onRefresh={startBulkRefresh}
 					refreshing={refreshQueue.length > 0}
-					items={[
-						...slots.flatMap(
-							(s) =>
-								s.children?.filter(
-									(b): b is ProductItem => b?.type === "product",
-								) ?? [],
-						),
-						...directProducts,
-					]}
+					items={localNodes
+						.filter((n) => n.type !== "section")
+						.sort((a, b) => a.positionKey.localeCompare(b.positionKey))}
 					onPress={openProduct}
 				/>
 			) : (
@@ -1665,14 +1818,22 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 					contentInsetAdjustmentBehavior="never"
 					onScroll={handleScroll}
 					scrollEventThrottle={16}
-					keyExtractor={(item) => item?.$jazz?.id ?? Math.random().toString()}
+					keyExtractor={(item) => (item as ProductItem).id}
 					renderItem={renderProduct}
 					renderSectionHeader={({ section }) =>
 						section.title ? (
 							<SlotHeader
-								slot={section.slot}
+								slot={(section as Section).slot}
 								title={section.title}
-								onDelete={() => section.slot && deleteSlot(section.slot)}
+								localNodes={localNodes}
+								onSave={(name, maxSel, bud) => {
+									const slot = (section as Section).slot;
+									if (slot) handleUpdateSlot(slot, name, maxSel, bud);
+								}}
+								onDelete={() => {
+									const slot = (section as Section).slot;
+									if (slot) deleteSlot(slot);
+								}}
 							/>
 						) : null
 					}
@@ -1684,18 +1845,19 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 				/>
 			)}
 
-			{sharingCollection && (
+			{sharingCollection && detail && (
 				<ShareCollectionSheet
-					collection={collection}
+					collection={detail.collection}
 					visible
 					onClose={() => setSharingCollection(false)}
 				/>
 			)}
-			{editingCollection && (
+			{editingCollection && detail && (
 				<EditCollectionModal
-					collection={collection}
+					collection={detail.collection}
 					visible
 					onClose={() => setEditingCollection(false)}
+					onSave={handleUpdateCollection}
 				/>
 			)}
 			<AddProductModal
@@ -1708,20 +1870,40 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 					item={editingProduct}
 					visible
 					onClose={() => setEditingProduct(null)}
+					onSave={(title, price, notes) => {
+						if (editingProduct) {
+							handleUpdateProduct(editingProduct, title, price, notes);
+						}
+					}}
 				/>
 			)}
 			{refreshQueue.length > 0 && (
 				<ProductRefresher
-					key={refreshQueue[0].$jazz.id}
+					key={refreshQueue[0].id}
 					item={refreshQueue[0]}
-					onDone={() => setRefreshQueue((q) => q.slice(1))}
+					collectionId={collectionId}
+					getToken={getToken}
+					onDone={(updated) => {
+						if (updated && refreshQueue[0]) {
+							const itemId = refreshQueue[0].id;
+							setLocalNodes((prev) =>
+								prev.map((n) =>
+									n.id === itemId ? { ...n, ...updated } : n,
+								),
+							);
+						}
+						setRefreshQueue((q) => q.slice(1));
+					}}
 				/>
 			)}
 			{pendingUrl && (
 				<SaveProductSheet
 					key={pendingUrl}
 					url={pendingUrl}
-					onDismiss={() => setPendingUrl(null)}
+					onDismiss={() => {
+						setPendingUrl(null);
+						refresh();
+					}}
 					defaultCollectionId={collectionId}
 				/>
 			)}

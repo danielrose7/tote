@@ -1,13 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@clerk/expo";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import {
-	Block,
-	JazzAccount,
-	SharedCollectionRef,
-	SharedWithMeList,
-} from "@tote/schema";
-import { useAccount } from "jazz-tools/expo";
 import React, { useEffect, useState } from "react";
 import {
 	ActivityIndicator,
@@ -18,6 +12,7 @@ import {
 	View,
 } from "react-native";
 import type { InviteParams } from "../hooks/useInviteLink";
+import { acceptInvite, fetchCollectionDetail } from "../lib/api";
 import type { RootStackParamList } from "../navigation/types";
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -31,67 +26,32 @@ type Status = "accepting" | "success" | "error";
 
 export function AcceptInviteSheet({ invite, onClose }: Props) {
 	const navigation = useNavigation<NavProp>();
+	const { getToken } = useAuth();
 	const [status, setStatus] = useState<Status>("accepting");
 	const [collectionName, setCollectionName] = useState("");
 	const [errorMessage, setErrorMessage] = useState("");
 
-	const me = useAccount(JazzAccount, {
-		resolve: { root: { sharedWithMe: { $each: {} } } },
-	});
-
 	useEffect(() => {
-		if (!me?.$isLoaded) return;
 		accept();
-	}, [me?.$isLoaded]);
+	}, []);
 
 	async function accept() {
 		try {
-			await me.acceptInvite(
-				invite.collectionId as `co_z${string}`,
-				invite.inviteSecret as `inviteSecret_z${string}`,
-				Block,
-			);
+			const token = await getToken();
+			if (!token) throw new Error("Not authenticated");
 
-			const block = await Block.load(
-				invite.collectionId as `co_z${string}`,
-				{},
-			);
-			if (!block || block.type !== "collection") {
-				throw new Error("Could not load collection");
-			}
+			const result = await acceptInvite(token, invite.token);
+			const collectionId = result.collectionId;
 
-			const name = block.name ?? "Shared collection";
+			const detail = await fetchCollectionDetail(token, collectionId);
+			const name = detail.collection.name ?? "Shared collection";
 			setCollectionName(name);
-
-			// Track in sharedWithMe
-			if (me.root) {
-				if (!me.root.sharedWithMe) {
-					const list = SharedWithMeList.create([], me);
-					me.root.$jazz.set("sharedWithMe", list);
-				}
-				const already = me.root.sharedWithMe?.find(
-					(r) => r?.$isLoaded && r.collectionId === invite.collectionId,
-				);
-				if (!already) {
-					const ref = SharedCollectionRef.create(
-						{
-							collectionId: invite.collectionId,
-							role: invite.role as "reader" | "writer" | "admin",
-							sharedBy: "",
-							sharedAt: new Date(),
-							name,
-						},
-						me,
-					);
-					me.root.sharedWithMe?.$jazz.push(ref);
-				}
-			}
-
 			setStatus("success");
+
 			setTimeout(() => {
 				onClose();
 				navigation.navigate("CollectionDetail", {
-					collectionId: invite.collectionId,
+					collectionId,
 					collectionName: name,
 				});
 			}, 1200);

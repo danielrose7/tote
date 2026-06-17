@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { Block } from "@tote/schema";
 import React, { useState } from "react";
 import {
 	ScrollView,
@@ -9,25 +8,25 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-
-type CollectionBlock = typeof Block.prototype;
-type SlotBlock = typeof Block.prototype;
+import type { Collection, CollectionNode } from "../lib/api";
 
 export interface Selection {
-	collection: CollectionBlock;
-	slot?: SlotBlock;
+	collection: Collection;
+	slot?: CollectionNode;
 }
 
 interface Props {
-	collections: (CollectionBlock | null)[];
+	collections: Collection[];
+	sections: Record<string, CollectionNode[]>;
 	onSelect: (selection: Selection) => void;
 	onCreateCollection: (name: string) => void;
-	onCreateSlot: (collection: CollectionBlock, slotName: string) => void;
+	onCreateSlot: (collection: Collection, slotName: string) => void;
 	defaultExpandedId?: string;
 }
 
 export function CollectionPicker({
 	collections,
+	sections,
 	onSelect,
 	onCreateCollection,
 	onCreateSlot,
@@ -41,11 +40,7 @@ export function CollectionPicker({
 	const [showNewCollection, setShowNewCollection] = useState(false);
 	const [newCollectionName, setNewCollectionName] = useState("");
 
-	const validCollections = collections.filter(
-		(c): c is CollectionBlock => c !== null && c.type === "collection",
-	);
-
-	function handleCreateSlot(collection: CollectionBlock) {
+	function handleCreateSlot(collection: Collection) {
 		const name = newSlotName.trim();
 		if (!name) return;
 		onCreateSlot(collection, name);
@@ -65,14 +60,13 @@ export function CollectionPicker({
 		<ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 			<Text style={styles.sectionLabel}>Save to</Text>
 
-			{validCollections.map((collection) => {
-				const id = collection.$jazz.id;
+			{collections.map((collection) => {
+				const id = collection.id;
 				const isExpanded = expandedId === id;
 				const isAddingSlot = newSlotForId === id;
-				const slots =
-					collection.children?.filter(
-						(c): c is SlotBlock => c !== null && c.type === "slot",
-					) ?? [];
+				const slots = (sections[id] ?? []).filter(
+					(n) => n.type === "section" && !n.parentId,
+				);
 
 				const isDefault = id === defaultExpandedId;
 
@@ -90,8 +84,7 @@ export function CollectionPicker({
 								style={[
 									styles.colorDot,
 									{
-										backgroundColor:
-											collection.collectionData?.color ?? "#6366f1",
+										backgroundColor: collection.color ?? "#6366f1",
 									},
 								]}
 							/>
@@ -114,11 +107,11 @@ export function CollectionPicker({
 								{/* Existing slots */}
 								{slots.map((slot) => (
 									<TouchableOpacity
-										key={slot.$jazz.id}
+										key={slot.id}
 										style={styles.slotRow}
 										onPress={() => onSelect({ collection, slot })}
 									>
-										<Text style={styles.slotName}>{slot.name}</Text>
+										<Text style={styles.slotName}>{slot.title}</Text>
 									</TouchableOpacity>
 								))}
 
