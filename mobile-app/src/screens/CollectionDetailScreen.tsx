@@ -28,6 +28,7 @@ import {
 	Sortable,
 	SortableGrid,
 	SortableGridItem,
+	type GridPositions,
 	type SortableGridRenderItemProps,
 	SortableItem,
 	type SortableRenderItemProps,
@@ -1426,9 +1427,10 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 		__: number,
 		positions?: Record<string, number>,
 	) {
+		const getPos = (id: string) => positions?.[id] ?? 0;
 		const orderedItems = reorderSlotItems
 			.slice()
-			.sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0));
+			.sort((a, b) => getPos(a.id) - getPos(b.id));
 
 		const reorderPayload = orderedItems.map((item, i) => ({
 			id: item.id,
@@ -1455,16 +1457,12 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 		}
 	}
 
-	async function handleActiveSectionDrop(
-		_: string,
-		__: number,
-		positions?: Record<string, number>,
-	) {
+	async function doActiveSectionReorder(getPos: (id: string) => number) {
 		if (!activeReorderSection) return;
 
 		const orderedItems = activeReorderItems
 			.slice()
-			.sort((a, b) => (positions?.[a.id] ?? 0) - (positions?.[b.id] ?? 0));
+			.sort((a, b) => getPos(a.id) - getPos(b.id));
 
 		const parentId = activeReorderSection.slot?.id ?? null;
 		const reorderPayload = orderedItems.map((item, i) => ({
@@ -1490,6 +1488,24 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 		} catch {
 			await refresh();
 		}
+	}
+
+	// List-based drop (SortableItem): positions is Record<string, number>
+	async function handleActiveSectionListDrop(
+		_: string,
+		__: number,
+		positions?: Record<string, number>,
+	) {
+		await doActiveSectionReorder((id) => positions?.[id] ?? 0);
+	}
+
+	// Grid-based drop (SortableGridItem): positions is GridPositions
+	async function handleActiveSectionGridDrop(
+		_: string,
+		__: number,
+		positions?: GridPositions,
+	) {
+		await doActiveSectionReorder((id) => positions?.[id]?.index ?? 0);
 	}
 
 	function renderReorderSlot({
@@ -1520,7 +1536,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 				key={id}
 				id={id}
 				data={item}
-				onDrop={handleActiveSectionDrop}
+				onDrop={handleActiveSectionListDrop}
 				{...rest}
 			>
 				<ReorderProductRow item={item.block} />
@@ -1535,9 +1551,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 		return (
 			<SortableGridItem
 				key={item.id}
-				id={item.id}
 				data={item}
-				onDrop={handleActiveSectionDrop}
+				onDrop={handleActiveSectionGridDrop}
 				style={{
 					width: gridItemSize,
 					height: Math.round(gridItemSize * 0.72) + 106,
@@ -1819,24 +1834,23 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 					onScroll={handleScroll}
 					scrollEventThrottle={16}
 					keyExtractor={(item) => (item as ProductItem).id}
-					renderItem={renderProduct}
-					renderSectionHeader={({ section }) =>
-						section.title ? (
+					renderItem={(info) => renderProduct(info as unknown as { item: ProductItem; section: Section })}
+					renderSectionHeader={({ section: rawSection }) => {
+						const section = rawSection as unknown as Section;
+						return section.title ? (
 							<SlotHeader
-								slot={(section as Section).slot}
+								slot={section.slot}
 								title={section.title}
 								localNodes={localNodes}
 								onSave={(name, maxSel, bud) => {
-									const slot = (section as Section).slot;
-									if (slot) handleUpdateSlot(slot, name, maxSel, bud);
+									if (section.slot) handleUpdateSlot(section.slot, name, maxSel, bud);
 								}}
 								onDelete={() => {
-									const slot = (section as Section).slot;
-									if (slot) deleteSlot(slot);
+									if (section.slot) deleteSlot(section.slot);
 								}}
 							/>
-						) : null
-					}
+						) : null;
+					}}
 					ListHeaderComponent={pageHeader}
 					contentContainerStyle={styles.list}
 					stickySectionHeadersEnabled={false}
