@@ -272,3 +272,86 @@ export async function acceptInvite(
 		body: JSON.stringify({ mutationId: Crypto.randomUUID(), token: inviteToken }),
 	});
 }
+
+export type CollectionMember = {
+	userId: string;
+	role: "owner" | "admin" | "editor" | "viewer";
+	joinedAt: string;
+};
+
+export type CollectionInviteRecord = {
+	id: string;
+	role: "editor" | "viewer";
+	recipientHint: string | null;
+	useCount: number;
+	expiresAt: string | null;
+	revokedAt: string | null;
+	createdAt: string;
+};
+
+export type CollectionTeamData = {
+	members: CollectionMember[];
+	invites: CollectionInviteRecord[];
+};
+
+export async function fetchCollectionTeam(
+	token: string,
+	collectionId: string,
+): Promise<CollectionTeamData> {
+	return request(`/api/v2/collections/${collectionId}/team`, token);
+}
+
+export async function revokeCollectionInvite(
+	token: string,
+	collectionId: string,
+	inviteId: string,
+): Promise<void> {
+	await request(
+		`/api/v2/collections/${collectionId}/team/invites/${inviteId}`,
+		token,
+		{ method: "DELETE" },
+	);
+}
+
+export async function updateCollectionMember(
+	token: string,
+	collectionId: string,
+	userId: string,
+	role: "admin" | "editor" | "viewer",
+): Promise<void> {
+	await request(
+		`/api/v2/collections/${collectionId}/team/members/${encodeURIComponent(userId)}`,
+		token,
+		{
+			method: "PATCH",
+			body: JSON.stringify({ role }),
+		},
+	);
+}
+
+export async function removeCollectionMember(
+	token: string,
+	collectionId: string,
+	userId: string,
+): Promise<void> {
+	await request(
+		`/api/v2/collections/${collectionId}/team/members/${encodeURIComponent(userId)}`,
+		token,
+		{ method: "DELETE" },
+	);
+}
+
+export async function transferCollectionOwnership(
+	token: string,
+	collectionId: string,
+	targetUserId: string,
+): Promise<void> {
+	await request(
+		`/api/v2/collections/${collectionId}/team/transfer-ownership`,
+		token,
+		{
+			method: "POST",
+			body: JSON.stringify({ targetUserId }),
+		},
+	);
+}

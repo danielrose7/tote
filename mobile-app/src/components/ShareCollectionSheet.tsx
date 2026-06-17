@@ -3,7 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useState } from "react";
 import {
+	ActionSheetIOS,
 	ActivityIndicator,
+	Alert,
 	Linking,
 	Modal,
 	ScrollView,
@@ -15,12 +17,23 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-import type { Collection, PublicationStatus } from "../lib/api";
+import type {
+	Collection,
+	CollectionInviteRecord,
+	CollectionMember,
+	CollectionTeamData,
+	PublicationStatus,
+} from "../lib/api";
 import {
 	createInvite,
+	fetchCollectionTeam,
 	getPublicationStatus,
 	publishCollection as apiPublishCollection,
+	removeCollectionMember,
+	revokeCollectionInvite,
+	transferCollectionOwnership,
 	unpublishCollection as apiUnpublishCollection,
+	updateCollectionMember,
 } from "../lib/api";
 import { parameterize } from "../lib/shareCollection";
 
@@ -56,15 +69,35 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 	// Reuse state
 	const [isUpdatingCloning, setIsUpdatingCloning] = useState(false);
 
+	// Team state
+	const [team, setTeam] = useState<CollectionTeamData | null>(null);
+	const [teamLoading, setTeamLoading] = useState(false);
+	const [teamBusy, setTeamBusy] = useState(false);
+
 	useEffect(() => {
 		if (!visible) return;
 		loadPublication();
+		loadTeam();
 	}, [visible, collection.id]);
 
 	useEffect(() => {
 		// Reset invite link when role changes
 		setInviteLink(null);
 	}, [selectedRole]);
+
+	async function loadTeam() {
+		setTeamLoading(true);
+		try {
+			const token = await getToken();
+			if (!token) return;
+			const data = await fetchCollectionTeam(token, collection.id);
+			setTeam(data);
+		} catch {
+			// non-fatal
+		} finally {
+			setTeamLoading(false);
+		}
+	}
 
 	async function loadPublication() {
 		try {
@@ -227,6 +260,142 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 		setTimeout(() => setInviteCopied(false), 2000);
 	}
 
+	async function handleRevokeInvite(invite: CollectionInviteRecord) {
+		setTeamBusy(true);
+		try {
+			const token = await getToken();
+			if (!token) return;
+			await revokeCollectionInvite(token, collection.id, invite.id);
+			setTeam((prev) =>
+				prev
+					? {
+							...prev,
+							invites: prev.invites.map((i) =>
+								i.id === invite.id
+									? { ...i, revokedAt: new Date().toISOString() }
+									: i,
+							),
+						}
+					: prev,
+			);
+		} catch (e) {
+			Alert.alert("Error", e instanceof Error ? e.message : "Failed to revoke invite");
+		} finally {
+			setTeamBusy(false);
+		}
+	}
+
+	function handleChangeMemberRole(member: CollectionMember) {
+		const currentUserId = user?.id;
+		if (member.userId === currentUserId || member.role === "owner") return;
+
+		const isOwner = collection.role === "owner";
+		const options: string[] = ["Editor", "Viewer"];
+		if (isOwner) {
+			options.push("Admin");
+			options.push("Make owner");
+		}
+		options.push("Cancel");
+
+		ActionSheetIOS.showActionSheetWithOptions(
+			{
+				title: `Change role for ${member.userId === currentUserId ? "you" : member.userId.slice(0, 12) + "…"}`,
+				options,
+				cancelButtonIndex: options.length - 1,
+				destructiveButtonIndex: isOwner ? options.length - 2 : undefined,
+			},
+			async (buttonIndex) => {
+				const selected = options[buttonIndex];
+				if (selected === "Cancel") return;
+				if (selected === "Make owner") {
+					Alert.alert(
+						"Transfer ownership",
+						`Transfer ownership to this member? You will become an admin.`,
+						[
+							{ text: "Cancel", style: "cancel" },
+							{
+								text: "Transfer",
+								style: "destructive",
+								onPress: async () => {
+									setTeamBusy(true);
+									try {
+										const token = await getToken();
+										if (!token) return;
+										await transferCollectionOwnership(token, collection.id, member.userId);
+										await loadTeam();
+									} catch (e) {
+										Alert.alert("Error", e instanceof Error ? e.message : "Failed to transfer ownership");
+									} finally {
+										setTeamBusy(false);
+									}
+								},
+							},
+						],
+					);
+					return;
+				}
+				const roleMap: Record<string, "admin" | "editor" | "viewer"> = {
+					Admin: "admin",
+					Editor: "editor",
+					Viewer: "viewer",
+				};
+				const newRole = roleMap[selected];
+				if (!newRole || newRole === member.role) return;
+				setTeamBusy(true);
+				try {
+					const token = await getToken();
+					if (!token) return;
+					await updateCollectionMember(token, collection.id, member.userId, newRole);
+					setTeam((prev) =>
+						prev
+							? {
+									...prev,
+									members: prev.members.map((m) =>
+										m.userId === member.userId ? { ...m, role: newRole } : m,
+									),
+								}
+							: prev,
+					);
+				} catch (e) {
+					Alert.alert("Error", e instanceof Error ? e.message : "Failed to update role");
+				} finally {
+					setTeamBusy(false);
+				}
+			},
+		);
+	}
+
+	function handleRemoveMember(member: CollectionMember) {
+		Alert.alert(
+			"Remove member",
+			`Remove this member from the collection?`,
+			[
+				{ text: "Cancel", style: "cancel" },
+				{
+					text: "Remove",
+					style: "destructive",
+					onPress: async () => {
+						setTeamBusy(true);
+						try {
+							const token = await getToken();
+							if (!token) return;
+							await removeCollectionMember(token, collection.id, member.userId);
+							setTeam((prev) =>
+								prev
+									? { ...prev, members: prev.members.filter((m) => m.userId !== member.userId) }
+									: prev,
+							);
+						} catch (e) {
+							Alert.alert("Error", e instanceof Error ? e.message : "Failed to remove member");
+						} finally {
+							setTeamBusy(false);
+						}
+					},
+				},
+			],
+		);
+	}
+
 	return (
 		<Modal
 			visible={visible}
@@ -351,6 +520,79 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
 											</Text>
 										)}
 									</TouchableOpacity>
+								)}
+
+								{/* Members */}
+								{teamLoading && <ActivityIndicator size="small" color="#9ca3af" style={{ marginTop: 8 }} />}
+								{team && team.members.length > 0 && (
+									<View style={styles.teamSection}>
+										<Text style={styles.fieldLabel}>Members</Text>
+										{team.members.map((member) => {
+											const isCurrentUser = member.userId === user?.id;
+											const canManage =
+												!isCurrentUser &&
+												member.role !== "owner" &&
+												(collection.role === "owner" || member.role !== "admin");
+											return (
+												<View style={styles.memberRow} key={member.userId}>
+													<View style={styles.memberInfo}>
+														<Text style={styles.memberName}>
+															{isCurrentUser ? "You" : member.userId.slice(0, 16) + "…"}
+														</Text>
+														<Text style={styles.memberRole}>{member.role}</Text>
+													</View>
+													{canManage && (
+														<View style={styles.memberActions}>
+															<TouchableOpacity
+																style={styles.memberActionBtn}
+																disabled={teamBusy}
+																onPress={() => handleChangeMemberRole(member)}
+															>
+																<Text style={styles.memberActionText}>Role</Text>
+															</TouchableOpacity>
+															<TouchableOpacity
+																style={[styles.memberActionBtn, styles.memberRemoveBtn]}
+																disabled={teamBusy}
+																onPress={() => handleRemoveMember(member)}
+															>
+																<Text style={styles.memberRemoveText}>Remove</Text>
+															</TouchableOpacity>
+														</View>
+													)}
+												</View>
+											);
+										})}
+									</View>
+								)}
+
+								{/* Pending Invites */}
+								{team && team.invites.length > 0 && (
+									<View style={styles.teamSection}>
+										<Text style={styles.fieldLabel}>Pending Invites</Text>
+										{team.invites.map((invite) => (
+											<View style={styles.memberRow} key={invite.id}>
+												<View style={styles.memberInfo}>
+													<Text style={styles.memberName}>
+														{invite.recipientHint || "Share link"}
+													</Text>
+													<Text style={styles.memberRole}>
+														{invite.role} · {invite.useCount} used
+													</Text>
+												</View>
+												{invite.revokedAt ? (
+													<Text style={styles.revokedText}>Revoked</Text>
+												) : (
+													<TouchableOpacity
+														style={[styles.memberActionBtn, styles.memberRemoveBtn]}
+														disabled={teamBusy}
+														onPress={() => handleRevokeInvite(invite)}
+													>
+														<Text style={styles.memberRemoveText}>Revoke</Text>
+													</TouchableOpacity>
+												)}
+											</View>
+										))}
+									</View>
 								)}
 							</View>
 						)}
@@ -835,4 +1077,29 @@ const styles = StyleSheet.create({
 		borderTopColor: "#f3f4f6",
 	},
 	doneBtnText: { fontSize: 15, fontWeight: "600", color: "#6366f1" },
+
+	// Team management
+	teamSection: { gap: 6, marginTop: 4 },
+	memberRow: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+		paddingVertical: 8,
+		borderBottomWidth: 1,
+		borderBottomColor: "#f3f4f6",
+	},
+	memberInfo: { flex: 1, gap: 2 },
+	memberName: { fontSize: 13, fontWeight: "600", color: "#111827" },
+	memberRole: { fontSize: 12, color: "#9ca3af", textTransform: "capitalize" },
+	memberActions: { flexDirection: "row", gap: 6 },
+	memberActionBtn: {
+		paddingHorizontal: 10,
+		paddingVertical: 5,
+		borderRadius: 6,
+		backgroundColor: "#f3f4f6",
+	},
+	memberRemoveBtn: { backgroundColor: "#fff1f2" },
+	memberActionText: { fontSize: 12, color: "#374151", fontWeight: "600" },
+	memberRemoveText: { fontSize: 12, color: "#ef4444", fontWeight: "600" },
+	revokedText: { fontSize: 12, color: "#9ca3af" },
 });
