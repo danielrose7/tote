@@ -97,11 +97,24 @@ export async function getPublishedCollectionsByOwner(
       (
         SELECT COALESCE(json_agg(json_build_object('url', image_url, 'title', title)), '[]'::json)
         FROM (
-          SELECT image_url, title FROM published_blocks
-          WHERE collection_id = pc.id
-            AND type = 'product'
-            AND image_url IS NOT NULL
-          ORDER BY sort_order
+          SELECT pb.image_url, pb.title
+          FROM (
+            SELECT
+              pb2.image_url,
+              pb2.title,
+              COALESCE(slot.sort_order, pb2.sort_order) AS slot_sort,
+              pb2.sort_order AS product_sort,
+              ROW_NUMBER() OVER (
+                PARTITION BY COALESCE(pb2.parent_block_id::text, pb2.id::text)
+                ORDER BY pb2.sort_order
+              ) AS rank_in_slot
+            FROM published_blocks pb2
+            LEFT JOIN published_blocks slot ON slot.id = pb2.parent_block_id
+            WHERE pb2.collection_id = pc.id
+              AND pb2.type = 'product'
+              AND pb2.image_url IS NOT NULL
+          ) pb
+          ORDER BY pb.rank_in_slot ASC, pb.slot_sort ASC, pb.product_sort ASC
           LIMIT 3
         ) imgs
       ) AS cover_images
@@ -157,11 +170,23 @@ export async function getPublishedCollectionSummariesByUsernameAndSlugs(
             SELECT COALESCE(json_agg(json_build_object('url', image_url, 'title', title)), '[]'::json)
             FROM (
               SELECT pb.image_url, pb.title
-              FROM published_blocks pb
-              WHERE pb.collection_id = pc.id
-                AND pb.type = 'product'
-                AND pb.image_url IS NOT NULL
-              ORDER BY pb.sort_order ASC
+              FROM (
+                SELECT
+                  pb2.image_url,
+                  pb2.title,
+                  COALESCE(slot.sort_order, pb2.sort_order) AS slot_sort,
+                  pb2.sort_order AS product_sort,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY COALESCE(pb2.parent_block_id::text, pb2.id::text)
+                    ORDER BY pb2.sort_order
+                  ) AS rank_in_slot
+                FROM published_blocks pb2
+                LEFT JOIN published_blocks slot ON slot.id = pb2.parent_block_id
+                WHERE pb2.collection_id = pc.id
+                  AND pb2.type = 'product'
+                  AND pb2.image_url IS NOT NULL
+              ) pb
+              ORDER BY pb.rank_in_slot ASC, pb.slot_sort ASC, pb.product_sort ASC
               LIMIT 3
             ) imgs
           ) AS cover_images

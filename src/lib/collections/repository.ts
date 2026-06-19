@@ -128,35 +128,99 @@ export async function listCollectionSummaries(
 
   if (rows.length === 0) return [];
 
-  // Fetch up to 4 product preview images per collection in one query
   const collectionIds = rows.map((r) => r.id);
-  const imageRows = await database
-    .select({
-      collectionId: collectionNodes.collectionId,
-      nodeId: collectionNodes.id,
-      imageUrl: sql<string>`${collectionNodes.properties}->>'imageUrl'`,
-      title: collectionNodes.title,
-    })
-    .from(collectionNodes)
-    .where(
-      and(
-        inArray(collectionNodes.collectionId, collectionIds),
-        eq(collectionNodes.type, 'product'),
-        isNull(collectionNodes.deletedAt),
-        sql`${collectionNodes.properties}->>'imageUrl' IS NOT NULL`,
+
+  const [productRows, sectionRows] = await Promise.all([
+    database
+      .select({
+        collectionId: collectionNodes.collectionId,
+        nodeId: collectionNodes.id,
+        parentId: collectionNodes.parentId,
+        imageUrl: sql<string>`${collectionNodes.properties}->>'imageUrl'`,
+        title: collectionNodes.title,
+        positionKey: collectionNodes.positionKey,
+      })
+      .from(collectionNodes)
+      .where(
+        and(
+          inArray(collectionNodes.collectionId, collectionIds),
+          eq(collectionNodes.type, 'product'),
+          isNull(collectionNodes.deletedAt),
+          sql`${collectionNodes.properties}->>'imageUrl' IS NOT NULL`,
+        ),
       ),
-    )
-    .orderBy(asc(collectionNodes.positionKey));
+    database
+      .select({
+        nodeId: collectionNodes.id,
+        positionKey: collectionNodes.positionKey,
+      })
+      .from(collectionNodes)
+      .where(
+        and(
+          inArray(collectionNodes.collectionId, collectionIds),
+          eq(collectionNodes.type, 'section'),
+          isNull(collectionNodes.deletedAt),
+        ),
+      ),
+  ]);
+
+  const sectionPositionKey = new Map(
+    sectionRows.map((s) => [s.nodeId, s.positionKey]),
+  );
+
+  const productsByCollection = new Map<string, typeof productRows>();
+  for (const p of productRows) {
+    if (!productsByCollection.has(p.collectionId))
+      productsByCollection.set(p.collectionId, []);
+    productsByCollection.get(p.collectionId)!.push(p);
+  }
 
   const imagesByCollection = new Map<
     string,
     { url: string; title: string | null; nodeId: string }[]
   >();
-  for (const row of imageRows) {
-    const imgs = imagesByCollection.get(row.collectionId) ?? [];
-    if (imgs.length < 3)
-      imgs.push({ url: row.imageUrl, title: row.title, nodeId: row.nodeId });
-    imagesByCollection.set(row.collectionId, imgs);
+  for (const collId of collectionIds) {
+    const products = productsByCollection.get(collId) ?? [];
+
+    // Group products by their slot (parentId for nested, nodeId for top-level)
+    const slotMap = new Map<
+      string,
+      { slotPositionKey: string; products: typeof productRows }
+    >();
+    for (const p of products) {
+      const slotKey = p.parentId ?? p.nodeId;
+      if (!slotMap.has(slotKey)) {
+        const slotPk = p.parentId
+          ? (sectionPositionKey.get(p.parentId) ?? p.positionKey)
+          : p.positionKey;
+        slotMap.set(slotKey, { slotPositionKey: slotPk, products: [] });
+      }
+      slotMap.get(slotKey)!.products.push(p);
+    }
+
+    for (const slot of slotMap.values())
+      slot.products.sort((a, b) => a.positionKey.localeCompare(b.positionKey));
+
+    const sortedSlots = [...slotMap.values()].sort((a, b) =>
+      a.slotPositionKey.localeCompare(b.slotPositionKey),
+    );
+
+    // Interleave: first image from each slot, then second, etc.
+    const imgs: { url: string; title: string | null; nodeId: string }[] = [];
+    outer: for (let rank = 0; ; rank++) {
+      let added = false;
+      for (const slot of sortedSlots) {
+        if (rank < slot.products.length) {
+          const p = slot.products[rank];
+          imgs.push({ url: p.imageUrl, title: p.title, nodeId: p.nodeId });
+          added = true;
+          if (imgs.length === 3) break outer;
+        }
+      }
+      if (!added) break;
+    }
+
+    imagesByCollection.set(collId, imgs);
   }
 
   return rows.map((r) => ({
