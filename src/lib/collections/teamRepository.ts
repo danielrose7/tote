@@ -1,169 +1,193 @@
-import { randomUUID } from "node:crypto";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { randomUUID } from 'node:crypto';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import {
-	collectionInvites,
-	collectionMembers,
-	collectionMembershipEvents,
-	collections,
-} from "../../db/schema";
-import { db as productionDb } from "../db";
-import { createInviteToken, hashInviteToken } from "./inviteToken";
-import { type CollectionRole, roleCan } from "./permissions";
-import type { CollectionDatabase, MutationResult } from "./repository";
+  collectionInvites,
+  collectionMembers,
+  collectionMembershipEvents,
+  collections,
+} from '../../db/schema';
+import { db as productionDb } from '../db';
+import { type UserSummary, resolveUsers } from '../users/repository';
+import { createInviteToken, hashInviteToken } from './inviteToken';
+import { type CollectionRole, roleCan } from './permissions';
+import type { CollectionDatabase, MutationResult } from './repository';
 
 async function getTeamManagerRole(
-	actorUserId: string,
-	collectionId: string,
-	database: CollectionDatabase,
+  actorUserId: string,
+  collectionId: string,
+  database: CollectionDatabase,
 ): Promise<CollectionRole | null> {
-	const [access] = await database
-		.select({ role: collectionMembers.role })
-		.from(collectionMembers)
-		.innerJoin(collections, eq(collections.id, collectionMembers.collectionId))
-		.where(
-			and(
-				eq(collectionMembers.userId, actorUserId),
-				eq(collectionMembers.collectionId, collectionId),
-				isNull(collectionMembers.revokedAt),
-				isNull(collections.deletedAt),
-			),
-		)
-		.limit(1);
+  const [access] = await database
+    .select({ role: collectionMembers.role })
+    .from(collectionMembers)
+    .innerJoin(collections, eq(collections.id, collectionMembers.collectionId))
+    .where(
+      and(
+        eq(collectionMembers.userId, actorUserId),
+        eq(collectionMembers.collectionId, collectionId),
+        isNull(collectionMembers.revokedAt),
+        isNull(collections.deletedAt),
+      ),
+    )
+    .limit(1);
 
-	return access?.role ?? null;
+  return access?.role ?? null;
 }
 
 export type CollectionTeam = {
-	members: Array<{
-		userId: string;
-		role: CollectionRole;
-		invitedByUserId: string | null;
-		joinedAt: Date;
-	}>;
-	invites: Array<{
-		id: string;
-		role: CollectionRole;
-		recipientHint: string | null;
-		createdByUserId: string;
-		expiresAt: Date | null;
-		maxUses: number | null;
-		useCount: number;
-		revokedAt: Date | null;
-		createdAt: Date;
-	}>;
-	events: Array<{
-		id: string;
-		actorUserId: string;
-		subjectUserId: string | null;
-		inviteId: string | null;
-		action: (typeof collectionMembershipEvents.$inferSelect)["action"];
-		previousRole: CollectionRole | null;
-		nextRole: CollectionRole | null;
-		metadata: Record<string, unknown>;
-		createdAt: Date;
-	}>;
+  members: Array<{
+    userId: string;
+    role: CollectionRole;
+    invitedByUserId: string | null;
+    joinedAt: Date;
+    user: UserSummary | null;
+  }>;
+  invites: Array<{
+    id: string;
+    role: CollectionRole;
+    recipientHint: string | null;
+    createdByUserId: string;
+    expiresAt: Date | null;
+    maxUses: number | null;
+    useCount: number;
+    revokedAt: Date | null;
+    createdAt: Date;
+  }>;
+  events: Array<{
+    id: string;
+    actorUserId: string;
+    subjectUserId: string | null;
+    inviteId: string | null;
+    action: (typeof collectionMembershipEvents.$inferSelect)['action'];
+    previousRole: CollectionRole | null;
+    nextRole: CollectionRole | null;
+    metadata: Record<string, unknown>;
+    createdAt: Date;
+  }>;
+  userIndex: Record<string, UserSummary>;
 };
 
 export async function getCollectionTeam(
-	actorUserId: string,
-	collectionId: string,
-	database: CollectionDatabase = productionDb,
+  actorUserId: string,
+  collectionId: string,
+  database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<CollectionTeam>> {
-	const role = await getTeamManagerRole(actorUserId, collectionId, database);
-	if (!role) {
-		return { status: "not_found" };
-	}
-	if (!roleCan(role, "manage_members")) {
-		return { status: "forbidden" };
-	}
+  const role = await getTeamManagerRole(actorUserId, collectionId, database);
+  if (!role) {
+    return { status: 'not_found' };
+  }
+  if (!roleCan(role, 'manage_members')) {
+    return { status: 'forbidden' };
+  }
 
-	const members = await database
-		.select({
-			userId: collectionMembers.userId,
-			role: collectionMembers.role,
-			invitedByUserId: collectionMembers.invitedByUserId,
-			joinedAt: collectionMembers.createdAt,
-		})
-		.from(collectionMembers)
-		.where(
-			and(
-				eq(collectionMembers.collectionId, collectionId),
-				isNull(collectionMembers.revokedAt),
-			),
-		)
-		.orderBy(asc(collectionMembers.createdAt));
-	const invites = await database
-		.select({
-			id: collectionInvites.id,
-			role: collectionInvites.role,
-			recipientHint: collectionInvites.recipientHint,
-			createdByUserId: collectionInvites.createdByUserId,
-			expiresAt: collectionInvites.expiresAt,
-			maxUses: collectionInvites.maxUses,
-			useCount: collectionInvites.useCount,
-			revokedAt: collectionInvites.revokedAt,
-			createdAt: collectionInvites.createdAt,
-		})
-		.from(collectionInvites)
-		.where(eq(collectionInvites.collectionId, collectionId))
-		.orderBy(asc(collectionInvites.createdAt));
-	const events = await database
-		.select({
-			id: collectionMembershipEvents.id,
-			actorUserId: collectionMembershipEvents.actorUserId,
-			subjectUserId: collectionMembershipEvents.subjectUserId,
-			inviteId: collectionMembershipEvents.inviteId,
-			action: collectionMembershipEvents.action,
-			previousRole: collectionMembershipEvents.previousRole,
-			nextRole: collectionMembershipEvents.nextRole,
-			metadata: collectionMembershipEvents.metadata,
-			createdAt: collectionMembershipEvents.createdAt,
-		})
-		.from(collectionMembershipEvents)
-		.where(eq(collectionMembershipEvents.collectionId, collectionId))
-		.orderBy(asc(collectionMembershipEvents.createdAt));
+  const members = await database
+    .select({
+      userId: collectionMembers.userId,
+      role: collectionMembers.role,
+      invitedByUserId: collectionMembers.invitedByUserId,
+      joinedAt: collectionMembers.createdAt,
+    })
+    .from(collectionMembers)
+    .where(
+      and(
+        eq(collectionMembers.collectionId, collectionId),
+        isNull(collectionMembers.revokedAt),
+      ),
+    )
+    .orderBy(asc(collectionMembers.createdAt));
+  const invites = await database
+    .select({
+      id: collectionInvites.id,
+      role: collectionInvites.role,
+      recipientHint: collectionInvites.recipientHint,
+      createdByUserId: collectionInvites.createdByUserId,
+      expiresAt: collectionInvites.expiresAt,
+      maxUses: collectionInvites.maxUses,
+      useCount: collectionInvites.useCount,
+      revokedAt: collectionInvites.revokedAt,
+      createdAt: collectionInvites.createdAt,
+    })
+    .from(collectionInvites)
+    .where(eq(collectionInvites.collectionId, collectionId))
+    .orderBy(asc(collectionInvites.createdAt));
+  const events = await database
+    .select({
+      id: collectionMembershipEvents.id,
+      actorUserId: collectionMembershipEvents.actorUserId,
+      subjectUserId: collectionMembershipEvents.subjectUserId,
+      inviteId: collectionMembershipEvents.inviteId,
+      action: collectionMembershipEvents.action,
+      previousRole: collectionMembershipEvents.previousRole,
+      nextRole: collectionMembershipEvents.nextRole,
+      metadata: collectionMembershipEvents.metadata,
+      createdAt: collectionMembershipEvents.createdAt,
+    })
+    .from(collectionMembershipEvents)
+    .where(eq(collectionMembershipEvents.collectionId, collectionId))
+    .orderBy(asc(collectionMembershipEvents.createdAt));
 
-	return { status: "ok", value: { members, invites, events } };
+  // Resolve display info for all user IDs that appear in this team view
+  const allUserIds = [
+    ...members.map((m) => m.userId),
+    ...members.flatMap((m) => (m.invitedByUserId ? [m.invitedByUserId] : [])),
+    ...events.flatMap((e) => [e.actorUserId, e.subjectUserId].filter(Boolean)),
+  ] as string[];
+  const userIndex = Object.fromEntries(
+    await resolveUsers(allUserIds),
+  ) as Record<string, UserSummary>;
+
+  return {
+    status: 'ok',
+    value: {
+      members: members.map((m) => ({
+        ...m,
+        user: userIndex[m.userId] ?? null,
+      })),
+      invites,
+      events,
+      userIndex,
+    },
+  };
 }
 
 export type CreateCollectionInviteInput = {
-	role: "editor" | "viewer";
-	recipientHint?: string;
-	expiresAt?: Date;
-	maxUses?: number;
+  role: 'editor' | 'viewer';
+  recipientHint?: string;
+  expiresAt?: Date;
+  maxUses?: number;
 };
 
 export async function createCollectionInvite(
-	actorUserId: string,
-	collectionId: string,
-	input: CreateCollectionInviteInput,
-	database: CollectionDatabase = productionDb,
+  actorUserId: string,
+  collectionId: string,
+  input: CreateCollectionInviteInput,
+  database: CollectionDatabase = productionDb,
 ): Promise<
-	MutationResult<{
-		id: string;
-		token: string;
-		role: "editor" | "viewer";
-		expiresAt: Date | null;
-		maxUses: number | null;
-	}>
+  MutationResult<{
+    id: string;
+    token: string;
+    role: 'editor' | 'viewer';
+    expiresAt: Date | null;
+    maxUses: number | null;
+  }>
 > {
-	const role = await getTeamManagerRole(actorUserId, collectionId, database);
-	if (!role) {
-		return { status: "not_found" };
-	}
-	if (!roleCan(role, "manage_members")) {
-		return { status: "forbidden" };
-	}
+  const role = await getTeamManagerRole(actorUserId, collectionId, database);
+  if (!role) {
+    return { status: 'not_found' };
+  }
+  if (!roleCan(role, 'manage_members')) {
+    return { status: 'forbidden' };
+  }
 
-	const inviteId = randomUUID();
-	const token = createInviteToken();
-	const tokenHash = hashInviteToken(token);
-	const result = (await database.execute<{
-		id: string;
-		role: "editor" | "viewer";
-		expiresAt: Date | null;
-		maxUses: number | null;
-	}>(sql`
+  const inviteId = randomUUID();
+  const token = createInviteToken();
+  const tokenHash = hashInviteToken(token);
+  const result = (await database.execute<{
+    id: string;
+    role: 'editor' | 'viewer';
+    expiresAt: Date | null;
+    maxUses: number | null;
+  }>(sql`
 		WITH inserted_invite AS (
 			INSERT INTO collection_invites (
 				id,
@@ -216,44 +240,44 @@ export async function createCollectionInvite(
 		FROM inserted_invite invited
 		INNER JOIN inserted_event event ON event.invite_id = invited.id
 	`)) as {
-		rows: Array<{
-			id: string;
-			role: "editor" | "viewer";
-			expiresAt: Date | null;
-			maxUses: number | null;
-		}>;
-	};
+    rows: Array<{
+      id: string;
+      role: 'editor' | 'viewer';
+      expiresAt: Date | null;
+      maxUses: number | null;
+    }>;
+  };
 
-	const invite = result.rows[0];
-	if (!invite) {
-		throw new Error("Invite creation did not return a row");
-	}
+  const invite = result.rows[0];
+  if (!invite) {
+    throw new Error('Invite creation did not return a row');
+  }
 
-	return {
-		status: "ok",
-		value: {
-			...invite,
-			expiresAt: invite.expiresAt ? new Date(invite.expiresAt) : null,
-			token,
-		},
-	};
+  return {
+    status: 'ok',
+    value: {
+      ...invite,
+      expiresAt: invite.expiresAt ? new Date(invite.expiresAt) : null,
+      token,
+    },
+  };
 }
 
 export async function revokeCollectionInvite(
-	actorUserId: string,
-	collectionId: string,
-	inviteId: string,
-	database: CollectionDatabase = productionDb,
+  actorUserId: string,
+  collectionId: string,
+  inviteId: string,
+  database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<{ revokedAt: Date }>> {
-	const role = await getTeamManagerRole(actorUserId, collectionId, database);
-	if (!role) {
-		return { status: "not_found" };
-	}
-	if (!roleCan(role, "manage_members")) {
-		return { status: "forbidden" };
-	}
+  const role = await getTeamManagerRole(actorUserId, collectionId, database);
+  if (!role) {
+    return { status: 'not_found' };
+  }
+  if (!roleCan(role, 'manage_members')) {
+    return { status: 'forbidden' };
+  }
 
-	const result = (await database.execute<{ revokedAt: Date }>(sql`
+  const result = (await database.execute<{ revokedAt: Date }>(sql`
 		WITH revoked_invite AS (
 			UPDATE collection_invites
 			SET revoked_at = now(),
@@ -285,91 +309,91 @@ export async function revokeCollectionInvite(
 		INNER JOIN inserted_event event ON event.invite_id = revoked.id
 	`)) as { rows: Array<{ revokedAt: Date }> };
 
-	const revoked = result.rows[0];
-	return revoked
-		? {
-				status: "ok",
-				value: { revokedAt: new Date(revoked.revokedAt) },
-			}
-		: { status: "not_found" };
+  const revoked = result.rows[0];
+  return revoked
+    ? {
+        status: 'ok',
+        value: { revokedAt: new Date(revoked.revokedAt) },
+      }
+    : { status: 'not_found' };
 }
 
 async function getActiveMemberRole(
-	collectionId: string,
-	userId: string,
-	database: CollectionDatabase,
+  collectionId: string,
+  userId: string,
+  database: CollectionDatabase,
 ): Promise<CollectionRole | null> {
-	const [member] = await database
-		.select({ role: collectionMembers.role })
-		.from(collectionMembers)
-		.where(
-			and(
-				eq(collectionMembers.collectionId, collectionId),
-				eq(collectionMembers.userId, userId),
-				isNull(collectionMembers.revokedAt),
-			),
-		)
-		.limit(1);
+  const [member] = await database
+    .select({ role: collectionMembers.role })
+    .from(collectionMembers)
+    .where(
+      and(
+        eq(collectionMembers.collectionId, collectionId),
+        eq(collectionMembers.userId, userId),
+        isNull(collectionMembers.revokedAt),
+      ),
+    )
+    .limit(1);
 
-	return member?.role ?? null;
+  return member?.role ?? null;
 }
 
 function canManageMember(
-	actorUserId: string,
-	actorRole: CollectionRole,
-	targetUserId: string,
-	targetRole: CollectionRole,
-	nextRole?: Exclude<CollectionRole, "owner">,
+  actorUserId: string,
+  actorRole: CollectionRole,
+  targetUserId: string,
+  targetRole: CollectionRole,
+  nextRole?: Exclude<CollectionRole, 'owner'>,
 ): boolean {
-	if (targetRole === "owner" || actorUserId === targetUserId) {
-		return false;
-	}
-	if (actorRole === "owner") {
-		return true;
-	}
-	if (actorRole !== "admin" || targetRole === "admin") {
-		return false;
-	}
-	return nextRole !== "admin";
+  if (targetRole === 'owner' || actorUserId === targetUserId) {
+    return false;
+  }
+  if (actorRole === 'owner') {
+    return true;
+  }
+  if (actorRole !== 'admin' || targetRole === 'admin') {
+    return false;
+  }
+  return nextRole !== 'admin';
 }
 
 export async function changeCollectionMemberRole(
-	actorUserId: string,
-	collectionId: string,
-	targetUserId: string,
-	nextRole: Exclude<CollectionRole, "owner">,
-	database: CollectionDatabase = productionDb,
-): Promise<MutationResult<{ role: Exclude<CollectionRole, "owner"> }>> {
-	const actorRole = await getTeamManagerRole(
-		actorUserId,
-		collectionId,
-		database,
-	);
-	if (!actorRole) {
-		return { status: "not_found" };
-	}
-	if (!roleCan(actorRole, "manage_members")) {
-		return { status: "forbidden" };
-	}
+  actorUserId: string,
+  collectionId: string,
+  targetUserId: string,
+  nextRole: Exclude<CollectionRole, 'owner'>,
+  database: CollectionDatabase = productionDb,
+): Promise<MutationResult<{ role: Exclude<CollectionRole, 'owner'> }>> {
+  const actorRole = await getTeamManagerRole(
+    actorUserId,
+    collectionId,
+    database,
+  );
+  if (!actorRole) {
+    return { status: 'not_found' };
+  }
+  if (!roleCan(actorRole, 'manage_members')) {
+    return { status: 'forbidden' };
+  }
 
-	const targetRole = await getActiveMemberRole(
-		collectionId,
-		targetUserId,
-		database,
-	);
-	if (!targetRole) {
-		return { status: "not_found" };
-	}
-	if (
-		!canManageMember(actorUserId, actorRole, targetUserId, targetRole, nextRole)
-	) {
-		return { status: "forbidden" };
-	}
-	if (targetRole === nextRole) {
-		return { status: "ok", value: { role: nextRole } };
-	}
+  const targetRole = await getActiveMemberRole(
+    collectionId,
+    targetUserId,
+    database,
+  );
+  if (!targetRole) {
+    return { status: 'not_found' };
+  }
+  if (
+    !canManageMember(actorUserId, actorRole, targetUserId, targetRole, nextRole)
+  ) {
+    return { status: 'forbidden' };
+  }
+  if (targetRole === nextRole) {
+    return { status: 'ok', value: { role: nextRole } };
+  }
 
-	const result = (await database.execute<{ role: typeof nextRole }>(sql`
+  const result = (await database.execute<{ role: typeof nextRole }>(sql`
 		WITH updated_member AS (
 			UPDATE collection_members
 			SET role = ${nextRole},
@@ -412,43 +436,43 @@ export async function changeCollectionMemberRole(
 		INNER JOIN inserted_event event ON event.next_role = member.role
 	`)) as { rows: Array<{ role: typeof nextRole }> };
 
-	const updated = result.rows[0];
-	return updated
-		? { status: "ok", value: updated }
-		: { status: "version_conflict" };
+  const updated = result.rows[0];
+  return updated
+    ? { status: 'ok', value: updated }
+    : { status: 'version_conflict' };
 }
 
 export async function removeCollectionMember(
-	actorUserId: string,
-	collectionId: string,
-	targetUserId: string,
-	database: CollectionDatabase = productionDb,
+  actorUserId: string,
+  collectionId: string,
+  targetUserId: string,
+  database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<{ revokedAt: Date }>> {
-	const actorRole = await getTeamManagerRole(
-		actorUserId,
-		collectionId,
-		database,
-	);
-	if (!actorRole) {
-		return { status: "not_found" };
-	}
-	if (!roleCan(actorRole, "manage_members")) {
-		return { status: "forbidden" };
-	}
+  const actorRole = await getTeamManagerRole(
+    actorUserId,
+    collectionId,
+    database,
+  );
+  if (!actorRole) {
+    return { status: 'not_found' };
+  }
+  if (!roleCan(actorRole, 'manage_members')) {
+    return { status: 'forbidden' };
+  }
 
-	const targetRole = await getActiveMemberRole(
-		collectionId,
-		targetUserId,
-		database,
-	);
-	if (!targetRole) {
-		return { status: "not_found" };
-	}
-	if (!canManageMember(actorUserId, actorRole, targetUserId, targetRole)) {
-		return { status: "forbidden" };
-	}
+  const targetRole = await getActiveMemberRole(
+    collectionId,
+    targetUserId,
+    database,
+  );
+  if (!targetRole) {
+    return { status: 'not_found' };
+  }
+  if (!canManageMember(actorUserId, actorRole, targetUserId, targetRole)) {
+    return { status: 'forbidden' };
+  }
 
-	const result = (await database.execute<{ revokedAt: Date }>(sql`
+  const result = (await database.execute<{ revokedAt: Date }>(sql`
 		WITH revoked_member AS (
 			UPDATE collection_members
 			SET revoked_at = now(),
@@ -490,32 +514,32 @@ export async function removeCollectionMember(
 			ON event.subject_user_id = ${targetUserId}
 	`)) as { rows: Array<{ revokedAt: Date }> };
 
-	const removed = result.rows[0];
-	return removed
-		? {
-				status: "ok",
-				value: { revokedAt: new Date(removed.revokedAt) },
-			}
-		: { status: "version_conflict" };
+  const removed = result.rows[0];
+  return removed
+    ? {
+        status: 'ok',
+        value: { revokedAt: new Date(removed.revokedAt) },
+      }
+    : { status: 'version_conflict' };
 }
 
 export async function acceptCollectionInvite(
-	actorUserId: string,
-	token: string,
-	database: CollectionDatabase = productionDb,
+  actorUserId: string,
+  token: string,
+  database: CollectionDatabase = productionDb,
 ): Promise<
-	MutationResult<{
-		collectionId: string;
-		inviteId: string;
-		role: CollectionRole;
-	}>
+  MutationResult<{
+    collectionId: string;
+    inviteId: string;
+    role: CollectionRole;
+  }>
 > {
-	const tokenHash = hashInviteToken(token);
-	const result = (await database.execute<{
-		collectionId: string;
-		inviteId: string;
-		role: CollectionRole;
-	}>(sql`
+  const tokenHash = hashInviteToken(token);
+  const result = (await database.execute<{
+    collectionId: string;
+    inviteId: string;
+    role: CollectionRole;
+  }>(sql`
 		WITH valid_invite AS (
 			SELECT
 				invite.id,
@@ -626,48 +650,48 @@ export async function acceptCollectionInvite(
 			next_role AS role
 		FROM inserted_event
 	`)) as {
-		rows: Array<{
-			collectionId: string;
-			inviteId: string;
-			role: CollectionRole;
-		}>;
-	};
+    rows: Array<{
+      collectionId: string;
+      inviteId: string;
+      role: CollectionRole;
+    }>;
+  };
 
-	const accepted = result.rows[0];
-	return accepted ? { status: "ok", value: accepted } : { status: "not_found" };
+  const accepted = result.rows[0];
+  return accepted ? { status: 'ok', value: accepted } : { status: 'not_found' };
 }
 
 export async function transferCollectionOwnership(
-	actorUserId: string,
-	collectionId: string,
-	targetUserId: string,
-	database: CollectionDatabase = productionDb,
+  actorUserId: string,
+  collectionId: string,
+  targetUserId: string,
+  database: CollectionDatabase = productionDb,
 ): Promise<MutationResult<{ version: number }>> {
-	const actorRole = await getTeamManagerRole(
-		actorUserId,
-		collectionId,
-		database,
-	);
-	if (!actorRole) {
-		return { status: "not_found" };
-	}
-	if (actorRole !== "owner" || actorUserId === targetUserId) {
-		return { status: "forbidden" };
-	}
+  const actorRole = await getTeamManagerRole(
+    actorUserId,
+    collectionId,
+    database,
+  );
+  if (!actorRole) {
+    return { status: 'not_found' };
+  }
+  if (actorRole !== 'owner' || actorUserId === targetUserId) {
+    return { status: 'forbidden' };
+  }
 
-	const targetRole = await getActiveMemberRole(
-		collectionId,
-		targetUserId,
-		database,
-	);
-	if (!targetRole) {
-		return { status: "not_found" };
-	}
-	if (targetRole === "owner") {
-		return { status: "forbidden" };
-	}
+  const targetRole = await getActiveMemberRole(
+    collectionId,
+    targetUserId,
+    database,
+  );
+  if (!targetRole) {
+    return { status: 'not_found' };
+  }
+  if (targetRole === 'owner') {
+    return { status: 'forbidden' };
+  }
 
-	const result = (await database.execute<{ version: number }>(sql`
+  const result = (await database.execute<{ version: number }>(sql`
 		WITH updated_collection AS (
 			UPDATE collections
 			SET owner_user_id = ${targetUserId},
@@ -730,8 +754,8 @@ export async function transferCollectionOwnership(
 		INNER JOIN inserted_event event ON event.collection_id = collection.id
 	`)) as { rows: Array<{ version: number }> };
 
-	const transferred = result.rows[0];
-	return transferred
-		? { status: "ok", value: { version: Number(transferred.version) } }
-		: { status: "version_conflict" };
+  const transferred = result.rows[0];
+  return transferred
+    ? { status: 'ok', value: { version: Number(transferred.version) } }
+    : { status: 'version_conflict' };
 }
