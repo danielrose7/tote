@@ -17,6 +17,77 @@ import { collectionQueryKeys } from '../../../lib/collections/queryKeys';
 import { Block, JazzAccount } from '../../../schema';
 import { NeonCreateCollectionDialog } from './NeonCreateCollectionDialog';
 
+function PreviewImageGrid({
+  images,
+  collectionId,
+  color,
+}: {
+  images: { url: string; title: string | null; nodeId: string }[];
+  collectionId: string;
+  color?: string | null;
+}) {
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
+
+  const visible = images.filter((img) => !failedUrls.has(img.url));
+
+  function handleError(img: { url: string; nodeId: string }) {
+    setFailedUrls((prev) => new Set([...prev, img.url]));
+    fetch(
+      `/api/v2/collections/${collectionId}/nodes/${img.nodeId}/clear-image`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: img.url }),
+      },
+    ).catch(() => {});
+  }
+
+  if (visible.length === 0) {
+    return (
+      <div
+        className={cardStyles.coverFallback}
+        style={{
+          background: `radial-gradient(circle at 20% 80%, ${color ?? '#6366f1'}99 0%, transparent 55%),
+                       radial-gradient(circle at 80% 15%, ${color ?? '#6366f1'}66 0%, transparent 45%),
+                       radial-gradient(circle at 55% 50%, ${color ?? '#6366f1'}44 0%, transparent 60%),
+                       ${color ?? '#6366f1'}22`,
+        }}
+      >
+        <svg
+          className={cardStyles.placeholderIcon}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`${cardStyles.previewGrid} ${cardStyles[`grid-${Math.min(visible.length, 3)}`]}`}
+    >
+      {visible.slice(0, 3).map((img) => (
+        <div key={img.nodeId} className={cardStyles.previewImage}>
+          <img
+            src={img.url}
+            alt={img.title ?? ''}
+            onError={() => handleError(img)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function NeonCollectionsPage({
   realtimeEnabled,
 }: {
@@ -76,47 +147,11 @@ export function NeonCollectionsPage({
                       }
                     >
                       <div className={cardStyles.cover}>
-                        {(collection.previewImages ?? []).length > 0 ? (
-                          <div
-                            className={`${cardStyles.previewGrid} ${cardStyles[`grid-${Math.min(collection.previewImages.length, 3)}`]}`}
-                          >
-                            {collection.previewImages
-                              .slice(0, 3)
-                              .map((img, idx) => (
-                                <div
-                                  key={idx}
-                                  className={cardStyles.previewImage}
-                                >
-                                  <img src={img.url} alt={img.title ?? ''} />
-                                </div>
-                              ))}
-                          </div>
-                        ) : (
-                          <div
-                            className={cardStyles.coverFallback}
-                            style={{
-                              background: `radial-gradient(circle at 20% 80%, ${collection.color ?? '#6366f1'}99 0%, transparent 55%),
-                                           radial-gradient(circle at 80% 15%, ${collection.color ?? '#6366f1'}66 0%, transparent 45%),
-                                           radial-gradient(circle at 55% 50%, ${collection.color ?? '#6366f1'}44 0%, transparent 60%),
-                                           ${collection.color ?? '#6366f1'}22`,
-                            }}
-                          >
-                            <svg
-                              className={cardStyles.placeholderIcon}
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              aria-hidden="true"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={1.5}
-                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                              />
-                            </svg>
-                          </div>
-                        )}
+                        <PreviewImageGrid
+                          images={collection.previewImages ?? []}
+                          collectionId={collection.id}
+                          color={collection.color}
+                        />
                       </div>
                       <div className={cardStyles.cardBody}>
                         <h3 className={cardStyles.title}>{collection.name}</h3>

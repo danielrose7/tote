@@ -95,7 +95,7 @@ export type CollectionSummary = Pick<
   | 'updatedAt'
 > & {
   role: (typeof collectionMembers.$inferSelect)['role'];
-  previewImages: { url: string; title: string | null }[];
+  previewImages: { url: string; title: string | null; nodeId: string }[];
 };
 
 export async function listCollectionSummaries(
@@ -133,6 +133,7 @@ export async function listCollectionSummaries(
   const imageRows = await database
     .select({
       collectionId: collectionNodes.collectionId,
+      nodeId: collectionNodes.id,
       imageUrl: sql<string>`${collectionNodes.properties}->>'imageUrl'`,
       title: collectionNodes.title,
     })
@@ -149,11 +150,12 @@ export async function listCollectionSummaries(
 
   const imagesByCollection = new Map<
     string,
-    { url: string; title: string | null }[]
+    { url: string; title: string | null; nodeId: string }[]
   >();
   for (const row of imageRows) {
     const imgs = imagesByCollection.get(row.collectionId) ?? [];
-    if (imgs.length < 3) imgs.push({ url: row.imageUrl, title: row.title });
+    if (imgs.length < 3)
+      imgs.push({ url: row.imageUrl, title: row.title, nodeId: row.nodeId });
     imagesByCollection.set(row.collectionId, imgs);
   }
 
@@ -1768,4 +1770,34 @@ export async function deleteCollectionNode(
       ...(await getCollectionMutationSummary(collectionId, database)),
     },
   };
+}
+
+export async function clearNodeImageUrl(
+  actorUserId: string,
+  collectionId: string,
+  nodeId: string,
+  imageUrl: string,
+  database: CollectionDatabase = productionDb,
+): Promise<
+  { status: 'ok' } | { status: 'not_found' } | { status: 'forbidden' }
+> {
+  const access = await getActiveCollectionAccess(
+    actorUserId,
+    collectionId,
+    database,
+  );
+  if (!access) return { status: 'not_found' };
+  if (!roleCan(access.role, 'edit')) return { status: 'forbidden' };
+
+  await database.execute(sql`
+    UPDATE collection_nodes
+    SET properties = properties - 'imageUrl',
+        updated_at = now()
+    WHERE id = ${nodeId}
+      AND collection_id = ${collectionId}
+      AND deleted_at IS NULL
+      AND properties->>'imageUrl' = ${imageUrl}
+  `);
+
+  return { status: 'ok' };
 }

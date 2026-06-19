@@ -1,3 +1,4 @@
+import { clerkClient } from '@clerk/nextjs/server';
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
 import { markUserDeleted, upsertUser } from '../../../../lib/users/repository';
@@ -58,6 +59,13 @@ export async function POST(request: Request) {
       imageUrl: data.image_url,
       primaryEmail,
     });
+
+    if (type === 'user.created') {
+      const clerk = await clerkClient();
+      await clerk.users.updateUserMetadata(data.id, {
+        publicMetadata: { neonCollectionsEnabled: true },
+      });
+    }
   } else if (type === 'user.deleted') {
     await markUserDeleted(data.id);
   }
