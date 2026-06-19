@@ -153,18 +153,16 @@ export function CollectionCard({
             )}
           </div>
         )}
+      </div>
 
-        <div className={styles.overlay}>
-          <h3 className={styles.title}>
-            {block.name || 'Untitled Collection'}
-          </h3>
-          <span className={styles.meta}>
-            {linkCount} {linkCount === 1 ? 'item' : 'items'}
-          </span>
-          {collectionData?.description && (
-            <p className={styles.description}>{collectionData.description}</p>
-          )}
-        </div>
+      <div className={styles.cardBody}>
+        <h3 className={styles.title}>{block.name || 'Untitled Collection'}</h3>
+        <span className={styles.meta}>
+          {linkCount} {linkCount === 1 ? 'item' : 'items'}
+        </span>
+        {collectionData?.description && (
+          <p className={styles.description}>{collectionData.description}</p>
+        )}
       </div>
     </article>
   );

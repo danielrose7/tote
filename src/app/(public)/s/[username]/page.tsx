@@ -90,15 +90,13 @@ function CollectionCard({
     >
       <div className={styles.cover}>
         <CollectionCover images={coverImages} color={hex} />
-        <div className={styles.overlay}>
-          <h2 className={styles.cardTitle}>{name}</h2>
-          <p className={styles.cardMeta}>
-            {itemCount} {itemCount === 1 ? 'item' : 'items'}
-          </p>
-          {description && (
-            <p className={styles.cardDescription}>{description}</p>
-          )}
-        </div>
+      </div>
+      <div className={styles.cardBody}>
+        <h2 className={styles.cardTitle}>{name}</h2>
+        <p className={styles.cardMeta}>
+          {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        </p>
+        {description && <p className={styles.cardDescription}>{description}</p>}
       </div>
     </Link>
   );

@@ -117,21 +117,19 @@ export function NeonCollectionsPage({
                             </svg>
                           </div>
                         )}
-                        <div className={cardStyles.overlay}>
-                          <h3 className={cardStyles.title}>
-                            {collection.name}
-                          </h3>
-                          <span className={cardStyles.meta}>
-                            {collection.itemCount}{' '}
-                            {collection.itemCount === 1 ? 'item' : 'items'}
-                            {collection.role !== 'owner' && ` · Shared`}
-                          </span>
-                          {collection.description && (
-                            <p className={cardStyles.description}>
-                              {collection.description}
-                            </p>
-                          )}
-                        </div>
+                      </div>
+                      <div className={cardStyles.cardBody}>
+                        <h3 className={cardStyles.title}>{collection.name}</h3>
+                        <span className={cardStyles.meta}>
+                          {collection.itemCount}{' '}
+                          {collection.itemCount === 1 ? 'item' : 'items'}
+                          {collection.role !== 'owner' && ' · Shared'}
+                        </span>
+                        {collection.description && (
+                          <p className={cardStyles.description}>
+                            {collection.description}
+                          </p>
+                        )}
                       </div>
                     </Link>
                   ))}

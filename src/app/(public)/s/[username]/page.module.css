@@ -43,20 +43,22 @@
 
 /* Card */
 .card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  display: block;
-  border-top: 3px solid var(--collection-color, var(--color-accent));
+  display: flex;
+  flex-direction: column;
   transition:
     box-shadow var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 /* Cover */
@@ -66,6 +68,7 @@
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--color-surface);
+  flex-shrink: 0;
 }
 
 /* Image layouts */
@@ -83,6 +86,7 @@
   grid-template-columns: 1fr 1fr;
 }
 
+/* 3-image L: large left, two stacked right */
 .coverThree {
   grid-template-columns: 2fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -116,30 +120,21 @@
   /* background set inline */
 }
 
-/* Gradient scrim overlay */
-.overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(0, 0, 0, 0.78) 0%,
-    rgba(0, 0, 0, 0.22) 45%,
-    transparent 68%
-  );
+/* Text content below image */
+.cardBody {
+  padding: var(--spacing-md);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: var(--spacing-md);
-  gap: 3px;
+  gap: var(--spacing-xs);
+  border-top: 3px solid var(--collection-color, var(--color-accent));
 }
 
 .cardTitle {
-  color: #fff;
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
   margin: 0;
   line-height: 1.3;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -147,21 +142,20 @@
 }
 
 .cardMeta {
-  color: rgba(255, 255, 255, 0.72);
   font-size: var(--font-size-sm);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  color: var(--color-text-tertiary);
   margin: 0;
 }
 
 .cardDescription {
-  color: rgba(255, 255, 255, 0.62);
-  font-size: var(--font-size-xs);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.5;
 }
 
 /* Not found */
