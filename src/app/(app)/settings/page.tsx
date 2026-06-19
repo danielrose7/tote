@@ -6,6 +6,7 @@ import {
   SignOutButton,
   UserProfile,
   useClerk,
+  useUser,
 } from '@clerk/nextjs';
 import { useAccount } from 'jazz-tools/react';
 import Link from 'next/link';
@@ -27,7 +28,9 @@ export default function SettingsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const { signOut } = useClerk();
+  const { user } = useUser();
   const router = useRouter();
 
   const me = useAccount(JazzAccount, {
@@ -175,6 +178,53 @@ export default function SettingsPage() {
                   >
                     Retry
                   </button>
+                )}
+              </div>
+
+              <div className={styles.publicProfile}>
+                <h2 className={styles.publicProfileTitle}>
+                  Your public profile
+                </h2>
+                {user?.username ? (
+                  <>
+                    <p className={styles.publicProfileHint}>
+                      Published collections appear here. Collections are private
+                      by default.
+                    </p>
+                    <div className={styles.publicProfileRow}>
+                      <span className={styles.publicProfileUrl}>
+                        {typeof window !== 'undefined'
+                          ? `${window.location.origin}/s/${user.username}`
+                          : `/s/${user.username}`}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            `${window.location.origin}/s/${user.username}`,
+                          );
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }}
+                      >
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                      <a
+                        href={`/s/${user.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-secondary btn-sm"
+                      >
+                        View →
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <p className={styles.publicProfileHint}>
+                    Add a username in the profile below to get a public profile
+                    URL.
+                  </p>
                 )}
               </div>
 
