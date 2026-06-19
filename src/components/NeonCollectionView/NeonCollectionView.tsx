@@ -42,6 +42,7 @@ import {
 } from '../CollectionView/ViewModeToggle';
 import { NeonSlotSection } from '../NeonSlotSection/NeonSlotSection';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
+import { formatPrice } from '../../lib/formatPrice';
 import { useToast } from '../ToastNotification';
 import { NeonTableView } from './NeonTableView';
 
@@ -245,7 +246,7 @@ function ItemNode({
         <span className={pageStyles.nodeListItemTitle}>{title}</span>
         {properties.price !== undefined && properties.price !== null && (
           <span className={pageStyles.nodeListItemPrice}>
-            {String(properties.price)}
+            {formatPrice(String(properties.price))}
           </span>
         )}
       </div>
@@ -272,7 +273,7 @@ function ItemNode({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {String(properties.price)}
+                {formatPrice(String(properties.price))}
               </span>
             </div>
           )}
@@ -295,7 +296,7 @@ function ItemNode({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {String(properties.price)}
+                {formatPrice(String(properties.price))}
               </span>
             </div>
           )}
