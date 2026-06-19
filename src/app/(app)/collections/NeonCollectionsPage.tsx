@@ -75,7 +75,7 @@ export function NeonCollectionsPage({
                         } as React.CSSProperties
                       }
                     >
-                      <div className={cardStyles.previewContainer}>
+                      <div className={cardStyles.cover}>
                         {(collection.previewImages ?? []).length > 0 ? (
                           <div
                             className={`${cardStyles.previewGrid} ${cardStyles[`grid-${Math.min(collection.previewImages.length, 4)}`]}`}
@@ -92,7 +92,15 @@ export function NeonCollectionsPage({
                               ))}
                           </div>
                         ) : (
-                          <div className={cardStyles.previewPlaceholder}>
+                          <div
+                            className={cardStyles.coverFallback}
+                            style={{
+                              background: `radial-gradient(circle at 20% 80%, ${collection.color ?? '#6366f1'}99 0%, transparent 55%),
+                                           radial-gradient(circle at 80% 15%, ${collection.color ?? '#6366f1'}66 0%, transparent 45%),
+                                           radial-gradient(circle at 55% 50%, ${collection.color ?? '#6366f1'}44 0%, transparent 60%),
+                                           ${collection.color ?? '#6366f1'}22`,
+                            }}
+                          >
                             <svg
                               className={cardStyles.placeholderIcon}
                               fill="none"
@@ -103,35 +111,27 @@ export function NeonCollectionsPage({
                               <path
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                strokeWidth={2}
+                                strokeWidth={1.5}
                                 d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                               />
                             </svg>
                           </div>
                         )}
-                        <div className={cardStyles.countBadge}>
-                          <span>
-                            {collection.itemCount}{' '}
-                            {collection.itemCount === 1 ? 'item' : 'items'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className={cardStyles.content}>
-                        <div className={cardStyles.header}>
+                        <div className={cardStyles.overlay}>
                           <h3 className={cardStyles.title}>
                             {collection.name}
                           </h3>
-                        </div>
-                        {collection.description && (
-                          <p className={cardStyles.description}>
-                            {collection.description}
-                          </p>
-                        )}
-                        {collection.role !== 'owner' && (
-                          <span className={listStyles.sharedBadge}>
-                            Shared · {collection.role}
+                          <span className={cardStyles.meta}>
+                            {collection.itemCount}{' '}
+                            {collection.itemCount === 1 ? 'item' : 'items'}
+                            {collection.role !== 'owner' && ` · Shared`}
                           </span>
-                        )}
+                          {collection.description && (
+                            <p className={cardStyles.description}>
+                              {collection.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </Link>
                   ))}
