@@ -154,7 +154,7 @@ export async function getPublishedCollectionSummariesByUsernameAndSlugs(
             WHERE collection_id = pc.id AND type = 'product'
           ) AS item_count,
           (
-            SELECT COALESCE(json_agg(json_build_object('url', pb.image_url, 'title', pb.title)), '[]'::json)
+            SELECT COALESCE(json_agg(json_build_object('url', image_url, 'title', title)), '[]'::json)
             FROM (
               SELECT pb.image_url, pb.title
               FROM published_blocks pb
