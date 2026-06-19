@@ -2,12 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
-import dayjs from 'dayjs';
-import localizedFormat from 'dayjs/plugin/localizedFormat';
-import relativeTime from 'dayjs/plugin/relativeTime';
-
-dayjs.extend(localizedFormat);
-dayjs.extend(relativeTime);
+import dayjs from '../../../../lib/dayjs';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useToast } from '../../../../components/ToastNotification';
