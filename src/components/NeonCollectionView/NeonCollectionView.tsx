@@ -231,6 +231,20 @@ function ItemNode({
   const isListMode = dragHandle !== undefined;
   const hasImage = !!(properties.imageUrl && !imageError);
 
+  function handleImageError() {
+    setImageError(true);
+    if (properties.imageUrl) {
+      fetch(
+        `/api/v2/collections/${node.collectionId}/nodes/${node.id}/clear-image`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl: properties.imageUrl }),
+        },
+      ).catch(() => {});
+    }
+  }
+
   if (isListMode) {
     return (
       <div className={pageStyles.nodeListItem}>
@@ -240,7 +254,7 @@ function ItemNode({
             src={properties.imageUrl!}
             alt=""
             className={pageStyles.nodeListItemImage}
-            onError={() => setImageError(true)}
+            onError={handleImageError}
           />
         )}
         <span className={pageStyles.nodeListItemTitle}>{title}</span>
@@ -268,7 +282,7 @@ function ItemNode({
             alt={title}
             className={`${productCardStyles.image} ${imageLoaded ? productCardStyles.imageLoaded : ''}`}
             onLoad={() => setImageLoaded(true)}
-            onError={() => setImageError(true)}
+            onError={handleImageError}
           />
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>

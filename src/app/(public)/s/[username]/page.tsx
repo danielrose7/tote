@@ -5,6 +5,7 @@ import { PublicFooter } from '../../../../components/PublicFooter';
 import { StickyCtaBar } from '../../../../components/StickyCtaBar';
 import type { PublishedCollectionSummary } from '../../../../lib/publishedCollectionsDb';
 import { getPublishedCollectionsByOwner } from '../../../../lib/publishedCollectionsDb';
+import { CollectionCover } from './CollectionCover';
 import styles from './page.module.css';
 
 type Params = Promise<{ username: string }>;
@@ -99,77 +100,6 @@ function CollectionCard({
         {description && <p className={styles.cardDescription}>{description}</p>}
       </div>
     </Link>
-  );
-}
-
-function CollectionCover({
-  images,
-  color,
-}: {
-  images: { url: string; title: string | null }[];
-  color: string;
-}) {
-  if (images.length === 0) {
-    return (
-      <div
-        className={styles.coverFallback}
-        style={{
-          background: `radial-gradient(circle at 20% 80%, ${color}99 0%, transparent 55%),
-                     radial-gradient(circle at 80% 15%, ${color}66 0%, transparent 45%),
-                     radial-gradient(circle at 55% 50%, ${color}44 0%, transparent 60%),
-                     ${color}22`,
-        }}
-      />
-    );
-  }
-
-  if (images.length === 1) {
-    return (
-      <div className={styles.coverSingle}>
-        <img
-          src={images[0].url}
-          alt={images[0].title ?? ''}
-          className={styles.coverImg}
-        />
-      </div>
-    );
-  }
-
-  if (images.length === 2) {
-    return (
-      <div className={styles.coverTwo}>
-        <img
-          src={images[0].url}
-          alt={images[0].title ?? ''}
-          className={styles.coverImg}
-        />
-        <img
-          src={images[1].url}
-          alt={images[1].title ?? ''}
-          className={styles.coverImg}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.coverThree}>
-      <img
-        src={images[0].url}
-        alt={images[0].title ?? ''}
-        className={`${styles.coverImg} ${styles.coverThreeMain}`}
-      />
-      <img
-        src={images[1].url}
-        alt={images[1].title ?? ''}
-        className={styles.coverImg}
-      />
-      <img
-        src={images[2].url}
-        alt={images[2].title ?? ''}
-        className={styles.coverImg}
-      />
-    </div>
   );
 }
 
