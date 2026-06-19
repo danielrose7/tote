@@ -114,7 +114,7 @@ export async function getPublishedCollectionsByOwner(
               AND pb2.type = 'product'
               AND pb2.image_url IS NOT NULL
           ) pb
-          ORDER BY pb.rank_in_slot ASC, pb.slot_sort ASC, pb.product_sort ASC
+          ORDER BY pb.rank_in_slot ASC, pb.slot_sort ASC, pb.product_sort ASC, pb.parent_block_id ASC, pb.id ASC
           LIMIT 3
         ) imgs
       ) AS cover_images
@@ -186,7 +186,7 @@ export async function getPublishedCollectionSummariesByUsernameAndSlugs(
                   AND pb2.type = 'product'
                   AND pb2.image_url IS NOT NULL
               ) pb
-              ORDER BY pb.rank_in_slot ASC, pb.slot_sort ASC, pb.product_sort ASC
+              ORDER BY pb.rank_in_slot ASC, pb.slot_sort ASC, pb.product_sort ASC, pb.parent_block_id ASC, pb.id ASC
               LIMIT 3
             ) imgs
           ) AS cover_images
