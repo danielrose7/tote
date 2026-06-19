@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { PreFooterCta } from '../../../../components/PreFooterCta';
-import { PublicFooter } from '../../../../components/PublicFooter';
-import { StickyCtaBar } from '../../../../components/StickyCtaBar';
-import type { PublishedCollectionSummary } from '../../../../lib/publishedCollectionsDb';
-import { getPublishedCollectionsByOwner } from '../../../../lib/publishedCollectionsDb';
+import { PreFooterCta } from '@/components/PreFooterCta';
+import { PublicFooter } from '@/components/PublicFooter';
+import { StickyCtaBar } from '@/components/StickyCtaBar';
+import type { PublishedCollectionSummary } from '@/lib/publishedCollectionsDb';
+import { getPublishedCollectionsByOwner } from '@/lib/publishedCollectionsDb';
 import { CollectionCover } from './CollectionCover';
 import styles from './page.module.css';
 

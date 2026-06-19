@@ -4,14 +4,14 @@ import { useUser } from "@clerk/nextjs";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
-import dialogStyles from "../../../components/CreateCollectionDialog/CreateCollectionDialog.module.css";
-import { useToast } from "../../../components/ToastNotification";
-import type { CreateCollectionMutation } from "../../../lib/collections/client";
+import dialogStyles from "@/components/CreateCollectionDialog/CreateCollectionDialog.module.css";
+import { useToast } from "@/components/ToastNotification";
+import type { CreateCollectionMutation } from "@/lib/collections/client";
 import {
 	collectionMutationKeys,
 	collectionQueryKeys,
-} from "../../../lib/collections/queryKeys";
-import type { CollectionSummary } from "../../../lib/collections/repository";
+} from "@/lib/collections/queryKeys";
+import type { CollectionSummary } from "@/lib/collections/repository";
 
 const presetColors = [
 	"#6366f1",

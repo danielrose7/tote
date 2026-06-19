@@ -14,19 +14,19 @@ import {
 } from "@dnd-kit/sortable";
 import type { co } from "jazz-tools";
 import { useEffect, useState } from "react";
-import { reorderBlockList } from "../../lib/blocks";
+import { reorderBlockList } from "@/lib/blocks";
 import {
 	checkExtensionAvailable,
 	type ExtractedMetadata,
 	refreshViaExtension,
-} from "../../lib/extension";
+} from "@/lib/extension";
 import {
 	getProductsForSlot,
 	getSlotsForCollection,
 	getUngroupedProducts,
 	removeFromSelection,
-} from "../../lib/slotHelpers";
-import type { Block } from "../../schema.ts";
+} from "@/lib/slotHelpers";
+import type { Block } from "@/schema.ts";
 import { CollectionChat } from "../CollectionChat/CollectionChat";
 import { CollectionNotes } from "../CollectionNotes/CollectionNotes";
 import { ProductCard } from "../ProductCard/ProductCard";

@@ -4,9 +4,9 @@ import {
 	canUseNeonCollections,
 	collectionIdSchema,
 	neonCollectionsApiEnabled,
-} from "../../../../../../../../lib/collections/api";
-import { getAccountCollectionDataSource } from "../../../../../../../../lib/collections/repository";
-import { revokeCollectionInvite } from "../../../../../../../../lib/collections/teamRepository";
+} from "@/lib/collections/api";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
+import { revokeCollectionInvite } from "@/lib/collections/teamRepository";
 
 type RouteContext = {
 	params: Promise<{ id: string; inviteId: string }>;

@@ -1,6 +1,6 @@
 import type { co } from 'jazz-tools';
 import { useState } from 'react';
-import type { Block } from '../../schema.ts';
+import type { Block } from '@/schema.ts';
 import styles from './CollectionCard.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;

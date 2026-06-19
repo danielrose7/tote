@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getPublishedCollectionByOwnerAndSlug } from "../../../../../lib/publishedCollectionsDb";
+import { getPublishedCollectionByOwnerAndSlug } from "@/lib/publishedCollectionsDb";
 import { PublicCollectionView } from "./PublicCollectionView";
 
 type Params = Promise<{ username: string; slug: string }>;

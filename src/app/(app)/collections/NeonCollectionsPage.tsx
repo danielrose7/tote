@@ -5,16 +5,16 @@ import { useAccount, useCoState } from 'jazz-tools/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import cardStyles from '../../../components/CollectionCard/CollectionCard.module.css';
-import listStyles from '../../../components/CollectionList/CollectionList.module.css';
-import { Header } from '../../../components/Header';
-import { useCollectionRealtime } from '../../../hooks/useCollectionRealtime';
-import { exportClassicCollection } from '../../../lib/collections/classicMigrationExport';
-import { getWaitingClassicSharedCollections } from '../../../lib/collections/classicSharedMigration';
-import { fetchCollectionSummaries } from '../../../lib/collections/client';
-import { fingerprintClassicMigrationCollectionsInBrowser } from '../../../lib/collections/migrationPayload';
-import { collectionQueryKeys } from '../../../lib/collections/queryKeys';
-import { Block, JazzAccount } from '../../../schema';
+import cardStyles from '@/components/CollectionCard/CollectionCard.module.css';
+import listStyles from '@/components/CollectionList/CollectionList.module.css';
+import { Header } from '@/components/Header';
+import { useCollectionRealtime } from '@/hooks/useCollectionRealtime';
+import { exportClassicCollection } from '@/lib/collections/classicMigrationExport';
+import { getWaitingClassicSharedCollections } from '@/lib/collections/classicSharedMigration';
+import { fetchCollectionSummaries } from '@/lib/collections/client';
+import { fingerprintClassicMigrationCollectionsInBrowser } from '@/lib/collections/migrationPayload';
+import { collectionQueryKeys } from '@/lib/collections/queryKeys';
+import { Block, JazzAccount } from '@/schema';
 import { NeonCreateCollectionDialog } from './NeonCreateCollectionDialog';
 
 function PreviewImageGrid({

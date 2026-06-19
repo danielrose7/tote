@@ -15,9 +15,9 @@ import { useEffect, useRef, useState } from "react";
 import {
 	type CollectionForCloning,
 	duplicateNeonCollectionToAccount,
-} from "../../../../lib/blocks";
-import { BlockList, JazzAccount } from "../../../../schema";
-import styles from "../../../(public)/view/[id]/page.module.css";
+} from "@/lib/blocks";
+import { BlockList, JazzAccount } from "@/schema";
+import styles from "@/app/(public)/view/[id]/page.module.css";
 
 export default function CloneCollectionPage() {
 	const params = useParams();

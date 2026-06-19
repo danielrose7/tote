@@ -1,7 +1,7 @@
 import type { co } from 'jazz-tools';
 import { useState } from 'react';
-import type { Block } from '../../schema.ts';
-import { formatPrice } from '../../lib/formatPrice';
+import type { Block } from '@/schema.ts';
+import { formatPrice } from '@/lib/formatPrice';
 import styles from './ProductCard.module.css';
 
 type LoadedBlock = co.loaded<typeof Block>;

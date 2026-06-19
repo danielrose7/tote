@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-table";
 import type { co } from "jazz-tools";
 import { useMemo, useState } from "react";
-import type { Block } from "../../schema";
+import type { Block } from "@/schema";
 import { getColumns } from "./columns";
 import styles from "./TableView.module.css";
 

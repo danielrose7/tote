@@ -2,7 +2,7 @@ import { clerkClient } from '@clerk/nextjs/server';
 import { inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { db } from '../db';
-import { users } from '../../db/schema/users';
+import { users } from '@/db/schema/users';
 
 export type UserRecord = {
   id: string;

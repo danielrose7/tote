@@ -1,7 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { count, eq } from 'drizzle-orm';
-import { publishedCollections } from '../../../db/schema';
-import { db } from '../../../lib/db';
+import { publishedCollections } from '@/db/schema';
+import { db } from '@/lib/db';
 import { CopyProfileUrl } from './CopyProfileUrl';
 import styles from './settings.module.css';
 

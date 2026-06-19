@@ -7,7 +7,7 @@ import {
 	collections,
 	publishedBlocks,
 	publishedCollections,
-} from "../../db/schema";
+} from "@/db/schema";
 import { db as productionDb } from "../db";
 import { withTransactionalDb } from "../transactionalDb";
 import { roleCan } from "./permissions";

@@ -2,22 +2,22 @@
 
 import { useUser } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
-import dayjs from '../../../../lib/dayjs';
+import dayjs from '@/lib/dayjs';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FormEvent, useEffect, useState } from 'react';
-import { useToast } from '../../../../components/ToastNotification';
-import { useOnlineStatus } from '../../../../hooks/useOnlineStatus';
+import { useToast } from '@/components/ToastNotification';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import {
   fetchCollectionPublication,
   type PublishCollectionMutation,
   type UnpublishCollectionMutation,
-} from '../../../../lib/collections/client';
+} from '@/lib/collections/client';
 import {
   collectionMutationKeys,
   collectionQueryKeys,
-} from '../../../../lib/collections/queryKeys';
-import type { CollectionDetail } from '../../../../lib/collections/repository';
-import { slugify } from '../../../../lib/slugify';
+} from '@/lib/collections/queryKeys';
+import type { CollectionDetail } from '@/lib/collections/repository';
+import { slugify } from '@/lib/slugify';
 import styles from './NeonPublicationDialog.module.css';
 
 export function NeonPublicationDialog({

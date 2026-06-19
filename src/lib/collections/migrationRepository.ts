@@ -6,7 +6,7 @@ import {
 	collectionMembers,
 	collectionNodes,
 	collections,
-} from "../../db/schema";
+} from "@/db/schema";
 import { withTransactionalDb } from "../transactionalDb";
 import { fingerprintMutationRequest } from "./idempotency";
 import {

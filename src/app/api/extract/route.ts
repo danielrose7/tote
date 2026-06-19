@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { extractMetadata } from "../../lib/extractors";
+import { extractMetadata } from "@/app/lib/extractors";
 
 export async function POST(request: Request) {
 	try {

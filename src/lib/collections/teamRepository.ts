@@ -5,7 +5,7 @@ import {
   collectionMembers,
   collectionMembershipEvents,
   collections,
-} from '../../db/schema';
+} from '@/db/schema';
 import { db as productionDb } from '../db';
 import { type UserSummary, resolveUsers } from '../users/repository';
 import { createInviteToken, hashInviteToken } from './inviteToken';

@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import {
 	listCaptureCollections,
 	saveCapture,
-} from "../../lib/collections/captureRepository";
+} from "@/lib/collections/captureRepository";
 import { collectionMembers, collectionNodes, collections } from "../schema";
 import {
 	collectionFactory,

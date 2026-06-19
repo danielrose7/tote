@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { inngest } from "../../../../inngest/client";
-import { isCurator } from "../../../../inngest/curator-auth";
-import type { CurationExtractionsEvent } from "../../../../inngest/types";
+import { inngest } from "@/inngest/client";
+import { isCurator } from "@/inngest/curator-auth";
+import type { CurationExtractionsEvent } from "@/inngest/types";
 
 export async function POST(request: Request) {
 	if (!(await isCurator())) {

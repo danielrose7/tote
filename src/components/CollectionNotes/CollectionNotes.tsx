@@ -3,7 +3,7 @@
 import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
 import { useState } from "react";
-import { type Block, CollectionNote, CollectionNoteList } from "../../schema";
+import { type Block, CollectionNote, CollectionNoteList } from "@/schema";
 import styles from "./CollectionNotes.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;

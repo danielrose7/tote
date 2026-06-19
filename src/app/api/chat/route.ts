@@ -11,16 +11,16 @@ import {
 	type UIMessage,
 } from "ai";
 import { z } from "zod";
-import { extractUrl } from "../../../inngest/server-extraction";
-import { braveSearch } from "../../../lib/braveSearch";
-import { canUseChat } from "../../../lib/chatAuth";
+import { extractUrl } from "@/inngest/server-extraction";
+import { braveSearch } from "@/lib/braveSearch";
+import { canUseChat } from "@/lib/chatAuth";
 import {
 	CF_PUPPETEER_COST_CENTS,
 	deductCredits,
 	hasPositiveCreditBalance,
 	runCostCents,
-} from "../../../lib/credits";
-import { MODELS } from "../../../lib/models";
+} from "@/lib/credits";
+import { MODELS } from "@/lib/models";
 
 export const maxDuration = 60;
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import styles from "../../docs/docs.module.css";
+import styles from "@/app/(public)/docs/docs.module.css";
 import { AnswerBlock } from "../AnswerBlock";
 import { PublicCollectionLinks } from "../PublicCollectionLinks";
 

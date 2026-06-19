@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { isCurator } from "../../../../../inngest/curator-auth";
-import { presignR2PutUrl } from "../../../../../lib/r2";
+import { isCurator } from "@/inngest/curator-auth";
+import { presignR2PutUrl } from "@/lib/r2";
 
 function buildR2Key(url: string): string {
 	const parsed = new URL(url);

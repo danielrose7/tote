@@ -1,7 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { sql } from "../../../../lib/db";
-import { stripe } from "../../../../lib/stripe";
+import { sql } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
 
 // Price IDs created in Stripe (test mode)
 const VALID_PRICE_IDS = new Set([

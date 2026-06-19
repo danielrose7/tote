@@ -4,22 +4,22 @@ import { useUser } from "@clerk/nextjs";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useCallback, useEffect, useState } from "react";
-import dialogStyles from "../../../../components/CreateCollectionDialog/CreateCollectionDialog.module.css";
-import { NeonSectionSelector } from "../../../../components/NeonSectionSelector/NeonSectionSelector";
-import { useToast } from "../../../../components/ToastNotification";
-import type { CollectionNode } from "../../../../db/schema";
+import dialogStyles from "@/components/CreateCollectionDialog/CreateCollectionDialog.module.css";
+import { NeonSectionSelector } from "@/components/NeonSectionSelector/NeonSectionSelector";
+import { useToast } from "@/components/ToastNotification";
+import type { CollectionNode } from "@/db/schema";
 import {
 	type CreateCollectionNodeMutation,
 	createCollectionNodeMutation,
-} from "../../../../lib/collections/client";
+} from "@/lib/collections/client";
 import {
 	collectionMutationKeys,
 	collectionQueryKeys,
-} from "../../../../lib/collections/queryKeys";
+} from "@/lib/collections/queryKeys";
 import type {
 	CollectionDetail,
 	CollectionSummary,
-} from "../../../../lib/collections/repository";
+} from "@/lib/collections/repository";
 
 const nodeTypes = [
 	"product",

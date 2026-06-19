@@ -1,6 +1,6 @@
 "use client";
 
-import { AiCreditsPanel } from "../../../components/Billing/AiCreditsPanel";
+import { AiCreditsPanel } from "@/components/Billing/AiCreditsPanel";
 
 interface CreditsPanelProps {
 	onBalanceLoaded?: (cents: number) => void;

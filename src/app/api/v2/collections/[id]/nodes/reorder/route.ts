@@ -6,11 +6,11 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	reorderCollectionNodesInputSchema,
-} from "../../../../../../../lib/collections/api";
+} from "@/lib/collections/api";
 import {
 	getAccountCollectionDataSource,
 	reorderCollectionNodes,
-} from "../../../../../../../lib/collections/repository";
+} from "@/lib/collections/repository";
 
 export async function POST(
 	request: Request,

@@ -9,8 +9,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
-import type { CollectionNode } from '../../db/schema';
-import { formatPrice as formatPriceLib } from '../../lib/formatPrice';
+import type { CollectionNode } from '@/db/schema';
+import { formatPrice as formatPriceLib } from '@/lib/formatPrice';
 import tableStyles from '../CollectionView/TableView.module.css';
 
 type NodeProperties = {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { inngest } from "../../../../inngest/client";
-import { isCurator } from "../../../../inngest/curator-auth";
-import { persistSubmittedAnswers } from "../../../../lib/curatorSession";
+import { inngest } from "@/inngest/client";
+import { isCurator } from "@/inngest/curator-auth";
+import { persistSubmittedAnswers } from "@/lib/curatorSession";
 
 export async function POST(request: Request) {
 	if (!(await isCurator())) {

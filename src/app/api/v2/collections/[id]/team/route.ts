@@ -6,12 +6,12 @@ import {
 	createCollectionInviteInputSchema,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
-} from "../../../../../../lib/collections/api";
-import { getAccountCollectionDataSource } from "../../../../../../lib/collections/repository";
+} from "@/lib/collections/api";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 import {
 	createCollectionInvite,
 	getCollectionTeam,
-} from "../../../../../../lib/collections/teamRepository";
+} from "@/lib/collections/teamRepository";
 
 export async function GET(
 	_request: Request,

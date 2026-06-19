@@ -4,14 +4,14 @@ import { Group } from "jazz-tools";
 import { useAccount } from "jazz-tools/react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { Header } from "../../../components/Header";
-import { useToast } from "../../../components/ToastNotification";
+import { Header } from "@/components/Header";
+import { useToast } from "@/components/ToastNotification";
 import {
 	createCollectionFromPayload,
 	type ImportPayload,
 	validatePayload,
-} from "../../../lib/importPayload";
-import { BlockList, JazzAccount } from "../../../schema";
+} from "@/lib/importPayload";
+import { BlockList, JazzAccount } from "@/schema";
 import styles from "./import.module.css";
 
 export function ImportPageClient() {

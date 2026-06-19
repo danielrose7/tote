@@ -1,4 +1,4 @@
-import type { CollectionMember } from "../../db/schema";
+import type { CollectionMember } from "@/db/schema";
 
 export type CollectionRole = CollectionMember["role"];
 export type CollectionCapability =

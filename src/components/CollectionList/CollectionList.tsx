@@ -1,7 +1,7 @@
 import type { co } from "jazz-tools";
 import { useCoState } from "jazz-tools/react";
-import type { Block, JazzAccount, SharedCollectionRef } from "../../schema.ts";
-import { Block as BlockSchema } from "../../schema.ts";
+import type { Block, JazzAccount, SharedCollectionRef } from "@/schema.ts";
+import { Block as BlockSchema } from "@/schema.ts";
 import { CollectionCard } from "../CollectionCard/CollectionCard";
 import styles from "./CollectionList.module.css";
 

@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { getCreditBalance } from "../../../../lib/credits";
+import { getCreditBalance } from "@/lib/credits";
 
 export async function GET() {
 	const { userId } = await auth();

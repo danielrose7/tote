@@ -2,8 +2,8 @@
 
 import { clerkClient, currentUser } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
-import { grantCredits } from '../../../lib/credits';
-import { upsertUser } from '../../../lib/users/repository';
+import { grantCredits } from '@/lib/credits';
+import { upsertUser } from '@/lib/users/repository';
 
 export async function grantCreditsAction(
   email: string,

@@ -19,30 +19,30 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import pageStyles from '../../app/(app)/collections/[id]/NeonCollectionDetailPage.module.css';
-import type { CollectionNode } from '../../db/schema';
+import pageStyles from '@/app/(app)/collections/[id]/NeonCollectionDetailPage.module.css';
+import type { CollectionNode } from '@/db/schema';
 import {
   type ReorderCollectionNodesMutation,
   reorderCollectionNodesMutation,
   updateCollectionNodeMutation,
-} from '../../lib/collections/client';
-import { roleCan } from '../../lib/collections/permissions';
+} from '@/lib/collections/client';
+import { roleCan } from '@/lib/collections/permissions';
 import {
   collectionMutationKeys,
   collectionQueryKeys,
-} from '../../lib/collections/queryKeys';
-import type { CollectionDetail } from '../../lib/collections/repository';
+} from '@/lib/collections/queryKeys';
+import type { CollectionDetail } from '@/lib/collections/repository';
 import {
   checkExtensionAvailable,
   refreshViaExtension,
-} from '../../lib/extension';
+} from '@/lib/extension';
 import {
   type ViewMode,
   ViewModeToggle,
 } from '../CollectionView/ViewModeToggle';
 import { NeonSlotSection } from '../NeonSlotSection/NeonSlotSection';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
-import { formatPrice } from '../../lib/formatPrice';
+import { formatPrice } from '@/lib/formatPrice';
 import { useToast } from '../ToastNotification';
 import { NeonTableView } from './NeonTableView';
 

@@ -4,9 +4,9 @@ import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
 import { useEffect, useState } from "react";
 import * as Yup from "yup";
-import { getSlotsForCollection } from "../../lib/slotHelpers";
-import type { Block, JazzAccount } from "../../schema.ts";
-import { BlockList, Block as BlockSchema } from "../../schema.ts";
+import { getSlotsForCollection } from "@/lib/slotHelpers";
+import type { Block, JazzAccount } from "@/schema.ts";
+import { BlockList, Block as BlockSchema } from "@/schema.ts";
 import { SlotSelector } from "../SlotSelector/SlotSelector";
 import styles from "./EditLinkDialog.module.css";
 

@@ -6,9 +6,9 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	transferCollectionOwnershipInputSchema,
-} from "../../../../../../../lib/collections/api";
-import { getAccountCollectionDataSource } from "../../../../../../../lib/collections/repository";
-import { transferCollectionOwnership } from "../../../../../../../lib/collections/teamRepository";
+} from "@/lib/collections/api";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
+import { transferCollectionOwnership } from "@/lib/collections/teamRepository";
 
 export async function POST(
 	request: Request,

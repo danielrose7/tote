@@ -3,9 +3,9 @@ import { useFormik } from "formik";
 import type { co } from "jazz-tools";
 import { useEffect, useState } from "react";
 import * as Yup from "yup";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import { deleteCollectionRecursively } from "../../lib/blocks";
-import type { Block, JazzAccount } from "../../schema.ts";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { deleteCollectionRecursively } from "@/lib/blocks";
+import type { Block, JazzAccount } from "@/schema.ts";
 import { useToast } from "../ToastNotification";
 import styles from "./EditCollectionDialog.module.css";
 

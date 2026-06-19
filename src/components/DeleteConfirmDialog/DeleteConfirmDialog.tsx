@@ -1,6 +1,6 @@
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import type { co } from "jazz-tools";
-import type { Block } from "../../schema.ts";
+import type { Block } from "@/schema.ts";
 import styles from "./DeleteConfirmDialog.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;

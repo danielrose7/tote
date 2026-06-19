@@ -2,8 +2,8 @@
 
 import { useMutationState } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import { collectionQueryKeys } from "../../lib/collections/queryKeys";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { collectionQueryKeys } from "@/lib/collections/queryKeys";
 import styles from "./OfflineBanner.module.css";
 
 export function OfflineBanner() {

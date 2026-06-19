@@ -3,9 +3,9 @@
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { exportClassicCollectionsWithMembers } from "../../../lib/collections/classicMigrationExport";
-import { fingerprintClassicMigrationCollectionsInBrowser } from "../../../lib/collections/migrationPayload";
-import { JazzAccount } from "../../../schema";
+import { exportClassicCollectionsWithMembers } from "@/lib/collections/classicMigrationExport";
+import { fingerprintClassicMigrationCollectionsInBrowser } from "@/lib/collections/migrationPayload";
+import { JazzAccount } from "@/schema";
 import styles from "./ClassicMigrationCoordinator.module.css";
 
 type ReadySummary = {

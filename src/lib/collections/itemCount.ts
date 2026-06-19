@@ -1,5 +1,5 @@
-import type { CollectionNode } from "../../db/schema";
-import { isItemNodeType } from "../../db/schema";
+import type { CollectionNode } from "@/db/schema";
+import { isItemNodeType } from "@/db/schema";
 
 export type ItemCountNodeState = Pick<
 	CollectionNode,

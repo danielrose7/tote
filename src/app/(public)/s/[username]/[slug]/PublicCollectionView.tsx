@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { PreFooterCta } from "../../../../../components/PreFooterCta";
-import { PublicFooter } from "../../../../../components/PublicFooter";
-import { StickyCtaBar } from "../../../../../components/StickyCtaBar";
-import { formatPrice } from "../../../../../lib/formatPrice";
-import type { PublishedCollection } from "../../../../../lib/publishedCollectionsDb";
-import styles from "../../../view/[id]/page.module.css";
+import { PreFooterCta } from "@/components/PreFooterCta";
+import { PublicFooter } from "@/components/PublicFooter";
+import { StickyCtaBar } from "@/components/StickyCtaBar";
+import { formatPrice } from "@/lib/formatPrice";
+import type { PublishedCollection } from "@/lib/publishedCollectionsDb";
+import styles from "@/app/(public)/view/[id]/page.module.css";
 import { MakeCopyButton } from "./MakeCopyButton";
 
 export function PublicCollectionView({

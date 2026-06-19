@@ -7,12 +7,12 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	updateCollectionMemberInputSchema,
-} from "../../../../../../../../lib/collections/api";
-import { getAccountCollectionDataSource } from "../../../../../../../../lib/collections/repository";
+} from "@/lib/collections/api";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 import {
 	changeCollectionMemberRole,
 	removeCollectionMember,
-} from "../../../../../../../../lib/collections/teamRepository";
+} from "@/lib/collections/teamRepository";
 
 type RouteContext = {
 	params: Promise<{ id: string; userId: string }>;

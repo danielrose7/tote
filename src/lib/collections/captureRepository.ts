@@ -3,7 +3,7 @@ import {
 	collectionMembers,
 	collectionNodes,
 	collections,
-} from "../../db/schema";
+} from "@/db/schema";
 import {
 	type CollectionDatabase,
 	createCollectionNode,

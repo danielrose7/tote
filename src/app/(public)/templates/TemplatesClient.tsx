@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import type { PublishedCollectionSummary } from '../../../lib/publishedCollectionsDb';
+import type { PublishedCollectionSummary } from '@/lib/publishedCollectionsDb';
 import styles from './templates.module.css';
 
 export type TemplateEntry = PublishedCollectionSummary & {

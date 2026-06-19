@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { sql } from "../../../../lib/db";
+import { sql } from "@/lib/db";
 
 export async function DELETE() {
 	const { userId } = await auth();

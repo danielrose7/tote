@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import type { co } from "jazz-tools";
-import type { SharedCollectionRef } from "../../schema.ts";
+import type { SharedCollectionRef } from "@/schema.ts";
 import styles from "./LeaveCollectionDialog.module.css";
 
 type LoadedSharedRef = co.loaded<typeof SharedCollectionRef>;

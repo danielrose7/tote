@@ -2,8 +2,8 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useToast } from "../../../components/ToastNotification";
-import type { CuratorSessionRow } from "../../../lib/curatorSessionsDb";
+import { useToast } from "@/components/ToastNotification";
+import type { CuratorSessionRow } from "@/lib/curatorSessionsDb";
 import { CreditsPanel } from "./CreditsPanel";
 import styles from "./curate.module.css";
 

@@ -20,22 +20,22 @@ import { CSS } from '@dnd-kit/utilities';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import type { CollectionNode } from '../../db/schema';
+import type { CollectionNode } from '@/db/schema';
 import {
   deleteCollectionNodeMutation,
   reorderCollectionNodesMutation,
   updateCollectionNodeMutation,
-} from '../../lib/collections/client';
+} from '@/lib/collections/client';
 import {
   collectionMutationKeys,
   collectionQueryKeys,
-} from '../../lib/collections/queryKeys';
-import type { CollectionDetail } from '../../lib/collections/repository';
+} from '@/lib/collections/queryKeys';
+import type { CollectionDetail } from '@/lib/collections/repository';
 import {
   checkExtensionAvailable,
   refreshViaExtension,
-} from '../../lib/extension';
-import { formatPrice } from '../../lib/formatPrice';
+} from '@/lib/extension';
+import { formatPrice } from '@/lib/formatPrice';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
 import styles from '../SlotSection/SlotSection.module.css';
 import { useToast } from '../ToastNotification';

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CHROME_WEB_STORE_URL } from "../../../../lib/constants";
+import { CHROME_WEB_STORE_URL } from "@/lib/constants";
 import { AnchorHeading } from "../AnchorHeading";
 import styles from "../docs.module.css";
 

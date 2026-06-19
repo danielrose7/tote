@@ -1,7 +1,7 @@
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { listCollectionMigrationHealth } from "../../../lib/collections/migrationRepository";
-import { db, sql } from "../../../lib/db";
+import { listCollectionMigrationHealth } from "@/lib/collections/migrationRepository";
+import { db, sql } from "@/lib/db";
 import {
 	AdminClient,
 	type Balance,

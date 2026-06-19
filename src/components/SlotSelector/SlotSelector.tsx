@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { LoadedBlock } from "../../lib/blocks";
+import type { LoadedBlock } from "@/lib/blocks";
 import styles from "./SlotSelector.module.css";
 
 interface SlotSelectorProps {

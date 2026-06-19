@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { AuthButton } from '../../AuthButton';
+import { AuthButton } from '@/AuthButton';
 import styles from './Header.module.css';
 
 interface Breadcrumb {

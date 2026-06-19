@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { isCurator } from "../../../../inngest/curator-auth";
-import { patchSession } from "../../../../lib/curatorSession";
+import { isCurator } from "@/inngest/curator-auth";
+import { patchSession } from "@/lib/curatorSession";
 
 export async function POST(request: Request) {
 	if (!(await isCurator())) {

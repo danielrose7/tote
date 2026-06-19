@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Fragment } from "react";
-import { LandingAuthButtons } from "../../components/LandingAuthButtons";
-import { PublicFooter } from "../../components/PublicFooter";
-import { CHROME_WEB_STORE_URL } from "../../lib/constants";
-import heroImage from "../../product-images-01.png";
-import collectionImage from "../../product-images-02.png";
+import { LandingAuthButtons } from "@/components/LandingAuthButtons";
+import { PublicFooter } from "@/components/PublicFooter";
+import { CHROME_WEB_STORE_URL } from "@/lib/constants";
+import heroImage from "@/product-images-01.png";
+import collectionImage from "@/product-images-02.png";
 import styles from "./landing.module.css";
 
 export const metadata: Metadata = {

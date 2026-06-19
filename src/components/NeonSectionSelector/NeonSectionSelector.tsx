@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CollectionNode } from "../../db/schema";
+import type { CollectionNode } from "@/db/schema";
 import styles from "../SlotSelector/SlotSelector.module.css";
 
 interface NeonSectionSelectorProps {

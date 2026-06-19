@@ -2,17 +2,17 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useIsMutating } from '@tanstack/react-query';
-import dayjs from '../../../../lib/dayjs';
+import dayjs from '@/lib/dayjs';
 import { useEffect, useRef, useState } from 'react';
 import {
   type CollectionSyncIssue,
   dismissCollectionSyncIssue,
   getCollectionSyncIssues,
-} from '../../../../lib/collections/queryPersistence';
+} from '@/lib/collections/queryPersistence';
 import {
   collectionSyncIssueEvent,
   notifyCollectionSyncIssues,
-} from '../../../../lib/collections/syncStatus';
+} from '@/lib/collections/syncStatus';
 import styles from './SyncStatus.module.css';
 
 type Status = 'idle' | 'syncing' | 'saved' | 'stable';

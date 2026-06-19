@@ -11,9 +11,9 @@ import { useAccount } from 'jazz-tools/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { type ReactNode, useCallback, useEffect, useState } from 'react';
-import { AiCreditsPanel } from '../../../components/Billing/AiCreditsPanel';
-import { Header } from '../../../components/Header/Header';
-import { JazzAccount } from '../../../schema';
+import { AiCreditsPanel } from '@/components/Billing/AiCreditsPanel';
+import { Header } from '@/components/Header/Header';
+import { JazzAccount } from '@/schema';
 import styles from './settings.module.css';
 
 type SettingsTab = 'account' | 'billing';

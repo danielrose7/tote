@@ -1,5 +1,5 @@
-import { getPublishedCollectionById } from "../../../../lib/publishedCollectionsDb";
-import { PublicCollectionView } from "../../../(public)/s/[username]/[slug]/PublicCollectionView";
+import { getPublishedCollectionById } from "@/lib/publishedCollectionsDb";
+import { PublicCollectionView } from "@/app/(public)/s/[username]/[slug]/PublicCollectionView";
 import styles from "./page.module.css";
 
 type Params = Promise<{ id: string }>;

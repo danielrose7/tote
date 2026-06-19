@@ -4,10 +4,10 @@ import { useChat } from "@ai-sdk/react";
 import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchMetadata } from "../../app/utils/metadata";
-import { removeFromSelection } from "../../lib/slotHelpers";
-import type { Block } from "../../schema";
-import { BlockList, Block as BlockSchema } from "../../schema";
+import { fetchMetadata } from "@/app/utils/metadata";
+import { removeFromSelection } from "@/lib/slotHelpers";
+import type { Block } from "@/schema";
+import { BlockList, Block as BlockSchema } from "@/schema";
 import { useToast } from "../ToastNotification";
 import styles from "./CollectionChat.module.css";
 import {

@@ -1,5 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { hashInviteToken } from "../../lib/collections/inviteToken";
+import { hashInviteToken } from "@/lib/collections/inviteToken";
 import {
 	acceptCollectionInvite,
 	changeCollectionMemberRole,
@@ -8,7 +8,7 @@ import {
 	removeCollectionMember,
 	revokeCollectionInvite,
 	transferCollectionOwnership,
-} from "../../lib/collections/teamRepository";
+} from "@/lib/collections/teamRepository";
 import {
 	collectionInvites,
 	collectionMembers,

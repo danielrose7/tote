@@ -3,7 +3,7 @@
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useToast } from "../../../../components/ToastNotification";
+import { useToast } from "@/components/ToastNotification";
 import styles from "./page.module.css";
 
 type InviteStatus = "loading" | "accepting" | "success" | "error";

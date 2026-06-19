@@ -5,17 +5,17 @@ import type { co } from "jazz-tools";
 import { useAccount } from "jazz-tools/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CollectionList } from "../../../components/CollectionList/CollectionList";
-import { CreateCollectionDialog } from "../../../components/CreateCollectionDialog/CreateCollectionDialog";
-import { EditCollectionDialog } from "../../../components/EditCollectionDialog";
-import { Header } from "../../../components/Header";
-import { LeaveCollectionDialog } from "../../../components/LeaveCollectionDialog";
-import { SaveTabsDialog } from "../../../components/SaveTabsDialog";
+import { CollectionList } from "@/components/CollectionList/CollectionList";
+import { CreateCollectionDialog } from "@/components/CreateCollectionDialog/CreateCollectionDialog";
+import { EditCollectionDialog } from "@/components/EditCollectionDialog";
+import { Header } from "@/components/Header";
+import { LeaveCollectionDialog } from "@/components/LeaveCollectionDialog";
+import { SaveTabsDialog } from "@/components/SaveTabsDialog";
 import {
 	type Block,
 	JazzAccount,
 	type SharedCollectionRef,
-} from "../../../schema";
+} from "@/schema";
 import { ClassicMigrationCoordinator } from "./ClassicMigrationCoordinator";
 
 type LoadedBlock = co.loaded<typeof Block>;

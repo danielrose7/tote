@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { addCredits } from "../../../../lib/credits";
-import { stripe } from "../../../../lib/stripe";
+import { addCredits } from "@/lib/credits";
+import { stripe } from "@/lib/stripe";
 
 // Credits (in cents) granted per price ID
 const PRICE_CREDITS: Record<string, number> = {

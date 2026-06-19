@@ -9,7 +9,7 @@ import {
 	collections,
 	publishedBlocks,
 	publishedCollections,
-} from "../../db/schema";
+} from "@/db/schema";
 import { withTransactionalDb } from "../transactionalDb";
 import { fingerprintMutationRequest } from "./idempotency";
 import {

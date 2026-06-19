@@ -8,7 +8,7 @@ import {
 	listCollectionMigrationHealth,
 	recordCollectionMigrationFailure,
 	rollbackCollectionMigration,
-} from "../../lib/collections/migrationRepository";
+} from "@/lib/collections/migrationRepository";
 import {
 	accountCollectionMigrations,
 	accountDataSources,

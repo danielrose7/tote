@@ -1,16 +1,16 @@
-import { deductCredits, runCostCents } from "../../lib/credits";
+import { deductCredits, runCostCents } from "@/lib/credits";
 import {
 	patchSession,
 	readSession,
 	writeSession,
-} from "../../lib/curatorSession";
+} from "@/lib/curatorSession";
 import {
 	completeCuratorSession,
 	createCuratorSession,
 	failCuratorSession,
-} from "../../lib/curatorSessionsDb";
-import { logProgressEvent, logStep } from "../../lib/curatorStepLog";
-import { MODELS } from "../../lib/models";
+} from "@/lib/curatorSessionsDb";
+import { logProgressEvent, logStep } from "@/lib/curatorStepLog";
+import { MODELS } from "@/lib/models";
 import { curationChannel } from "../channels";
 import { inngest } from "../client";
 import { parseJson } from "../lib/parseJson";

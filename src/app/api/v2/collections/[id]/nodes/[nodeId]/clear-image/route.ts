@@ -5,11 +5,11 @@ import {
   collectionIdSchema,
   neonCollectionsApiEnabled,
   parseJsonRequest,
-} from '../../../../../../../../lib/collections/api';
+} from '@/lib/collections/api';
 import {
   clearNodeImageUrl,
   getAccountCollectionDataSource,
-} from '../../../../../../../../lib/collections/repository';
+} from '@/lib/collections/repository';
 import { z } from 'zod';
 
 const bodySchema = z.object({ imageUrl: z.string().url() });

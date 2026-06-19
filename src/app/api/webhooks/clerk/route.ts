@@ -1,7 +1,7 @@
 import { clerkClient } from '@clerk/nextjs/server';
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
-import { markUserDeleted, upsertUser } from '../../../../lib/users/repository';
+import { markUserDeleted, upsertUser } from '@/lib/users/repository';
 
 type ClerkEmailAddress = { email_address: string };
 

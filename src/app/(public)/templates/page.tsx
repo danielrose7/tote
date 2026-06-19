@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PreFooterCta } from "../../../components/PreFooterCta";
-import { PublicFooter } from "../../../components/PublicFooter";
-import { StickyCtaBar } from "../../../components/StickyCtaBar";
-import { getPublishedCollectionSummariesByUsernameAndSlugs } from "../../../lib/publishedCollectionsDb";
+import { PreFooterCta } from "@/components/PreFooterCta";
+import { PublicFooter } from "@/components/PublicFooter";
+import { StickyCtaBar } from "@/components/StickyCtaBar";
+import { getPublishedCollectionSummariesByUsernameAndSlugs } from "@/lib/publishedCollectionsDb";
 import type { TemplateEntry } from "./TemplatesClient";
 import { TemplatesClient } from "./TemplatesClient";
 import styles from "./templates.module.css";

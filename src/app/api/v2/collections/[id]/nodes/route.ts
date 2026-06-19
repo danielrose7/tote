@@ -6,11 +6,11 @@ import {
 	createCollectionNodeInputSchema,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
-} from "../../../../../../lib/collections/api";
+} from "@/lib/collections/api";
 import {
 	createCollectionNode,
 	getAccountCollectionDataSource,
-} from "../../../../../../lib/collections/repository";
+} from "@/lib/collections/repository";
 
 export async function POST(
 	request: Request,

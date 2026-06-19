@@ -13,15 +13,15 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useState } from "react";
-import type { LoadedBlock } from "../../lib/blocks";
-import { reorderBlockList } from "../../lib/blocks";
+import type { LoadedBlock } from "@/lib/blocks";
+import { reorderBlockList } from "@/lib/blocks";
 import {
 	formatBudget,
 	getSelectedTotal,
 	getSelectionCount,
 	isProductSelected,
 	toggleProductSelection,
-} from "../../lib/slotHelpers";
+} from "@/lib/slotHelpers";
 import { ProductCard } from "../ProductCard/ProductCard";
 import styles from "./SlotSection.module.css";
 import { SortableProductItem } from "./SortableProductItem";

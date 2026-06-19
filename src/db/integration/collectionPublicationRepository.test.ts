@@ -3,7 +3,7 @@ import {
 	getCollectionPublicationStatus,
 	publishCollectionSnapshot,
 	unpublishCollectionSnapshot,
-} from "../../lib/collections/publicationRepository";
+} from "@/lib/collections/publicationRepository";
 import {
 	ablyOutbox,
 	collectionNodes,

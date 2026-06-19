@@ -9,7 +9,7 @@ import {
 	reorderCollectionNodes,
 	updateCollection,
 	updateCollectionNode,
-} from "../../lib/collections/repository";
+} from "@/lib/collections/repository";
 import {
 	ablyOutbox,
 	collectionLineage,

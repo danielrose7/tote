@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { gunzipSync } from "zlib";
-import { isCurator } from "../../../../../inngest/curator-auth";
-import { getR2Object, listR2Objects } from "../../../../../lib/r2";
+import { isCurator } from "@/inngest/curator-auth";
+import { getR2Object, listR2Objects } from "@/lib/r2";
 
 interface CaptureData {
 	url: string;

@@ -2,7 +2,7 @@
 
 import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
-import styles from "../../../view/[id]/page.module.css";
+import styles from "@/app/(public)/view/[id]/page.module.css";
 
 function CopyIcon() {
 	return (

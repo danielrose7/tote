@@ -4,7 +4,7 @@ import { useAuth } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FormEvent, useEffect, useState } from 'react';
-import { useToast } from '../../../../components/ToastNotification';
+import { useToast } from '@/components/ToastNotification';
 import {
   type CreateCollectionInviteMutation,
   fetchCollectionTeam,
@@ -12,13 +12,13 @@ import {
   type RevokeCollectionInviteMutation,
   type TransferCollectionOwnershipMutation,
   type UpdateCollectionMemberMutation,
-} from '../../../../lib/collections/client';
-import type { CollectionRole } from '../../../../lib/collections/permissions';
+} from '@/lib/collections/client';
+import type { CollectionRole } from '@/lib/collections/permissions';
 import {
   collectionMutationKeys,
   collectionQueryKeys,
-} from '../../../../lib/collections/queryKeys';
-import type { CollectionTeam } from '../../../../lib/collections/teamRepository';
+} from '@/lib/collections/queryKeys';
+import type { CollectionTeam } from '@/lib/collections/teamRepository';
 import styles from './NeonTeamDialog.module.css';
 
 function useOnline() {

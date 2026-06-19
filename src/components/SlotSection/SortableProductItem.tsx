@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { LoadedBlock } from "../../lib/blocks";
+import type { LoadedBlock } from "@/lib/blocks";
 import styles from "./SlotSection.module.css";
 
 interface SortableProductItemProps {

@@ -1,6 +1,6 @@
 import { createColumnHelper } from "@tanstack/react-table";
 import type { co } from "jazz-tools";
-import type { Block } from "../../schema";
+import type { Block } from "@/schema";
 import styles from "./TableView.module.css";
 
 type LoadedBlock = co.loaded<typeof Block>;

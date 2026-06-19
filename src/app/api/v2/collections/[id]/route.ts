@@ -7,13 +7,13 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	updateCollectionInputSchema,
-} from "../../../../../lib/collections/api";
+} from "@/lib/collections/api";
 import {
 	deleteCollection,
 	getAccountCollectionDataSource,
 	getCollectionDetail,
 	updateCollection,
-} from "../../../../../lib/collections/repository";
+} from "@/lib/collections/repository";
 
 export async function GET(
 	_request: Request,

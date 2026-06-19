@@ -5,12 +5,12 @@ import {
   QueryClient,
 } from '@tanstack/react-query';
 import { notFound, redirect } from 'next/navigation';
-import { canUseNeonCollections } from '../../../../lib/collections/api';
-import { collectionQueryKeys } from '../../../../lib/collections/queryKeys';
+import { canUseNeonCollections } from '@/lib/collections/api';
+import { collectionQueryKeys } from '@/lib/collections/queryKeys';
 import {
   getAccountCollectionDataSource,
   getCollectionDetail,
-} from '../../../../lib/collections/repository';
+} from '@/lib/collections/repository';
 import { ClassicCollectionDetailPage } from './ClassicCollectionDetailPage';
 import { NeonCollectionDetailPage } from './NeonCollectionDetailPage';
 

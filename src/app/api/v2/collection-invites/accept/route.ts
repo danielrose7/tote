@@ -5,9 +5,9 @@ import {
 	canUseNeonCollections,
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
-} from "../../../../../lib/collections/api";
-import { getAccountCollectionDataSource } from "../../../../../lib/collections/repository";
-import { acceptCollectionInvite } from "../../../../../lib/collections/teamRepository";
+} from "@/lib/collections/api";
+import { getAccountCollectionDataSource } from "@/lib/collections/repository";
+import { acceptCollectionInvite } from "@/lib/collections/teamRepository";
 
 export async function POST(request: Request) {
 	if (!neonCollectionsApiEnabled()) {

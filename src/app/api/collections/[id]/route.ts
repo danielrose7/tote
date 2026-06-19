@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPublishedCollectionById } from "../../../../lib/publishedCollectionsDb";
+import { getPublishedCollectionById } from "@/lib/publishedCollectionsDb";
 
 export async function GET(
 	_req: Request,

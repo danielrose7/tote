@@ -3,8 +3,8 @@ import {
 	copyClassicSharedCollection,
 	copyCollection,
 	copyPublishedCollection,
-} from "../../lib/collections/copyRepository";
-import { fingerprintClassicMigrationCollections } from "../../lib/collections/migrationRepository";
+} from "@/lib/collections/copyRepository";
+import { fingerprintClassicMigrationCollections } from "@/lib/collections/migrationRepository";
 import {
 	ablyOutbox,
 	collectionInvites,

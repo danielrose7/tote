@@ -3,9 +3,9 @@ import { useFormik } from "formik";
 import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
 import * as Yup from "yup";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import type { JazzAccount } from "../../schema.ts";
-import { Block, BlockList } from "../../schema.ts";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import type { JazzAccount } from "@/schema.ts";
+import { Block, BlockList } from "@/schema.ts";
 import { useToast } from "../ToastNotification";
 import styles from "./CreateCollectionDialog.module.css";
 

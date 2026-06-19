@@ -2,17 +2,17 @@ import * as Dialog from "@radix-ui/react-dialog";
 import type { co } from "jazz-tools";
 import { Group } from "jazz-tools";
 import { useCallback, useEffect, useState } from "react";
-import { fetchMetadata } from "../../app/utils/metadata";
-import { useAllCollections } from "../../hooks/useAllCollections";
-import { CHROME_WEB_STORE_URL } from "../../lib/constants";
+import { fetchMetadata } from "@/app/utils/metadata";
+import { useAllCollections } from "@/hooks/useAllCollections";
+import { CHROME_WEB_STORE_URL } from "@/lib/constants";
 import {
 	checkExtensionAvailable,
 	extractTabMetadata,
 	getAllTabs,
 	type TabInfo,
-} from "../../lib/extension";
-import { BlockList, Block as BlockSchema } from "../../schema";
-import type { Block, JazzAccount } from "../../schema.ts";
+} from "@/lib/extension";
+import { BlockList, Block as BlockSchema } from "@/schema";
+import type { Block, JazzAccount } from "@/schema.ts";
 import { SlotSelector } from "../SlotSelector/SlotSelector";
 import { useToast } from "../ToastNotification";
 import styles from "./SaveTabsDialog.module.css";

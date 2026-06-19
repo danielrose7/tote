@@ -4,18 +4,18 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
-import editStyles from "../../../../components/EditCollectionDialog/EditCollectionDialog.module.css";
-import { useToast } from "../../../../components/ToastNotification";
-import { useOnlineStatus } from "../../../../hooks/useOnlineStatus";
+import editStyles from "@/components/EditCollectionDialog/EditCollectionDialog.module.css";
+import { useToast } from "@/components/ToastNotification";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import {
 	type CopyCollectionMutation,
 	copyCollectionMutation,
-} from "../../../../lib/collections/client";
+} from "@/lib/collections/client";
 import {
 	collectionMutationKeys,
 	collectionQueryKeys,
-} from "../../../../lib/collections/queryKeys";
-import type { CollectionDetail } from "../../../../lib/collections/repository";
+} from "@/lib/collections/queryKeys";
+import type { CollectionDetail } from "@/lib/collections/repository";
 
 export function NeonCopyCollectionDialog({
 	detail,

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, eq, inArray, isNull, type SQL, sql } from 'drizzle-orm';
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
-import type * as schema from '../../db/schema';
+import type * as schema from '@/db/schema';
 import {
   accountDataSources,
   type Collection,
@@ -11,7 +11,7 @@ import {
   collectionMutationReceipts,
   collectionNodes,
   collections,
-} from '../../db/schema';
+} from '@/db/schema';
 import { db as productionDb } from '../db';
 import { fingerprintMutationRequest } from './idempotency';
 import { roleCan } from './permissions';

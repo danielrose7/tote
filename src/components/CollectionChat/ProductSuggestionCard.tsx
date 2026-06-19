@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatPrice } from "../../lib/formatPrice";
+import { formatPrice } from "@/lib/formatPrice";
 import styles from "./ProductSuggestionCard.module.css";
 
 export interface SuggestedProduct {

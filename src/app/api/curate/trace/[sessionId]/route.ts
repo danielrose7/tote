@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { isCurator } from "../../../../../inngest/curator-auth";
-import { getStepLog } from "../../../../../lib/curatorStepLog";
+import { isCurator } from "@/inngest/curator-auth";
+import { getStepLog } from "@/lib/curatorStepLog";
 
 export async function GET(
 	_request: Request,

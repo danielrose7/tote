@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { isCurator } from "../../../../inngest/curator-auth";
-import { listCuratorSessions } from "../../../../lib/curatorSessionsDb";
+import { isCurator } from "@/inngest/curator-auth";
+import { listCuratorSessions } from "@/lib/curatorSessionsDb";
 
 export async function GET() {
 	if (!(await isCurator())) {

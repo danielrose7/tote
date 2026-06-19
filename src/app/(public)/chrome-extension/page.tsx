@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { LandingAuthButtons } from "../../../components/LandingAuthButtons";
-import { PublicFooter } from "../../../components/PublicFooter";
-import { CHROME_WEB_STORE_URL } from "../../../lib/constants";
-import extensionImage from "../../../product-images-01.png";
+import { LandingAuthButtons } from "@/components/LandingAuthButtons";
+import { PublicFooter } from "@/components/PublicFooter";
+import { CHROME_WEB_STORE_URL } from "@/lib/constants";
+import extensionImage from "@/product-images-01.png";
 import styles from "./chrome-extension.module.css";
 
 export const metadata: Metadata = {

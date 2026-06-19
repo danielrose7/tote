@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server';
 import {
   createCollectionInputSchema,
   parseJsonRequest,
-} from '../../../../lib/collections/api';
+} from '@/lib/collections/api';
 import {
   createCollection,
   listCollectionSummaries,
-} from '../../../../lib/collections/repository';
+} from '@/lib/collections/repository';
 
 export async function GET() {
   const { userId } = await auth();

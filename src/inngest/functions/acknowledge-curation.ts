@@ -1,4 +1,4 @@
-import { logProgressEvent } from "../../lib/curatorStepLog";
+import { logProgressEvent } from "@/lib/curatorStepLog";
 import { curationChannel } from "../channels";
 import { inngest } from "../client";
 import type { CurationStartEvent } from "../types";

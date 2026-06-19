@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { inngest } from "../../../../inngest/client";
-import { isCurator } from "../../../../inngest/curator-auth";
-import { hasPositiveCreditBalance } from "../../../../lib/credits";
+import { inngest } from "@/inngest/client";
+import { isCurator } from "@/inngest/curator-auth";
+import { hasPositiveCreditBalance } from "@/lib/credits";
 
 export async function POST(request: Request) {
 	if (!(await isCurator())) {

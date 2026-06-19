@@ -13,9 +13,9 @@ import {
 	type SharingRole,
 	syncPublishedCollectionToNeon,
 	unpublishCollection,
-} from "../../lib/blocks";
-import { slugify } from "../../lib/slugify";
-import type { Block, JazzAccount } from "../../schema";
+} from "@/lib/blocks";
+import { slugify } from "@/lib/slugify";
+import type { Block, JazzAccount } from "@/schema";
 import { useToast } from "../ToastNotification";
 import styles from "./ShareCollectionDialog.module.css";
 

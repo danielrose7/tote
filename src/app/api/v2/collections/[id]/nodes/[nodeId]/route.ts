@@ -7,12 +7,12 @@ import {
 	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	updateCollectionNodeInputSchema,
-} from "../../../../../../../lib/collections/api";
+} from "@/lib/collections/api";
 import {
 	deleteCollectionNode,
 	getAccountCollectionDataSource,
 	updateCollectionNode,
-} from "../../../../../../../lib/collections/repository";
+} from "@/lib/collections/repository";
 
 type RouteContext = {
 	params: Promise<{ id: string; nodeId: string }>;
