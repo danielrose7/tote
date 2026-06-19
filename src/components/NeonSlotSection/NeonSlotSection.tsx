@@ -19,7 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { type Dispatch, useState } from 'react';
 import type { CollectionNode } from '@/db/schema';
 import {
   deleteCollectionNodeMutation,
@@ -31,10 +31,8 @@ import {
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
-import {
-  checkExtensionAvailable,
-  refreshViaExtension,
-} from '@/lib/extension';
+import { checkExtensionAvailable, refreshViaExtension } from '@/lib/extension';
+import type { RefreshAction, RefreshState } from '@/hooks/useRefreshQueue';
 import { formatPrice } from '@/lib/formatPrice';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
 import styles from '../SlotSection/SlotSection.module.css';
@@ -399,6 +397,8 @@ export interface NeonSlotSectionProps {
   otherSections: CollectionNode[];
   collectionId: string;
   canEdit: boolean;
+  refresh: RefreshState;
+  dispatchRefresh: Dispatch<RefreshAction>;
   onEditItem?: (node: CollectionNode) => void;
   dragHandle?: React.ReactNode;
   isDragging?: boolean;
@@ -411,6 +411,8 @@ export function NeonSlotSection({
   otherSections,
   collectionId,
   canEdit,
+  refresh,
+  dispatchRefresh,
   onEditItem,
   dragHandle,
   isDragging,
@@ -438,12 +440,6 @@ export function NeonSlotSection({
   const [editBudget, setEditBudget] = useState(
     budget !== undefined ? String(budget / 100) : '',
   );
-  const [refreshingId, setRefreshingId] = useState<string | null>(null);
-  const [enqueuedIds, setEnqueuedIds] = useState<string[]>([]);
-  const [refreshAllProgress, setRefreshAllProgress] = useState<{
-    current: number;
-    total: number;
-  } | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteAction, setDeleteAction] = useState<
     'delete' | 'ungrouped' | 'section'
@@ -586,7 +582,7 @@ export function NeonSlotSection({
   const handleRefreshItem = async (node: CollectionNode) => {
     const url = propertiesFor(node).url;
     if (!url) return;
-    setRefreshingId(node.id);
+    dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
     const extensionAvailable = await checkExtensionAvailable();
     const metadata = await refreshNodeMetadata(url, extensionAvailable);
     if (metadata) {
@@ -609,7 +605,7 @@ export function NeonSlotSection({
         },
       });
     }
-    setRefreshingId(null);
+    dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
   };
 
   const handleRefreshAll = async () => {
@@ -619,12 +615,12 @@ export function NeonSlotSection({
     );
     if (refreshable.length === 0) return;
     const extensionAvailable = await checkExtensionAvailable();
-    setEnqueuedIds(refreshable.map((n) => n.id));
-    setRefreshAllProgress({ current: 0, total: refreshable.length });
-    for (let i = 0; i < refreshable.length; i++) {
-      const node = refreshable[i];
-      setEnqueuedIds((prev) => prev.filter((id) => id !== node.id));
-      setRefreshingId(node.id);
+    dispatchRefresh({
+      type: 'REFRESH_BATCH_START',
+      ids: refreshable.map((n) => n.id),
+    });
+    for (const node of refreshable) {
+      dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
       const metadata = await refreshNodeMetadata(
         propertiesFor(node).url!,
         extensionAvailable,
@@ -649,11 +645,9 @@ export function NeonSlotSection({
           },
         });
       }
-      setRefreshAllProgress({ current: i + 1, total: refreshable.length });
+      dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
     }
-    setRefreshingId(null);
-    setEnqueuedIds([]);
-    setRefreshAllProgress(null);
+    dispatchRefresh({ type: 'REFRESH_BATCH_DONE' });
   };
 
   const handleSaveEdit = () => {
@@ -1009,12 +1003,12 @@ export function NeonSlotSection({
                         <button
                           type="button"
                           onClick={() => void handleRefreshAll()}
-                          disabled={refreshAllProgress !== null}
+                          disabled={refresh.progress !== null}
                           className={styles.actionButton}
                           aria-label="Refresh all"
                           data-tooltip={
-                            refreshAllProgress
-                              ? `${refreshAllProgress.current}/${refreshAllProgress.total}`
+                            refresh.progress
+                              ? `${refresh.progress.done}/${refresh.progress.total}`
                               : 'Refresh all'
                           }
                         >
@@ -1028,7 +1022,7 @@ export function NeonSlotSection({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             style={
-                              refreshAllProgress !== null
+                              refresh.progress !== null
                                 ? { animation: 'spin 0.8s linear infinite' }
                                 : undefined
                             }
@@ -1125,8 +1119,8 @@ export function NeonSlotSection({
                         ? () => void handleRefreshItem(node)
                         : undefined
                     }
-                    isRefreshing={refreshingId === node.id}
-                    isEnqueued={enqueuedIds.includes(node.id)}
+                    isRefreshing={refresh.activeId === node.id}
+                    isEnqueued={refresh.queuedIds.includes(node.id)}
                   />
                 ))}
               </div>

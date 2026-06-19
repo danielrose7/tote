@@ -19,6 +19,12 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import {
+  useRefreshQueue,
+  type RefreshState,
+  type RefreshAction,
+} from '@/hooks/useRefreshQueue';
+import type { Dispatch } from 'react';
 import pageStyles from '@/app/(app)/collections/[id]/NeonCollectionDetailPage.module.css';
 import type { CollectionNode } from '@/db/schema';
 import {
@@ -32,10 +38,7 @@ import {
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
-import {
-  checkExtensionAvailable,
-  refreshViaExtension,
-} from '@/lib/extension';
+import { checkExtensionAvailable, refreshViaExtension } from '@/lib/extension';
 import {
   type ViewMode,
   ViewModeToggle,
@@ -143,6 +146,8 @@ function SortableSectionWrapper({
   canEdit,
   isSectionReorderMode,
   onEditItem,
+  refresh,
+  dispatchRefresh,
 }: {
   id: string;
   section: CollectionNode;
@@ -152,6 +157,8 @@ function SortableSectionWrapper({
   canEdit: boolean;
   isSectionReorderMode: boolean;
   onEditItem?: (node: CollectionNode) => void;
+  refresh: RefreshState;
+  dispatchRefresh: Dispatch<RefreshAction>;
 }) {
   const {
     attributes,
@@ -173,6 +180,8 @@ function SortableSectionWrapper({
         otherSections={otherSections}
         collectionId={collectionId}
         canEdit={canEdit}
+        refresh={refresh}
+        dispatchRefresh={dispatchRefresh}
         onEditItem={onEditItem}
         dragHandle={
           isSectionReorderMode ? (
@@ -425,12 +434,7 @@ export function NeonCollectionView({
   const [reorderRoots, setReorderRoots] = useState<CollectionNode[]>([]);
   const isSectionReorderMode = reorderSections.length > 0;
   const isRootReorderMode = reorderRoots.length > 0;
-  const [refreshingRootId, setRefreshingRootId] = useState<string | null>(null);
-  const [enqueuedRootIds, setEnqueuedRootIds] = useState<string[]>([]);
-  const [refreshAllRootsProgress, setRefreshAllRootsProgress] = useState<{
-    current: number;
-    total: number;
-  } | null>(null);
+  const [refresh, dispatchRefresh] = useRefreshQueue();
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -519,7 +523,7 @@ export function NeonCollectionView({
   const handleRefreshRootItem = async (node: CollectionNode) => {
     const url = propertiesFor(node).url;
     if (!url) return;
-    setRefreshingRootId(node.id);
+    dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
     const extensionAvailable = await checkExtensionAvailable();
     let metadata: {
       title?: string;
@@ -562,18 +566,18 @@ export function NeonCollectionView({
         },
       });
     }
-    setRefreshingRootId(null);
+    dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
   };
 
   const handleRefreshAllRoots = async (refreshableNodes: CollectionNode[]) => {
     if (refreshableNodes.length === 0) return;
     const extensionAvailable = await checkExtensionAvailable();
-    setEnqueuedRootIds(refreshableNodes.map((n) => n.id));
-    setRefreshAllRootsProgress({ current: 0, total: refreshableNodes.length });
-    for (let i = 0; i < refreshableNodes.length; i++) {
-      const node = refreshableNodes[i];
-      setEnqueuedRootIds((prev) => prev.filter((id) => id !== node.id));
-      setRefreshingRootId(node.id);
+    dispatchRefresh({
+      type: 'REFRESH_BATCH_START',
+      ids: refreshableNodes.map((n) => n.id),
+    });
+    for (const node of refreshableNodes) {
+      dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
       const url = propertiesFor(node).url!;
       let metadata: {
         title?: string;
@@ -616,14 +620,9 @@ export function NeonCollectionView({
           },
         });
       }
-      setRefreshAllRootsProgress({
-        current: i + 1,
-        total: refreshableNodes.length,
-      });
+      dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
     }
-    setRefreshingRootId(null);
-    setEnqueuedRootIds([]);
-    setRefreshAllRootsProgress(null);
+    dispatchRefresh({ type: 'REFRESH_BATCH_DONE' });
   };
 
   const sections = nodes.filter((n) => n.type === 'section');
@@ -742,11 +741,30 @@ export function NeonCollectionView({
               <button
                 type="button"
                 className={pageStyles.reorderButton}
-                disabled={refreshAllRootsProgress !== null}
+                disabled={refresh.progress !== null}
                 onClick={() => void handleRefreshAllRoots(allRefreshableNodes)}
               >
-                {refreshAllRootsProgress
-                  ? `Refreshing ${refreshAllRootsProgress.current}/${refreshAllRootsProgress.total}…`
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={
+                    refresh.progress !== null
+                      ? { animation: 'spin 0.8s linear infinite' }
+                      : undefined
+                  }
+                >
+                  <path d="M23 4v6h-6" />
+                  <path d="M1 20v-6h6" />
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                </svg>
+                {refresh.progress
+                  ? `${refresh.progress.done}/${refresh.progress.total}`
                   : 'Refresh All'}
               </button>
             )}
@@ -816,6 +834,8 @@ export function NeonCollectionView({
                         canEdit={canEdit}
                         isSectionReorderMode={isSectionReorderMode}
                         onEditItem={canEdit ? onEditNode : undefined}
+                        refresh={refresh}
+                        dispatchRefresh={dispatchRefresh}
                       />
                     ))}
                   </SortableContext>
@@ -849,7 +869,7 @@ export function NeonCollectionView({
                           <button
                             type="button"
                             className={pageStyles.sectionEditButton}
-                            disabled={refreshAllRootsProgress !== null}
+                            disabled={refresh.progress !== null}
                             onClick={() => {
                               const refreshable = rootNodes.filter(
                                 (n) =>
@@ -859,8 +879,8 @@ export function NeonCollectionView({
                               void handleRefreshAllRoots(refreshable);
                             }}
                             aria-label={
-                              refreshAllRootsProgress
-                                ? `${refreshAllRootsProgress.current}/${refreshAllRootsProgress.total}`
+                              refresh.progress
+                                ? `${refresh.progress.done}/${refresh.progress.total}`
                                 : 'Refresh all'
                             }
                           >
@@ -874,7 +894,7 @@ export function NeonCollectionView({
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               style={
-                                refreshAllRootsProgress !== null
+                                refresh.progress !== null
                                   ? { animation: 'spin 0.8s linear infinite' }
                                   : undefined
                               }
@@ -951,8 +971,8 @@ export function NeonCollectionView({
                                 ? () => void handleRefreshRootItem(node)
                                 : undefined
                             }
-                            isRefreshing={refreshingRootId === node.id}
-                            isEnqueued={enqueuedRootIds.includes(node.id)}
+                            isRefreshing={refresh.activeId === node.id}
+                            isEnqueued={refresh.queuedIds.includes(node.id)}
                           />
                         ))}
                       </div>

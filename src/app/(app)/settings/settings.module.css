@@ -14,9 +14,9 @@
 }
 
 .main {
-  max-width: 900px;
+  max-width: var(--max-width-container);
   margin: 0 auto;
-  padding: 1rem 2rem 2rem;
+  padding: 1rem var(--spacing-lg) 2rem;
 }
 
 .settingsRow {
@@ -163,7 +163,6 @@
 
 .profileWrapper {
   display: flex;
-  justify-content: center;
 }
 
 .billingWrapper {
@@ -261,7 +260,7 @@
 
 @media (max-width: 768px) {
   .main {
-    padding: 1rem;
+    padding: 1rem var(--spacing-md);
   }
 
   .settingsRow {
