@@ -76,7 +76,7 @@ export function NeonCollectionsPage({
                       }
                     >
                       <div className={cardStyles.previewContainer}>
-                        {collection.previewImages.length > 0 ? (
+                        {(collection.previewImages ?? []).length > 0 ? (
                           <div
                             className={`${cardStyles.previewGrid} ${cardStyles[`grid-${Math.min(collection.previewImages.length, 4)}`]}`}
                           >
