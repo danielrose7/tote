@@ -114,6 +114,14 @@
   background: var(--color-background-secondary, #f5f5f5);
 }
 
+.publicProfileSkeleton {
+  height: 72px;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  background: var(--color-background-secondary, #f9f9f9);
+  border: 1px solid var(--color-border, #e5e7eb);
+}
+
 .publicProfile {
   margin-bottom: 1.5rem;
   padding: 1rem 1.25rem;
