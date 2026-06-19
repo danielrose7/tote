@@ -106,7 +106,7 @@ function CollectionCover({
   images,
   color,
 }: {
-  images: string[];
+  images: { url: string; title: string | null }[];
   color: string;
 }) {
   if (images.length === 0) {
@@ -126,7 +126,11 @@ function CollectionCover({
   if (images.length === 1) {
     return (
       <div className={styles.coverSingle}>
-        <img src={images[0]} alt="" className={styles.coverImg} />
+        <img
+          src={images[0].url}
+          alt={images[0].title ?? ''}
+          className={styles.coverImg}
+        />
       </div>
     );
   }
@@ -134,31 +138,37 @@ function CollectionCover({
   if (images.length === 2) {
     return (
       <div className={styles.coverTwo}>
-        <img src={images[0]} alt="" className={styles.coverImg} />
-        <img src={images[1]} alt="" className={styles.coverImg} />
-      </div>
-    );
-  }
-
-  if (images.length === 3) {
-    return (
-      <div className={styles.coverThree}>
         <img
-          src={images[0]}
-          alt=""
-          className={`${styles.coverImg} ${styles.coverThreeMain}`}
+          src={images[0].url}
+          alt={images[0].title ?? ''}
+          className={styles.coverImg}
         />
-        <img src={images[1]} alt="" className={styles.coverImg} />
-        <img src={images[2]} alt="" className={styles.coverImg} />
+        <img
+          src={images[1].url}
+          alt={images[1].title ?? ''}
+          className={styles.coverImg}
+        />
       </div>
     );
   }
 
   return (
-    <div className={styles.coverFour}>
-      {images.slice(0, 4).map((src, i) => (
-        <img key={i} src={src} alt="" className={styles.coverImg} />
-      ))}
+    <div className={styles.coverThree}>
+      <img
+        src={images[0].url}
+        alt={images[0].title ?? ''}
+        className={`${styles.coverImg} ${styles.coverThreeMain}`}
+      />
+      <img
+        src={images[1].url}
+        alt={images[1].title ?? ''}
+        className={styles.coverImg}
+      />
+      <img
+        src={images[2].url}
+        alt={images[2].title ?? ''}
+        className={styles.coverImg}
+      />
     </div>
   );
 }

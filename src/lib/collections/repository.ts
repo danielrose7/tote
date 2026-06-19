@@ -95,7 +95,7 @@ export type CollectionSummary = Pick<
   | 'updatedAt'
 > & {
   role: (typeof collectionMembers.$inferSelect)['role'];
-  previewImages: string[];
+  previewImages: { url: string; title: string | null }[];
 };
 
 export async function listCollectionSummaries(
@@ -134,6 +134,7 @@ export async function listCollectionSummaries(
     .select({
       collectionId: collectionNodes.collectionId,
       imageUrl: sql<string>`${collectionNodes.properties}->>'imageUrl'`,
+      title: collectionNodes.title,
     })
     .from(collectionNodes)
     .where(
@@ -146,10 +147,13 @@ export async function listCollectionSummaries(
     )
     .orderBy(asc(collectionNodes.positionKey));
 
-  const imagesByCollection = new Map<string, string[]>();
+  const imagesByCollection = new Map<
+    string,
+    { url: string; title: string | null }[]
+  >();
   for (const row of imageRows) {
     const imgs = imagesByCollection.get(row.collectionId) ?? [];
-    if (imgs.length < 4) imgs.push(row.imageUrl);
+    if (imgs.length < 3) imgs.push({ url: row.imageUrl, title: row.title });
     imagesByCollection.set(row.collectionId, imgs);
   }
 

@@ -78,16 +78,16 @@ export function NeonCollectionsPage({
                       <div className={cardStyles.cover}>
                         {(collection.previewImages ?? []).length > 0 ? (
                           <div
-                            className={`${cardStyles.previewGrid} ${cardStyles[`grid-${Math.min(collection.previewImages.length, 4)}`]}`}
+                            className={`${cardStyles.previewGrid} ${cardStyles[`grid-${Math.min(collection.previewImages.length, 3)}`]}`}
                           >
                             {collection.previewImages
-                              .slice(0, 4)
-                              .map((url, idx) => (
+                              .slice(0, 3)
+                              .map((img, idx) => (
                                 <div
                                   key={idx}
                                   className={cardStyles.previewImage}
                                 >
-                                  <img src={url} alt="" />
+                                  <img src={img.url} alt={img.title ?? ''} />
                                 </div>
                               ))}
                           </div>

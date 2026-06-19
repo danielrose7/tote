@@ -24,15 +24,18 @@ export function CollectionCard({
   const hex = collectionData?.color ?? '#6366f1';
 
   let linkCount = 0;
-  const previewImages: string[] = [];
+  const previewImages: { url: string; title: string | null }[] = [];
 
   if (block.children?.$isLoaded) {
     for (const child of block.children) {
       if (!child || !child.$isLoaded) continue;
       if (child.type === 'product') {
         linkCount++;
-        if (previewImages.length < 4 && child.productData?.imageUrl) {
-          previewImages.push(child.productData.imageUrl);
+        if (previewImages.length < 3 && child.productData?.imageUrl) {
+          previewImages.push({
+            url: child.productData.imageUrl,
+            title: child.name ?? null,
+          });
         }
       } else if (child.type === 'slot' && child.children?.$isLoaded) {
         for (const slotChild of child.children) {
@@ -42,8 +45,11 @@ export function CollectionCard({
             slotChild.type === 'product'
           ) {
             linkCount++;
-            if (previewImages.length < 4 && slotChild.productData?.imageUrl) {
-              previewImages.push(slotChild.productData.imageUrl);
+            if (previewImages.length < 3 && slotChild.productData?.imageUrl) {
+              previewImages.push({
+                url: slotChild.productData.imageUrl,
+                title: slotChild.name ?? null,
+              });
             }
           }
         }
@@ -62,11 +68,11 @@ export function CollectionCard({
       <div className={styles.cover}>
         {previewImages.length > 0 ? (
           <div
-            className={`${styles.previewGrid} ${styles[`grid-${Math.min(previewImages.length, 4)}`]}`}
+            className={`${styles.previewGrid} ${styles[`grid-${Math.min(previewImages.length, 3)}`]}`}
           >
-            {previewImages.map((url, idx) => (
+            {previewImages.map((img, idx) => (
               <div key={idx} className={styles.previewImage}>
-                <img src={url} alt="" />
+                <img src={img.url} alt={img.title ?? ''} />
               </div>
             ))}
           </div>
