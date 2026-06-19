@@ -6,10 +6,13 @@
 
 ## Tech Stack
 
-- **Jazz** - Local-first database with real-time sync
-- **Clerk** - Authentication (integrated with Jazz via `JazzReactProviderWithClerk`)
+- **Neon (Postgres)** - Primary database via Drizzle ORM
+- **Clerk** - Authentication
+- **Ably** - Realtime push (Postgres outbox → Ably channels → TanStack Query invalidation)
+- **TanStack Query** - Server state, `staleTime: 30s`
 - **Next.js 16** - App Router, React 19
 - **TypeScript** - Strict mode
+- **Jazz** - Legacy local-first sync, being migrated out; still present for classic collection import/migration flows
 
 ## Project Structure
 
@@ -17,20 +20,37 @@
 src/
   app/           # Next.js App Router pages and API routes
   components/    # React components
-  hooks/         # Custom hooks
-  schema.ts      # Jazz schema (ProductLink, Collection, AccountRoot)
+  db/            # Drizzle schema and migrations
+  hooks/         # Custom hooks (useCollectionRealtime, etc.)
+  lib/           # Business logic (collections/repository.ts, publishedCollectionsDb.ts, formatPrice.ts, etc.)
 chrome-extension/
   src/           # Extension source (popup, content scripts, extractors)
   CLAUDE.md      # Extension-specific dev guide
+mobile-app/      # React Native / Expo iOS app
 docs/
   PLATFORM_METADATA_PATTERNS.md  # Extraction patterns reference
 ```
 
 ## Key Files
 
-- `src/schema.ts` - Jazz data model
-- `src/app/providers.tsx` - Clerk + Jazz provider setup
+- `src/db/schema.ts` - Drizzle schema (collections, collection_nodes, collection_members, ably_outbox, ably_nodes)
+- `src/lib/collections/repository.ts` - All collection read/write operations
+- `src/lib/publishedCollectionsDb.ts` - Public collection queries (published/shared)
+- `src/lib/formatPrice.ts` - Shared price formatter; use everywhere prices are displayed
+- `src/app/providers.tsx` - Clerk + Jazz provider setup (Jazz kept for migration)
+- `src/hooks/useCollectionRealtime.ts` - Ably subscription hook
 - `chrome-extension/src/lib/extractors/` - Metadata extraction logic
+
+## Realtime Architecture
+
+Mutations write to `ably_outbox` in the same DB transaction. The Ably Postgres connector polls via `pg_notify('ably_adbc')` and publishes to channels. Clients subscribe via `useCollectionRealtime` and call `queryClient.invalidateQueries` on message.
+
+- `user:<id>:collections` — collection list changes
+- `collection:<id>` — individual collection changes
+
+The Ably connector **must** use `NEON_DB_DATABASE_URL_UNPOOLED` — PgBouncer doesn't support `LISTEN/NOTIFY`.
+
+Token auth: clients fetch scoped subscribe-only tokens from `/api/v2/realtime/token` using `ABLY_ROOT_KEY` (server-only, never `NEXT_PUBLIC_*`).
 
 ## Extraction Logic — Keep Two Files in Sync
 
@@ -54,6 +74,7 @@ cd chrome-extension
 pnpm dev          # Build with watch
 pnpm test         # Run extraction tests
 pnpm build        # Production build
+pnpm build:zip    # Build + zip for Chrome Web Store submission
 ```
 
 ## Curator Dev UI
@@ -68,45 +89,25 @@ The dev-only collection curator lives at `/dev/curate`.
 
 1. **Privacy first** - No analytics, tracking, or data collection
 2. **Bundle size matters** - Avoid adding dependencies; justify new ones
-3. **Offline works** - Jazz handles sync; don't assume network
-4. **Keep it simple** - Prefer boring solutions over clever ones
+3. **Keep it simple** - Prefer boring solutions over clever ones
 
-## Jazz Mutation Patterns
+## Route Groups
 
-Jazz wraps CoMap and CoList objects in proxies that **throw on direct mutation**. Always use the `.$jazz` API.
+- `(app)/` — authenticated routes; layout wraps in `Providers` (ClerkProvider + Jazz)
+- `(public)/` — public routes; layout wraps in ClerkProvider only
+- Root layout is bare (html/body only, no providers)
 
-### CoMap fields — use `.$jazz.set()`
+## Jazz Migration Notes
 
-```ts
-// ❌ Throws: "Cannot update a CoMap directly. Use $jazz.set instead."
-item.name = 'New name';
-item.slotData = { ...item.slotData, maxSelections: 3 };
+Jazz is being phased out in favor of Neon. New features go to Neon. The Jazz schema (`src/schema.ts`) and `JazzReactProviderWithClerk` are kept only to support:
 
-// ✅ Correct
-item.$jazz.set('name', 'New name');
-item.$jazz.set('slotData', { ...item.slotData, maxSelections: 3 });
-```
+- Classic collection import/migration UI
+- Shared collection handoff flows
 
-### CoList items — use `.$jazz.splice()`
-
-```ts
-// ❌ Throws: "Cannot mutate COList directly. Use .$jazz.splice instead."
-list.splice(idx, 1);
-
-// ✅ Correct
-const idx = list.findIndex((c) => c?.$jazz?.id === item.$jazz.id);
-if (idx !== -1) list.$jazz.splice(idx, 1);
-```
-
-### Reading is fine directly
-
-```ts
-// ✅ Read normally — no $jazz needed
-const name = item.name;
-const children = collection.children;
-const id = item.$jazz.id; // ID is on $jazz though
-```
+Do not add new Jazz CoValues or mutations. Use `src/lib/collections/repository.ts` and `/api/v2/` routes instead.
 
 ## UI Conventions
 
-- **Use "Add" not "Create"** - Button labels should say "Add Collection", "Add Link", etc. (not "Create" or "New")
+- **Use "Add" not "Create"** — Button labels should say "Add Collection", "Add Link", etc. (not "Create" or "New")
+- **Prices** — always use `formatPrice()` from `src/lib/formatPrice.ts`; never format inline
+- **Preview images** — cap at 3 per collection card across all surfaces
