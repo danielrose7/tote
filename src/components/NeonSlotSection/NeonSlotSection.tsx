@@ -19,7 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type Dispatch, useState } from 'react';
+import { type Dispatch, useEffect, useState } from 'react';
 import type { CollectionNode } from '@/db/schema';
 import {
   deleteCollectionNodeMutation,
@@ -130,6 +130,11 @@ function NeonProductItem({
   const title = node.title || (node.type === 'photo' ? 'Photo' : 'Untitled');
   const hasImage = !!(properties.imageUrl && !imageError);
   const isListMode = dragHandle !== undefined;
+
+  useEffect(() => {
+    setImageError(false);
+    setImageLoaded(false);
+  }, [properties.imageUrl]);
 
   if (isListMode) {
     return (

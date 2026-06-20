@@ -240,6 +240,11 @@ function ItemNode({
   const isListMode = dragHandle !== undefined;
   const hasImage = !!(properties.imageUrl && !imageError);
 
+  useEffect(() => {
+    setImageError(false);
+    setImageLoaded(false);
+  }, [properties.imageUrl]);
+
   function handleImageError() {
     setImageError(true);
     if (properties.imageUrl) {
