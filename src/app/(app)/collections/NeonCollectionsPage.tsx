@@ -88,12 +88,15 @@ function PreviewImageGrid({
   );
 }
 
+const SEARCH_THRESHOLD = 6;
+
 export function NeonCollectionsPage({
   realtimeEnabled,
 }: {
   realtimeEnabled: boolean;
 }) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const classicAccount = useAccount(JazzAccount, {
     resolve: { root: { sharedWithMe: { $each: {} } } },
   });
@@ -109,6 +112,13 @@ export function NeonCollectionsPage({
   );
   const hasCollections =
     collections.length > 0 || waitingSharedCollections.length > 0;
+  const showSearch = collections.length >= SEARCH_THRESHOLD;
+  const filteredCollections =
+    searchQuery.trim() === ''
+      ? collections
+      : collections.filter((c) =>
+          c.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        );
   useCollectionRealtime({
     enabled: realtimeEnabled,
     collectionIds: collections.map((collection) => collection.id),
@@ -122,6 +132,18 @@ export function NeonCollectionsPage({
       />
       <main>
         <div className={listStyles.container}>
+          {showSearch && (
+            <div className={listStyles.searchBar}>
+              <input
+                type="search"
+                placeholder="Search collections…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={listStyles.searchInput}
+                aria-label="Search collections"
+              />
+            </div>
+          )}
           {!hasCollections ? (
             <div className={listStyles.empty}>
               <h2 className={listStyles.emptyTitle}>No collections yet</h2>
@@ -131,45 +153,52 @@ export function NeonCollectionsPage({
             </div>
           ) : (
             <>
-              {collections.length > 0 && (
-                <div className={listStyles.grid}>
-                  {collections.map((collection) => (
-                    <Link
-                      key={collection.id}
-                      href={`/collections/${collection.id}`}
-                      className={cardStyles.card}
-                      style={
-                        {
-                          '--collection-color':
-                            collection.color || 'var(--color-accent)',
-                          textDecoration: 'none',
-                        } as React.CSSProperties
-                      }
-                    >
-                      <div className={cardStyles.cover}>
-                        <PreviewImageGrid
-                          images={collection.previewImages ?? []}
-                          collectionId={collection.id}
-                          color={collection.color}
-                        />
-                      </div>
-                      <div className={cardStyles.cardBody}>
-                        <h3 className={cardStyles.title}>{collection.name}</h3>
-                        <span className={cardStyles.meta}>
-                          {collection.itemCount}{' '}
-                          {collection.itemCount === 1 ? 'item' : 'items'}
-                          {collection.role !== 'owner' && ' · Shared'}
-                        </span>
-                        {collection.description && (
-                          <p className={cardStyles.description}>
-                            {collection.description}
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
+              {collections.length > 0 &&
+                (filteredCollections.length === 0 ? (
+                  <p className={listStyles.noResults}>
+                    No collections match &ldquo;{searchQuery}&rdquo;
+                  </p>
+                ) : (
+                  <div className={listStyles.grid}>
+                    {filteredCollections.map((collection) => (
+                      <Link
+                        key={collection.id}
+                        href={`/collections/${collection.id}`}
+                        className={cardStyles.card}
+                        style={
+                          {
+                            '--collection-color':
+                              collection.color || 'var(--color-accent)',
+                            textDecoration: 'none',
+                          } as React.CSSProperties
+                        }
+                      >
+                        <div className={cardStyles.cover}>
+                          <PreviewImageGrid
+                            images={collection.previewImages ?? []}
+                            collectionId={collection.id}
+                            color={collection.color}
+                          />
+                        </div>
+                        <div className={cardStyles.cardBody}>
+                          <h3 className={cardStyles.title}>
+                            {collection.name}
+                          </h3>
+                          <span className={cardStyles.meta}>
+                            {collection.itemCount}{' '}
+                            {collection.itemCount === 1 ? 'item' : 'items'}
+                            {collection.role !== 'owner' && ' · Shared'}
+                          </span>
+                          {collection.description && (
+                            <p className={cardStyles.description}>
+                              {collection.description}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ))}
               {waitingSharedCollections.length > 0 && (
                 <section className={listStyles.sharedSection}>
                   <h2 className={listStyles.sectionTitle}>

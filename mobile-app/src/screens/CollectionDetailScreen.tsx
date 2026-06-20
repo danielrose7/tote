@@ -1,2443 +1,2474 @@
-import { useAuth } from "@clerk/expo";
-import { Ionicons } from "@expo/vector-icons";
-import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import * as WebBrowser from "expo-web-browser";
-import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useAuth } from '@clerk/expo';
+import { Ionicons } from '@expo/vector-icons';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as WebBrowser from 'expo-web-browser';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-	ActionSheetIOS,
-	ActivityIndicator,
-	Alert,
-	Animated,
-	Dimensions,
-	Image,
-	KeyboardAvoidingView,
-	Modal,
-	Platform,
-	RefreshControl,
-	ScrollView,
-	SectionList,
-	StyleSheet,
-	Text,
-	TextInput,
-	TouchableOpacity,
-	View,
-} from "react-native";
-import { Swipeable } from "react-native-gesture-handler";
+  ActionSheetIOS,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  SectionList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import {
-	Sortable,
-	SortableGrid,
-	SortableGridItem,
-	type GridPositions,
-	type SortableGridRenderItemProps,
-	SortableItem,
-	type SortableRenderItemProps,
-} from "react-native-reanimated-dnd";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { WebView, type WebViewMessageEvent } from "react-native-webview";
-import { SaveProductSheet } from "../components/SaveProductSheet";
-import { ShareCollectionSheet } from "../components/ShareCollectionSheet";
-import { useViewMode } from "../hooks/useViewMode";
-import type { Collection, CollectionDetail, CollectionNode } from "../lib/api";
+  Sortable,
+  SortableGrid,
+  SortableGridItem,
+  type GridPositions,
+  type SortableGridRenderItemProps,
+  SortableItem,
+  type SortableRenderItemProps,
+} from 'react-native-reanimated-dnd';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import { SaveProductSheet } from '../components/SaveProductSheet';
+import { ShareCollectionSheet } from '../components/ShareCollectionSheet';
+import { useViewMode } from '../hooks/useViewMode';
+import { relativeTime, useSyncStatus } from '../hooks/useSyncStatus';
+import type { Collection, CollectionDetail, CollectionNode } from '../lib/api';
 import {
-	captureUrl,
-	deleteCollection,
-	deleteNode,
-	reorderNodes,
-	updateCollection,
-	updateNode,
-	fetchCollectionDetail,
-} from "../lib/api";
-import { extractorScript } from "../lib/extractorScript";
-import { formatPrice } from "../lib/formatPrice";
-import { getCachedNodes, upsertNodes } from "../lib/localDb";
-import type { RootStackParamList } from "../navigation/types";
+  captureUrl,
+  deleteCollection,
+  deleteNode,
+  reorderNodes,
+  updateCollection,
+  updateNode,
+  fetchCollectionDetail,
+} from '../lib/api';
+import { extractorScript } from '../lib/extractorScript';
+import { formatPrice } from '../lib/formatPrice';
+import { getCachedNodes, upsertNodes } from '../lib/localDb';
+import type { RootStackParamList } from '../navigation/types';
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
 
-type Props = NativeStackScreenProps<RootStackParamList, "CollectionDetail">;
+type Props = NativeStackScreenProps<RootStackParamList, 'CollectionDetail'>;
 type ProductItem = CollectionNode;
 
 type Section = {
-	title: string | null;
-	slot: ProductItem | null; // null for ungrouped
-	data: ProductItem[];
+  title: string | null;
+  slot: ProductItem | null; // null for ungrouped
+  data: ProductItem[];
 };
 
 type ReorderSectionTarget = {
-	id: string;
-	title: string;
-	slot: ProductItem | null;
-	items: ProductItem[];
+  id: string;
+  title: string;
+  slot: ProductItem | null;
+  items: ProductItem[];
 };
 
 type ReorderableBlockItem = {
-	id: string;
-	block: ProductItem;
+  id: string;
+  block: ProductItem;
 };
 
 function ProductRefresher({
-	item,
-	collectionId,
-	getToken,
-	onDone,
+  item,
+  collectionId,
+  getToken,
+  onDone,
 }: {
-	item: ProductItem;
-	collectionId: string;
-	getToken: () => Promise<string | null>;
-	onDone: (updated?: Partial<CollectionNode>) => void;
+  item: ProductItem;
+  collectionId: string;
+  getToken: () => Promise<string | null>;
+  onDone: (updated?: Partial<CollectionNode>) => void;
 }) {
-	const webViewRef = useRef<WebView>(null);
-	const url = item.properties.url;
+  const webViewRef = useRef<WebView>(null);
+  const url = item.properties.url;
 
-	if (!url) {
-		onDone();
-		return null;
-	}
+  if (!url) {
+    onDone();
+    return null;
+  }
 
-	function handleLoadEnd() {
-		webViewRef.current?.injectJavaScript(extractorScript);
-	}
+  function handleLoadEnd() {
+    webViewRef.current?.injectJavaScript(extractorScript);
+  }
 
-	async function handleMessage(event: WebViewMessageEvent) {
-		try {
-			const msg = JSON.parse(event.nativeEvent.data);
-			if (msg.type === "METADATA_RESULT") {
-				const d = msg.data;
-				const updatedProperties = {
-					...item.properties,
-					url,
-					...(d.imageUrl ? { imageUrl: d.imageUrl } : {}),
-					...(d.price ? { price: d.price } : {}),
-					...(d.description ? { description: d.description } : {}),
-				};
-				const updatedTitle = d.title || item.title;
-				try {
-					const token = await getToken();
-					if (token) {
-						await updateNode(token, collectionId, item.id, {
-							title: updatedTitle,
-							properties: updatedProperties,
-						});
-						onDone({ title: updatedTitle, properties: updatedProperties });
-						return;
-					}
-				} catch {}
-			}
-		} catch {}
-		onDone();
-	}
+  async function handleMessage(event: WebViewMessageEvent) {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data);
+      if (msg.type === 'METADATA_RESULT') {
+        const d = msg.data;
+        const updatedProperties = {
+          ...item.properties,
+          url,
+          ...(d.imageUrl ? { imageUrl: d.imageUrl } : {}),
+          ...(d.price ? { price: d.price } : {}),
+          ...(d.description ? { description: d.description } : {}),
+        };
+        const updatedTitle = d.title || item.title;
+        try {
+          const token = await getToken();
+          if (token) {
+            await updateNode(token, collectionId, item.id, {
+              title: updatedTitle,
+              properties: updatedProperties,
+            });
+            onDone({ title: updatedTitle, properties: updatedProperties });
+            return;
+          }
+        } catch {}
+      }
+    } catch {}
+    onDone();
+  }
 
-	return (
-		<View style={styles.hidden}>
-			<WebView
-				ref={webViewRef}
-				source={{ uri: url }}
-				onLoadEnd={handleLoadEnd}
-				onMessage={handleMessage}
-				javaScriptEnabled
-				domStorageEnabled
-				userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-			/>
-		</View>
-	);
+  return (
+    <View style={styles.hidden}>
+      <WebView
+        ref={webViewRef}
+        source={{ uri: url }}
+        onLoadEnd={handleLoadEnd}
+        onMessage={handleMessage}
+        javaScriptEnabled
+        domStorageEnabled
+        userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
+      />
+    </View>
+  );
 }
 
 function ProductRow({
-	item,
-	isSelected,
-	isRefreshing,
-	isQueued,
-	onOpen,
-	onToggleSelected,
-	onDelete,
-	onEdit,
-	onRefresh,
+  item,
+  isSelected,
+  isRefreshing,
+  isQueued,
+  onOpen,
+  onToggleSelected,
+  onDelete,
+  onEdit,
+  onRefresh,
 }: {
-	item: ProductItem;
-	isSelected: boolean;
-	isRefreshing: boolean;
-	isQueued: boolean;
-	onOpen: () => void;
-	onToggleSelected: (() => void) | null;
-	onDelete: () => void;
-	onEdit: () => void;
-	onRefresh: () => void;
+  item: ProductItem;
+  isSelected: boolean;
+  isRefreshing: boolean;
+  isQueued: boolean;
+  onOpen: () => void;
+  onToggleSelected: (() => void) | null;
+  onDelete: () => void;
+  onEdit: () => void;
+  onRefresh: () => void;
 }) {
-	const swipeRef = useRef<Swipeable>(null);
+  const swipeRef = useRef<Swipeable>(null);
 
-	return (
-		<Swipeable
-			ref={swipeRef}
-			renderLeftActions={(progress) => {
-				const translateX = progress.interpolate({
-					inputRange: [0, 1],
-					outputRange: [-160, 0],
-					extrapolate: "clamp",
-				});
-				return (
-					<Animated.View
-						style={[styles.leftActions, { transform: [{ translateX }] }]}
-					>
-						<TouchableOpacity
-							style={styles.editActionInner}
-							onPress={() => {
-								swipeRef.current?.close();
-								onEdit();
-							}}
-						>
-							<Text style={styles.editActionText}>Edit</Text>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.refreshActionInner}
-							onPress={() => {
-								swipeRef.current?.close();
-								onRefresh();
-							}}
-						>
-							<Text style={styles.refreshActionText}>Refresh</Text>
-						</TouchableOpacity>
-					</Animated.View>
-				);
-			}}
-			renderRightActions={(progress) => {
-				const translateX = progress.interpolate({
-					inputRange: [0, 1],
-					outputRange: [80, 0],
-					extrapolate: "clamp",
-				});
-				return (
-					<Animated.View
-						style={[styles.deleteAction, { transform: [{ translateX }] }]}
-					>
-						<TouchableOpacity
-							style={styles.deleteActionInner}
-							onPress={onDelete}
-						>
-							<Text style={styles.deleteActionText}>Remove</Text>
-						</TouchableOpacity>
-					</Animated.View>
-				);
-			}}
-			leftThreshold={40}
-			rightThreshold={40}
-			overshootLeft={false}
-			overshootRight={false}
-		>
-			<TouchableOpacity
-				style={[styles.productRow, isQueued && styles.productRowQueued]}
-				onPress={onOpen}
-				activeOpacity={0.7}
-			>
-				<View>
-					{item.properties.imageUrl ? (
-						<Image
-							source={{ uri: item.properties.imageUrl }}
-							style={[
-								styles.thumbnail,
-								(isRefreshing || isQueued) && styles.thumbnailRefreshing,
-							]}
-							resizeMode="cover"
-						/>
-					) : (
-						<View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
-					)}
-					{isRefreshing && (
-						<View style={styles.thumbnailSpinner}>
-							<ActivityIndicator size="small" color="#6366f1" />
-						</View>
-					)}
-					{isQueued && (
-						<View style={styles.thumbnailSpinner}>
-							<Ionicons name="time-outline" size={18} color="#6366f1" />
-						</View>
-					)}
-				</View>
-				<View style={styles.productInfo}>
-					<Text style={styles.productName} numberOfLines={2}>
-						{item.title ?? "Untitled"}
-					</Text>
-					{item.properties.price ? (
-						<Text style={styles.productPrice}>
-							{formatPrice(item.properties.price)}
-						</Text>
-					) : null}
-				</View>
-				{onToggleSelected && (
-					<TouchableOpacity
-						onPress={onToggleSelected}
-						hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-					>
-						<View
-							style={[styles.checkbox, isSelected && styles.checkboxSelected]}
-						>
-							{isSelected && <Text style={styles.checkmark}>✓</Text>}
-						</View>
-					</TouchableOpacity>
-				)}
-			</TouchableOpacity>
-		</Swipeable>
-	);
+  return (
+    <Swipeable
+      ref={swipeRef}
+      renderLeftActions={(progress) => {
+        const translateX = progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [-160, 0],
+          extrapolate: 'clamp',
+        });
+        return (
+          <Animated.View
+            style={[styles.leftActions, { transform: [{ translateX }] }]}
+          >
+            <TouchableOpacity
+              style={styles.editActionInner}
+              onPress={() => {
+                swipeRef.current?.close();
+                onEdit();
+              }}
+            >
+              <Text style={styles.editActionText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.refreshActionInner}
+              onPress={() => {
+                swipeRef.current?.close();
+                onRefresh();
+              }}
+            >
+              <Text style={styles.refreshActionText}>Refresh</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      }}
+      renderRightActions={(progress) => {
+        const translateX = progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [80, 0],
+          extrapolate: 'clamp',
+        });
+        return (
+          <Animated.View
+            style={[styles.deleteAction, { transform: [{ translateX }] }]}
+          >
+            <TouchableOpacity
+              style={styles.deleteActionInner}
+              onPress={onDelete}
+            >
+              <Text style={styles.deleteActionText}>Remove</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      }}
+      leftThreshold={40}
+      rightThreshold={40}
+      overshootLeft={false}
+      overshootRight={false}
+    >
+      <TouchableOpacity
+        style={[styles.productRow, isQueued && styles.productRowQueued]}
+        onPress={onOpen}
+        activeOpacity={0.7}
+      >
+        <View>
+          {item.properties.imageUrl ? (
+            <Image
+              source={{ uri: item.properties.imageUrl }}
+              style={[
+                styles.thumbnail,
+                (isRefreshing || isQueued) && styles.thumbnailRefreshing,
+              ]}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
+          )}
+          {isRefreshing && (
+            <View style={styles.thumbnailSpinner}>
+              <ActivityIndicator size="small" color="#6366f1" />
+            </View>
+          )}
+          {isQueued && (
+            <View style={styles.thumbnailSpinner}>
+              <Ionicons name="time-outline" size={18} color="#6366f1" />
+            </View>
+          )}
+        </View>
+        <View style={styles.productInfo}>
+          <Text style={styles.productName} numberOfLines={2}>
+            {item.title ?? 'Untitled'}
+          </Text>
+          {item.properties.price ? (
+            <Text style={styles.productPrice}>
+              {formatPrice(item.properties.price)}
+            </Text>
+          ) : null}
+        </View>
+        {onToggleSelected && (
+          <TouchableOpacity
+            onPress={onToggleSelected}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <View
+              style={[styles.checkbox, isSelected && styles.checkboxSelected]}
+            >
+              {isSelected && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+          </TouchableOpacity>
+        )}
+      </TouchableOpacity>
+    </Swipeable>
+  );
 }
 
 function EditProductModal({
-	item,
-	visible,
-	onClose,
-	onSave,
+  item,
+  visible,
+  onClose,
+  onSave,
 }: {
-	item: ProductItem;
-	visible: boolean;
-	onClose: () => void;
-	onSave: (title: string, price: string, notes: string) => void;
+  item: ProductItem;
+  visible: boolean;
+  onClose: () => void;
+  onSave: (title: string, price: string, notes: string) => void;
 }) {
-	const [name, setName] = useState(item.title ?? "");
-	const [price, setPrice] = useState(item.properties.price ?? "");
-	const [notes, setNotes] = useState(item.properties.notes ?? "");
+  const [name, setName] = useState(item.title ?? '');
+  const [price, setPrice] = useState(item.properties.price ?? '');
+  const [notes, setNotes] = useState(item.properties.notes ?? '');
 
-	function handleSave() {
-		onSave(name.trim(), price.trim(), notes.trim());
-		onClose();
-	}
+  function handleSave() {
+    onSave(name.trim(), price.trim(), notes.trim());
+    onClose();
+  }
 
-	return (
-		<Modal
-			visible={visible}
-			transparent
-			animationType="slide"
-			onRequestClose={onClose}
-		>
-			<TouchableOpacity
-				style={styles.modalBackdrop}
-				activeOpacity={1}
-				onPress={onClose}
-			/>
-			<KeyboardAvoidingView
-				style={styles.modalOverlay}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-			>
-				<View style={styles.modalSheet}>
-					<View style={styles.modalHandle} />
-					<Text style={styles.modalTitle}>Edit Product</Text>
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Edit Product</Text>
 
-					<Text style={styles.fieldLabel}>Name</Text>
-					<TextInput
-						style={styles.fieldInput}
-						value={name}
-						onChangeText={setName}
-						placeholder="Product name"
-						autoFocus
-					/>
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Product name"
+            autoFocus
+          />
 
-					<Text style={styles.fieldLabel}>Price</Text>
-					<TextInput
-						style={styles.fieldInput}
-						value={price}
-						onChangeText={setPrice}
-						placeholder="e.g. $49.99"
-						keyboardType="decimal-pad"
-					/>
+          <Text style={styles.fieldLabel}>Price</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={price}
+            onChangeText={setPrice}
+            placeholder="e.g. $49.99"
+            keyboardType="decimal-pad"
+          />
 
-					<Text style={styles.fieldLabel}>Notes</Text>
-					<TextInput
-						style={[styles.fieldInput, styles.fieldTextarea]}
-						value={notes}
-						onChangeText={setNotes}
-						placeholder="Add your personal notes..."
-						multiline
-						numberOfLines={3}
-					/>
+          <Text style={styles.fieldLabel}>Notes</Text>
+          <TextInput
+            style={[styles.fieldInput, styles.fieldTextarea]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Add your personal notes..."
+            multiline
+            numberOfLines={3}
+          />
 
-					<View style={styles.modalActions}>
-						<TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-							<Text style={styles.modalCancelText}>Cancel</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.modalSave} onPress={handleSave}>
-							<Text style={styles.modalSaveText}>Save</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</KeyboardAvoidingView>
-		</Modal>
-	);
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
 
 function SlotEditModal({
-	slot,
-	visible,
-	onClose,
-	onSave,
-	onDelete,
+  slot,
+  visible,
+  onClose,
+  onSave,
+  onDelete,
 }: {
-	slot: ProductItem;
-	visible: boolean;
-	onClose: () => void;
-	onSave: (name: string, maxSelections: string, budget: string) => void;
-	onDelete: () => void;
+  slot: ProductItem;
+  visible: boolean;
+  onClose: () => void;
+  onSave: (name: string, maxSelections: string, budget: string) => void;
+  onDelete: () => void;
 }) {
-	const [name, setName] = useState(slot.title ?? "");
-	const [maxSelections, setMaxSelections] = useState(
-		slot.properties.maxSelections?.toString() ?? "",
-	);
-	const [budget, setBudget] = useState(
-		slot.properties.budget
-			? (slot.properties.budget / 100).toString()
-			: "",
-	);
-	const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [name, setName] = useState(slot.title ?? '');
+  const [maxSelections, setMaxSelections] = useState(
+    slot.properties.maxSelections?.toString() ?? '',
+  );
+  const [budget, setBudget] = useState(
+    slot.properties.budget ? (slot.properties.budget / 100).toString() : '',
+  );
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-	useEffect(() => {
-		if (!(visible && confirmingDelete)) return;
+  useEffect(() => {
+    if (!(visible && confirmingDelete)) return;
 
-		const timeout = setTimeout(() => {
-			setConfirmingDelete(false);
-		}, 5000);
+    const timeout = setTimeout(() => {
+      setConfirmingDelete(false);
+    }, 5000);
 
-		return () => clearTimeout(timeout);
-	}, [visible, confirmingDelete]);
+    return () => clearTimeout(timeout);
+  }, [visible, confirmingDelete]);
 
-	useEffect(() => {
-		if (!visible) {
-			setConfirmingDelete(false);
-		}
-	}, [visible]);
+  useEffect(() => {
+    if (!visible) {
+      setConfirmingDelete(false);
+    }
+  }, [visible]);
 
-	function handleSave() {
-		onSave(name.trim(), maxSelections, budget);
-		onClose();
-	}
+  function handleSave() {
+    onSave(name.trim(), maxSelections, budget);
+    onClose();
+  }
 
-	function handleDeletePress() {
-		if (!confirmingDelete) {
-			setConfirmingDelete(true);
-			return;
-		}
-		onDelete();
-	}
+  function handleDeletePress() {
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      return;
+    }
+    onDelete();
+  }
 
-	return (
-		<Modal
-			visible={visible}
-			transparent
-			animationType="slide"
-			onRequestClose={onClose}
-		>
-			<TouchableOpacity
-				style={styles.modalBackdrop}
-				activeOpacity={1}
-				onPress={onClose}
-			/>
-			<KeyboardAvoidingView
-				style={styles.modalOverlay}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-			>
-				<View style={styles.modalSheet}>
-					<View style={styles.modalHandle} />
-					<View style={styles.modalHeaderRow}>
-						<Text style={styles.modalTitle}>Edit Slot</Text>
-						<TouchableOpacity
-							style={[
-								styles.modalDeletePill,
-								confirmingDelete && styles.modalDeletePillArmed,
-							]}
-							onPress={handleDeletePress}
-						>
-							<Text
-								style={[
-									styles.modalDeleteText,
-									confirmingDelete && styles.modalDeleteTextArmed,
-								]}
-							>
-								{confirmingDelete ? "Tap again to delete" : "Delete Slot"}
-							</Text>
-						</TouchableOpacity>
-					</View>
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <View style={styles.modalHeaderRow}>
+            <Text style={styles.modalTitle}>Edit Slot</Text>
+            <TouchableOpacity
+              style={[
+                styles.modalDeletePill,
+                confirmingDelete && styles.modalDeletePillArmed,
+              ]}
+              onPress={handleDeletePress}
+            >
+              <Text
+                style={[
+                  styles.modalDeleteText,
+                  confirmingDelete && styles.modalDeleteTextArmed,
+                ]}
+              >
+                {confirmingDelete ? 'Tap again to delete' : 'Delete Slot'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-					<Text style={styles.fieldLabel}>Name</Text>
-					<TextInput
-						style={styles.fieldInput}
-						value={name}
-						onChangeText={setName}
-						placeholder="Slot name"
-						autoFocus
-					/>
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Slot name"
+            autoFocus
+          />
 
-					<Text style={styles.fieldLabel}>Max selections</Text>
-					<TextInput
-						style={styles.fieldInput}
-						value={maxSelections}
-						onChangeText={setMaxSelections}
-						placeholder="No limit"
-						keyboardType="number-pad"
-					/>
+          <Text style={styles.fieldLabel}>Max selections</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={maxSelections}
+            onChangeText={setMaxSelections}
+            placeholder="No limit"
+            keyboardType="number-pad"
+          />
 
-					<Text style={styles.fieldLabel}>Budget ($)</Text>
-					<TextInput
-						style={styles.fieldInput}
-						value={budget}
-						onChangeText={setBudget}
-						placeholder="No budget"
-						keyboardType="decimal-pad"
-					/>
+          <Text style={styles.fieldLabel}>Budget ($)</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={budget}
+            onChangeText={setBudget}
+            placeholder="No budget"
+            keyboardType="decimal-pad"
+          />
 
-					<View style={styles.modalActions}>
-						<TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-							<Text style={styles.modalCancelText}>Cancel</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.modalSave} onPress={handleSave}>
-							<Text style={styles.modalSaveText}>Save</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</KeyboardAvoidingView>
-		</Modal>
-	);
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
 
 function SlotHeader({
-	slot,
-	title,
-	localNodes,
-	onSave,
-	onDelete,
+  slot,
+  title,
+  localNodes,
+  onSave,
+  onDelete,
 }: {
-	slot: ProductItem | null;
-	title: string;
-	localNodes: CollectionNode[];
-	onSave: (name: string, maxSelections: string, budget: string) => void;
-	onDelete: () => void;
+  slot: ProductItem | null;
+  title: string;
+  localNodes: CollectionNode[];
+  onSave: (name: string, maxSelections: string, budget: string) => void;
+  onDelete: () => void;
 }) {
-	const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(false);
 
-	if (!slot) {
-		return (
-			<View style={styles.sectionHeader}>
-				<Text style={styles.sectionTitle}>{title}</Text>
-			</View>
-		);
-	}
+  if (!slot) {
+    return (
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+    );
+  }
 
-	const selectedIds =
-		(slot.properties.selectedProductIds as string[] | undefined) ?? [];
-	const maxSelections = slot.properties.maxSelections;
-	const budget = slot.properties.budget;
+  const selectedIds =
+    (slot.properties.selectedProductIds as string[] | undefined) ?? [];
+  const maxSelections = slot.properties.maxSelections;
+  const budget = slot.properties.budget;
 
-	const products = localNodes.filter(
-		(n) => n.parentId === slot.id && n.type !== "section",
-	);
-	const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
-	const selectedTotal = selectedProducts.reduce((sum, p) => {
-		const rawPrice = p.properties.price;
-		const parsedPrice = rawPrice
-			? parseFloat(rawPrice.replace(/[^0-9.]/g, ""))
-			: NaN;
-		const numericPrice = Number.isFinite(parsedPrice) ? parsedPrice : 0;
-		return sum + numericPrice;
-	}, 0);
-	const formattedSelectedTotal =
-		formatPrice(String(selectedTotal)) ?? `$${selectedTotal}`;
-	const formattedBudget = budget
-		? (formatPrice(String(budget / 100)) ?? `$${budget / 100}`)
-		: null;
+  const products = localNodes.filter(
+    (n) => n.parentId === slot.id && n.type !== 'section',
+  );
+  const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
+  const selectedTotal = selectedProducts.reduce((sum, p) => {
+    const rawPrice = p.properties.price;
+    const parsedPrice = rawPrice
+      ? parseFloat(rawPrice.replace(/[^0-9.]/g, ''))
+      : NaN;
+    const numericPrice = Number.isFinite(parsedPrice) ? parsedPrice : 0;
+    return sum + numericPrice;
+  }, 0);
+  const formattedSelectedTotal =
+    formatPrice(String(selectedTotal)) ?? `$${selectedTotal}`;
+  const formattedBudget = budget
+    ? (formatPrice(String(budget / 100)) ?? `$${budget / 100}`)
+    : null;
 
-	const hasProgress = maxSelections || budget;
+  const hasProgress = maxSelections || budget;
 
-	return (
-		<>
-			<View style={styles.sectionHeader}>
-				<View style={styles.sectionHeaderLeft}>
-					<Text style={styles.sectionTitle}>{slot.title ?? title}</Text>
-					{hasProgress && (
-						<View style={styles.slotProgress}>
-							{maxSelections ? (
-								<Text style={styles.slotProgressText}>
-									{selectedIds.length} / {maxSelections} selected
-								</Text>
-							) : null}
-							{budget ? (
-								<Text style={styles.slotProgressText}>
-									{formattedSelectedTotal} / {formattedBudget}
-								</Text>
-							) : null}
-						</View>
-					)}
-				</View>
-				<TouchableOpacity
-					onPress={() => setEditing(true)}
-					hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-				>
-					<Ionicons name="settings-outline" size={16} color="#9ca3af" />
-				</TouchableOpacity>
-			</View>
-			<SlotEditModal
-				slot={slot}
-				visible={editing}
-				onClose={() => setEditing(false)}
-				onSave={(name, maxSel, bud) => {
-					onSave(name, maxSel, bud);
-					setEditing(false);
-				}}
-				onDelete={() => {
-					setEditing(false);
-					onDelete();
-				}}
-			/>
-		</>
-	);
+  return (
+    <>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionHeaderLeft}>
+          <Text style={styles.sectionTitle}>{slot.title ?? title}</Text>
+          {hasProgress && (
+            <View style={styles.slotProgress}>
+              {maxSelections ? (
+                <Text style={styles.slotProgressText}>
+                  {selectedIds.length} / {maxSelections} selected
+                </Text>
+              ) : null}
+              {budget ? (
+                <Text style={styles.slotProgressText}>
+                  {formattedSelectedTotal} / {formattedBudget}
+                </Text>
+              ) : null}
+            </View>
+          )}
+        </View>
+        <TouchableOpacity
+          onPress={() => setEditing(true)}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="settings-outline" size={16} color="#9ca3af" />
+        </TouchableOpacity>
+      </View>
+      <SlotEditModal
+        slot={slot}
+        visible={editing}
+        onClose={() => setEditing(false)}
+        onSave={(name, maxSel, bud) => {
+          onSave(name, maxSel, bud);
+          setEditing(false);
+        }}
+        onDelete={() => {
+          setEditing(false);
+          onDelete();
+        }}
+      />
+    </>
+  );
 }
 
 const PRESET_COLORS = [
-	"#6366f1",
-	"#8b5cf6",
-	"#ec4899",
-	"#f43f5e",
-	"#f97316",
-	"#eab308",
-	"#22c55e",
-	"#14b8a6",
-	"#3b82f6",
-	"#06b6d4",
+  '#6366f1',
+  '#8b5cf6',
+  '#ec4899',
+  '#f43f5e',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#14b8a6',
+  '#3b82f6',
+  '#06b6d4',
 ];
 
 function EditCollectionModal({
-	collection,
-	visible,
-	onClose,
-	onSave,
+  collection,
+  visible,
+  onClose,
+  onSave,
 }: {
-	collection: Collection;
-	visible: boolean;
-	onClose: () => void;
-	onSave: (name: string, color: string) => void;
+  collection: Collection;
+  visible: boolean;
+  onClose: () => void;
+  onSave: (name: string, color: string) => void;
 }) {
-	const [name, setName] = useState(collection.name ?? "");
-	const [color, setColor] = useState(collection.color ?? PRESET_COLORS[0]);
+  const [name, setName] = useState(collection.name ?? '');
+  const [color, setColor] = useState(collection.color ?? PRESET_COLORS[0]);
 
-	function handleSave() {
-		onSave(name.trim() || collection.name, color);
-		onClose();
-	}
+  function handleSave() {
+    onSave(name.trim() || collection.name, color);
+    onClose();
+  }
 
-	return (
-		<Modal
-			visible={visible}
-			transparent
-			animationType="slide"
-			onRequestClose={onClose}
-		>
-			<TouchableOpacity
-				style={styles.modalBackdrop}
-				activeOpacity={1}
-				onPress={onClose}
-			/>
-			<KeyboardAvoidingView
-				style={styles.modalOverlay}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-			>
-				<View style={styles.modalSheet}>
-					<View style={styles.modalHandle} />
-					<Text style={styles.modalTitle}>Edit Collection</Text>
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Edit Collection</Text>
 
-					<Text style={styles.fieldLabel}>Name</Text>
-					<TextInput
-						style={styles.fieldInput}
-						value={name}
-						onChangeText={setName}
-						placeholder="Collection name"
-						autoFocus
-						returnKeyType="done"
-						onSubmitEditing={handleSave}
-					/>
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Collection name"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleSave}
+          />
 
-					<Text style={styles.fieldLabel}>Color</Text>
-					<View style={styles.swatches}>
-						{PRESET_COLORS.map((c) => (
-							<TouchableOpacity
-								key={c}
-								style={[
-									styles.swatch,
-									{ backgroundColor: c },
-									color === c && styles.swatchSelected,
-								]}
-								onPress={() => setColor(c)}
-							>
-								{color === c && (
-									<Ionicons name="checkmark" size={14} color="#fff" />
-								)}
-							</TouchableOpacity>
-						))}
-					</View>
+          <Text style={styles.fieldLabel}>Color</Text>
+          <View style={styles.swatches}>
+            {PRESET_COLORS.map((c) => (
+              <TouchableOpacity
+                key={c}
+                style={[
+                  styles.swatch,
+                  { backgroundColor: c },
+                  color === c && styles.swatchSelected,
+                ]}
+                onPress={() => setColor(c)}
+              >
+                {color === c && (
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
 
-					<View style={styles.modalActions}>
-						<TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-							<Text style={styles.modalCancelText}>Cancel</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.modalSave} onPress={handleSave}>
-							<Text style={styles.modalSaveText}>Save</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</KeyboardAvoidingView>
-		</Modal>
-	);
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
 
 function AddProductModal({
-	visible,
-	onClose,
-	onSubmit,
+  visible,
+  onClose,
+  onSubmit,
 }: {
-	visible: boolean;
-	onClose: () => void;
-	onSubmit: (url: string) => void;
+  visible: boolean;
+  onClose: () => void;
+  onSubmit: (url: string) => void;
 }) {
-	const [url, setUrl] = useState("");
+  const [url, setUrl] = useState('');
 
-	function handleSubmit() {
-		const trimmed = url.trim();
-		if (!trimmed) return;
-		onSubmit(trimmed);
-		setUrl("");
-		onClose();
-	}
+  function handleSubmit() {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
+    setUrl('');
+    onClose();
+  }
 
-	return (
-		<Modal
-			visible={visible}
-			transparent
-			animationType="slide"
-			onRequestClose={onClose}
-		>
-			<TouchableOpacity
-				style={styles.modalBackdrop}
-				activeOpacity={1}
-				onPress={onClose}
-			/>
-			<KeyboardAvoidingView
-				style={styles.modalOverlay}
-				behavior={Platform.OS === "ios" ? "padding" : undefined}
-			>
-				<View style={styles.modalSheet}>
-					<View style={styles.modalHandle} />
-					<Text style={styles.modalTitle}>Add Product</Text>
-					<Text style={styles.fieldLabel}>Product URL</Text>
-					<TextInput
-						style={styles.fieldInput}
-						value={url}
-						onChangeText={setUrl}
-						placeholder="https://..."
-						autoFocus
-						autoCapitalize="none"
-						autoCorrect={false}
-						keyboardType="url"
-						returnKeyType="go"
-						onSubmitEditing={handleSubmit}
-					/>
-					<View style={styles.modalActions}>
-						<TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-							<Text style={styles.modalCancelText}>Cancel</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.modalSave} onPress={handleSubmit}>
-							<Text style={styles.modalSaveText}>Save</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</KeyboardAvoidingView>
-		</Modal>
-	);
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Add Product</Text>
+          <Text style={styles.fieldLabel}>Product URL</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={url}
+            onChangeText={setUrl}
+            placeholder="https://..."
+            autoFocus
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            returnKeyType="go"
+            onSubmitEditing={handleSubmit}
+          />
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSubmit}>
+              <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
 }
 
 function ProductGridCard({
-	item,
-	columnWidth,
-	onPress,
+  item,
+  columnWidth,
+  onPress,
 }: {
-	item: ProductItem;
-	columnWidth: number;
-	onPress: () => void;
+  item: ProductItem;
+  columnWidth: number;
+  onPress: () => void;
 }) {
-	const [imageHeight, setImageHeight] = useState(150);
-	const imageUrl = item.properties.imageUrl;
+  const [imageHeight, setImageHeight] = useState(150);
+  const imageUrl = item.properties.imageUrl;
 
-	useEffect(() => {
-		if (!imageUrl) return;
-		Image.getSize(
-			imageUrl,
-			(w, h) => {
-				if (w > 0) setImageHeight(Math.round((columnWidth * h) / w));
-			},
-			() => {},
-		);
-	}, [imageUrl, columnWidth]);
+  useEffect(() => {
+    if (!imageUrl) return;
+    Image.getSize(
+      imageUrl,
+      (w, h) => {
+        if (w > 0) setImageHeight(Math.round((columnWidth * h) / w));
+      },
+      () => {},
+    );
+  }, [imageUrl, columnWidth]);
 
-	return (
-		<TouchableOpacity
-			onPress={onPress}
-			activeOpacity={0.85}
-			style={styles.gridCard}
-		>
-			{imageUrl ? (
-				<Image
-					source={{ uri: imageUrl }}
-					style={{ width: "100%", height: imageHeight }}
-					resizeMode="cover"
-				/>
-			) : (
-				<View style={styles.gridImagePlaceholder} />
-			)}
-			<View style={styles.gridCardInfo}>
-				<Text style={styles.gridCardName} numberOfLines={3}>
-					{item.title ?? "Untitled"}
-				</Text>
-				{item.properties.price ? (
-					<Text style={styles.gridCardPrice}>
-						{formatPrice(item.properties.price)}
-					</Text>
-				) : null}
-			</View>
-		</TouchableOpacity>
-	);
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={styles.gridCard}
+    >
+      {imageUrl ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={{ width: '100%', height: imageHeight }}
+          resizeMode="cover"
+        />
+      ) : (
+        <View style={styles.gridImagePlaceholder} />
+      )}
+      <View style={styles.gridCardInfo}>
+        <Text style={styles.gridCardName} numberOfLines={3}>
+          {item.title ?? 'Untitled'}
+        </Text>
+        {item.properties.price ? (
+          <Text style={styles.gridCardPrice}>
+            {formatPrice(item.properties.price)}
+          </Text>
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
 }
 
 function ReorderProductRow({ item }: { item: ProductItem }) {
-	return (
-		<SortableItem.Handle style={styles.reorderWholeHandle}>
-			<View style={styles.reorderRow}>
-				{item.properties.imageUrl ? (
-					<Image
-						source={{ uri: item.properties.imageUrl }}
-						style={styles.reorderThumbnail}
-						resizeMode="cover"
-					/>
-				) : (
-					<View
-						style={[styles.reorderThumbnail, styles.thumbnailPlaceholder]}
-					/>
-				)}
-				<View style={styles.reorderRowMeta}>
-					<Text style={styles.reorderRowTitle} numberOfLines={2}>
-						{item.title ?? "Untitled"}
-					</Text>
-					{item.properties.price ? (
-						<Text style={styles.reorderRowSubtitle}>
-							{formatPrice(item.properties.price)}
-						</Text>
-					) : null}
-				</View>
-				<View style={styles.reorderHandle}>
-					<Ionicons name="reorder-three-outline" size={20} color="#6b7280" />
-				</View>
-			</View>
-		</SortableItem.Handle>
-	);
+  return (
+    <SortableItem.Handle style={styles.reorderWholeHandle}>
+      <View style={styles.reorderRow}>
+        {item.properties.imageUrl ? (
+          <Image
+            source={{ uri: item.properties.imageUrl }}
+            style={styles.reorderThumbnail}
+            resizeMode="cover"
+          />
+        ) : (
+          <View
+            style={[styles.reorderThumbnail, styles.thumbnailPlaceholder]}
+          />
+        )}
+        <View style={styles.reorderRowMeta}>
+          <Text style={styles.reorderRowTitle} numberOfLines={2}>
+            {item.title ?? 'Untitled'}
+          </Text>
+          {item.properties.price ? (
+            <Text style={styles.reorderRowSubtitle}>
+              {formatPrice(item.properties.price)}
+            </Text>
+          ) : null}
+        </View>
+        <View style={styles.reorderHandle}>
+          <Ionicons name="reorder-three-outline" size={20} color="#6b7280" />
+        </View>
+      </View>
+    </SortableItem.Handle>
+  );
 }
 
 function ReorderGridCard({ item, size }: { item: ProductItem; size: number }) {
-	const imageHeight = Math.round(size * 0.72);
-	const cardHeight = imageHeight + 106;
+  const imageHeight = Math.round(size * 0.72);
+  const cardHeight = imageHeight + 106;
 
-	return (
-		<View
-			style={[styles.reorderGridCard, { width: size, minHeight: cardHeight }]}
-		>
-			<View style={[styles.reorderGridMedia, { height: imageHeight }]}>
-				{item.properties.imageUrl ? (
-					<Image
-						source={{ uri: item.properties.imageUrl }}
-						style={styles.reorderGridImage}
-						resizeMode="cover"
-					/>
-				) : (
-					<View style={styles.reorderGridImagePlaceholder} />
-				)}
-			</View>
-			<View style={styles.reorderGridInfo}>
-				<Text style={styles.reorderGridTitle} numberOfLines={3}>
-					{item.title ?? "Untitled"}
-				</Text>
-				<View style={styles.reorderGridFooter}>
-					{item.properties.price ? (
-						<Text style={styles.reorderGridPrice}>
-							{formatPrice(item.properties.price)}
-						</Text>
-					) : (
-						<View />
-					)}
-					<Ionicons name="reorder-three-outline" size={18} color="#6b7280" />
-				</View>
-			</View>
-		</View>
-	);
+  return (
+    <View
+      style={[styles.reorderGridCard, { width: size, minHeight: cardHeight }]}
+    >
+      <View style={[styles.reorderGridMedia, { height: imageHeight }]}>
+        {item.properties.imageUrl ? (
+          <Image
+            source={{ uri: item.properties.imageUrl }}
+            style={styles.reorderGridImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.reorderGridImagePlaceholder} />
+        )}
+      </View>
+      <View style={styles.reorderGridInfo}>
+        <Text style={styles.reorderGridTitle} numberOfLines={3}>
+          {item.title ?? 'Untitled'}
+        </Text>
+        <View style={styles.reorderGridFooter}>
+          {item.properties.price ? (
+            <Text style={styles.reorderGridPrice}>
+              {formatPrice(item.properties.price)}
+            </Text>
+          ) : (
+            <View />
+          )}
+          <Ionicons name="reorder-three-outline" size={18} color="#6b7280" />
+        </View>
+      </View>
+    </View>
+  );
 }
 
 function ReorderSlotCard({
-	slot,
-	localNodes,
+  slot,
+  localNodes,
 }: {
-	slot: ProductItem;
-	localNodes: CollectionNode[];
+  slot: ProductItem;
+  localNodes: CollectionNode[];
 }) {
-	const itemCount = localNodes.filter(
-		(n) => n.parentId === slot.id && n.type !== "section",
-	).length;
+  const itemCount = localNodes.filter(
+    (n) => n.parentId === slot.id && n.type !== 'section',
+  ).length;
 
-	return (
-		<SortableItem.Handle style={styles.reorderWholeHandle}>
-			<View style={styles.reorderSlotCard}>
-				<View>
-					<Text style={styles.reorderSlotEyebrow}>Slot</Text>
-					<Text style={styles.reorderSlotTitle}>{slot.title ?? "Untitled"}</Text>
-					<Text style={styles.reorderSlotSubtitle}>{itemCount} items</Text>
-				</View>
-				<View style={styles.reorderSlotHandle}>
-					<Ionicons name="reorder-three-outline" size={22} color="#4f46e5" />
-				</View>
-			</View>
-		</SortableItem.Handle>
-	);
+  return (
+    <SortableItem.Handle style={styles.reorderWholeHandle}>
+      <View style={styles.reorderSlotCard}>
+        <View>
+          <Text style={styles.reorderSlotEyebrow}>Slot</Text>
+          <Text style={styles.reorderSlotTitle}>
+            {slot.title ?? 'Untitled'}
+          </Text>
+          <Text style={styles.reorderSlotSubtitle}>{itemCount} items</Text>
+        </View>
+        <View style={styles.reorderSlotHandle}>
+          <Ionicons name="reorder-three-outline" size={22} color="#4f46e5" />
+        </View>
+      </View>
+    </SortableItem.Handle>
+  );
 }
 
 function MasonryGrid({
-	items,
-	onPress,
-	header,
-	onScroll,
-	onRefresh,
-	refreshing = false,
+  items,
+  onPress,
+  header,
+  onScroll,
+  onRefresh,
+  refreshing = false,
 }: {
-	items: ProductItem[];
-	onPress: (item: ProductItem) => void;
-	header?: React.ReactNode;
-	onScroll?: any;
-	onRefresh?: () => void;
-	refreshing?: boolean;
+  items: ProductItem[];
+  onPress: (item: ProductItem) => void;
+  header?: React.ReactNode;
+  onScroll?: any;
+  onRefresh?: () => void;
+  refreshing?: boolean;
 }) {
-	const screenWidth = Dimensions.get("window").width;
-	const columnWidth = Math.floor((screenWidth - 48) / 2);
+  const screenWidth = Dimensions.get('window').width;
+  const columnWidth = Math.floor((screenWidth - 48) / 2);
 
-	const leftItems = items.filter((_, i) => i % 2 === 0);
-	const rightItems = items.filter((_, i) => i % 2 === 1);
+  const leftItems = items.filter((_, i) => i % 2 === 0);
+  const rightItems = items.filter((_, i) => i % 2 === 1);
 
-	return (
-		<Animated.ScrollView
-			contentInsetAdjustmentBehavior="never"
-			contentContainerStyle={styles.masonryContainer}
-			onScroll={onScroll}
-			scrollEventThrottle={16}
-			refreshControl={
-				onRefresh ? (
-					<RefreshControl
-						refreshing={refreshing}
-						onRefresh={onRefresh}
-						tintColor="#6366f1"
-					/>
-				) : undefined
-			}
-		>
-			{header}
-			<View style={styles.masonryColumns}>
-				<View style={{ width: columnWidth }}>
-					{leftItems.map((item) => (
-						<ProductGridCard
-							key={item.id}
-							item={item}
-							columnWidth={columnWidth}
-							onPress={() => onPress(item)}
-						/>
-					))}
-				</View>
-				<View style={{ width: columnWidth }}>
-					{rightItems.map((item) => (
-						<ProductGridCard
-							key={item.id}
-							item={item}
-							columnWidth={columnWidth}
-							onPress={() => onPress(item)}
-						/>
-					))}
-				</View>
-			</View>
-		</Animated.ScrollView>
-	);
+  return (
+    <Animated.ScrollView
+      contentInsetAdjustmentBehavior="never"
+      contentContainerStyle={styles.masonryContainer}
+      onScroll={onScroll}
+      scrollEventThrottle={16}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#6366f1"
+          />
+        ) : undefined
+      }
+    >
+      {header}
+      <View style={styles.masonryColumns}>
+        <View style={{ width: columnWidth }}>
+          {leftItems.map((item) => (
+            <ProductGridCard
+              key={item.id}
+              item={item}
+              columnWidth={columnWidth}
+              onPress={() => onPress(item)}
+            />
+          ))}
+        </View>
+        <View style={{ width: columnWidth }}>
+          {rightItems.map((item) => (
+            <ProductGridCard
+              key={item.id}
+              item={item}
+              columnWidth={columnWidth}
+              onPress={() => onPress(item)}
+            />
+          ))}
+        </View>
+      </View>
+    </Animated.ScrollView>
+  );
 }
 
 export function CollectionDetailScreen({ route, navigation }: Props) {
-	const { collectionId, collectionName } = route.params;
-	const { getToken } = useAuth();
-	const insets = useSafeAreaInsets();
-	const [addingProduct, setAddingProduct] = useState(false);
-	const [pendingUrl, setPendingUrl] = useState<string | null>(null);
-	const [editingProduct, setEditingProduct] = useState<ProductItem | null>(
-		null,
-	);
-	const [editingCollection, setEditingCollection] = useState(false);
-	const [sharingCollection, setSharingCollection] = useState(false);
-	const [isReorderMode, setIsReorderMode] = useState(false);
-	const [activeReorderTargetId, setActiveReorderTargetId] =
-		useState("ungrouped");
-	const [isGridReorderReady, setIsGridReorderReady] = useState(false);
-	const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
-	const { viewMode, setViewMode } = useViewMode();
-	const scrollY = useRef(new Animated.Value(0)).current;
+  const { collectionId, collectionName } = route.params;
+  const { getToken } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [addingProduct, setAddingProduct] = useState(false);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(
+    null,
+  );
+  const [editingCollection, setEditingCollection] = useState(false);
+  const [sharingCollection, setSharingCollection] = useState(false);
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [activeReorderTargetId, setActiveReorderTargetId] =
+    useState('ungrouped');
+  const [isGridReorderReady, setIsGridReorderReady] = useState(false);
+  const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
+  const { viewMode, setViewMode } = useViewMode();
+  const { track, syncState, lastSavedAt } = useSyncStatus();
+  const scrollY = useRef(new Animated.Value(0)).current;
 
-	const [detail, setDetail] = useState<CollectionDetail | null>(null);
-	const [localNodes, setLocalNodes] = useState<CollectionNode[]>([]);
+  const [detail, setDetail] = useState<CollectionDetail | null>(null);
+  const [localNodes, setLocalNodes] = useState<CollectionNode[]>([]);
 
-	useEffect(() => {
-		// Load cached nodes immediately for fast display
-		getCachedNodes(collectionId).then((cached) => {
-			if (cached.length > 0) setLocalNodes(cached);
-		});
-		// Fetch from API
-		refresh();
-	}, [collectionId]);
+  useEffect(() => {
+    // Load cached nodes immediately for fast display
+    getCachedNodes(collectionId).then((cached) => {
+      if (cached.length > 0) setLocalNodes(cached);
+    });
+    // Fetch from API
+    refresh();
+  }, [collectionId]);
 
-	async function refresh() {
-		try {
-			const token = await getToken();
-			if (!token) return;
-			const d = await fetchCollectionDetail(token, collectionId);
-			setDetail(d);
-			setLocalNodes(d.nodes);
-			upsertNodes(d.nodes).catch(() => {}); // background cache update
-		} catch (e) {
-			console.warn("CollectionDetail refresh error:", e);
-		}
-	}
+  async function refresh() {
+    try {
+      const token = await getToken();
+      if (!token) return;
+      const d = await fetchCollectionDetail(token, collectionId);
+      setDetail(d);
+      setLocalNodes(d.nodes);
+      upsertNodes(d.nodes).catch(() => {}); // background cache update
+    } catch (e) {
+      console.warn('CollectionDetail refresh error:', e);
+    }
+  }
 
-	// Derived data from localNodes
-	const sectionNodes = localNodes
-		.filter((n) => n.type === "section" && !n.parentId)
-		.sort((a, b) => a.positionKey.localeCompare(b.positionKey));
+  // Derived data from localNodes
+  const sectionNodes = localNodes
+    .filter((n) => n.type === 'section' && !n.parentId)
+    .sort((a, b) => a.positionKey.localeCompare(b.positionKey));
 
-	const directItems = localNodes
-		.filter((n) => n.type !== "section" && !n.parentId)
-		.sort((a, b) => a.positionKey.localeCompare(b.positionKey));
+  const directItems = localNodes
+    .filter((n) => n.type !== 'section' && !n.parentId)
+    .sort((a, b) => a.positionKey.localeCompare(b.positionKey));
 
-	const sections: Section[] = [
-		...sectionNodes
-			.map((slot) => ({
-				title: slot.title ?? "Untitled",
-				slot,
-				data: localNodes
-					.filter((n) => n.parentId === slot.id)
-					.sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
-			}))
-			.filter((s) => s.data.length > 0),
-		...(directItems.length > 0
-			? [
-					{
-						title: sectionNodes.length > 0 ? "Ungrouped" : null,
-						slot: null as ProductItem | null,
-						data: directItems,
-					},
-				]
-			: []),
-	];
+  const sections: Section[] = [
+    ...sectionNodes
+      .map((slot) => ({
+        title: slot.title ?? 'Untitled',
+        slot,
+        data: localNodes
+          .filter((n) => n.parentId === slot.id)
+          .sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
+      }))
+      .filter((s) => s.data.length > 0),
+    ...(directItems.length > 0
+      ? [
+          {
+            title: sectionNodes.length > 0 ? 'Ungrouped' : null,
+            slot: null as ProductItem | null,
+            data: directItems,
+          },
+        ]
+      : []),
+  ];
 
-	const totalItems = localNodes.filter((n) => n.type !== "section").length;
-	const childrenLoading = localNodes.length === 0 && detail === null;
-	const displayTitle =
-		detail?.collection.name ?? collectionName ?? route.params.collectionName;
-	const collectionColor = detail?.collection.color ?? "#6366f1";
-	const collectionVersion = detail?.collection.version ?? 1;
+  const totalItems = localNodes.filter((n) => n.type !== 'section').length;
+  const childrenLoading = localNodes.length === 0 && detail === null;
+  const displayTitle =
+    detail?.collection.name ?? collectionName ?? route.params.collectionName;
+  const collectionColor = detail?.collection.color ?? '#6366f1';
+  const collectionVersion = detail?.collection.version ?? 1;
 
-	const topBarTop = insets.top + 8;
-	const pageHeaderTopPadding = topBarTop + 72;
-	const titleFadeStyle = {
-		opacity: scrollY.interpolate({
-			inputRange: [0, 28, 72],
-			outputRange: [1, 0.9, 0.08],
-			extrapolate: "clamp",
-		}),
-		transform: [
-			{
-				translateY: scrollY.interpolate({
-					inputRange: [0, 72],
-					outputRange: [0, -22],
-					extrapolate: "clamp",
-				}),
-			},
-		],
-	};
-	const metaFadeStyle = {
-		opacity: scrollY.interpolate({
-			inputRange: [0, 22, 54],
-			outputRange: [1, 0.72, 0],
-			extrapolate: "clamp",
-		}),
-	};
-	const handleScroll = Animated.event(
-		[{ nativeEvent: { contentOffset: { y: scrollY } } }],
-		{ useNativeDriver: true },
-	);
+  const topBarTop = insets.top + 8;
+  const pageHeaderTopPadding = topBarTop + 72;
+  const titleFadeStyle = {
+    opacity: scrollY.interpolate({
+      inputRange: [0, 28, 72],
+      outputRange: [1, 0.9, 0.08],
+      extrapolate: 'clamp',
+    }),
+    transform: [
+      {
+        translateY: scrollY.interpolate({
+          inputRange: [0, 72],
+          outputRange: [0, -22],
+          extrapolate: 'clamp',
+        }),
+      },
+    ],
+  };
+  const metaFadeStyle = {
+    opacity: scrollY.interpolate({
+      inputRange: [0, 22, 54],
+      outputRange: [1, 0.72, 0],
+      extrapolate: 'clamp',
+    }),
+  };
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { useNativeDriver: true },
+  );
 
-	const reorderSections: ReorderSectionTarget[] = [
-		...sectionNodes.map((slot) => ({
-			id: slot.id,
-			title: slot.title ?? "Untitled",
-			slot,
-			items: localNodes
-				.filter((n) => n.parentId === slot.id)
-				.sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
-		})),
-		...(directItems.length > 0 || sectionNodes.length === 0
-			? [
-					{
-						id: "ungrouped",
-						title: sectionNodes.length > 0 ? "Ungrouped" : "Items",
-						slot: null as ProductItem | null,
-						items: directItems,
-					},
-				]
-			: []),
-	];
+  const reorderSections: ReorderSectionTarget[] = [
+    ...sectionNodes.map((slot) => ({
+      id: slot.id,
+      title: slot.title ?? 'Untitled',
+      slot,
+      items: localNodes
+        .filter((n) => n.parentId === slot.id)
+        .sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
+    })),
+    ...(directItems.length > 0 || sectionNodes.length === 0
+      ? [
+          {
+            id: 'ungrouped',
+            title: sectionNodes.length > 0 ? 'Ungrouped' : 'Items',
+            slot: null as ProductItem | null,
+            items: directItems,
+          },
+        ]
+      : []),
+  ];
 
-	useEffect(() => {
-		const validTargets = [
-			...(sectionNodes.length > 1 ? ["slots"] : []),
-			...reorderSections.map((section) => section.id),
-		];
-		if (!validTargets.includes(activeReorderTargetId)) {
-			setActiveReorderTargetId(validTargets[0] ?? "ungrouped");
-		}
-	}, [activeReorderTargetId, reorderSections, sectionNodes.length]);
+  useEffect(() => {
+    const validTargets = [
+      ...(sectionNodes.length > 1 ? ['slots'] : []),
+      ...reorderSections.map((section) => section.id),
+    ];
+    if (!validTargets.includes(activeReorderTargetId)) {
+      setActiveReorderTargetId(validTargets[0] ?? 'ungrouped');
+    }
+  }, [activeReorderTargetId, reorderSections, sectionNodes.length]);
 
-	function openProduct(item: ProductItem) {
-		const url = item.properties.url;
-		if (url) WebBrowser.openBrowserAsync(url);
-	}
+  function openProduct(item: ProductItem) {
+    const url = item.properties.url;
+    if (url) WebBrowser.openBrowserAsync(url);
+  }
 
-	async function toggleSelected(item: ProductItem, slot: ProductItem) {
-		const selectedIds =
-			(slot.properties.selectedProductIds as string[] | undefined) ?? [];
-		const id = item.id;
-		const isSelected = selectedIds.includes(id);
-		const maxSelections = slot.properties.maxSelections;
+  async function toggleSelected(item: ProductItem, slot: ProductItem) {
+    const selectedIds =
+      (slot.properties.selectedProductIds as string[] | undefined) ?? [];
+    const id = item.id;
+    const isSelected = selectedIds.includes(id);
+    const maxSelections = slot.properties.maxSelections;
 
-		if (!isSelected && maxSelections && selectedIds.length >= maxSelections)
-			return;
+    if (!isSelected && maxSelections && selectedIds.length >= maxSelections)
+      return;
 
-		const newSelectedIds = isSelected
-			? selectedIds.filter((sid) => sid !== id)
-			: [...selectedIds, id];
+    const newSelectedIds = isSelected
+      ? selectedIds.filter((sid) => sid !== id)
+      : [...selectedIds, id];
 
-		// Optimistic update
-		setLocalNodes((prev) =>
-			prev.map((n) =>
-				n.id === slot.id
-					? {
-							...n,
-							properties: {
-								...n.properties,
-								selectedProductIds: newSelectedIds,
-							},
-						}
-					: n,
-			),
-		);
+    // Optimistic update
+    setLocalNodes((prev) =>
+      prev.map((n) =>
+        n.id === slot.id
+          ? {
+              ...n,
+              properties: {
+                ...n.properties,
+                selectedProductIds: newSelectedIds,
+              },
+            }
+          : n,
+      ),
+    );
 
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await updateNode(token, collectionId, slot.id, {
-				properties: { ...slot.properties, selectedProductIds: newSelectedIds },
-			});
-		} catch {
-			await refresh();
-		}
-	}
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await track(
+        updateNode(token, collectionId, slot.id, {
+          properties: {
+            ...slot.properties,
+            selectedProductIds: newSelectedIds,
+          },
+        }),
+      );
+    } catch {
+      await refresh();
+    }
+  }
 
-	function startBulkRefresh() {
-		const allProducts = localNodes.filter(
-			(n) => n.type !== "section" && n.properties.url,
-		);
-		if (allProducts.length > 0) setRefreshQueue(allProducts);
-	}
+  function startBulkRefresh() {
+    const allProducts = localNodes.filter(
+      (n) => n.type !== 'section' && n.properties.url,
+    );
+    if (allProducts.length > 0) setRefreshQueue(allProducts);
+  }
 
-	async function deleteSlot(slot: ProductItem) {
-		// Optimistic: remove slot and its children
-		setLocalNodes((prev) =>
-			prev.filter((n) => n.id !== slot.id && n.parentId !== slot.id),
-		);
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await deleteNode(token, collectionId, slot.id, slot.version);
-		} catch {
-			await refresh();
-		}
-	}
+  async function deleteSlot(slot: ProductItem) {
+    // Optimistic: remove slot and its children
+    setLocalNodes((prev) =>
+      prev.filter((n) => n.id !== slot.id && n.parentId !== slot.id),
+    );
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await track(deleteNode(token, collectionId, slot.id, slot.version));
+    } catch {
+      await refresh();
+    }
+  }
 
-	async function deleteProduct(item: ProductItem) {
-		// Optimistic update
-		setLocalNodes((prev) => prev.filter((n) => n.id !== item.id));
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await deleteNode(token, collectionId, item.id, item.version);
-		} catch {
-			await refresh();
-		}
-	}
+  async function deleteProduct(item: ProductItem) {
+    // Optimistic update
+    setLocalNodes((prev) => prev.filter((n) => n.id !== item.id));
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await track(deleteNode(token, collectionId, item.id, item.version));
+    } catch {
+      await refresh();
+    }
+  }
 
-	async function handleUpdateProduct(
-		item: ProductItem,
-		title: string,
-		price: string,
-		notes: string,
-	) {
-		const updatedTitle = title || item.title;
-		const updatedProperties = {
-			...item.properties,
-			price: price || undefined,
-			notes: notes || undefined,
-		};
-		// Optimistic update
-		setLocalNodes((prev) =>
-			prev.map((n) =>
-				n.id === item.id
-					? { ...n, title: updatedTitle, properties: updatedProperties }
-					: n,
-			),
-		);
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await updateNode(token, collectionId, item.id, {
-				title: updatedTitle ?? undefined,
-				properties: updatedProperties,
-			});
-		} catch {
-			await refresh();
-		}
-	}
+  async function handleUpdateProduct(
+    item: ProductItem,
+    title: string,
+    price: string,
+    notes: string,
+  ) {
+    const updatedTitle = title || item.title;
+    const updatedProperties = {
+      ...item.properties,
+      price: price || undefined,
+      notes: notes || undefined,
+    };
+    // Optimistic update
+    setLocalNodes((prev) =>
+      prev.map((n) =>
+        n.id === item.id
+          ? { ...n, title: updatedTitle, properties: updatedProperties }
+          : n,
+      ),
+    );
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await track(
+        updateNode(token, collectionId, item.id, {
+          title: updatedTitle ?? undefined,
+          properties: updatedProperties,
+        }),
+      );
+    } catch {
+      await refresh();
+    }
+  }
 
-	async function handleUpdateSlot(
-		slot: ProductItem,
-		name: string,
-		maxSelectionsStr: string,
-		budgetStr: string,
-	) {
-		const updatedTitle = name || slot.title;
-		const updatedProperties = {
-			...slot.properties,
-			maxSelections: maxSelectionsStr
-				? parseInt(maxSelectionsStr, 10)
-				: undefined,
-			budget: budgetStr
-				? Math.round(parseFloat(budgetStr) * 100)
-				: undefined,
-		};
-		// Optimistic update
-		setLocalNodes((prev) =>
-			prev.map((n) =>
-				n.id === slot.id
-					? { ...n, title: updatedTitle, properties: updatedProperties }
-					: n,
-			),
-		);
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await updateNode(token, collectionId, slot.id, {
-				title: updatedTitle ?? undefined,
-				properties: updatedProperties,
-			});
-		} catch {
-			await refresh();
-		}
-	}
+  async function handleUpdateSlot(
+    slot: ProductItem,
+    name: string,
+    maxSelectionsStr: string,
+    budgetStr: string,
+  ) {
+    const updatedTitle = name || slot.title;
+    const updatedProperties = {
+      ...slot.properties,
+      maxSelections: maxSelectionsStr
+        ? parseInt(maxSelectionsStr, 10)
+        : undefined,
+      budget: budgetStr ? Math.round(parseFloat(budgetStr) * 100) : undefined,
+    };
+    // Optimistic update
+    setLocalNodes((prev) =>
+      prev.map((n) =>
+        n.id === slot.id
+          ? { ...n, title: updatedTitle, properties: updatedProperties }
+          : n,
+      ),
+    );
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await track(
+        updateNode(token, collectionId, slot.id, {
+          title: updatedTitle ?? undefined,
+          properties: updatedProperties,
+        }),
+      );
+    } catch {
+      await refresh();
+    }
+  }
 
-	async function handleUpdateCollection(name: string, color: string) {
-		// Optimistic: update detail
-		if (detail) {
-			setDetail({
-				...detail,
-				collection: { ...detail.collection, name, color },
-			});
-		}
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await updateCollection(token, collectionId, { name, color });
-			await refresh();
-		} catch {
-			await refresh();
-		}
-	}
+  async function handleUpdateCollection(name: string, color: string) {
+    // Optimistic: update detail
+    if (detail) {
+      setDetail({
+        ...detail,
+        collection: { ...detail.collection, name, color },
+      });
+    }
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await track(updateCollection(token, collectionId, { name, color }));
+      await refresh();
+    } catch {
+      await refresh();
+    }
+  }
 
-	function confirmDeleteCollection() {
-		Alert.alert(
-			"Delete collection?",
-			`"${displayTitle}" and its contents will be removed from Tote.`,
-			[
-				{ text: "Cancel", style: "cancel" },
-				{
-					text: "Delete",
-					style: "destructive",
-					onPress: async () => {
-						try {
-							const token = await getToken();
-							if (!token) throw new Error("Not authenticated");
-							await deleteCollection(token, collectionId, collectionVersion);
-							navigation.reset({
-								index: 0,
-								routes: [{ name: "CollectionList" }],
-							});
-						} catch (error) {
-							Alert.alert(
-								"Could not delete collection",
-								error instanceof Error ? error.message : "Please try again.",
-							);
-						}
-					},
-				},
-			],
-		);
-	}
+  function confirmDeleteCollection() {
+    Alert.alert(
+      'Delete collection?',
+      `"${displayTitle}" and its contents will be removed from Tote.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const token = await getToken();
+              if (!token) throw new Error('Not authenticated');
+              await deleteCollection(token, collectionId, collectionVersion);
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'CollectionList' }],
+              });
+            } catch (error) {
+              Alert.alert(
+                'Could not delete collection',
+                error instanceof Error ? error.message : 'Please try again.',
+              );
+            }
+          },
+        },
+      ],
+    );
+  }
 
-	function openReorderItemTargetPicker() {
-		const options = [
-			"Cancel",
-			...reorderSections.map((section) => section.title),
-		];
+  function openReorderItemTargetPicker() {
+    const options = [
+      'Cancel',
+      ...reorderSections.map((section) => section.title),
+    ];
 
-		ActionSheetIOS.showActionSheetWithOptions(
-			{
-				options,
-				cancelButtonIndex: 0,
-			},
-			(buttonIndex) => {
-				if (buttonIndex > 0) {
-					const target = reorderSections[buttonIndex - 1];
-					if (target) {
-						setActiveReorderTargetId(target.id);
-					}
-				}
-			},
-		);
-	}
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex: 0,
+      },
+      (buttonIndex) => {
+        if (buttonIndex > 0) {
+          const target = reorderSections[buttonIndex - 1];
+          if (target) {
+            setActiveReorderTargetId(target.id);
+          }
+        }
+      },
+    );
+  }
 
-	function openCollectionActions() {
-		const nextViewModeLabel =
-			viewMode === "list" ? "Switch to grid" : "Switch to list";
+  function openCollectionActions() {
+    const nextViewModeLabel =
+      viewMode === 'list' ? 'Switch to grid' : 'Switch to list';
 
-		ActionSheetIOS.showActionSheetWithOptions(
-			{
-				options: [
-					"Cancel",
-					"Edit collection",
-					"Share collection",
-					nextViewModeLabel,
-					"Reorder items",
-					"Delete collection",
-				],
-				cancelButtonIndex: 0,
-				destructiveButtonIndex: 5,
-			},
-			(buttonIndex) => {
-				if (buttonIndex === 1) {
-					setEditingCollection(true);
-				} else if (buttonIndex === 2) {
-					setSharingCollection(true);
-				} else if (buttonIndex === 3) {
-					setViewMode((mode) => (mode === "list" ? "grid" : "list"));
-				} else if (buttonIndex === 4) {
-					setIsReorderMode(true);
-				} else if (buttonIndex === 5) {
-					confirmDeleteCollection();
-				}
-			},
-		);
-	}
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options: [
+          'Cancel',
+          'Edit collection',
+          'Share collection',
+          nextViewModeLabel,
+          'Reorder items',
+          'Delete collection',
+        ],
+        cancelButtonIndex: 0,
+        destructiveButtonIndex: 5,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 1) {
+          setEditingCollection(true);
+        } else if (buttonIndex === 2) {
+          setSharingCollection(true);
+        } else if (buttonIndex === 3) {
+          setViewMode((mode) => (mode === 'list' ? 'grid' : 'list'));
+        } else if (buttonIndex === 4) {
+          setIsReorderMode(true);
+        } else if (buttonIndex === 5) {
+          confirmDeleteCollection();
+        }
+      },
+    );
+  }
 
-	function renderProduct({
-		item,
-		section,
-	}: {
-		item: ProductItem;
-		section: Section;
-	}) {
-		const slot = section.slot;
-		const selectedIds =
-			slot
-				? ((slot.properties.selectedProductIds as string[] | undefined) ?? [])
-				: [];
-		const isSelected = selectedIds.includes(item.id);
+  function renderProduct({
+    item,
+    section,
+  }: {
+    item: ProductItem;
+    section: Section;
+  }) {
+    const slot = section.slot;
+    const selectedIds = slot
+      ? ((slot.properties.selectedProductIds as string[] | undefined) ?? [])
+      : [];
+    const isSelected = selectedIds.includes(item.id);
 
-		return (
-			<ProductRow
-				item={item}
-				isSelected={isSelected}
-				isRefreshing={refreshQueue[0]?.id === item.id}
-				isQueued={refreshQueue.slice(1).some((q) => q.id === item.id)}
-				onOpen={() => openProduct(item)}
-				onToggleSelected={slot ? () => toggleSelected(item, slot) : null}
-				onDelete={() => deleteProduct(item)}
-				onEdit={() => setEditingProduct(item)}
-				onRefresh={() => setRefreshQueue([item])}
-			/>
-		);
-	}
+    return (
+      <ProductRow
+        item={item}
+        isSelected={isSelected}
+        isRefreshing={refreshQueue[0]?.id === item.id}
+        isQueued={refreshQueue.slice(1).some((q) => q.id === item.id)}
+        onOpen={() => openProduct(item)}
+        onToggleSelected={slot ? () => toggleSelected(item, slot) : null}
+        onDelete={() => deleteProduct(item)}
+        onEdit={() => setEditingProduct(item)}
+        onRefresh={() => setRefreshQueue([item])}
+      />
+    );
+  }
 
-	const activeReorderSection =
-		reorderSections.find((section) => section.id === activeReorderTargetId) ??
-		reorderSections[0];
-	const hasMultipleSlots = sectionNodes.length > 1;
-	const gridItemSize = Math.floor((Dimensions.get("window").width - 64) / 2);
-	const reorderSlotItems: ReorderableBlockItem[] = sectionNodes.map((slot) => ({
-		id: slot.id,
-		block: slot,
-	}));
-	const activeReorderItems: ReorderableBlockItem[] =
-		activeReorderSection?.items.map((item) => ({
-			id: item.id,
-			block: item,
-		})) ?? [];
-	const reorderGridHeight =
-		Math.ceil(activeReorderItems.length / 2) *
-			(Math.round(gridItemSize * 0.72) + 106 + 12) -
-		12;
-	const reorderGridKey = `${activeReorderSection?.id ?? "none"}:${activeReorderItems
-		.map((item) => item.id)
-		.join(",")}`;
+  const activeReorderSection =
+    reorderSections.find((section) => section.id === activeReorderTargetId) ??
+    reorderSections[0];
+  const hasMultipleSlots = sectionNodes.length > 1;
+  const gridItemSize = Math.floor((Dimensions.get('window').width - 64) / 2);
+  const reorderSlotItems: ReorderableBlockItem[] = sectionNodes.map((slot) => ({
+    id: slot.id,
+    block: slot,
+  }));
+  const activeReorderItems: ReorderableBlockItem[] =
+    activeReorderSection?.items.map((item) => ({
+      id: item.id,
+      block: item,
+    })) ?? [];
+  const reorderGridHeight =
+    Math.ceil(activeReorderItems.length / 2) *
+      (Math.round(gridItemSize * 0.72) + 106 + 12) -
+    12;
+  const reorderGridKey = `${activeReorderSection?.id ?? 'none'}:${activeReorderItems
+    .map((item) => item.id)
+    .join(',')}`;
 
-	useEffect(() => {
-		if (
-			!(isReorderMode && viewMode === "grid" && activeReorderItems.length > 0)
-		) {
-			setIsGridReorderReady(false);
-			return;
-		}
+  useEffect(() => {
+    if (
+      !(isReorderMode && viewMode === 'grid' && activeReorderItems.length > 0)
+    ) {
+      setIsGridReorderReady(false);
+      return;
+    }
 
-		setIsGridReorderReady(false);
+    setIsGridReorderReady(false);
 
-		const handle = requestAnimationFrame(() => {
-			setIsGridReorderReady(true);
-		});
+    const handle = requestAnimationFrame(() => {
+      setIsGridReorderReady(true);
+    });
 
-		return () => {
-			cancelAnimationFrame(handle);
-		};
-	}, [isReorderMode, viewMode, reorderGridKey, activeReorderItems.length]);
+    return () => {
+      cancelAnimationFrame(handle);
+    };
+  }, [isReorderMode, viewMode, reorderGridKey, activeReorderItems.length]);
 
-	async function handleSlotDrop(
-		_: string,
-		__: number,
-		positions?: Record<string, number>,
-	) {
-		const getPos = (id: string) => positions?.[id] ?? 0;
-		const orderedItems = reorderSlotItems
-			.slice()
-			.sort((a, b) => getPos(a.id) - getPos(b.id));
+  async function handleSlotDrop(
+    _: string,
+    __: number,
+    positions?: Record<string, number>,
+  ) {
+    const getPos = (id: string) => positions?.[id] ?? 0;
+    const orderedItems = reorderSlotItems
+      .slice()
+      .sort((a, b) => getPos(a.id) - getPos(b.id));
 
-		const reorderPayload = orderedItems.map((item, i) => ({
-			id: item.id,
-			positionKey: String(i + 1).padStart(8, "0"),
-			parentId: null as string | null,
-		}));
+    const reorderPayload = orderedItems.map((item, i) => ({
+      id: item.id,
+      positionKey: String(i + 1).padStart(8, '0'),
+      parentId: null as string | null,
+    }));
 
-		// Optimistic update
-		setLocalNodes((prev) => {
-			const updated = [...prev];
-			reorderPayload.forEach(({ id, positionKey }) => {
-				const idx = updated.findIndex((n) => n.id === id);
-				if (idx !== -1) updated[idx] = { ...updated[idx], positionKey };
-			});
-			return updated;
-		});
+    // Optimistic update
+    setLocalNodes((prev) => {
+      const updated = [...prev];
+      reorderPayload.forEach(({ id, positionKey }) => {
+        const idx = updated.findIndex((n) => n.id === id);
+        if (idx !== -1) updated[idx] = { ...updated[idx], positionKey };
+      });
+      return updated;
+    });
 
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await reorderNodes(token, collectionId, reorderPayload);
-		} catch {
-			await refresh();
-		}
-	}
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await track(reorderNodes(token, collectionId, reorderPayload));
+    } catch {
+      await refresh();
+    }
+  }
 
-	async function doActiveSectionReorder(getPos: (id: string) => number) {
-		if (!activeReorderSection) return;
+  async function doActiveSectionReorder(getPos: (id: string) => number) {
+    if (!activeReorderSection) return;
 
-		const orderedItems = activeReorderItems
-			.slice()
-			.sort((a, b) => getPos(a.id) - getPos(b.id));
+    const orderedItems = activeReorderItems
+      .slice()
+      .sort((a, b) => getPos(a.id) - getPos(b.id));
 
-		const parentId = activeReorderSection.slot?.id ?? null;
-		const reorderPayload = orderedItems.map((item, i) => ({
-			id: item.id,
-			positionKey: String(i + 1).padStart(8, "0"),
-			parentId,
-		}));
+    const parentId = activeReorderSection.slot?.id ?? null;
+    const reorderPayload = orderedItems.map((item, i) => ({
+      id: item.id,
+      positionKey: String(i + 1).padStart(8, '0'),
+      parentId,
+    }));
 
-		// Optimistic update
-		setLocalNodes((prev) => {
-			const updated = [...prev];
-			reorderPayload.forEach(({ id, positionKey }) => {
-				const idx = updated.findIndex((n) => n.id === id);
-				if (idx !== -1) updated[idx] = { ...updated[idx], positionKey };
-			});
-			return updated;
-		});
+    // Optimistic update
+    setLocalNodes((prev) => {
+      const updated = [...prev];
+      reorderPayload.forEach(({ id, positionKey }) => {
+        const idx = updated.findIndex((n) => n.id === id);
+        if (idx !== -1) updated[idx] = { ...updated[idx], positionKey };
+      });
+      return updated;
+    });
 
-		try {
-			const token = await getToken();
-			if (!token) return;
-			await reorderNodes(token, collectionId, reorderPayload);
-		} catch {
-			await refresh();
-		}
-	}
+    try {
+      const token = await getToken();
+      if (!token) return;
+      await reorderNodes(token, collectionId, reorderPayload);
+    } catch {
+      await refresh();
+    }
+  }
 
-	// List-based drop (SortableItem): positions is Record<string, number>
-	async function handleActiveSectionListDrop(
-		_: string,
-		__: number,
-		positions?: Record<string, number>,
-	) {
-		await doActiveSectionReorder((id) => positions?.[id] ?? 0);
-	}
+  // List-based drop (SortableItem): positions is Record<string, number>
+  async function handleActiveSectionListDrop(
+    _: string,
+    __: number,
+    positions?: Record<string, number>,
+  ) {
+    await doActiveSectionReorder((id) => positions?.[id] ?? 0);
+  }
 
-	// Grid-based drop (SortableGridItem): positions is GridPositions
-	async function handleActiveSectionGridDrop(
-		_: string,
-		__: number,
-		positions?: GridPositions,
-	) {
-		await doActiveSectionReorder((id) => positions?.[id]?.index ?? 0);
-	}
+  // Grid-based drop (SortableGridItem): positions is GridPositions
+  async function handleActiveSectionGridDrop(
+    _: string,
+    __: number,
+    positions?: GridPositions,
+  ) {
+    await doActiveSectionReorder((id) => positions?.[id]?.index ?? 0);
+  }
 
-	function renderReorderSlot({
-		item,
-		id,
-		...rest
-	}: SortableRenderItemProps<ReorderableBlockItem>) {
-		return (
-			<SortableItem
-				key={id}
-				id={id}
-				data={item}
-				onDrop={handleSlotDrop}
-				{...rest}
-			>
-				<ReorderSlotCard slot={item.block} localNodes={localNodes} />
-			</SortableItem>
-		);
-	}
+  function renderReorderSlot({
+    item,
+    id,
+    ...rest
+  }: SortableRenderItemProps<ReorderableBlockItem>) {
+    return (
+      <SortableItem
+        key={id}
+        id={id}
+        data={item}
+        onDrop={handleSlotDrop}
+        {...rest}
+      >
+        <ReorderSlotCard slot={item.block} localNodes={localNodes} />
+      </SortableItem>
+    );
+  }
 
-	function renderReorderProduct({
-		item,
-		id,
-		...rest
-	}: SortableRenderItemProps<ReorderableBlockItem>) {
-		return (
-			<SortableItem
-				key={id}
-				id={id}
-				data={item}
-				onDrop={handleActiveSectionListDrop}
-				{...rest}
-			>
-				<ReorderProductRow item={item.block} />
-			</SortableItem>
-		);
-	}
+  function renderReorderProduct({
+    item,
+    id,
+    ...rest
+  }: SortableRenderItemProps<ReorderableBlockItem>) {
+    return (
+      <SortableItem
+        key={id}
+        id={id}
+        data={item}
+        onDrop={handleActiveSectionListDrop}
+        {...rest}
+      >
+        <ReorderProductRow item={item.block} />
+      </SortableItem>
+    );
+  }
 
-	function renderReorderGridItem({
-		item,
-		...rest
-	}: SortableGridRenderItemProps<ReorderableBlockItem>) {
-		return (
-			<SortableGridItem
-				key={item.id}
-				data={item}
-				onDrop={handleActiveSectionGridDrop}
-				style={{
-					width: gridItemSize,
-					height: Math.round(gridItemSize * 0.72) + 106,
-				}}
-				{...rest}
-			>
-				<ReorderGridCard item={item.block} size={gridItemSize} />
-			</SortableGridItem>
-		);
-	}
+  function renderReorderGridItem({
+    item,
+    ...rest
+  }: SortableGridRenderItemProps<ReorderableBlockItem>) {
+    return (
+      <SortableGridItem
+        key={item.id}
+        data={item}
+        onDrop={handleActiveSectionGridDrop}
+        style={{
+          width: gridItemSize,
+          height: Math.round(gridItemSize * 0.72) + 106,
+        }}
+        {...rest}
+      >
+        <ReorderGridCard item={item.block} size={gridItemSize} />
+      </SortableGridItem>
+    );
+  }
 
-	const pageHeader = (
-		<View style={[styles.pageHeader, { paddingTop: pageHeaderTopPadding }]}>
-			<Animated.View style={[styles.pageHeaderText, titleFadeStyle]}>
-				{isReorderMode ? (
-					<Text style={styles.pageEyebrow}>Reorder collection</Text>
-				) : null}
-				<Text style={styles.pageTitle}>{displayTitle}</Text>
-				<Animated.View style={[styles.pageMetaRow, metaFadeStyle]}>
-					<View
-						style={[
-							styles.colorDot,
-							{
-								backgroundColor: collectionColor,
-							},
-						]}
-					/>
-					<Text style={styles.pageMetaText}>{totalItems} items</Text>
-					{isReorderMode ? (
-						<>
-							<Text style={styles.pageMetaDivider}>·</Text>
-							<Text style={styles.pageMetaText}>
-								{activeReorderTargetId === "slots" ? "Slots" : "Items"}
-							</Text>
-						</>
-					) : (
-						<>
-							<Text style={styles.pageMetaDivider}>·</Text>
-							<Text style={styles.pageMetaText}>{viewMode}</Text>
-						</>
-					)}
-				</Animated.View>
-			</Animated.View>
-		</View>
-	);
+  const pageHeader = (
+    <View style={[styles.pageHeader, { paddingTop: pageHeaderTopPadding }]}>
+      <Animated.View style={[styles.pageHeaderText, titleFadeStyle]}>
+        {isReorderMode ? (
+          <Text style={styles.pageEyebrow}>Reorder collection</Text>
+        ) : null}
+        <Text style={styles.pageTitle}>{displayTitle}</Text>
+        <Animated.View style={[styles.pageMetaRow, metaFadeStyle]}>
+          <View
+            style={[
+              styles.colorDot,
+              {
+                backgroundColor: collectionColor,
+              },
+            ]}
+          />
+          <Text style={styles.pageMetaText}>{totalItems} items</Text>
+          {isReorderMode ? (
+            <>
+              <Text style={styles.pageMetaDivider}>·</Text>
+              <Text style={styles.pageMetaText}>
+                {activeReorderTargetId === 'slots' ? 'Slots' : 'Items'}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={styles.pageMetaDivider}>·</Text>
+              <Text style={styles.pageMetaText}>{viewMode}</Text>
+            </>
+          )}
+          {syncState !== 'idle' && (
+            <>
+              <Text style={styles.pageMetaDivider}>·</Text>
+              <Text
+                style={[
+                  styles.pageMetaText,
+                  syncState === 'saved' && styles.syncSaved,
+                ]}
+              >
+                {syncState === 'syncing'
+                  ? 'Saving...'
+                  : syncState === 'saved'
+                    ? 'Saved'
+                    : lastSavedAt
+                      ? `Saved ${relativeTime(lastSavedAt)}`
+                      : null}
+              </Text>
+            </>
+          )}
+        </Animated.View>
+      </Animated.View>
+    </View>
+  );
 
-	return (
-		<View style={styles.container}>
-			<View
-				style={[styles.statusScrim, { height: insets.top + 24 }]}
-				pointerEvents="none"
-			/>
-			<View style={[styles.floatingTopBar, { top: topBarTop }]}>
-				<TouchableOpacity
-					style={styles.floatingCircleButton}
-					onPress={() => navigation.goBack()}
-					hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-				>
-					<Ionicons name="chevron-back" size={18} color="#0f172a" />
-				</TouchableOpacity>
+  return (
+    <View style={styles.container}>
+      <View
+        style={[styles.statusScrim, { height: insets.top + 24 }]}
+        pointerEvents="none"
+      />
+      <View style={[styles.floatingTopBar, { top: topBarTop }]}>
+        <TouchableOpacity
+          style={styles.floatingCircleButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="chevron-back" size={18} color="#0f172a" />
+        </TouchableOpacity>
 
-				<View style={styles.floatingTopBarRight}>
-					{isReorderMode ? (
-						<TouchableOpacity
-							style={styles.donePillButton}
-							onPress={() => setIsReorderMode(false)}
-							hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-						>
-							<Text style={styles.donePillButtonText}>Done</Text>
-						</TouchableOpacity>
-					) : (
-						<>
-							<TouchableOpacity
-								style={styles.floatingCircleButton}
-								onPress={() => setAddingProduct(true)}
-								hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-							>
-								<Ionicons name="add" size={20} color="#0f172a" />
-							</TouchableOpacity>
-							<TouchableOpacity
-								style={styles.floatingCircleButton}
-								onPress={openCollectionActions}
-								hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-							>
-								<Ionicons
-									name="ellipsis-horizontal"
-									size={18}
-									color="#0f172a"
-								/>
-							</TouchableOpacity>
-						</>
-					)}
-				</View>
-			</View>
+        <View style={styles.floatingTopBarRight}>
+          {isReorderMode ? (
+            <TouchableOpacity
+              style={styles.donePillButton}
+              onPress={() => setIsReorderMode(false)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={styles.donePillButtonText}>Done</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.floatingCircleButton}
+                onPress={() => setAddingProduct(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="add" size={20} color="#0f172a" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.floatingCircleButton}
+                onPress={openCollectionActions}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons
+                  name="ellipsis-horizontal"
+                  size={18}
+                  color="#0f172a"
+                />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
 
-			{totalItems === 0 && !childrenLoading ? (
-				<View style={styles.emptyStateContainer}>
-					{pageHeader}
-					<Text style={styles.empty}>No items yet</Text>
-				</View>
-			) : totalItems === 0 && childrenLoading ? (
-				<View style={styles.emptyStateContainer}>
-					{pageHeader}
-					<ActivityIndicator
-						size="large"
-						color="#6366f1"
-						style={{ marginTop: 40 }}
-					/>
-				</View>
-			) : isReorderMode ? (
-				<View style={styles.reorderModeContainer}>
-					{pageHeader}
-					<View style={styles.reorderModeBody}>
-						{hasMultipleSlots || reorderSections.length > 1 ? (
-							<View style={styles.reorderControls}>
-								<View style={styles.reorderScopeSwitch}>
-									{hasMultipleSlots ? (
-										<TouchableOpacity
-											style={[
-												styles.reorderScopeButton,
-												activeReorderTargetId === "slots" &&
-													styles.reorderScopeButtonActive,
-											]}
-											onPress={() => setActiveReorderTargetId("slots")}
-										>
-											<Text
-												style={[
-													styles.reorderScopeButtonLabel,
-													activeReorderTargetId === "slots" &&
-														styles.reorderScopeButtonLabelActive,
-												]}
-											>
-												Slots
-											</Text>
-										</TouchableOpacity>
-									) : null}
-									<TouchableOpacity
-										style={[
-											styles.reorderScopeButton,
-											activeReorderTargetId !== "slots" &&
-												styles.reorderScopeButtonActive,
-										]}
-										onPress={() =>
-											setActiveReorderTargetId(
-												activeReorderSection?.id ??
-													reorderSections[0]?.id ??
-													"ungrouped",
-											)
-										}
-									>
-										<Text
-											style={[
-												styles.reorderScopeButtonLabel,
-												activeReorderTargetId !== "slots" &&
-													styles.reorderScopeButtonLabelActive,
-											]}
-										>
-											Items
-										</Text>
-									</TouchableOpacity>
-								</View>
+      {totalItems === 0 && !childrenLoading ? (
+        <View style={styles.emptyStateContainer}>
+          {pageHeader}
+          <Text style={styles.empty}>No items yet</Text>
+        </View>
+      ) : totalItems === 0 && childrenLoading ? (
+        <View style={styles.emptyStateContainer}>
+          {pageHeader}
+          <ActivityIndicator
+            size="large"
+            color="#6366f1"
+            style={{ marginTop: 40 }}
+          />
+        </View>
+      ) : isReorderMode ? (
+        <View style={styles.reorderModeContainer}>
+          {pageHeader}
+          <View style={styles.reorderModeBody}>
+            {hasMultipleSlots || reorderSections.length > 1 ? (
+              <View style={styles.reorderControls}>
+                <View style={styles.reorderScopeSwitch}>
+                  {hasMultipleSlots ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.reorderScopeButton,
+                        activeReorderTargetId === 'slots' &&
+                          styles.reorderScopeButtonActive,
+                      ]}
+                      onPress={() => setActiveReorderTargetId('slots')}
+                    >
+                      <Text
+                        style={[
+                          styles.reorderScopeButtonLabel,
+                          activeReorderTargetId === 'slots' &&
+                            styles.reorderScopeButtonLabelActive,
+                        ]}
+                      >
+                        Slots
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  <TouchableOpacity
+                    style={[
+                      styles.reorderScopeButton,
+                      activeReorderTargetId !== 'slots' &&
+                        styles.reorderScopeButtonActive,
+                    ]}
+                    onPress={() =>
+                      setActiveReorderTargetId(
+                        activeReorderSection?.id ??
+                          reorderSections[0]?.id ??
+                          'ungrouped',
+                      )
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.reorderScopeButtonLabel,
+                        activeReorderTargetId !== 'slots' &&
+                          styles.reorderScopeButtonLabelActive,
+                      ]}
+                    >
+                      Items
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-								{activeReorderTargetId !== "slots" &&
-								reorderSections.length > 1 ? (
-									<TouchableOpacity
-										style={styles.reorderTargetPicker}
-										onPress={openReorderItemTargetPicker}
-									>
-										<Text style={styles.reorderTargetPickerLabel}>Editing</Text>
-										<View style={styles.reorderTargetPickerValueRow}>
-											<Text
-												style={styles.reorderTargetPickerValue}
-												numberOfLines={1}
-											>
-												{activeReorderSection?.title ?? "Items"}
-											</Text>
-											<Ionicons name="chevron-down" size={16} color="#6b7280" />
-										</View>
-									</TouchableOpacity>
-								) : null}
-							</View>
-						) : null}
+                {activeReorderTargetId !== 'slots' &&
+                reorderSections.length > 1 ? (
+                  <TouchableOpacity
+                    style={styles.reorderTargetPicker}
+                    onPress={openReorderItemTargetPicker}
+                  >
+                    <Text style={styles.reorderTargetPickerLabel}>Editing</Text>
+                    <View style={styles.reorderTargetPickerValueRow}>
+                      <Text
+                        style={styles.reorderTargetPickerValue}
+                        numberOfLines={1}
+                      >
+                        {activeReorderSection?.title ?? 'Items'}
+                      </Text>
+                      <Ionicons name="chevron-down" size={16} color="#6b7280" />
+                    </View>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : null}
 
-						{activeReorderTargetId === "slots" && hasMultipleSlots ? (
-							<View style={styles.reorderPanelFlex}>
-								<View style={styles.reorderPanelHeader}>
-									<Text style={styles.reorderPanelTitle}>Slots</Text>
-									<Text style={styles.reorderPanelMeta}>
-										{sectionNodes.length} slots
-									</Text>
-								</View>
-								<Sortable
-									data={reorderSlotItems}
-									renderItem={renderReorderSlot}
-									itemHeight={112}
-									gap={12}
-									useFlatList={false}
-									itemKeyExtractor={(item) => item.id}
-									contentContainerStyle={styles.reorderSlotsList}
-								/>
-							</View>
-						) : activeReorderSection ? (
-							<View style={styles.reorderPanelFlex}>
-								<View style={styles.reorderPanelHeader}>
-									<Text style={styles.reorderPanelTitle}>
-										{activeReorderSection.title}
-									</Text>
-									<Text style={styles.reorderPanelMeta}>
-										{activeReorderSection.items.length} items · {viewMode}
-									</Text>
-								</View>
+            {activeReorderTargetId === 'slots' && hasMultipleSlots ? (
+              <View style={styles.reorderPanelFlex}>
+                <View style={styles.reorderPanelHeader}>
+                  <Text style={styles.reorderPanelTitle}>Slots</Text>
+                  <Text style={styles.reorderPanelMeta}>
+                    {sectionNodes.length} slots
+                  </Text>
+                </View>
+                <Sortable
+                  data={reorderSlotItems}
+                  renderItem={renderReorderSlot}
+                  itemHeight={112}
+                  gap={12}
+                  useFlatList={false}
+                  itemKeyExtractor={(item) => item.id}
+                  contentContainerStyle={styles.reorderSlotsList}
+                />
+              </View>
+            ) : activeReorderSection ? (
+              <View style={styles.reorderPanelFlex}>
+                <View style={styles.reorderPanelHeader}>
+                  <Text style={styles.reorderPanelTitle}>
+                    {activeReorderSection.title}
+                  </Text>
+                  <Text style={styles.reorderPanelMeta}>
+                    {activeReorderSection.items.length} items · {viewMode}
+                  </Text>
+                </View>
 
-								{activeReorderSection.items.length === 0 ? (
-									<View style={styles.reorderEmptyState}>
-										<Text style={styles.reorderEmptyText}>
-											Nothing to reorder here yet.
-										</Text>
-									</View>
-								) : viewMode === "grid" ? (
-									<View
-										style={[
-											styles.reorderGridFrame,
-											{
-												height: Math.max(
-													reorderGridHeight + gridItemSize,
-													gridItemSize * 2,
-												),
-											},
-										]}
-									>
-										{isGridReorderReady ? (
-											<SortableGrid
-												key={reorderGridKey}
-												data={activeReorderItems}
-												renderItem={renderReorderGridItem}
-												itemKeyExtractor={(item) => item.id}
-												dimensions={{
-													columns: 2,
-													itemWidth: gridItemSize,
-													itemHeight: Math.round(gridItemSize * 0.72) + 106,
-													columnGap: 12,
-													rowGap: 12,
-												}}
-												scrollEnabled={false}
-												style={styles.reorderGrid}
-												contentContainerStyle={styles.reorderGridContainer}
-											/>
-										) : null}
-									</View>
-								) : (
-									<Sortable
-										data={activeReorderItems}
-										renderItem={renderReorderProduct}
-										itemHeight={96}
-										gap={10}
-										itemKeyExtractor={(item) => item.id}
-										contentContainerStyle={styles.reorderItemsList}
-									/>
-								)}
-							</View>
-						) : null}
-					</View>
-				</View>
-			) : viewMode === "grid" ? (
-				<MasonryGrid
-					header={pageHeader}
-					onScroll={handleScroll}
-					onRefresh={startBulkRefresh}
-					refreshing={refreshQueue.length > 0}
-					items={localNodes
-						.filter((n) => n.type !== "section")
-						.sort((a, b) => a.positionKey.localeCompare(b.positionKey))}
-					onPress={openProduct}
-				/>
-			) : (
-				<AnimatedSectionList
-					sections={sections}
-					contentInsetAdjustmentBehavior="never"
-					onScroll={handleScroll}
-					scrollEventThrottle={16}
-					keyExtractor={(item) => (item as ProductItem).id}
-					renderItem={(info) => renderProduct(info as unknown as { item: ProductItem; section: Section })}
-					renderSectionHeader={({ section: rawSection }) => {
-						const section = rawSection as unknown as Section;
-						return section.title ? (
-							<SlotHeader
-								slot={section.slot}
-								title={section.title}
-								localNodes={localNodes}
-								onSave={(name, maxSel, bud) => {
-									if (section.slot) handleUpdateSlot(section.slot, name, maxSel, bud);
-								}}
-								onDelete={() => {
-									if (section.slot) deleteSlot(section.slot);
-								}}
-							/>
-						) : null;
-					}}
-					ListHeaderComponent={pageHeader}
-					contentContainerStyle={styles.list}
-					stickySectionHeadersEnabled={false}
-					onRefresh={startBulkRefresh}
-					refreshing={refreshQueue.length > 0}
-				/>
-			)}
+                {activeReorderSection.items.length === 0 ? (
+                  <View style={styles.reorderEmptyState}>
+                    <Text style={styles.reorderEmptyText}>
+                      Nothing to reorder here yet.
+                    </Text>
+                  </View>
+                ) : viewMode === 'grid' ? (
+                  <View
+                    style={[
+                      styles.reorderGridFrame,
+                      {
+                        height: Math.max(
+                          reorderGridHeight + gridItemSize,
+                          gridItemSize * 2,
+                        ),
+                      },
+                    ]}
+                  >
+                    {isGridReorderReady ? (
+                      <SortableGrid
+                        key={reorderGridKey}
+                        data={activeReorderItems}
+                        renderItem={renderReorderGridItem}
+                        itemKeyExtractor={(item) => item.id}
+                        dimensions={{
+                          columns: 2,
+                          itemWidth: gridItemSize,
+                          itemHeight: Math.round(gridItemSize * 0.72) + 106,
+                          columnGap: 12,
+                          rowGap: 12,
+                        }}
+                        scrollEnabled={false}
+                        style={styles.reorderGrid}
+                        contentContainerStyle={styles.reorderGridContainer}
+                      />
+                    ) : null}
+                  </View>
+                ) : (
+                  <Sortable
+                    data={activeReorderItems}
+                    renderItem={renderReorderProduct}
+                    itemHeight={96}
+                    gap={10}
+                    itemKeyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.reorderItemsList}
+                  />
+                )}
+              </View>
+            ) : null}
+          </View>
+        </View>
+      ) : viewMode === 'grid' ? (
+        <MasonryGrid
+          header={pageHeader}
+          onScroll={handleScroll}
+          onRefresh={startBulkRefresh}
+          refreshing={refreshQueue.length > 0}
+          items={localNodes
+            .filter((n) => n.type !== 'section')
+            .sort((a, b) => a.positionKey.localeCompare(b.positionKey))}
+          onPress={openProduct}
+        />
+      ) : (
+        <AnimatedSectionList
+          sections={sections}
+          contentInsetAdjustmentBehavior="never"
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          keyExtractor={(item) => (item as ProductItem).id}
+          renderItem={(info) =>
+            renderProduct(
+              info as unknown as { item: ProductItem; section: Section },
+            )
+          }
+          renderSectionHeader={({ section: rawSection }) => {
+            const section = rawSection as unknown as Section;
+            return section.title ? (
+              <SlotHeader
+                slot={section.slot}
+                title={section.title}
+                localNodes={localNodes}
+                onSave={(name, maxSel, bud) => {
+                  if (section.slot)
+                    handleUpdateSlot(section.slot, name, maxSel, bud);
+                }}
+                onDelete={() => {
+                  if (section.slot) deleteSlot(section.slot);
+                }}
+              />
+            ) : null;
+          }}
+          ListHeaderComponent={pageHeader}
+          contentContainerStyle={styles.list}
+          stickySectionHeadersEnabled={false}
+          onRefresh={startBulkRefresh}
+          refreshing={refreshQueue.length > 0}
+        />
+      )}
 
-			{sharingCollection && detail && (
-				<ShareCollectionSheet
-					collection={detail.collection}
-					visible
-					onClose={() => setSharingCollection(false)}
-				/>
-			)}
-			{editingCollection && detail && (
-				<EditCollectionModal
-					collection={detail.collection}
-					visible
-					onClose={() => setEditingCollection(false)}
-					onSave={handleUpdateCollection}
-				/>
-			)}
-			<AddProductModal
-				visible={addingProduct}
-				onClose={() => setAddingProduct(false)}
-				onSubmit={(url) => setPendingUrl(url)}
-			/>
-			{editingProduct && (
-				<EditProductModal
-					item={editingProduct}
-					visible
-					onClose={() => setEditingProduct(null)}
-					onSave={(title, price, notes) => {
-						if (editingProduct) {
-							handleUpdateProduct(editingProduct, title, price, notes);
-						}
-					}}
-				/>
-			)}
-			{refreshQueue.length > 0 && (
-				<ProductRefresher
-					key={refreshQueue[0].id}
-					item={refreshQueue[0]}
-					collectionId={collectionId}
-					getToken={getToken}
-					onDone={(updated) => {
-						if (updated && refreshQueue[0]) {
-							const itemId = refreshQueue[0].id;
-							setLocalNodes((prev) =>
-								prev.map((n) =>
-									n.id === itemId ? { ...n, ...updated } : n,
-								),
-							);
-						}
-						setRefreshQueue((q) => q.slice(1));
-					}}
-				/>
-			)}
-			{pendingUrl && (
-				<SaveProductSheet
-					key={pendingUrl}
-					url={pendingUrl}
-					onDismiss={() => {
-						setPendingUrl(null);
-						refresh();
-					}}
-					defaultCollectionId={collectionId}
-				/>
-			)}
-		</View>
-	);
+      {sharingCollection && detail && (
+        <ShareCollectionSheet
+          collection={detail.collection}
+          visible
+          onClose={() => setSharingCollection(false)}
+        />
+      )}
+      {editingCollection && detail && (
+        <EditCollectionModal
+          collection={detail.collection}
+          visible
+          onClose={() => setEditingCollection(false)}
+          onSave={handleUpdateCollection}
+        />
+      )}
+      <AddProductModal
+        visible={addingProduct}
+        onClose={() => setAddingProduct(false)}
+        onSubmit={(url) => setPendingUrl(url)}
+      />
+      {editingProduct && (
+        <EditProductModal
+          item={editingProduct}
+          visible
+          onClose={() => setEditingProduct(null)}
+          onSave={(title, price, notes) => {
+            if (editingProduct) {
+              handleUpdateProduct(editingProduct, title, price, notes);
+            }
+          }}
+        />
+      )}
+      {refreshQueue.length > 0 && (
+        <ProductRefresher
+          key={refreshQueue[0].id}
+          item={refreshQueue[0]}
+          collectionId={collectionId}
+          getToken={getToken}
+          onDone={(updated) => {
+            if (updated && refreshQueue[0]) {
+              const itemId = refreshQueue[0].id;
+              setLocalNodes((prev) =>
+                prev.map((n) => (n.id === itemId ? { ...n, ...updated } : n)),
+              );
+            }
+            setRefreshQueue((q) => q.slice(1));
+          }}
+        />
+      )}
+      {pendingUrl && (
+        <SaveProductSheet
+          key={pendingUrl}
+          url={pendingUrl}
+          onDismiss={() => {
+            setPendingUrl(null);
+            refresh();
+          }}
+          defaultCollectionId={collectionId}
+        />
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-	container: { flex: 1, backgroundColor: "#f8fafc" },
-	centered: {
-		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#f8fafc",
-	},
-	statusScrim: {
-		position: "absolute",
-		top: 0,
-		left: 0,
-		right: 0,
-		zIndex: 18,
-		backgroundColor: "#f8fafc",
-	},
-	floatingTopBar: {
-		position: "absolute",
-		left: 16,
-		right: 16,
-		zIndex: 20,
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	floatingTopBarRight: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 10,
-	},
-	floatingCircleButton: {
-		width: 42,
-		height: 42,
-		borderRadius: 21,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "rgba(255,255,255,0.92)",
-		borderWidth: 1,
-		borderColor: "rgba(226,232,240,0.9)",
-		shadowColor: "#0f172a",
-		shadowOpacity: 0.08,
-		shadowRadius: 14,
-		shadowOffset: { width: 0, height: 6 },
-		elevation: 3,
-	},
-	donePillButton: {
-		minWidth: 68,
-		height: 42,
-		paddingHorizontal: 16,
-		borderRadius: 21,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#111827",
-		shadowColor: "#0f172a",
-		shadowOpacity: 0.12,
-		shadowRadius: 14,
-		shadowOffset: { width: 0, height: 6 },
-		elevation: 4,
-	},
-	donePillButtonText: {
-		color: "#fff",
-		fontSize: 15,
-		fontWeight: "600",
-	},
-	pageHeader: {
-		paddingHorizontal: 20,
-		paddingTop: 96,
-		paddingBottom: 18,
-	},
-	pageHeaderText: {
-		gap: 8,
-	},
-	pageEyebrow: {
-		fontSize: 12,
-		fontWeight: "700",
-		color: "#6366f1",
-		textTransform: "uppercase",
-		letterSpacing: 0.9,
-	},
-	pageTitle: {
-		fontSize: 34,
-		lineHeight: 38,
-		fontWeight: "700",
-		color: "#111827",
-		letterSpacing: -0.8,
-	},
-	pageMetaRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 8,
-		flexWrap: "wrap",
-	},
-	colorDot: { width: 10, height: 10, borderRadius: 5 },
-	pageMetaText: { fontSize: 14, color: "#6b7280", textTransform: "capitalize" },
-	pageMetaDivider: { fontSize: 14, color: "#cbd5e1" },
-	list: { paddingHorizontal: 20, paddingBottom: 40, backgroundColor: "#fff" },
-	emptyStateContainer: { flex: 1, backgroundColor: "#fff" },
-	sectionHeader: {
-		paddingTop: 24,
-		paddingBottom: 8,
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	sectionTitle: {
-		fontSize: 13,
-		fontWeight: "600",
-		color: "#6b7280",
-		textTransform: "uppercase",
-		letterSpacing: 0.5,
-	},
-	slotProgress: { flexDirection: "row", gap: 10 },
-	slotProgressText: { fontSize: 12, color: "#9ca3af" },
-	productRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		paddingVertical: 12,
-		paddingHorizontal: 12,
-		gap: 12,
-		marginBottom: 10,
-		borderRadius: 18,
-		borderWidth: 1,
-		borderColor: "#eef2f7",
-		backgroundColor: "#f8fafc",
-	},
-	thumbnail: {
-		width: 56,
-		height: 56,
-		borderRadius: 8,
-		backgroundColor: "#f3f4f6",
-	},
-	thumbnailPlaceholder: { backgroundColor: "#f3f4f6" },
-	productInfo: { flex: 1 },
-	productName: {
-		fontSize: 15,
-		fontWeight: "500",
-		color: "#111",
-		lineHeight: 20,
-	},
-	productPrice: { fontSize: 13, color: "#6b7280", marginTop: 3 },
-	checkbox: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		borderWidth: 1.5,
-		borderColor: "#d1d5db",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	checkboxSelected: {
-		backgroundColor: "#6366f1",
-		borderColor: "#6366f1",
-	},
-	checkmark: { color: "#fff", fontSize: 13, fontWeight: "700" },
-	empty: {
-		textAlign: "center",
-		color: "#9ca3af",
-		marginTop: 60,
-		fontSize: 15,
-	},
-	sectionHeaderLeft: { flex: 1 },
-	modalBackdrop: {
-		...StyleSheet.absoluteFillObject,
-		backgroundColor: "rgba(0,0,0,0.4)",
-	},
-	modalOverlay: { position: "absolute", bottom: 0, left: 0, right: 0 },
-	modalSheet: {
-		backgroundColor: "#fff",
-		borderTopLeftRadius: 16,
-		borderTopRightRadius: 16,
-		padding: 20,
-		paddingBottom: 36,
-	},
-	modalHandle: {
-		width: 36,
-		height: 4,
-		backgroundColor: "#e5e7eb",
-		borderRadius: 2,
-		alignSelf: "center",
-		marginBottom: 16,
-	},
-	modalHeaderRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		gap: 12,
-		marginBottom: 20,
-	},
-	modalTitle: { flex: 1, fontSize: 17, fontWeight: "700" },
-	fieldLabel: {
-		fontSize: 12,
-		fontWeight: "600",
-		color: "#6b7280",
-		textTransform: "uppercase",
-		letterSpacing: 0.4,
-		marginBottom: 6,
-		marginTop: 16,
-	},
-	fieldInput: {
-		borderWidth: 1,
-		borderColor: "#e5e7eb",
-		borderRadius: 8,
-		paddingHorizontal: 12,
-		paddingVertical: 10,
-		fontSize: 15,
-		color: "#111",
-	},
-	fieldTextarea: {
-		minHeight: 80,
-		textAlignVertical: "top",
-	},
-	modalActions: { flexDirection: "row", gap: 10, marginTop: 24 },
-	modalCancel: {
-		flex: 1,
-		paddingVertical: 12,
-		borderRadius: 10,
-		borderWidth: 1,
-		borderColor: "#e5e7eb",
-		alignItems: "center",
-	},
-	modalCancelText: { fontSize: 15, color: "#6b7280", fontWeight: "600" },
-	modalSave: {
-		flex: 1,
-		paddingVertical: 12,
-		borderRadius: 10,
-		backgroundColor: "#6366f1",
-		alignItems: "center",
-	},
-	modalSaveText: { fontSize: 15, color: "#fff", fontWeight: "600" },
-	swatches: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 4 },
-	swatch: {
-		width: 32,
-		height: 32,
-		borderRadius: 16,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	swatchSelected: { borderWidth: 2.5, borderColor: "rgba(0,0,0,0.2)" },
-	modalDeletePill: {
-		paddingHorizontal: 14,
-		height: 36,
-		borderRadius: 18,
-		borderWidth: 1,
-		borderColor: "#fecaca",
-		backgroundColor: "#fff5f5",
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	modalDeletePillArmed: {
-		borderColor: "#fca5a5",
-		backgroundColor: "#fee2e2",
-	},
-	modalDeleteText: { fontSize: 14, color: "#dc2626", fontWeight: "600" },
-	modalDeleteTextArmed: { color: "#b91c1c" },
-	leftActions: { flexDirection: "row", width: 160 },
-	editActionInner: {
-		width: 80,
-		backgroundColor: "#6366f1",
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	editActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-	refreshActionInner: {
-		width: 80,
-		backgroundColor: "#8b5cf6",
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	refreshActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-	deleteAction: { width: 80, backgroundColor: "#ef4444" },
-	deleteActionInner: {
-		flex: 1,
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	deleteActionText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-	productRowQueued: { opacity: 0.5 },
-	thumbnailRefreshing: { opacity: 0.4 },
-	thumbnailSpinner: {
-		position: "absolute",
-		inset: 0,
-		justifyContent: "center",
-		alignItems: "center",
-	},
-	hidden: { width: 0, height: 0, overflow: "hidden" },
-	reorderModeContainer: {
-		flex: 1,
-		paddingBottom: 16,
-		backgroundColor: "#f8fafc",
-	},
-	reorderModeBody: {
-		flex: 1,
-		paddingHorizontal: 16,
-		paddingBottom: 16,
-		gap: 10,
-	},
-	reorderControls: {
-		gap: 10,
-	},
-	reorderScopeSwitch: {
-		flexDirection: "row",
-		alignSelf: "flex-start",
-		backgroundColor: "#e5e7eb",
-		borderRadius: 999,
-		padding: 4,
-		gap: 4,
-	},
-	reorderScopeButton: {
-		minWidth: 76,
-		height: 36,
-		paddingHorizontal: 14,
-		borderRadius: 999,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	reorderScopeButtonActive: {
-		backgroundColor: "#111827",
-	},
-	reorderScopeButtonLabel: {
-		fontSize: 13,
-		fontWeight: "600",
-		color: "#4b5563",
-	},
-	reorderScopeButtonLabelActive: {
-		color: "#fff",
-	},
-	reorderTargetPicker: {
-		borderRadius: 16,
-		backgroundColor: "#fff",
-		borderWidth: 1,
-		borderColor: "#e5e7eb",
-		paddingHorizontal: 14,
-		paddingVertical: 12,
-		gap: 4,
-	},
-	reorderTargetPickerLabel: {
-		fontSize: 11,
-		fontWeight: "700",
-		color: "#6b7280",
-		textTransform: "uppercase",
-		letterSpacing: 0.8,
-	},
-	reorderTargetPickerValueRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-		gap: 12,
-	},
-	reorderTargetPickerValue: {
-		flex: 1,
-		fontSize: 16,
-		fontWeight: "600",
-		color: "#111827",
-	},
-	reorderPanelFlex: {
-		flex: 1,
-		minHeight: 0,
-		overflow: "visible",
-		backgroundColor: "#fff",
-		borderRadius: 20,
-		padding: 12,
-		gap: 10,
-		borderWidth: 1,
-		borderColor: "#e5e7eb",
-	},
-	reorderPanelHeader: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	reorderPanelTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-	reorderPanelMeta: {
-		fontSize: 13,
-		color: "#6b7280",
-		textTransform: "capitalize",
-	},
-	reorderSlotsList: { paddingTop: 2, paddingBottom: 14 },
-	reorderItemsList: { paddingBottom: 20 },
-	reorderSlotCard: {
-		height: 88,
-		borderRadius: 18,
-		backgroundColor: "#f8fafc",
-		borderWidth: 1,
-		borderColor: "#e5e7eb",
-		paddingHorizontal: 16,
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	reorderSlotEyebrow: {
-		fontSize: 11,
-		fontWeight: "700",
-		color: "#6366f1",
-		textTransform: "uppercase",
-		letterSpacing: 0.8,
-	},
-	reorderSlotTitle: {
-		fontSize: 18,
-		fontWeight: "700",
-		color: "#111827",
-		marginTop: 4,
-	},
-	reorderSlotSubtitle: { fontSize: 13, color: "#6b7280", marginTop: 4 },
-	reorderSlotHandle: {
-		width: 42,
-		height: 42,
-		borderRadius: 21,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#eef2ff",
-	},
-	reorderWholeHandle: {
-		width: "100%",
-	},
-	reorderRow: {
-		flexDirection: "row",
-		alignItems: "center",
-		gap: 12,
-		height: 84,
-		marginBottom: 10,
-		paddingHorizontal: 14,
-		borderRadius: 16,
-		backgroundColor: "#f8fafc",
-		borderWidth: 1,
-		borderColor: "#e5e7eb",
-	},
-	reorderThumbnail: {
-		width: 52,
-		height: 52,
-		borderRadius: 10,
-		backgroundColor: "#e5e7eb",
-	},
-	reorderRowMeta: { flex: 1 },
-	reorderRowTitle: { fontSize: 15, fontWeight: "600", color: "#111827" },
-	reorderRowSubtitle: { marginTop: 4, fontSize: 13, color: "#6b7280" },
-	reorderHandle: {
-		width: 38,
-		height: 38,
-		borderRadius: 19,
-		alignItems: "center",
-		justifyContent: "center",
-		backgroundColor: "#fff",
-	},
-	reorderEmptyState: {
-		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
-	},
-	reorderEmptyText: { fontSize: 14, color: "#9ca3af" },
-	reorderGridFrame: {
-		overflow: "visible",
-	},
-	reorderGrid: {
-		backgroundColor: "transparent",
-	},
-	reorderGridContainer: { paddingTop: 4, paddingBottom: 40 },
-	reorderGridCard: {
-		flex: 1,
-		borderRadius: 20,
-		overflow: "hidden",
-		backgroundColor: "#fff",
-		borderWidth: 1,
-		borderColor: "#e5e7eb",
-	},
-	reorderGridMedia: {
-		width: "100%",
-		backgroundColor: "#f8fafc",
-		alignItems: "center",
-		justifyContent: "center",
-		padding: 10,
-	},
-	reorderGridImage: {
-		width: "100%",
-		height: "100%",
-	},
-	reorderGridImagePlaceholder: {
-		width: "100%",
-		height: "100%",
-		backgroundColor: "#e5e7eb",
-		borderRadius: 14,
-	},
-	reorderGridInfo: { flex: 1, padding: 12, gap: 8 },
-	reorderGridTitle: {
-		fontSize: 14,
-		fontWeight: "600",
-		color: "#111827",
-		lineHeight: 18,
-	},
-	reorderGridFooter: {
-		flexDirection: "row",
-		alignItems: "center",
-		justifyContent: "space-between",
-	},
-	reorderGridPrice: { fontSize: 13, color: "#6b7280" },
-	masonryContainer: {
-		paddingHorizontal: 20,
-		paddingBottom: 40,
-		backgroundColor: "#f8fafc",
-	},
-	masonryColumns: { flexDirection: "row", gap: 8 },
-	gridCard: {
-		backgroundColor: "#f9fafb",
-		borderRadius: 12,
-		marginBottom: 8,
-		overflow: "hidden",
-	},
-	gridImagePlaceholder: { height: 130, backgroundColor: "#e5e7eb" },
-	gridCardInfo: { padding: 8, paddingBottom: 10 },
-	gridCardName: {
-		fontSize: 13,
-		fontWeight: "500",
-		color: "#111",
-		lineHeight: 18,
-	},
-	gridCardPrice: { fontSize: 12, color: "#6b7280", marginTop: 3 },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+  },
+  statusScrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 18,
+    backgroundColor: '#f8fafc',
+  },
+  floatingTopBar: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    zIndex: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  floatingTopBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  floatingCircleButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(226,232,240,0.9)',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  donePillButton: {
+    minWidth: 68,
+    height: 42,
+    paddingHorizontal: 16,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#111827',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  donePillButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  pageHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 96,
+    paddingBottom: 18,
+  },
+  pageHeaderText: {
+    gap: 8,
+  },
+  pageEyebrow: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6366f1',
+    textTransform: 'uppercase',
+    letterSpacing: 0.9,
+  },
+  pageTitle: {
+    fontSize: 34,
+    lineHeight: 38,
+    fontWeight: '700',
+    color: '#111827',
+    letterSpacing: -0.8,
+  },
+  pageMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  colorDot: { width: 10, height: 10, borderRadius: 5 },
+  pageMetaText: { fontSize: 14, color: '#6b7280', textTransform: 'capitalize' },
+  pageMetaDivider: { fontSize: 14, color: '#cbd5e1' },
+  syncSaved: { color: '#22c55e' },
+  list: { paddingHorizontal: 20, paddingBottom: 40, backgroundColor: '#fff' },
+  emptyStateContainer: { flex: 1, backgroundColor: '#fff' },
+  sectionHeader: {
+    paddingTop: 24,
+    paddingBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  slotProgress: { flexDirection: 'row', gap: 10 },
+  slotProgressText: { fontSize: 12, color: '#9ca3af' },
+  productRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 12,
+    marginBottom: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#eef2f7',
+    backgroundColor: '#f8fafc',
+  },
+  thumbnail: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+  },
+  thumbnailPlaceholder: { backgroundColor: '#f3f4f6' },
+  productInfo: { flex: 1 },
+  productName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#111',
+    lineHeight: 20,
+  },
+  productPrice: { fontSize: 13, color: '#6b7280', marginTop: 3 },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#6366f1',
+    borderColor: '#6366f1',
+  },
+  checkmark: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  empty: {
+    textAlign: 'center',
+    color: '#9ca3af',
+    marginTop: 60,
+    fontSize: 15,
+  },
+  sectionHeaderLeft: { flex: 1 },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+    paddingBottom: 36,
+  },
+  modalHandle: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 20,
+  },
+  modalTitle: { flex: 1, fontSize: 17, fontWeight: '700' },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 6,
+    marginTop: 16,
+  },
+  fieldInput: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#111',
+  },
+  fieldTextarea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  modalActions: { flexDirection: 'row', gap: 10, marginTop: 24 },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+  },
+  modalCancelText: { fontSize: 15, color: '#6b7280', fontWeight: '600' },
+  modalSave: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#6366f1',
+    alignItems: 'center',
+  },
+  modalSaveText: { fontSize: 15, color: '#fff', fontWeight: '600' },
+  swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
+  swatch: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swatchSelected: { borderWidth: 2.5, borderColor: 'rgba(0,0,0,0.2)' },
+  modalDeletePill: {
+    paddingHorizontal: 14,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    backgroundColor: '#fff5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalDeletePillArmed: {
+    borderColor: '#fca5a5',
+    backgroundColor: '#fee2e2',
+  },
+  modalDeleteText: { fontSize: 14, color: '#dc2626', fontWeight: '600' },
+  modalDeleteTextArmed: { color: '#b91c1c' },
+  leftActions: { flexDirection: 'row', width: 160 },
+  editActionInner: {
+    width: 80,
+    backgroundColor: '#6366f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editActionText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  refreshActionInner: {
+    width: 80,
+    backgroundColor: '#8b5cf6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  refreshActionText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  deleteAction: { width: 80, backgroundColor: '#ef4444' },
+  deleteActionInner: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteActionText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  productRowQueued: { opacity: 0.5 },
+  thumbnailRefreshing: { opacity: 0.4 },
+  thumbnailSpinner: {
+    position: 'absolute',
+    inset: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hidden: { width: 0, height: 0, overflow: 'hidden' },
+  reorderModeContainer: {
+    flex: 1,
+    paddingBottom: 16,
+    backgroundColor: '#f8fafc',
+  },
+  reorderModeBody: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 10,
+  },
+  reorderControls: {
+    gap: 10,
+  },
+  reorderScopeSwitch: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    backgroundColor: '#e5e7eb',
+    borderRadius: 999,
+    padding: 4,
+    gap: 4,
+  },
+  reorderScopeButton: {
+    minWidth: 76,
+    height: 36,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reorderScopeButtonActive: {
+    backgroundColor: '#111827',
+  },
+  reorderScopeButtonLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#4b5563',
+  },
+  reorderScopeButtonLabelActive: {
+    color: '#fff',
+  },
+  reorderTargetPicker: {
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  reorderTargetPickerLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  reorderTargetPickerValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  reorderTargetPickerValue: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  reorderPanelFlex: {
+    flex: 1,
+    minHeight: 0,
+    overflow: 'visible',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  reorderPanelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  reorderPanelTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  reorderPanelMeta: {
+    fontSize: 13,
+    color: '#6b7280',
+    textTransform: 'capitalize',
+  },
+  reorderSlotsList: { paddingTop: 2, paddingBottom: 14 },
+  reorderItemsList: { paddingBottom: 20 },
+  reorderSlotCard: {
+    height: 88,
+    borderRadius: 18,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  reorderSlotEyebrow: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6366f1',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  reorderSlotTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginTop: 4,
+  },
+  reorderSlotSubtitle: { fontSize: 13, color: '#6b7280', marginTop: 4 },
+  reorderSlotHandle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#eef2ff',
+  },
+  reorderWholeHandle: {
+    width: '100%',
+  },
+  reorderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    height: 84,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  reorderThumbnail: {
+    width: 52,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: '#e5e7eb',
+  },
+  reorderRowMeta: { flex: 1 },
+  reorderRowTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
+  reorderRowSubtitle: { marginTop: 4, fontSize: 13, color: '#6b7280' },
+  reorderHandle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  reorderEmptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reorderEmptyText: { fontSize: 14, color: '#9ca3af' },
+  reorderGridFrame: {
+    overflow: 'visible',
+  },
+  reorderGrid: {
+    backgroundColor: 'transparent',
+  },
+  reorderGridContainer: { paddingTop: 4, paddingBottom: 40 },
+  reorderGridCard: {
+    flex: 1,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  reorderGridMedia: {
+    width: '100%',
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  reorderGridImage: {
+    width: '100%',
+    height: '100%',
+  },
+  reorderGridImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#e5e7eb',
+    borderRadius: 14,
+  },
+  reorderGridInfo: { flex: 1, padding: 12, gap: 8 },
+  reorderGridTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+    lineHeight: 18,
+  },
+  reorderGridFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  reorderGridPrice: { fontSize: 13, color: '#6b7280' },
+  masonryContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    backgroundColor: '#f8fafc',
+  },
+  masonryColumns: { flexDirection: 'row', gap: 8 },
+  gridCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  gridImagePlaceholder: { height: 130, backgroundColor: '#e5e7eb' },
+  gridCardInfo: { padding: 8, paddingBottom: 10 },
+  gridCardName: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#111',
+    lineHeight: 18,
+  },
+  gridCardPrice: { fontSize: 12, color: '#6b7280', marginTop: 3 },
 });
