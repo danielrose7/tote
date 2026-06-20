@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/expo';
+import { useAuth, useUser } from '@clerk/expo';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as WebBrowser from 'expo-web-browser';
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
+  AppState,
   Dimensions,
   Image,
   KeyboardAvoidingView,
@@ -37,6 +38,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { SaveProductSheet } from '../components/SaveProductSheet';
 import { ShareCollectionSheet } from '../components/ShareCollectionSheet';
+import { useCollectionRealtime } from '../hooks/useCollectionRealtime';
 import { useViewMode } from '../hooks/useViewMode';
 import { fromNow, useSyncStatus } from '../hooks/useSyncStatus';
 import type { Collection, CollectionDetail, CollectionNode } from '../lib/api';
@@ -965,6 +967,7 @@ function MasonryGrid({
 export function CollectionDetailScreen({ route, navigation }: Props) {
   const { collectionId, collectionName } = route.params;
   const { getToken } = useAuth();
+  const { user } = useUser();
   const insets = useSafeAreaInsets();
   const [addingProduct, setAddingProduct] = useState(false);
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
@@ -993,6 +996,21 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     // Fetch from API
     refresh();
   }, [collectionId]);
+
+  // Refresh when the app comes back to the foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => sub.remove();
+  }, []);
+
+  useCollectionRealtime({
+    collectionId,
+    userId: user?.id,
+    getToken,
+    onUpdate: refresh,
+  });
 
   async function refresh() {
     try {
@@ -1156,6 +1174,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   }
 
   function startBulkRefresh() {
+    refresh();
     const allProducts = localNodes.filter(
       (n) => n.type !== 'section' && n.properties.url,
     );
