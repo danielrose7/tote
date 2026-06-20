@@ -14,9 +14,9 @@
 }
 
 .main {
-  max-width: var(--max-width-container);
+  max-width: 880px;
   margin: 0 auto;
-  padding: 1rem var(--spacing-lg) 2rem;
+  padding: 1rem 0 2rem;
 }
 
 .settingsRow {
