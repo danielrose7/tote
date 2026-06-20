@@ -66,6 +66,7 @@ export async function getCachedCollections(): Promise<Collection[]> {
 			role: r.role as Collection["role"],
 			ownerUserId: r.owner_user_id,
 			updatedAt: r.updated_at,
+			previewImages: [],
 		}));
 	} catch {
 		return [];

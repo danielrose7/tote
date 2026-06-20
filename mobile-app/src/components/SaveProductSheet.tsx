@@ -221,6 +221,7 @@ export function SaveProductSheet({
 				role: "owner",
 				ownerUserId: "",
 				updatedAt: new Date().toISOString(),
+				previewImages: [],
 			};
 			setCollections((prev) => [...prev, newCollection]);
 		} catch (e) {

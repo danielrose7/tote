@@ -498,12 +498,14 @@ function SlotEditModal({
 function SlotHeader({
   slot,
   title,
+  itemCount,
   localNodes,
   onSave,
   onDelete,
 }: {
   slot: ProductItem | null;
   title: string;
+  itemCount: number;
   localNodes: CollectionNode[];
   onSave: (name: string, maxSelections: string, budget: string) => void;
   onDelete: () => void;
@@ -514,6 +516,9 @@ function SlotHeader({
     return (
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionItemCount}>
+          {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        </Text>
       </View>
     );
   }
@@ -548,20 +553,22 @@ function SlotHeader({
       <View style={styles.sectionHeader}>
         <View style={styles.sectionHeaderLeft}>
           <Text style={styles.sectionTitle}>{slot.title ?? title}</Text>
-          {hasProgress && (
-            <View style={styles.slotProgress}>
-              {maxSelections ? (
-                <Text style={styles.slotProgressText}>
-                  {selectedIds.length} / {maxSelections} selected
-                </Text>
-              ) : null}
-              {budget ? (
-                <Text style={styles.slotProgressText}>
-                  {formattedSelectedTotal} / {formattedBudget}
-                </Text>
-              ) : null}
-            </View>
-          )}
+          <View style={styles.slotProgress}>
+            {maxSelections ? (
+              <Text style={styles.slotProgressText}>
+                {selectedIds.length} / {maxSelections} selected
+              </Text>
+            ) : (
+              <Text style={styles.slotProgressText}>
+                {itemCount} {itemCount === 1 ? 'item' : 'items'}
+              </Text>
+            )}
+            {budget ? (
+              <Text style={styles.slotProgressText}>
+                · {formattedSelectedTotal} / {formattedBudget}
+              </Text>
+            ) : null}
+          </View>
         </View>
         <TouchableOpacity
           onPress={() => setEditing(true)}
@@ -987,6 +994,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 
   const [detail, setDetail] = useState<CollectionDetail | null>(null);
   const [localNodes, setLocalNodes] = useState<CollectionNode[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     // Load cached nodes immediately for fast display
@@ -1022,6 +1030,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       upsertNodes(d.nodes).catch(() => {}); // background cache update
     } catch (e) {
       console.warn('CollectionDetail refresh error:', e);
+    } finally {
+      setHasFetched(true);
     }
   }
 
@@ -1056,11 +1066,26 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   ];
 
   const totalItems = localNodes.filter((n) => n.type !== 'section').length;
-  const childrenLoading = localNodes.length === 0 && detail === null;
   const displayTitle =
     detail?.collection.name ?? collectionName ?? route.params.collectionName;
   const collectionColor = detail?.collection.color ?? '#6366f1';
   const collectionVersion = detail?.collection.version ?? 1;
+
+  // Fallback collection for modals — available even before detail loads
+  const collectionForModals: Collection = detail?.collection ?? {
+    id: collectionId,
+    name: displayTitle,
+    color: collectionColor,
+    description: null,
+    itemCount: totalItems,
+    positionKey: '',
+    role: 'owner',
+    ownerUserId: '',
+    updatedAt: new Date().toISOString(),
+    previewImages: [],
+  };
+
+  const childrenLoading = localNodes.length === 0 && !hasFetched;
 
   const topBarTop = insets.top + 8;
   const pageHeaderTopPadding = topBarTop + 72;
@@ -1891,6 +1916,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
               <SlotHeader
                 slot={section.slot}
                 title={section.title}
+                itemCount={section.data.length}
                 localNodes={localNodes}
                 onSave={(name, maxSel, bud) => {
                   if (section.slot)
@@ -1910,16 +1936,16 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         />
       )}
 
-      {sharingCollection && detail && (
+      {sharingCollection && (
         <ShareCollectionSheet
-          collection={detail.collection}
+          collection={collectionForModals}
           visible
           onClose={() => setSharingCollection(false)}
         />
       )}
-      {editingCollection && detail && (
+      {editingCollection && (
         <EditCollectionModal
-          collection={detail.collection}
+          collection={collectionForModals}
           visible
           onClose={() => setEditingCollection(false)}
           onSave={handleUpdateCollection}
@@ -2073,21 +2099,30 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 20, paddingBottom: 40, backgroundColor: '#fff' },
   emptyStateContainer: { flex: 1, backgroundColor: '#fff' },
   sectionHeader: {
-    paddingTop: 24,
-    paddingBottom: 8,
+    marginTop: 20,
+    marginBottom: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: '#111827',
+    marginBottom: 2,
   },
-  slotProgress: { flexDirection: 'row', gap: 10 },
-  slotProgressText: { fontSize: 12, color: '#9ca3af' },
+  sectionItemCount: {
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  slotProgress: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  slotProgressText: { fontSize: 13, color: '#6b7280' },
   productRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2135,7 +2170,7 @@ const styles = StyleSheet.create({
     marginTop: 60,
     fontSize: 15,
   },
-  sectionHeaderLeft: { flex: 1 },
+  sectionHeaderLeft: { flex: 1, flexDirection: 'column', gap: 2 },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',

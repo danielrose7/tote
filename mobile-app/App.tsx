@@ -488,63 +488,102 @@ function SignInScreen() {
 	);
 }
 
+function PreviewImageGrid({
+	images,
+	color,
+}: {
+	images: { url: string; title: string | null; nodeId: string }[];
+	color?: string | null;
+}) {
+	const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
+	const visible = images.filter((img) => !failedUrls.has(img.url));
+	const count = Math.min(visible.length, 3);
+
+	if (count === 0) {
+		return (
+			<View
+				style={[
+					styles.previewGridFallback,
+					{ backgroundColor: color ?? "rgba(99,102,241,0.18)" },
+				]}
+			>
+				<Ionicons name="albums-outline" size={30} color="rgba(255,255,255,0.8)" />
+			</View>
+		);
+	}
+
+	if (count === 1) {
+		return (
+			<Image
+				source={{ uri: visible[0].url }}
+				style={styles.previewGridFull}
+				resizeMode="cover"
+				onError={() => setFailedUrls((p) => new Set([...p, visible[0].url]))}
+			/>
+		);
+	}
+
+	if (count === 2) {
+		return (
+			<View style={styles.previewGridRow}>
+				{visible.slice(0, 2).map((img) => (
+					<Image
+						key={img.nodeId}
+						source={{ uri: img.url }}
+						style={styles.previewGridHalf}
+						resizeMode="cover"
+						onError={() => setFailedUrls((p) => new Set([...p, img.url]))}
+					/>
+				))}
+			</View>
+		);
+	}
+
+	// 3 images: "L" — large left, two stacked right
+	return (
+		<View style={styles.previewGridRow}>
+			<Image
+				source={{ uri: visible[0].url }}
+				style={styles.previewGridLarge}
+				resizeMode="cover"
+				onError={() => setFailedUrls((p) => new Set([...p, visible[0].url]))}
+			/>
+			<View style={styles.previewGridStack}>
+				{visible.slice(1, 3).map((img) => (
+					<Image
+						key={img.nodeId}
+						source={{ uri: img.url }}
+						style={styles.previewGridSmall}
+						resizeMode="cover"
+						onError={() => setFailedUrls((p) => new Set([...p, img.url]))}
+					/>
+				))}
+			</View>
+		</View>
+	);
+}
+
 function CollectionCard({
 	item,
-	columnWidth,
 	onPress,
 }: {
 	item: Collection;
-	columnWidth: number;
 	onPress: () => void;
 }) {
-	const itemCount = item.itemCount;
-	const imageUrl: string | undefined = undefined;
-	const [imageHeight, setImageHeight] = useState(
-		Math.round(columnWidth * 0.82),
-	);
-
-	useEffect(() => {
-		if (!imageUrl) return;
-		Image.getSize(
-			imageUrl,
-			(width, height) => {
-				if (width > 0) {
-					setImageHeight(Math.round((columnWidth * height) / width));
-				}
-			},
-			() => {},
-		);
-	}, [columnWidth, imageUrl]);
-
 	return (
 		<TouchableOpacity
 			style={styles.collectionCard}
 			onPress={onPress}
 			activeOpacity={0.75}
 		>
-			<View style={[styles.collectionPreview, { height: imageHeight }]}>
-				{imageUrl ? (
-					<Image
-						source={{ uri: imageUrl }}
-						style={styles.collectionPreviewImage}
-						resizeMode="cover"
-					/>
-				) : (
-					<View
-						style={[
-							styles.collectionPreviewPlaceholder,
-							{
-								backgroundColor:
-									item.color ?? "rgba(99, 102, 241, 0.16)",
-							},
-						]}
-					>
-						<Ionicons name="albums-outline" size={30} color="#fff" />
-					</View>
-				)}
+			<View style={styles.collectionPreview}>
+				<PreviewImageGrid
+					images={item.previewImages ?? []}
+					color={item.color}
+				/>
 				<View style={styles.collectionCount}>
 					<Text style={styles.collectionCountText}>
-						{itemCount} {itemCount === 1 ? "item" : "items"}
+						{item.itemCount} {item.itemCount === 1 ? "item" : "items"}
 					</Text>
 				</View>
 			</View>
@@ -563,10 +602,10 @@ function CollectionCard({
 	);
 }
 
-function CollectionSkeleton({ height }: { height: number }) {
+function CollectionSkeleton() {
 	return (
 		<View style={styles.skeletonCard}>
-			<View style={[styles.skeletonPreview, { height }]} />
+			<View style={styles.skeletonPreview} />
 			<View style={styles.skeletonInfo}>
 				<View style={styles.skeletonName} />
 			</View>
@@ -799,12 +838,12 @@ function CollectionListContent({
 				{!loaded ? (
 					<View style={styles.masonryColumns}>
 						<View style={{ width: collectionColumnWidth }}>
-							<CollectionSkeleton height={190} />
-							<CollectionSkeleton height={140} />
+							<CollectionSkeleton />
+							<CollectionSkeleton />
 						</View>
 						<View style={{ width: collectionColumnWidth }}>
-							<CollectionSkeleton height={145} />
-							<CollectionSkeleton height={205} />
+							<CollectionSkeleton />
+							<CollectionSkeleton />
 						</View>
 					</View>
 				) : filteredCollections.length > 0 ? (
@@ -819,7 +858,6 @@ function CollectionListContent({
 										<CollectionCard
 											key={item.id}
 											item={item}
-											columnWidth={collectionColumnWidth}
 											onPress={() =>
 												navigation.navigate("CollectionDetail", {
 													collectionId: item.id,
@@ -1220,17 +1258,36 @@ const styles = StyleSheet.create({
 	},
 	collectionPreview: {
 		width: "100%",
+		aspectRatio: 4 / 3,
 		backgroundColor: "#e5e7eb",
 		overflow: "hidden",
 	},
-	collectionPreviewImage: {
-		width: "100%",
-		height: "100%",
-	},
-	collectionPreviewPlaceholder: {
+	previewGridFallback: {
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	previewGridFull: {
+		flex: 1,
+		width: "100%",
+	},
+	previewGridRow: {
+		flex: 1,
+		flexDirection: "row",
+		gap: 2,
+	},
+	previewGridHalf: {
+		flex: 1,
+	},
+	previewGridLarge: {
+		flex: 2,
+	},
+	previewGridStack: {
+		flex: 1,
+		gap: 2,
+	},
+	previewGridSmall: {
+		flex: 1,
 	},
 	collectionCount: {
 		position: "absolute",
@@ -1318,6 +1375,7 @@ const styles = StyleSheet.create({
 	},
 	skeletonPreview: {
 		width: "100%",
+		aspectRatio: 4 / 3,
 		backgroundColor: "#e5e7eb",
 	},
 	skeletonInfo: { padding: 10, paddingBottom: 12 },

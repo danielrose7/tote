@@ -21,6 +21,7 @@ export type Collection = {
 	positionKey: string;
 	role: "owner" | "admin" | "editor" | "viewer";
 	updatedAt: string;
+	previewImages: { url: string; title: string | null; nodeId: string }[];
 };
 
 export type NodeProperties = {
@@ -101,7 +102,7 @@ export async function createCollection(
 ): Promise<{ id: string; replayed: boolean }> {
 	return request("/api/v2/collections", token, {
 		method: "POST",
-		body: JSON.stringify({ mutationId: Crypto.randomUUID(), ...input }),
+		body: JSON.stringify({ id: Crypto.randomUUID(), ...input }),
 	});
 }
 
@@ -147,7 +148,7 @@ export async function createNode(
 ): Promise<{ id: string; replayed: boolean }> {
 	return request(`/api/v2/collections/${collectionId}/nodes`, token, {
 		method: "POST",
-		body: JSON.stringify({ mutationId: Crypto.randomUUID(), ...input }),
+		body: JSON.stringify({ id: Crypto.randomUUID(), ...input }),
 	});
 }
 
@@ -212,7 +213,7 @@ export async function captureUrl(
 ): Promise<{ nodeId: string }> {
 	return request("/api/v2/capture", token, {
 		method: "POST",
-		body: JSON.stringify({ mutationId: Crypto.randomUUID(), ...input }),
+		body: JSON.stringify({ id: Crypto.randomUUID(), mutationId: Crypto.randomUUID(), ...input }),
 	});
 }
 
