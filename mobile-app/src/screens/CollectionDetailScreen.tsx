@@ -38,7 +38,7 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { SaveProductSheet } from '../components/SaveProductSheet';
 import { ShareCollectionSheet } from '../components/ShareCollectionSheet';
 import { useViewMode } from '../hooks/useViewMode';
-import { relativeTime, useSyncStatus } from '../hooks/useSyncStatus';
+import { fromNow, useSyncStatus } from '../hooks/useSyncStatus';
 import type { Collection, CollectionDetail, CollectionNode } from '../lib/api';
 import {
   captureUrl,
@@ -1616,7 +1616,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
                   : syncState === 'saved'
                     ? 'Saved'
                     : lastSavedAt
-                      ? `Saved ${relativeTime(lastSavedAt)}`
+                      ? `Saved ${fromNow(lastSavedAt)}`
                       : null}
               </Text>
             </>
