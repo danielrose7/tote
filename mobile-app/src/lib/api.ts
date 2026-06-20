@@ -88,6 +88,19 @@ async function request<T>(
 	return res.json() as Promise<T>;
 }
 
+export type CaptureCollection = {
+	id: string;
+	name: string;
+	color: string | null;
+	role: "owner" | "admin" | "editor";
+	sections: Array<{ id: string; name: string }>;
+};
+
+export async function fetchCaptureCollections(token: string): Promise<CaptureCollection[]> {
+	const data = await request<{ collections: CaptureCollection[] }>("/api/v2/capture", token);
+	return data.collections;
+}
+
 export async function fetchCollections(token: string): Promise<Collection[]> {
 	const data = await request<{ collections: Collection[] }>(
 		"/api/v2/collections",
