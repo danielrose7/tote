@@ -259,6 +259,30 @@ Do not prioritize yet:
 - Heavy analytics
 - Creator monetization language
 
+## Competitor User Targeting
+
+### Moonsift Users
+
+Moonsift is the closest public comp — universal product saving, curation angle, browser extension. As of mid-2026 they have a small but real user base (1M+ products saved as of 2023) who are already shopping-list-aware. Their AI copilot is still in beta, their UX skews toward wishlists and registries, and their editorial/taste dimension is weak.
+
+Their users are worth targeting because:
+
+- They're already in the habit of saving products cross-retailer
+- They likely feel the gap between "saved wishlist" and "something I'd actually send someone"
+- Moonsift's aesthetic is functional, not opinionated — Tote's curation angle is a genuine differentiator
+
+**Channels to reach them:**
+
+- Reddit threads where Moonsift gets mentioned (r/ProductivityApps, r/LifeProTips, shopping/wishlist subreddits) — show up with a useful public collection, not a pitch
+- Chrome Web Store listing — Moonsift users searching for alternatives or reading reviews
+- App Store positioning — target same keywords (universal wishlist, product saving, shopping list)
+- Direct comparison content: "Moonsift vs Tote" or "alternatives to Moonsift" — honest framing, lean into the taste/editorial difference
+- If Moonsift ever winds down or raises again with noise, watch for community displacement moments
+
+**Message angle for this audience:**
+
+Don't lead with saving or organizing — they already have that. Lead with the curation/sharing outcome: the list you'd actually send, the edit that reveals taste, the thing you make for someone else rather than for yourself.
+
 ## Research Plan
 
 Run a two-week practical tastemaker sprint.

@@ -396,6 +396,7 @@ class ShareExtensionViewController: UIViewController {
                   }
                 } else {
                   sharedItems["url"] = sharedURL.absoluteString
+                  self.enqueuePendingUrl(sharedURL.absoluteString)
                 }
               }
               group.leave()
@@ -427,6 +428,7 @@ class ShareExtensionViewController: UIViewController {
             DispatchQueue.main.async {
               if let text = textItem as? String {
                 sharedItems["text"] = text
+                self.enqueuePendingUrl(text)
               }
               group.leave()
             }
