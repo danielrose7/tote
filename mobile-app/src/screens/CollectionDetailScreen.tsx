@@ -119,6 +119,7 @@ function ProductRefresher({
           const token = await getToken();
           if (token) {
             await updateNode(token, collectionId, item.id, {
+              expectedVersion: item.version,
               title: updatedTitle,
               properties: updatedProperties,
             });
@@ -1187,6 +1188,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       if (!token) return;
       await track(
         updateNode(token, collectionId, slot.id, {
+          expectedVersion: slot.version,
           properties: {
             ...slot.properties,
             selectedProductIds: newSelectedIds,
@@ -1257,6 +1259,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       if (!token) return;
       await track(
         updateNode(token, collectionId, item.id, {
+          expectedVersion: item.version,
           title: updatedTitle ?? undefined,
           properties: updatedProperties,
         }),
@@ -1293,6 +1296,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       if (!token) return;
       await track(
         updateNode(token, collectionId, slot.id, {
+          expectedVersion: slot.version,
           title: updatedTitle ?? undefined,
           properties: updatedProperties,
         }),
@@ -1313,7 +1317,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     try {
       const token = await getToken();
       if (!token) return;
-      await track(updateCollection(token, collectionId, { name, color }));
+      await track(updateCollection(token, collectionId, { expectedVersion: collectionVersion, name, color }));
       await refresh();
     } catch {
       await refresh();
@@ -1487,7 +1491,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     const reorderPayload = orderedItems.map((item, i) => ({
       id: item.id,
       positionKey: String(i + 1).padStart(8, '0'),
-      parentId: null as string | null,
+      expectedVersion: item.version,
     }));
 
     // Optimistic update
@@ -1520,7 +1524,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     const reorderPayload = orderedItems.map((item, i) => ({
       id: item.id,
       positionKey: String(i + 1).padStart(8, '0'),
-      parentId,
+      expectedVersion: item.version,
     }));
 
     // Optimistic update

@@ -1,4 +1,6 @@
 import { useAuth } from "@clerk/expo";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { useEffect, useRef, useState } from "react";
 import {
 	ActivityIndicator,
@@ -11,6 +13,7 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
+import type { RootStackParamList } from "../navigation/types";
 import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import type { Collection, CollectionNode } from "../lib/api";
 import {
@@ -56,11 +59,13 @@ export function SaveProductSheet({
 	autoApplyCollectionId,
 }: Props) {
 	const { getToken } = useAuth();
+	const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 	const [stage, setStage] = useState<Stage>("loading");
 	const [metadata, setMetadata] = useState<Metadata | null>(null);
 	const [applyToRemaining, setApplyToRemaining] = useState(false);
 	const [collections, setCollections] = useState<Collection[]>([]);
 	const [sections, setSections] = useState<Record<string, CollectionNode[]>>({});
+	const [savedCollection, setSavedCollection] = useState<Collection | null>(null);
 	const webViewRef = useRef<WebView>(null);
 	const hasAutoSavedRef = useRef<string | null>(null);
 
@@ -161,8 +166,11 @@ export function SaveProductSheet({
 			if (nextApplyCollectionId !== undefined) {
 				onApplyCollectionToRemaining?.(nextApplyCollectionId);
 			}
+			setSavedCollection(collection);
 			setStage("done");
-			setTimeout(onDismiss, queueRemaining > 0 ? 300 : 800);
+			if (queueRemaining > 0) {
+				setTimeout(onDismiss, 300);
+			}
 		} catch (e) {
 			console.error("Save error:", e);
 			setStage("preview");
@@ -356,17 +364,34 @@ export function SaveProductSheet({
 								</View>
 							)}
 
-							{/* Saving indicator */}
-							{(stage === "saving" || stage === "done") && (
+							{/* Saving / done */}
+							{stage === "saving" && (
 								<View style={styles.savingRow}>
-									{stage === "saving" ? (
-										<ActivityIndicator color="#6366f1" />
-									) : (
-										<Text style={styles.savedText}>
-											{queueRemaining > 0
-												? "Added. Loading next item…"
-												: "Added to collection"}
-										</Text>
+									<ActivityIndicator color="#6366f1" />
+								</View>
+							)}
+							{stage === "done" && (
+								<View style={styles.doneRow}>
+									<Text style={styles.savedText}>
+										{queueRemaining > 0
+											? "Added. Loading next item…"
+											: "Added to collection"}
+									</Text>
+									{queueRemaining === 0 && savedCollection && (
+										<TouchableOpacity
+											style={styles.viewCollectionButton}
+											onPress={() => {
+												onDismiss();
+												navigation.navigate("CollectionDetail", {
+													collectionId: savedCollection.id,
+													collectionName: savedCollection.name,
+												});
+											}}
+										>
+											<Text style={styles.viewCollectionText}>
+												View in {savedCollection.name}
+											</Text>
+										</TouchableOpacity>
 									)}
 								</View>
 							)}
@@ -496,9 +521,25 @@ const styles = StyleSheet.create({
 		paddingTop: 24,
 		alignItems: "center",
 	},
+	doneRow: {
+		paddingTop: 24,
+		alignItems: "center",
+		gap: 16,
+	},
 	savedText: {
 		fontSize: 16,
 		color: "#22c55e",
 		fontWeight: "600",
+	},
+	viewCollectionButton: {
+		backgroundColor: "#6366f1",
+		paddingHorizontal: 20,
+		paddingVertical: 12,
+		borderRadius: 10,
+	},
+	viewCollectionText: {
+		color: "#fff",
+		fontWeight: "600",
+		fontSize: 15,
 	},
 });

@@ -116,7 +116,7 @@ export async function fetchCollectionDetail(
 export async function updateCollection(
 	token: string,
 	id: string,
-	input: { name?: string; color?: string; description?: string },
+	input: { expectedVersion: number; name?: string; color?: string; description?: string },
 ): Promise<Collection> {
 	return request(`/api/v2/collections/${id}`, token, {
 		method: "PATCH",
@@ -127,11 +127,11 @@ export async function updateCollection(
 export async function deleteCollection(
 	token: string,
 	id: string,
-	version: number,
+	expectedVersion: number,
 ): Promise<void> {
 	await request(`/api/v2/collections/${id}`, token, {
 		method: "DELETE",
-		body: JSON.stringify({ mutationId: Crypto.randomUUID(), version }),
+		body: JSON.stringify({ mutationId: Crypto.randomUUID(), expectedVersion }),
 	});
 }
 
@@ -156,7 +156,7 @@ export async function updateNode(
 	token: string,
 	collectionId: string,
 	nodeId: string,
-	input: { title?: string | null; properties?: NodeProperties },
+	input: { expectedVersion: number; title?: string | null; properties?: NodeProperties },
 ): Promise<void> {
 	await request(
 		`/api/v2/collections/${collectionId}/nodes/${nodeId}`,
@@ -172,14 +172,14 @@ export async function deleteNode(
 	token: string,
 	collectionId: string,
 	nodeId: string,
-	version: number,
+	expectedVersion: number,
 ): Promise<void> {
 	await request(
 		`/api/v2/collections/${collectionId}/nodes/${nodeId}`,
 		token,
 		{
 			method: "DELETE",
-			body: JSON.stringify({ mutationId: Crypto.randomUUID(), version }),
+			body: JSON.stringify({ mutationId: Crypto.randomUUID(), expectedVersion }),
 		},
 	);
 }
@@ -187,7 +187,7 @@ export async function deleteNode(
 export async function reorderNodes(
 	token: string,
 	collectionId: string,
-	nodes: Array<{ id: string; positionKey: string; parentId: string | null }>,
+	nodes: Array<{ id: string; positionKey: string; expectedVersion: number }>,
 ): Promise<void> {
 	await request(
 		`/api/v2/collections/${collectionId}/nodes/reorder`,
