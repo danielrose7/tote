@@ -1,15 +1,40 @@
 /**
- * Reads pending URLs from the App Group shared container written by the
- * share extension (ShareExtensionViewController.swift → group.tools.tote.app).
+ * Reads pending URLs and structured captures from the App Group shared
+ * container written by the share extension.
  *
- * Maintains a queue so multiple shares before opening the app are all
- * presented one after the other.
+ * Priority: pendingCaptures (extension picked a collection) > pendingUrls
+ * (plain URL, present SaveProductSheet for manual assignment).
  */
 
 import { useEffect, useRef, useState } from "react";
 import { AppState, type AppStateStatus, NativeModules } from "react-native";
 
 const { AppGroupModule } = NativeModules;
+
+export type PendingCapture = {
+	url: string;
+	title?: string;
+	collectionId: string;
+	sectionId?: string;
+};
+
+async function fetchPendingCaptures(): Promise<PendingCapture[]> {
+	try {
+		const raw = await AppGroupModule?.getPendingCaptures?.();
+		if (!Array.isArray(raw) || raw.length === 0) return [];
+		return raw
+			.map((s: string) => {
+				try {
+					return JSON.parse(s) as PendingCapture;
+				} catch {
+					return null;
+				}
+			})
+			.filter((c): c is PendingCapture => !!c?.collectionId);
+	} catch {
+		return [];
+	}
+}
 
 async function fetchPendingUrls(): Promise<string[]> {
 	try {
@@ -39,10 +64,22 @@ async function fetchPendingUrlDebugEvents(): Promise<string[]> {
 
 export function usePendingUrl() {
 	const [queue, setQueue] = useState<string[]>([]);
+	const [captures, setCaptures] = useState<PendingCapture[]>([]);
 	const appState = useRef(AppState.currentState);
 	const loaded = useRef(false);
 
 	async function check() {
+		// Structured captures take priority — extension already picked a collection
+		const newCaptures = await fetchPendingCaptures();
+		if (newCaptures.length > 0) {
+			AppGroupModule?.clearPendingCaptures?.();
+			// Also clear pendingUrls to avoid SaveProductSheet opening for the same URLs
+			AppGroupModule?.clearPendingUrls?.();
+			setCaptures((prev) => [...prev, ...newCaptures]);
+			return;
+		}
+
+		// Fall through to plain URLs
 		const urls = await fetchPendingUrls();
 		const debugEvents = await fetchPendingUrlDebugEvents();
 		if (__DEV__ && debugEvents.length > 0) {
@@ -50,7 +87,6 @@ export function usePendingUrl() {
 			AppGroupModule.clearPendingUrlDebugEvents?.();
 		}
 		if (urls.length === 0) return;
-		// Clear from shared container immediately so they aren't re-read
 		AppGroupModule.clearPendingUrls();
 		setQueue((prev) =>
 			Array.from(new Set([...prev, ...urls.filter((u) => !prev.includes(u))])),
@@ -78,5 +114,11 @@ export function usePendingUrl() {
 		setQueue((prev) => prev.slice(1));
 	}
 
-	return { pendingUrl, clearPendingUrl, queueLength };
+	const pendingCapture = captures[0] ?? null;
+
+	function clearPendingCapture() {
+		setCaptures((prev) => prev.slice(1));
+	}
+
+	return { pendingUrl, clearPendingUrl, queueLength, pendingCapture, clearPendingCapture };
 }

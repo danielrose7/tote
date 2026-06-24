@@ -1,40 +1,40 @@
 {
-	"expo": {
-		"name": "Tote",
-		"slug": "tote",
-		"version": "1.1.1",
-		"orientation": "portrait",
-		"icon": "./assets/icon.png",
-		"userInterfaceStyle": "light",
-		"scheme": "tote",
-		"splash": {
-			"image": "./assets/splash-icon.png",
-			"resizeMode": "contain",
-			"backgroundColor": "#ffffff"
-		},
-		"ios": {
-			"supportsTablet": true,
-			"bundleIdentifier": "tools.tote.app",
-			"associatedDomains": ["applinks:tote.tools"],
-			"buildNumber": "1"
-		},
-		"plugins": [
-			"@clerk/expo",
-			"expo-apple-authentication",
-			[
-				"expo-share-extension",
-				{
-					"backgroundColor": {
-						"red": 255,
-						"green": 255,
-						"blue": 255,
-						"alpha": 1
-					}
-				}
-			]
-		],
-		"android": {
-			"package": "tools.tote.app"
-		}
-	}
+  "expo": {
+    "name": "Tote",
+    "slug": "tote",
+    "version": "1.1.2",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "tote",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tools.tote.app",
+      "associatedDomains": ["applinks:tote.tools"],
+      "buildNumber": "1"
+    },
+    "plugins": [
+      "@clerk/expo",
+      "expo-apple-authentication",
+      [
+        "expo-share-extension",
+        {
+          "backgroundColor": {
+            "red": 255,
+            "green": 255,
+            "blue": 255,
+            "alpha": 1
+          }
+        }
+      ]
+    ],
+    "android": {
+      "package": "tools.tote.app"
+    }
+  }
 }

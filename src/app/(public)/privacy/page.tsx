@@ -75,6 +75,12 @@ export default function PrivacyPage() {
             . Data is encrypted at rest by Neon and transmitted over HTTPS.
           </p>
           <p>
+            On iOS, Tote also caches your collections locally on your device
+            using SQLite. This cache is stored in your app&rsquo;s private
+            sandbox, is never shared with other apps, and is deleted when you
+            delete the app or sign out.
+          </p>
+          <p>
             Tote uses{' '}
             <a
               href="https://ably.com"
@@ -118,6 +124,14 @@ export default function PrivacyPage() {
             address before sharing it. Tote does not receive any additional
             information from Apple beyond what is needed to create or identify
             your account.
+          </p>
+          <p>
+            On iOS, Tote stores a long-lived access credential in your
+            device&rsquo;s secure Keychain. This credential is shared between
+            the main app and the iOS Share Extension so that you can save
+            products directly from Safari without opening the app. The
+            credential never leaves your device except as an authentication
+            header on requests to Tote&rsquo;s own servers.
           </p>
         </div>
 

@@ -12,7 +12,7 @@ import { getAccountCollectionDataSource } from '@/lib/collections/repository';
 import { db } from '@/lib/db';
 
 async function authorizedNeonUser() {
-  const { userId } = await auth();
+  const { userId } = await auth({ acceptsToken: ['session_token', 'api_key'] });
   if (!userId) return { status: 401 as const };
   const dataSource = await getAccountCollectionDataSource(userId);
   if (dataSource !== 'neon') {

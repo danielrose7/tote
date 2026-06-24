@@ -21,6 +21,8 @@
 		CA887B8474AB1C0DA3D717C9 /* libPods-ToteShareExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D0E0CAB8065AC8DF36DA68 /* libPods-ToteShareExtension.a */; };
 		D1A001000000000000000001 /* AppGroupModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000002 /* AppGroupModule.swift */; };
 		D1A001000000000000000003 /* AppGroupModule.m in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000004 /* AppGroupModule.m */; };
+		D1A001000000000000000005 /* AppGroupModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000002 /* AppGroupModule.swift */; };
+		D1A001000000000000000006 /* AppGroupModule.m in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000004 /* AppGroupModule.m */; };
 		EF0A9B5566DB4785B78748FE /* ClerkViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20BE5A05F9344A5A18ECCAF /* ClerkViewFactory.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
@@ -623,6 +625,8 @@
 			files = (
 				9FCC31A23AE64C1D8FB494EC /* ShareExtensionViewController.swift in Sources */,
 				8B44CAF14B32F95FC37516F4 /* ExpoModulesProvider.swift in Sources */,
+				D1A001000000000000000005 /* AppGroupModule.swift in Sources */,
+				D1A001000000000000000006 /* AppGroupModule.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -659,7 +663,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -693,7 +697,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -733,7 +737,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = tools.tote.app.share;
 				PRODUCT_NAME = ToteShareExtension;
@@ -767,7 +771,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = tools.tote.app.share;
 				PRODUCT_NAME = ToteShareExtension;
