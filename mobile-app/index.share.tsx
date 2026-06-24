@@ -44,15 +44,24 @@ type CaptureCollection = {
   sections: Section[];
 };
 
+type PreprocessingResults = {
+  title?: string | null;
+  imageUrl?: string | null;
+  description?: string | null;
+  price?: string | null;
+};
+
 type Props = {
   url?: string;
   text?: string;
   title?: string;
+  preprocessingResults?: PreprocessingResults;
 };
 
 function ShareExtension(props: Props) {
   const url = props.url || props.text;
-  const title = props.title;
+  const pre = props.preprocessingResults;
+  const title = pre?.title || props.title;
 
   const [collections, setCollections] = useState<CaptureCollection[] | null>(
     null,
@@ -111,6 +120,9 @@ function ShareExtension(props: Props) {
             mutationId: generateId(),
             url,
             title: title || url,
+            imageUrl: pre?.imageUrl ?? undefined,
+            description: pre?.description ?? undefined,
+            price: pre?.price ?? undefined,
             collectionId,
             sectionId: sectionId ?? null,
           }),
