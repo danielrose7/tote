@@ -996,6 +996,8 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
   const [defaultQueuedCollectionId, setDefaultQueuedCollectionId] = useState<
     string | undefined
   >(undefined);
+  const [rescuedCapture, setRescuedCapture] =
+    useState<typeof pendingCapture>(null);
 
   useEffect(() => {
     if (!pendingCapture) return;
@@ -1008,13 +1010,11 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
           collectionId: capture.collectionId,
           sectionId: capture.sectionId,
           url: capture.url,
-          title: capture.title,
+          title: capture.title || capture.url,
         });
-      } catch (e) {
-        Alert.alert(
-          'Could not save link',
-          'Something went wrong saving from the share extension. Please try again from Safari.',
-        );
+      } catch {
+        // Fall back to SaveProductSheet with the collection pre-selected
+        setRescuedCapture(capture);
       }
       clearPendingCapture();
     })();
@@ -1061,6 +1061,15 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
           onApplyCollectionToRemaining={(collectionId) =>
             setDefaultQueuedCollectionId(collectionId ?? undefined)
           }
+        />
+      )}
+      {rescuedCapture && (
+        <SaveProductSheet
+          key={rescuedCapture.url}
+          url={rescuedCapture.url}
+          defaultCollectionId={rescuedCapture.collectionId}
+          autoApplyCollectionId={rescuedCapture.collectionId}
+          onDismiss={() => setRescuedCapture(null)}
         />
       )}
       {invite && <AcceptInviteSheet invite={invite} onClose={clearInvite} />}

@@ -662,13 +662,6 @@ class ShareExtensionViewController: UIViewController {
     }
     
     group.notify(queue: .main) {
-      // Extract page title from Safari's attributed title
-      for item in extensionItems {
-        if let title = item.attributedTitle?.string, !title.isEmpty {
-          sharedItems["title"] = title
-          break
-        }
-      }
       completion(sharedItems.isEmpty ? nil : sharedItems)
     }
   }
