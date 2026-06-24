@@ -90,6 +90,7 @@ The dev-only collection curator lives at `/dev/curate`.
 1. **Privacy first** - No analytics, tracking, or data collection
 2. **Bundle size matters** - Avoid adding dependencies; justify new ones
 3. **Keep it simple** - Prefer boring solutions over clever ones
+4. **Surface errors, don't swallow them** - Show the user what went wrong and offer a retry. Empty `catch {}` blocks that hide failures are not acceptable; at minimum show an Alert or an error state with a retry action.
 
 ## Route Groups
 

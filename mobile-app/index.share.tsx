@@ -14,8 +14,9 @@
  * Both trigger JavaScriptActor / ClerkViewFactory crashes in extension context.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   AppRegistry,
   NativeModules,
   ScrollView,
@@ -57,7 +58,14 @@ function ShareExtension(props: Props) {
     null,
   );
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState<
+    'idle' | 'saving' | 'saved' | 'error'
+  >('idle');
+  const lastPickArgs = useRef<{
+    collectionId: string;
+    sectionId?: string;
+  } | null>(null);
+  const picking = useRef(false);
 
   useEffect(() => {
     async function load() {
@@ -82,20 +90,24 @@ function ShareExtension(props: Props) {
   }
 
   async function handlePick(collectionId: string, sectionId?: string) {
-    setSaved(true);
+    if (picking.current) return;
+    picking.current = true;
+    lastPickArgs.current = { collectionId, sectionId };
+    setSaveState('saving');
+
+    let didSave = false;
     try {
       const apiKey = await AppGroupModule?.getApiKey?.();
       if (apiKey && url) {
         const appUrl = process.env.EXPO_PUBLIC_APP_URL ?? 'https://tote.tools';
-        const id = generateId();
-        await fetch(`${appUrl}/api/v2/capture`, {
+        const response = await fetch(`${appUrl}/api/v2/capture`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            id,
+            id: generateId(),
             mutationId: generateId(),
             url,
             title: title || url,
@@ -103,19 +115,32 @@ function ShareExtension(props: Props) {
             sectionId: sectionId ?? null,
           }),
         });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        didSave = true;
       } else {
-        // Fallback: enqueue for main app to process on next open
+        // No API key — enqueue for main app
         const capture = JSON.stringify({ url, title, collectionId, sectionId });
         await AppGroupModule?.enqueuePendingCapture?.(capture);
+        didSave = true;
       }
     } catch {
-      // Fallback on any error
+      // Primary failed — try fallback enqueue
       try {
         const capture = JSON.stringify({ url, title, collectionId, sectionId });
         await AppGroupModule?.enqueuePendingCapture?.(capture);
+        didSave = true;
       } catch {}
     }
-    setTimeout(() => AppGroupModule?.close?.(), 800);
+
+    if (didSave) {
+      setSaveState('saved');
+      setTimeout(() => AppGroupModule?.close?.(), 800);
+    } else {
+      picking.current = false;
+      setSaveState('error');
+    }
   }
 
   if (!url) {
@@ -128,7 +153,15 @@ function ShareExtension(props: Props) {
     );
   }
 
-  if (saved) {
+  if (saveState === 'saving') {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#6366f1" />
+      </View>
+    );
+  }
+
+  if (saveState === 'saved') {
     return (
       <View style={styles.centered}>
         <Text allowFontScaling={false} style={styles.checkmark}>
@@ -137,6 +170,34 @@ function ShareExtension(props: Props) {
         <Text allowFontScaling={false} style={styles.title}>
           Added to Tote
         </Text>
+      </View>
+    );
+  }
+
+  if (saveState === 'error') {
+    return (
+      <View style={styles.centered}>
+        <Text allowFontScaling={false} style={styles.errorTitle}>
+          Could not save
+        </Text>
+        <Text allowFontScaling={false} style={styles.subtitle}>
+          Check your connection and try again.
+        </Text>
+        <TouchableOpacity
+          style={styles.retryBtn}
+          onPress={() => {
+            if (lastPickArgs.current) {
+              handlePick(
+                lastPickArgs.current.collectionId,
+                lastPickArgs.current.sectionId,
+              );
+            }
+          }}
+        >
+          <Text allowFontScaling={false} style={styles.retryBtnText}>
+            Retry
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -206,29 +267,31 @@ function ShareExtension(props: Props) {
           const dot = col.color ?? '#6366f1';
           return (
             <View key={col.id} style={styles.collectionGroup}>
-              {/* Collection row */}
+              {/* Collection row — always saves directly; chevron toggles section picker */}
               <TouchableOpacity
                 style={styles.collectionRow}
-                onPress={() => {
-                  if (col.sections.length === 0) {
-                    handlePick(col.id);
-                  } else {
-                    setExpandedId(isExpanded ? null : col.id);
-                  }
-                }}
+                onPress={() => handlePick(col.id)}
               >
                 <View style={[styles.dot, { backgroundColor: dot }]} />
                 <Text allowFontScaling={false} style={styles.collectionName}>
                   {col.name}
                 </Text>
                 {col.sections.length > 0 && (
-                  <Text allowFontScaling={false} style={styles.chevron}>
-                    {isExpanded ? '▾' : '›'}
-                  </Text>
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      setExpandedId(isExpanded ? null : col.id);
+                    }}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Text allowFontScaling={false} style={styles.chevron}>
+                      {isExpanded ? '▾' : '›'}
+                    </Text>
+                  </TouchableOpacity>
                 )}
               </TouchableOpacity>
 
-              {/* Section rows */}
+              {/* Section rows — shown when chevron is tapped */}
               {isExpanded &&
                 col.sections.map((sec) => (
                   <TouchableOpacity
@@ -241,21 +304,6 @@ function ShareExtension(props: Props) {
                     </Text>
                   </TouchableOpacity>
                 ))}
-
-              {/* "No section" option when expanded */}
-              {isExpanded && (
-                <TouchableOpacity
-                  style={styles.sectionRow}
-                  onPress={() => handlePick(col.id)}
-                >
-                  <Text
-                    allowFontScaling={false}
-                    style={[styles.sectionName, styles.noSection]}
-                  >
-                    No section
-                  </Text>
-                </TouchableOpacity>
-              )}
             </View>
           );
         })}
@@ -287,6 +335,24 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     marginTop: 6,
     textAlign: 'center',
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ef4444',
+    marginBottom: 6,
+  },
+  retryBtn: {
+    marginTop: 20,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#6366f1',
+  },
+  retryBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   loading: {
     fontSize: 16,

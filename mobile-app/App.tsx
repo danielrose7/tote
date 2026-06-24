@@ -33,6 +33,7 @@ import { useInviteLink } from './src/hooks/useInviteLink';
 import { usePendingUrl } from './src/hooks/usePendingUrl';
 import type { Collection } from './src/lib/api';
 import {
+  captureUrl,
   createCollection,
   fetchCaptureCollections,
   fetchCollections,
@@ -740,6 +741,7 @@ function CollectionListContent({
   const [searchQuery, setSearchQuery] = useState('');
 
   const autoAddTriggered = useRef(false);
+  const apiKeyProvisioned = useRef(false);
 
   async function loadCollections(force = false) {
     // 1. Load from cache first (fast path)
@@ -765,16 +767,16 @@ function CollectionListContent({
       setLoaded(true);
       // Populate cache and provision API key for share extension
       try {
-        const token2 = await getToken();
-        if (token2) {
-          const captureCollections = await fetchCaptureCollections(token2);
-          NativeModules.AppGroupModule?.setCollectionsCache?.(
-            JSON.stringify(captureCollections),
-          );
-          // Provision a long-lived API key if we don't have one yet
+        const captureCollections = await fetchCaptureCollections(token);
+        NativeModules.AppGroupModule?.setCollectionsCache?.(
+          JSON.stringify(captureCollections),
+        );
+        // Provision a long-lived API key once per app session
+        if (!apiKeyProvisioned.current) {
+          apiKeyProvisioned.current = true;
           const existing = await NativeModules.AppGroupModule?.getApiKey?.();
           if (!existing) {
-            const secret = await provisionApiKey(token2);
+            const secret = await provisionApiKey(token);
             NativeModules.AppGroupModule?.setApiKey?.(secret);
           }
         }
@@ -982,11 +984,41 @@ function CollectionListScreen({ navigation, route }: any) {
 }
 
 function AppScreens({ autoAdd }: { autoAdd: boolean }) {
-  const { pendingUrl, clearPendingUrl, queueLength } = usePendingUrl();
+  const { getToken } = useAuth();
+  const {
+    pendingUrl,
+    clearPendingUrl,
+    queueLength,
+    pendingCapture,
+    clearPendingCapture,
+  } = usePendingUrl();
   const { invite, clearInvite } = useInviteLink();
   const [defaultQueuedCollectionId, setDefaultQueuedCollectionId] = useState<
     string | undefined
   >(undefined);
+
+  useEffect(() => {
+    if (!pendingCapture) return;
+    const capture = pendingCapture;
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) throw new Error('Not signed in');
+        await captureUrl(token, {
+          collectionId: capture.collectionId,
+          sectionId: capture.sectionId,
+          url: capture.url,
+          title: capture.title,
+        });
+      } catch (e) {
+        Alert.alert(
+          'Could not save link',
+          'Something went wrong saving from the share extension. Please try again from Safari.',
+        );
+      }
+      clearPendingCapture();
+    })();
+  }, [pendingCapture]);
 
   function handleDismissPendingUrl() {
     clearPendingUrl();
