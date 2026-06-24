@@ -29,29 +29,29 @@ Steps:
 
 ### Assets needed
 
-| Asset                                 | Status | Notes                              |
-| ------------------------------------- | ------ | ---------------------------------- |
-| App icon (1024×1024)                  | Done   | `assets/icon.png` + xcassets       |
-| Splash screen                         | Done   | `assets/splash-icon.png`           |
-| Screenshots — iPhone 6.7" (1290×2796) | Needed | Min 3, capture from Simulator      |
-| Screenshots — iPhone 6.1" (1179×2556) | Needed | Or let Apple auto-resize from 6.7" |
-| Privacy policy URL                    | Needed | Simple page on tote.tools          |
+| Asset                                 | Status | Notes                         |
+| ------------------------------------- | ------ | ----------------------------- |
+| App icon (1024×1024)                  | Done   | `assets/icon.png` + xcassets  |
+| Splash screen                         | Done   | `assets/splash-icon.png`      |
+| Screenshots — iPhone 6.7" (1290×2796) | Done   | Uploaded to App Store Connect |
+| Screenshots — iPhone 6.1" (1179×2556) | Done   | Auto-resized from 6.7"        |
+| Privacy policy URL                    | Done   | tote.tools/privacy            |
 
 ### App Store Connect metadata
 
-- [ ] App name: Tote
-- [ ] Subtitle (30 chars max)
-- [ ] Description
-- [ ] Keywords (100 chars max)
-- [ ] Category: Shopping (primary) or Productivity
-- [ ] Age rating questionnaire
-- [ ] Support URL
-- [ ] Review notes explaining the Share Extension
+- [x] App name: Tote
+- [x] Subtitle (30 chars max)
+- [x] Description
+- [x] Keywords (100 chars max)
+- [x] Category: Shopping (primary) or Productivity
+- [x] Age rating questionnaire
+- [x] Support URL
+- [x] Review notes explaining the Share Extension
 
 ### Pre-submission checklist
 
-- [ ] Universal Links working (`apple-app-site-association` deployed with Team ID)
-- [ ] Bundle identifier confirmed: `tools.tote.app`
-- [ ] Version and build number set in Xcode
-- [ ] Privacy policy live at a public URL
+- [x] Universal Links working (`apple-app-site-association` deployed with Team ID `8RCZXVFHYN`)
+- [x] Bundle identifier confirmed: `tools.tote.app`
+- [x] Version and build number set in Xcode (1.1.2)
+- [x] Privacy policy live at a public URL (tote.tools/privacy)
 - [ ] Tested on a real device via TestFlight

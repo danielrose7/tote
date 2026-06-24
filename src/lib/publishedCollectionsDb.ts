@@ -100,8 +100,10 @@ export async function getPublishedCollectionsByOwner(
           SELECT pb.image_url, pb.title
           FROM (
             SELECT
+              pb2.id,
               pb2.image_url,
               pb2.title,
+              pb2.parent_block_id,
               COALESCE(slot.sort_order, pb2.sort_order) AS slot_sort,
               pb2.sort_order AS product_sort,
               ROW_NUMBER() OVER (
@@ -172,8 +174,10 @@ export async function getPublishedCollectionSummariesByUsernameAndSlugs(
               SELECT pb.image_url, pb.title
               FROM (
                 SELECT
+                  pb2.id,
                   pb2.image_url,
                   pb2.title,
+                  pb2.parent_block_id,
                   COALESCE(slot.sort_order, pb2.sort_order) AS slot_sort,
                   pb2.sort_order AS product_sort,
                   ROW_NUMBER() OVER (
