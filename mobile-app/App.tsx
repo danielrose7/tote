@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Dimensions,
   Image,
   KeyboardAvoidingView,
@@ -795,6 +796,20 @@ function CollectionListContent({
   useEffect(() => {
     if (refreshing) loadCollections(true);
   }, [refreshing]);
+
+  // Refresh when screen comes back into focus (navigate-back or app foreground)
+  useEffect(() => {
+    const appStateSub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') loadCollections(true);
+    });
+    const focusSub = navigation.addListener('focus', () =>
+      loadCollections(true),
+    );
+    return () => {
+      appStateSub.remove();
+      focusSub();
+    };
+  }, []);
 
   useEffect(() => {
     if (!autoAdd || autoAddTriggered.current || !loaded) return;

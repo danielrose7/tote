@@ -49,6 +49,8 @@ type PreprocessingResults = {
   imageUrl?: string | null;
   description?: string | null;
   price?: string | null;
+  currency?: string | null;
+  brand?: string | null;
 };
 
 type Props = {

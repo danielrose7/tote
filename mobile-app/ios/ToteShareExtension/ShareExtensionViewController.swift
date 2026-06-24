@@ -330,11 +330,16 @@ class ShareExtensionViewController: UIViewController {
     }
     
     var sharedItems: [String: Any] = [:]
-    
+
+    // Extract the page title from the extension item metadata (provided by Safari natively)
+    if let title = extensionItems.first?.attributedTitle?.string, !title.isEmpty {
+      sharedItems["title"] = title
+    }
+
     let group = DispatchGroup()
-    
+
     let fileManager = FileManager.default
-    
+
     for item in extensionItems {
       for provider in item.attachments ?? [] {
         if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
