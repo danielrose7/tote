@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
   AppState,
+  DeviceEventEmitter,
   Dimensions,
   Image,
   KeyboardAvoidingView,
@@ -801,7 +802,7 @@ function CollectionListContent({
     if (refreshing) loadCollections(true);
   }, [refreshing]);
 
-  // Refresh when screen comes back into focus (navigate-back or app foreground)
+  // Refresh when screen comes back into focus, app foregrounds, or a save completes
   useEffect(() => {
     const appStateSub = AppState.addEventListener('change', (next) => {
       if (next === 'active') loadCollections(true);
@@ -809,9 +810,14 @@ function CollectionListContent({
     const focusSub = navigation.addListener('focus', () =>
       loadCollections(true),
     );
+    const saveSub = DeviceEventEmitter.addListener(
+      'tote:collectionUpdated',
+      () => loadCollections(true),
+    );
     return () => {
       appStateSub.remove();
       focusSub();
+      saveSub.remove();
     };
   }, []);
 
@@ -1034,6 +1040,7 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
           url: capture.url,
           title: capture.title || capture.url,
         });
+        DeviceEventEmitter.emit('tote:collectionUpdated');
         // If we didn't get a real title, queue background enrichment
         const hasRealTitle = capture.title && capture.title !== capture.url;
         if (!hasRealTitle) {
@@ -1102,7 +1109,10 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
           key={enrichQueue[0].nodeId}
           job={enrichQueue[0]}
           token={enrichToken}
-          onDone={() => setEnrichQueue((prev) => prev.slice(1))}
+          onDone={() => {
+            setEnrichQueue((prev) => prev.slice(1));
+            DeviceEventEmitter.emit('tote:collectionUpdated');
+          }}
         />
       )}
       {invite && <AcceptInviteSheet invite={invite} onClose={clearInvite} />}
