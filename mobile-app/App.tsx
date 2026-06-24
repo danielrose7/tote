@@ -29,6 +29,10 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AcceptInviteSheet } from './src/components/AcceptInviteSheet';
+import {
+  HeadlessExtractor,
+  type EnrichJob,
+} from './src/components/HeadlessExtractor';
 import { SaveProductSheet } from './src/components/SaveProductSheet';
 import { useInviteLink } from './src/hooks/useInviteLink';
 import { usePendingUrl } from './src/hooks/usePendingUrl';
@@ -1011,34 +1015,41 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
   const [defaultQueuedCollectionId, setDefaultQueuedCollectionId] = useState<
     string | undefined
   >(undefined);
-  const [rescuedCapture, setRescuedCapture] =
-    useState<typeof pendingCapture>(null);
+  const [enrichQueue, setEnrichQueue] = useState<EnrichJob[]>([]);
+  const [enrichToken, setEnrichToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!pendingCapture) return;
     const capture = pendingCapture;
     clearPendingCapture();
 
-    // If the share extension couldn't extract a real title, open SaveProductSheet
-    // so the WebView extractor runs and fills in title, image, price properly.
-    const hasRealTitle = capture.title && capture.title !== capture.url;
-    if (!hasRealTitle) {
-      setRescuedCapture(capture);
-      return;
-    }
-
     (async () => {
       try {
         const token = await getToken();
-        if (!token) throw new Error('Not signed in');
-        await captureUrl(token, {
+        if (!token) return;
+        // Always save immediately — URL as title is fine as a placeholder
+        const result = await captureUrl(token, {
           collectionId: capture.collectionId,
           sectionId: capture.sectionId,
           url: capture.url,
-          title: capture.title!,
+          title: capture.title || capture.url,
         });
+        // If we didn't get a real title, queue background enrichment
+        const hasRealTitle = capture.title && capture.title !== capture.url;
+        if (!hasRealTitle) {
+          setEnrichToken(token);
+          setEnrichQueue((prev) => [
+            ...prev,
+            {
+              nodeId: result.id,
+              version: result.version,
+              collectionId: capture.collectionId,
+              url: capture.url,
+            },
+          ]);
+        }
       } catch {
-        setRescuedCapture(capture);
+        // Save failed silently — item not added; user will see nothing changed
       }
     })();
   }, [pendingCapture]);
@@ -1086,13 +1097,12 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
           }
         />
       )}
-      {rescuedCapture && (
-        <SaveProductSheet
-          key={rescuedCapture.url}
-          url={rescuedCapture.url}
-          defaultCollectionId={rescuedCapture.collectionId}
-          autoApplyCollectionId={rescuedCapture.collectionId}
-          onDismiss={() => setRescuedCapture(null)}
+      {enrichQueue.length > 0 && enrichToken && (
+        <HeadlessExtractor
+          key={enrichQueue[0].nodeId}
+          job={enrichQueue[0]}
+          token={enrichToken}
+          onDone={() => setEnrichQueue((prev) => prev.slice(1))}
         />
       )}
       {invite && <AcceptInviteSheet invite={invite} onClose={clearInvite} />}

@@ -106,50 +106,14 @@ function ShareExtension(props: Props) {
     lastPickArgs.current = { collectionId, sectionId };
     setSaveState('saving');
 
-    // Only use the direct API key save when Action.js gave us a real title.
-    // Otherwise enqueue so the main app runs full WebView extraction via SaveProductSheet.
-    const hasExtractedData = !!(pre?.title && pre.title !== url);
-
     let didSave = false;
     try {
-      const apiKey = await AppGroupModule?.getApiKey?.();
-      if (apiKey && url && hasExtractedData) {
-        const appUrl = process.env.EXPO_PUBLIC_APP_URL ?? 'https://tote.tools';
-        const response = await fetch(`${appUrl}/api/v2/capture`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            id: generateId(),
-            mutationId: generateId(),
-            url,
-            title: pre!.title!,
-            imageUrl: pre?.imageUrl ?? undefined,
-            description: pre?.description ?? undefined,
-            price: pre?.price ?? undefined,
-            collectionId,
-            sectionId: sectionId ?? null,
-          }),
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        didSave = true;
-      } else {
-        // No extracted data or no API key — enqueue for main app WebView extraction
-        const capture = JSON.stringify({ url, title, collectionId, sectionId });
-        await AppGroupModule?.enqueuePendingCapture?.(capture);
-        didSave = true;
-      }
+      // Always enqueue — the main app saves immediately then enriches in the background
+      const capture = JSON.stringify({ url, title, collectionId, sectionId });
+      await AppGroupModule?.enqueuePendingCapture?.(capture);
+      didSave = true;
     } catch {
-      // Direct save failed — fall back to enqueue
-      try {
-        const capture = JSON.stringify({ url, title, collectionId, sectionId });
-        await AppGroupModule?.enqueuePendingCapture?.(capture);
-        didSave = true;
-      } catch {}
+      didSave = false;
     }
 
     if (didSave) {

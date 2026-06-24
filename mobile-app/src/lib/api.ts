@@ -239,7 +239,7 @@ export async function captureUrl(
     price?: string;
     description?: string;
   },
-): Promise<{ nodeId: string }> {
+): Promise<{ id: string; version: number }> {
   return request('/api/v2/capture', token, {
     method: 'POST',
     body: JSON.stringify({
