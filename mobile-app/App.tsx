@@ -1017,6 +1017,16 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
   useEffect(() => {
     if (!pendingCapture) return;
     const capture = pendingCapture;
+    clearPendingCapture();
+
+    // If the share extension couldn't extract a real title, open SaveProductSheet
+    // so the WebView extractor runs and fills in title, image, price properly.
+    const hasRealTitle = capture.title && capture.title !== capture.url;
+    if (!hasRealTitle) {
+      setRescuedCapture(capture);
+      return;
+    }
+
     (async () => {
       try {
         const token = await getToken();
@@ -1025,13 +1035,11 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
           collectionId: capture.collectionId,
           sectionId: capture.sectionId,
           url: capture.url,
-          title: capture.title || capture.url,
+          title: capture.title!,
         });
       } catch {
-        // Fall back to SaveProductSheet with the collection pre-selected
         setRescuedCapture(capture);
       }
-      clearPendingCapture();
     })();
   }, [pendingCapture]);
 
