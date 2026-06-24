@@ -10,8 +10,10 @@ export async function POST() {
   const clerk = await clerkClient();
   const apiKey = await clerk.apiKeys.create({
     name: 'iOS Share Extension',
-    subject: `user:${userId}`,
+    subject: userId,
   });
+  const secret =
+    apiKey.secret ?? (await clerk.apiKeys.getSecret(apiKey.id)).secret;
 
-  return NextResponse.json({ secret: apiKey.secret }, { status: 201 });
+  return NextResponse.json({ secret }, { status: 201 });
 }
