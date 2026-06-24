@@ -18,7 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   useRefreshQueue,
   type RefreshState,
@@ -440,6 +440,7 @@ export function NeonCollectionView({
   const isSectionReorderMode = reorderSections.length > 0;
   const isRootReorderMode = reorderRoots.length > 0;
   const [refresh, dispatchRefresh] = useRefreshQueue();
+  const autoEnrichedIds = useRef(new Set<string>());
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -638,6 +639,20 @@ export function NeonCollectionView({
   const allRefreshableNodes = nodes.filter(
     (n) => (n.type === 'product' || n.type === 'link') && propertiesFor(n).url,
   );
+
+  // Auto-enrich URL-only nodes (title === URL, set as placeholder by the iOS share extension)
+  useEffect(() => {
+    if (!canEdit) return;
+    const urlOnlyNodes = allRefreshableNodes.filter((n) => {
+      const url = propertiesFor(n).url;
+      return url && n.title === url && !autoEnrichedIds.current.has(n.id);
+    });
+    for (const node of urlOnlyNodes) {
+      autoEnrichedIds.current.add(node.id);
+      void handleRefreshRootItem(node);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes]);
 
   const childrenByParent = new Map<string, CollectionNode[]>();
   for (const node of nodes) {
