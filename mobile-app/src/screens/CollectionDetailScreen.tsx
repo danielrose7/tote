@@ -44,6 +44,7 @@ import { fromNow, useSyncStatus } from '../hooks/useSyncStatus';
 import type { Collection, CollectionDetail, CollectionNode } from '../lib/api';
 import {
   captureUrl,
+  createNode,
   deleteCollection,
   deleteNode,
   reorderNodes,
@@ -613,18 +614,38 @@ function EditCollectionModal({
   visible,
   onClose,
   onSave,
+  slotCount,
+  onAddSlot,
 }: {
   collection: Collection;
   visible: boolean;
   onClose: () => void;
   onSave: (name: string, color: string) => void;
+  slotCount: number;
+  onAddSlot: (name: string) => Promise<void>;
 }) {
   const [name, setName] = useState(collection.name ?? '');
   const [color, setColor] = useState(collection.color ?? PRESET_COLORS[0]);
+  const [addingSlot, setAddingSlot] = useState(false);
+  const [slotName, setSlotName] = useState('');
+  const [savingSlot, setSavingSlot] = useState(false);
 
   function handleSave() {
     onSave(name.trim() || collection.name, color);
     onClose();
+  }
+
+  async function handleAddSlot() {
+    const trimmed = slotName.trim();
+    if (!trimmed) return;
+    setSavingSlot(true);
+    try {
+      await onAddSlot(trimmed);
+      setSlotName('');
+      setAddingSlot(false);
+    } finally {
+      setSavingSlot(false);
+    }
   }
 
   return (
@@ -676,6 +697,47 @@ function EditCollectionModal({
               </TouchableOpacity>
             ))}
           </View>
+
+          <Text style={styles.fieldLabel}>
+            Slots{slotCount > 0 ? ` · ${slotCount}` : ''}
+          </Text>
+          {addingSlot ? (
+            <View style={styles.addSlotRow}>
+              <TextInput
+                style={[styles.fieldInput, styles.addSlotInput]}
+                value={slotName}
+                onChangeText={setSlotName}
+                placeholder="Slot name"
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={handleAddSlot}
+              />
+              <TouchableOpacity
+                style={[styles.addSlotConfirm, savingSlot && { opacity: 0.5 }]}
+                onPress={handleAddSlot}
+                disabled={savingSlot || !slotName.trim()}
+              >
+                <Text style={styles.addSlotConfirmText}>Add</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addSlotCancel}
+                onPress={() => {
+                  setAddingSlot(false);
+                  setSlotName('');
+                }}
+              >
+                <Text style={styles.addSlotCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity
+              style={styles.addSlotButton}
+              onPress={() => setAddingSlot(true)}
+            >
+              <Ionicons name="add" size={16} color="#6366f1" />
+              <Text style={styles.addSlotButtonText}>Add slot</Text>
+            </TouchableOpacity>
+          )}
 
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
@@ -1317,10 +1379,52 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     try {
       const token = await getToken();
       if (!token) return;
-      await track(updateCollection(token, collectionId, { expectedVersion: collectionVersion, name, color }));
+      await track(
+        updateCollection(token, collectionId, {
+          expectedVersion: collectionVersion,
+          name,
+          color,
+        }),
+      );
       await refresh();
     } catch {
       await refresh();
+    }
+  }
+
+  async function handleAddSlot(name: string) {
+    const nextPositionKey = String(sectionNodes.length + 1).padStart(8, '0');
+    const tempId = `temp-${Date.now()}`;
+    const tempNode: CollectionNode = {
+      id: tempId,
+      collectionId,
+      parentId: null,
+      type: 'section',
+      title: name,
+      properties: {},
+      positionKey: nextPositionKey,
+      version: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setLocalNodes((prev) => [...prev, tempNode]);
+    try {
+      const token = await getToken();
+      if (!token) throw new Error('Not authenticated');
+      await track(
+        createNode(token, collectionId, {
+          type: 'section',
+          title: name,
+          positionKey: nextPositionKey,
+        }),
+      );
+      await refresh();
+    } catch (e) {
+      setLocalNodes((prev) => prev.filter((n) => n.id !== tempId));
+      Alert.alert(
+        'Could not add slot',
+        e instanceof Error ? e.message : 'Please try again.',
+      );
     }
   }
 
@@ -1385,24 +1489,34 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         options: [
           'Cancel',
           'Edit collection',
+          'Add slot',
           'Share collection',
           nextViewModeLabel,
           'Reorder items',
           'Delete collection',
         ],
         cancelButtonIndex: 0,
-        destructiveButtonIndex: 5,
+        destructiveButtonIndex: 6,
       },
       (buttonIndex) => {
         if (buttonIndex === 1) {
           setEditingCollection(true);
         } else if (buttonIndex === 2) {
-          setSharingCollection(true);
+          Alert.prompt(
+            'Add slot',
+            'Enter a name for the new slot.',
+            (name) => {
+              if (name?.trim()) handleAddSlot(name.trim());
+            },
+            'plain-text',
+          );
         } else if (buttonIndex === 3) {
-          setViewMode((mode) => (mode === 'list' ? 'grid' : 'list'));
+          setSharingCollection(true);
         } else if (buttonIndex === 4) {
-          setIsReorderMode(true);
+          setViewMode((mode) => (mode === 'list' ? 'grid' : 'list'));
         } else if (buttonIndex === 5) {
+          setIsReorderMode(true);
+        } else if (buttonIndex === 6) {
           confirmDeleteCollection();
         }
       },
@@ -1953,6 +2067,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           visible
           onClose={() => setEditingCollection(false)}
           onSave={handleUpdateCollection}
+          slotCount={sectionNodes.length}
+          onAddSlot={handleAddSlot}
         />
       )}
       <AddProductModal
@@ -2243,6 +2359,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalSaveText: { fontSize: 15, color: '#fff', fontWeight: '600' },
+  addSlotButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#c7d2fe',
+    backgroundColor: '#eef2ff',
+    alignSelf: 'flex-start',
+  },
+  addSlotButtonText: { fontSize: 14, fontWeight: '600', color: '#6366f1' },
+  addSlotRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  addSlotInput: { flex: 1, marginTop: 0 },
+  addSlotConfirm: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    backgroundColor: '#6366f1',
+  },
+  addSlotConfirmText: { fontSize: 14, fontWeight: '600', color: '#fff' },
+  addSlotCancel: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  addSlotCancelText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
   swatch: {
     width: 32,
