@@ -273,43 +273,53 @@ function ShareExtension(props: Props) {
           const dot = col.color ?? '#6366f1';
           return (
             <View key={col.id} style={styles.collectionGroup}>
-              {/* Collection row — always saves directly; chevron toggles section picker */}
               <TouchableOpacity
                 style={styles.collectionRow}
-                onPress={() => handlePick(col.id)}
+                onPress={() => {
+                  if (col.sections.length > 0) {
+                    setExpandedId(isExpanded ? null : col.id);
+                  } else {
+                    handlePick(col.id);
+                  }
+                }}
               >
                 <View style={[styles.dot, { backgroundColor: dot }]} />
                 <Text allowFontScaling={false} style={styles.collectionName}>
                   {col.name}
                 </Text>
                 {col.sections.length > 0 && (
-                  <TouchableOpacity
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      setExpandedId(isExpanded ? null : col.id);
-                    }}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                    <Text allowFontScaling={false} style={styles.chevron}>
-                      {isExpanded ? '▾' : '›'}
-                    </Text>
-                  </TouchableOpacity>
+                  <Text allowFontScaling={false} style={styles.chevron}>
+                    {isExpanded ? '▾' : '›'}
+                  </Text>
                 )}
               </TouchableOpacity>
 
-              {/* Section rows — shown when chevron is tapped */}
-              {isExpanded &&
-                col.sections.map((sec) => (
+              {isExpanded && (
+                <>
+                  {col.sections.map((sec) => (
+                    <TouchableOpacity
+                      key={sec.id}
+                      style={styles.sectionRow}
+                      onPress={() => handlePick(col.id, sec.id)}
+                    >
+                      <Text allowFontScaling={false} style={styles.sectionName}>
+                        {sec.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                   <TouchableOpacity
-                    key={sec.id}
                     style={styles.sectionRow}
-                    onPress={() => handlePick(col.id, sec.id)}
+                    onPress={() => handlePick(col.id)}
                   >
-                    <Text allowFontScaling={false} style={styles.sectionName}>
-                      {sec.name}
+                    <Text
+                      allowFontScaling={false}
+                      style={[styles.sectionName, styles.noSection]}
+                    >
+                      No section
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </>
+              )}
             </View>
           );
         })}

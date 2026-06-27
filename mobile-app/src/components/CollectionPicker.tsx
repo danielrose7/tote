@@ -116,7 +116,11 @@ export function CollectionPicker({
               ]}
               onPress={() => {
                 if (!sectionsReady) return;
-                hasSlots ? setExpandedId(id) : onSelect({ collection });
+                if (hasSlots) {
+                  setExpandedId(isExpanded ? null : id);
+                } else {
+                  onSelect({ collection });
+                }
               }}
             >
               <View
