@@ -18,6 +18,10 @@ _High effort_
 
 ## Later
 
+### Structured data & cache management library
+
+The current approach hand-rolls stale-while-revalidate with SQLite + `useState`. Consider adopting a library (TanStack Query, SWR, or a React Native-specific alternative — evaluate options when the time comes) to handle cache invalidation, background refresh, deduplication, and loading/error states consistently across screens. SQLite would still be needed as a persistence layer for offline/cold-start reads; the library would sit on top.
+
 ### Responsive iPad layouts
 
 _Moderate effort: 1–2 days for core polish; 3–5 days for a full tablet pass_

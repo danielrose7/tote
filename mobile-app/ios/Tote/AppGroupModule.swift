@@ -116,6 +116,12 @@ class AppGroupModule: NSObject {
     resolve(json)
   }
 
+  @objc
+  func clearCollectionsCache() {
+    sharedDefaults()?.removeObject(forKey: collectionsKey)
+    sharedDefaults()?.synchronize()
+  }
+
   // MARK: - API key (stored in shared Keychain, read by share extension)
 
   @objc(setApiKey:)

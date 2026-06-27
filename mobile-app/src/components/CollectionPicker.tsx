@@ -67,6 +67,7 @@ export function CollectionPicker({
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
@@ -103,7 +104,8 @@ export function CollectionPicker({
         );
 
         const isDefault = id === defaultExpandedId;
-        const hasSlots = slots.length > 0;
+        const sectionsReady = id in sections;
+        const hasSlots = sectionsReady && slots.length > 0;
 
         return (
           <View key={id}>
@@ -112,11 +114,10 @@ export function CollectionPicker({
                 styles.collectionRow,
                 isDefault && styles.collectionRowDefault,
               ]}
-              onPress={() =>
-                hasSlots
-                  ? setExpandedId(isExpanded ? null : id)
-                  : onSelect({ collection })
-              }
+              onPress={() => {
+                if (!sectionsReady) return;
+                hasSlots ? setExpandedId(id) : onSelect({ collection });
+              }}
             >
               <View
                 style={[
@@ -239,6 +240,10 @@ export function CollectionPicker({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  contentContainer: {
+    paddingBottom: 40,
   },
   sectionLabel: {
     fontSize: 13,

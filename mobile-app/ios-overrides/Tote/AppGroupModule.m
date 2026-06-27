@@ -22,6 +22,7 @@ RCT_EXTERN_METHOD(clearPendingCaptures)
 RCT_EXTERN_METHOD(setCollectionsCache:(NSString *)json)
 RCT_EXTERN_METHOD(getCollectionsCache:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(clearCollectionsCache)
 
 // API key
 RCT_EXTERN_METHOD(setApiKey:(NSString *)secret)

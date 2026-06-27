@@ -65,6 +65,7 @@ function ShareExtension(props: Props) {
   const pre = props.preprocessingResults;
   const title = pre?.title || props.title;
 
+  const [signedIn, setSignedIn] = useState<boolean | null>(null); // null = loading
   const [collections, setCollections] = useState<CaptureCollection[] | null>(
     null,
   );
@@ -82,14 +83,18 @@ function ShareExtension(props: Props) {
     async function load() {
       try {
         const json = await AppGroupModule?.getCollectionsCache?.();
-        if (json) {
+        if (json == null) {
+          // Cache absent means the user is signed out (cleared on sign-out)
+          setSignedIn(false);
+          setCollections([]);
+        } else {
+          setSignedIn(true);
           const parsed = JSON.parse(json) as CaptureCollection[];
           setCollections(parsed);
           if (parsed.length > 0) setExpandedId(parsed[0].id);
-        } else {
-          setCollections([]);
         }
       } catch {
+        setSignedIn(false);
         setCollections([]);
       }
     }
@@ -195,7 +200,26 @@ function ShareExtension(props: Props) {
     );
   }
 
-  // No cache — fall back to confirmation (URL is already in pendingUrls)
+  // Cache absent — user is signed out
+  if (signedIn === false) {
+    return (
+      <View style={styles.centered}>
+        <Text allowFontScaling={false} style={styles.title}>
+          Sign in to save
+        </Text>
+        <Text allowFontScaling={false} style={styles.subtitle}>
+          Open Tote and sign in, then try sharing again.
+        </Text>
+        <TouchableOpacity style={styles.retryBtn} onPress={handleClose}>
+          <Text allowFontScaling={false} style={styles.retryBtnText}>
+            Open Tote
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Signed in but no collections yet — fall back to confirmation
   if (collections.length === 0) {
     return (
       <View style={styles.centered}>

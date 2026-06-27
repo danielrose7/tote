@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   AppState,
   DeviceEventEmitter,
   Dimensions,
@@ -501,6 +502,33 @@ function SignInScreen() {
   );
 }
 
+function FadeImage({
+  uri,
+  style,
+  onError,
+}: {
+  uri: string;
+  style: any;
+  onError: () => void;
+}) {
+  const opacity = useRef(new Animated.Value(0)).current;
+  return (
+    <Animated.Image
+      source={{ uri }}
+      style={[style, { opacity }]}
+      resizeMode="cover"
+      onLoad={() =>
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+        }).start()
+      }
+      onError={onError}
+    />
+  );
+}
+
 function PreviewImageGrid({
   images,
   color,
@@ -531,10 +559,9 @@ function PreviewImageGrid({
 
   if (count === 1) {
     return (
-      <Image
-        source={{ uri: visible[0].url }}
+      <FadeImage
+        uri={visible[0].url}
         style={styles.previewGridFull}
-        resizeMode="cover"
         onError={() => setFailedUrls((p) => new Set([...p, visible[0].url]))}
       />
     );
@@ -544,11 +571,10 @@ function PreviewImageGrid({
     return (
       <View style={styles.previewGridRow}>
         {visible.slice(0, 2).map((img) => (
-          <Image
+          <FadeImage
             key={img.nodeId}
-            source={{ uri: img.url }}
+            uri={img.url}
             style={styles.previewGridHalf}
-            resizeMode="cover"
             onError={() => setFailedUrls((p) => new Set([...p, img.url]))}
           />
         ))}
@@ -559,19 +585,17 @@ function PreviewImageGrid({
   // 3 images: "L" — large left, two stacked right
   return (
     <View style={styles.previewGridRow}>
-      <Image
-        source={{ uri: visible[0].url }}
+      <FadeImage
+        uri={visible[0].url}
         style={styles.previewGridLarge}
-        resizeMode="cover"
         onError={() => setFailedUrls((p) => new Set([...p, visible[0].url]))}
       />
       <View style={styles.previewGridStack}>
         {visible.slice(1, 3).map((img) => (
-          <Image
+          <FadeImage
             key={img.nodeId}
-            source={{ uri: img.url }}
+            uri={img.url}
             style={styles.previewGridSmall}
-            resizeMode="cover"
             onError={() => setFailedUrls((p) => new Set([...p, img.url]))}
           />
         ))}
@@ -593,7 +617,12 @@ function CollectionCard({
       onPress={onPress}
       activeOpacity={0.75}
     >
-      <View style={styles.collectionPreview}>
+      <View
+        style={[
+          styles.collectionPreview,
+          { backgroundColor: item.color ?? 'rgba(99,102,241,0.18)' },
+        ]}
+      >
         <PreviewImageGrid
           images={item.previewImages ?? []}
           color={item.color}
@@ -1369,7 +1398,6 @@ const styles = StyleSheet.create({
   collectionPreview: {
     width: '100%',
     aspectRatio: 4 / 3,
-    backgroundColor: '#e5e7eb',
     overflow: 'hidden',
   },
   previewGridFallback: {
@@ -1384,7 +1412,6 @@ const styles = StyleSheet.create({
   previewGridRow: {
     flex: 1,
     flexDirection: 'row',
-    gap: 2,
   },
   previewGridHalf: {
     flex: 1,
@@ -1394,7 +1421,6 @@ const styles = StyleSheet.create({
   },
   previewGridStack: {
     flex: 1,
-    gap: 2,
   },
   previewGridSmall: {
     flex: 1,
