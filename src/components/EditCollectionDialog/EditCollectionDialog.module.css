@@ -220,6 +220,11 @@
   color: var(--color-text-secondary);
 }
 
+.deleteConfirmLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
 .deleteConfirmActions {
   display: flex;
   align-items: center;

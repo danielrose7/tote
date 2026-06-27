@@ -52,7 +52,9 @@ export function NeonEditCollectionDialog({
   const [name, setName] = useState(collection.name);
   const [description, setDescription] = useState(collection.description ?? '');
   const [color, setColor] = useState(collection.color ?? presetColors[0]);
+  const deletePhrase = 'delete this collection';
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export function NeonEditCollectionDialog({
     setDescription(collection.description ?? '');
     setColor(collection.color ?? presetColors[0]);
     setDeleteOpen(false);
+    setDeleteConfirmation('');
     setError(null);
   }, [open, collection.name, collection.description, collection.color]);
 
@@ -297,11 +300,30 @@ export function NeonEditCollectionDialog({
                       This permanently deletes the collection and all its
                       contents. There&apos;s no undo.
                     </p>
+                    <div className={editStyles.inputGroup}>
+                      <label
+                        htmlFor="neon-delete-confirm"
+                        className={editStyles.deleteConfirmLabel}
+                      >
+                        Type <em>{deletePhrase}</em> to confirm
+                      </label>
+                      <input
+                        id="neon-delete-confirm"
+                        type="text"
+                        value={deleteConfirmation}
+                        onChange={(e) => setDeleteConfirmation(e.target.value)}
+                        className={editStyles.input}
+                        autoComplete="off"
+                      />
+                    </div>
                     <div className={editStyles.deleteConfirmActions}>
                       <button
                         type="button"
                         className={editStyles.deleteConfirmCancel}
-                        onClick={() => setDeleteOpen(false)}
+                        onClick={() => {
+                          setDeleteOpen(false);
+                          setDeleteConfirmation('');
+                        }}
                       >
                         Cancel
                       </button>
@@ -309,6 +331,9 @@ export function NeonEditCollectionDialog({
                         type="button"
                         onClick={handleDelete}
                         className="btn btn-danger"
+                        disabled={
+                          deleteConfirmation.toLowerCase() !== deletePhrase
+                        }
                       >
                         I&apos;m sure
                       </button>
