@@ -223,13 +223,13 @@ export function NeonTeamDialog({
           {error && <p className={styles.error}>{error}</p>}
 
           <section className={styles.section}>
-            <h3>Invite someone</h3>
+            <h3>Share with someone</h3>
             <form className={styles.inviteForm} onSubmit={submitInvite}>
               <input
                 value={recipientHint}
                 onChange={(event) => setRecipientHint(event.target.value)}
-                placeholder="Name or email (optional)"
-                aria-label="Invite recipient"
+                placeholder="Label (optional, for your reference)"
+                aria-label="Invite label"
                 maxLength={320}
               />
               <select
@@ -247,20 +247,26 @@ export function NeonTeamDialog({
               </button>
             </form>
             {latestInviteUrl && (
-              <div className={styles.inviteLink}>
-                <input
-                  readOnly
-                  value={latestInviteUrl}
-                  aria-label="Invite link"
-                />
-                <button type="button" onClick={copyInvite}>
-                  Copy
-                </button>
+              <div className={styles.inviteLinkReady}>
+                <p className={styles.inviteLinkReadyLabel}>
+                  Copy this link and send it to whoever you want to share with.
+                  No email is sent.
+                </p>
+                <div className={styles.inviteLink}>
+                  <input
+                    readOnly
+                    value={latestInviteUrl}
+                    aria-label="Invite link"
+                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                  />
+                  <button type="button" onClick={copyInvite}>
+                    Copy link
+                  </button>
+                </div>
               </div>
             )}
             <p className={styles.helper}>
-              New links are single-use. The complete link is only shown when it
-              is created.
+              Links are single-use and only shown once when created.
             </p>
           </section>
 

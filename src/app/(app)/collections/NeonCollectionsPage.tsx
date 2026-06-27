@@ -104,6 +104,13 @@ export function NeonCollectionsPage({
     queryKey: collectionQueryKeys.all,
     queryFn: fetchCollectionSummaries,
   });
+  const RECENTLY_SHARED_DAYS = 7;
+  const recentlyShared = collections.filter((c) => {
+    if (c.role === 'owner') return false;
+    const msAgo = Date.now() - new Date(c.joinedAt).getTime();
+    return msAgo < RECENTLY_SHARED_DAYS * 24 * 60 * 60 * 1000;
+  });
+
   const waitingSharedCollections = getWaitingClassicSharedCollections(
     classicAccount.$isLoaded && classicAccount.root?.$isLoaded
       ? classicAccount.root.sharedWithMe
@@ -142,6 +149,27 @@ export function NeonCollectionsPage({
                 className={listStyles.searchInput}
                 aria-label="Search collections"
               />
+            </div>
+          )}
+          {recentlyShared.length > 0 && (
+            <div className={listStyles.recentShareNotice}>
+              <strong>New:</strong>{' '}
+              {recentlyShared.length === 1 ? (
+                <>
+                  You were added to{' '}
+                  <Link
+                    href={`/collections/${recentlyShared[0].id}`}
+                    className={listStyles.recentShareLink}
+                  >
+                    {recentlyShared[0].name}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  You were recently added to {recentlyShared.length} shared
+                  collections
+                </>
+              )}
             </div>
           )}
           {!hasCollections ? (

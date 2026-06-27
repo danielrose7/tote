@@ -52,6 +52,7 @@ function hydrateCollectionSummary(
     ...collection,
     previewImages: collection.previewImages ?? [],
     updatedAt: new Date(collection.updatedAt),
+    joinedAt: new Date(collection.joinedAt),
   };
 }
 

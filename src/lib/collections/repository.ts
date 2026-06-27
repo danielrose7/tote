@@ -95,6 +95,7 @@ export type CollectionSummary = Pick<
   | 'updatedAt'
 > & {
   role: (typeof collectionMembers.$inferSelect)['role'];
+  joinedAt: Date;
   previewImages: { url: string; title: string | null; nodeId: string }[];
 };
 
@@ -114,6 +115,7 @@ export async function listCollectionSummaries(
       positionKey: collections.positionKey,
       updatedAt: collections.updatedAt,
       role: collectionMembers.role,
+      joinedAt: collectionMembers.createdAt,
     })
     .from(collectionMembers)
     .innerJoin(collections, eq(collections.id, collectionMembers.collectionId))
