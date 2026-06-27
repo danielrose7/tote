@@ -262,6 +262,7 @@ function hydrateCollectionTeam(team: CollectionTeam): CollectionTeam {
       ...event,
       createdAt: new Date(event.createdAt),
     })),
+    userIndex: team.userIndex,
   };
 }
 

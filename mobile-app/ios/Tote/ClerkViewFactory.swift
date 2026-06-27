@@ -329,7 +329,7 @@ struct ClerkAuthWrapperView: View {
   let dismissable: Bool
 
   var body: some View {
-    AuthView(mode: mode, isDismissable: dismissable)
+    AuthView(mode: mode, isDismissible: dismissable)
       .environment(Clerk.shared)
   }
 }
@@ -390,7 +390,7 @@ struct ClerkProfileWrapperView: View {
   let dismissable: Bool
 
   var body: some View {
-    UserProfileView(isDismissable: dismissable)
+    UserProfileView(isDismissible: dismissable)
       .environment(Clerk.shared)
   }
 }
@@ -413,7 +413,7 @@ struct ClerkInlineAuthWrapperView: View {
   }
 
   var body: some View {
-    AuthView(mode: mode, isDismissable: dismissable)
+    AuthView(mode: mode, isDismissible: dismissable)
       .environment(Clerk.shared)
       .task {
         for await event in Clerk.shared.auth.events {
@@ -444,7 +444,7 @@ struct ClerkInlineProfileWrapperView: View {
   let onEvent: (String, [String: Any]) -> Void
 
   var body: some View {
-    UserProfileView(isDismissable: dismissable)
+    UserProfileView(isDismissible: dismissable)
       .environment(Clerk.shared)
       .task {
         for await event in Clerk.shared.auth.events {
