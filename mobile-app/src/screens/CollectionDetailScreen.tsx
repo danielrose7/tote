@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as WebBrowser from 'expo-web-browser';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActionSheetIOS,
   ActivityIndicator,
@@ -158,6 +158,8 @@ function ProductRow({
   onDelete,
   onEdit,
   onRefresh,
+  refreshKey,
+  itemIndex,
 }: {
   item: ProductItem;
   isSelected: boolean;
@@ -168,120 +170,146 @@ function ProductRow({
   onDelete: () => void;
   onEdit: () => void;
   onRefresh: () => void;
+  refreshKey: number;
+  itemIndex: number;
 }) {
   const swipeRef = useRef<Swipeable>(null);
+  const opacity = useRef(new Animated.Value(1)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (refreshKey === 0) return;
+    opacity.setValue(0);
+    translateY.setValue(10);
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 240,
+        delay: itemIndex * 45,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 240,
+        delay: itemIndex * 45,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [refreshKey]);
 
   return (
-    <Swipeable
-      ref={swipeRef}
-      renderLeftActions={(progress) => {
-        const translateX = progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [-160, 0],
-          extrapolate: 'clamp',
-        });
-        return (
-          <Animated.View
-            style={[styles.leftActions, { transform: [{ translateX }] }]}
-          >
-            <TouchableOpacity
-              style={styles.editActionInner}
-              onPress={() => {
-                swipeRef.current?.close();
-                onEdit();
-              }}
+    <Animated.View style={{ opacity, transform: [{ translateY }] }}>
+      <Swipeable
+        ref={swipeRef}
+        renderLeftActions={(progress) => {
+          const translateX = progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [-160, 0],
+            extrapolate: 'clamp',
+          });
+          return (
+            <Animated.View
+              style={[styles.leftActions, { transform: [{ translateX }] }]}
             >
-              <Text style={styles.editActionText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.refreshActionInner}
-              onPress={() => {
-                swipeRef.current?.close();
-                onRefresh();
-              }}
+              <TouchableOpacity
+                style={styles.editActionInner}
+                onPress={() => {
+                  swipeRef.current?.close();
+                  onEdit();
+                }}
+              >
+                <Text style={styles.editActionText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.refreshActionInner}
+                onPress={() => {
+                  swipeRef.current?.close();
+                  onRefresh();
+                }}
+              >
+                <Text style={styles.refreshActionText}>Refresh</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        }}
+        renderRightActions={(progress) => {
+          const translateX = progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [80, 0],
+            extrapolate: 'clamp',
+          });
+          return (
+            <Animated.View
+              style={[styles.deleteAction, { transform: [{ translateX }] }]}
             >
-              <Text style={styles.refreshActionText}>Refresh</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        );
-      }}
-      renderRightActions={(progress) => {
-        const translateX = progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [80, 0],
-          extrapolate: 'clamp',
-        });
-        return (
-          <Animated.View
-            style={[styles.deleteAction, { transform: [{ translateX }] }]}
-          >
-            <TouchableOpacity
-              style={styles.deleteActionInner}
-              onPress={onDelete}
-            >
-              <Text style={styles.deleteActionText}>Remove</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        );
-      }}
-      leftThreshold={40}
-      rightThreshold={40}
-      overshootLeft={false}
-      overshootRight={false}
-    >
-      <TouchableOpacity
-        style={[styles.productRow, isQueued && styles.productRowQueued]}
-        onPress={onOpen}
-        activeOpacity={0.7}
+              <TouchableOpacity
+                style={styles.deleteActionInner}
+                onPress={onDelete}
+              >
+                <Text style={styles.deleteActionText}>Remove</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          );
+        }}
+        leftThreshold={40}
+        rightThreshold={40}
+        overshootLeft={false}
+        overshootRight={false}
       >
-        <View>
-          {item.properties.imageUrl ? (
-            <Image
-              source={{ uri: item.properties.imageUrl }}
-              style={[
-                styles.thumbnail,
-                (isRefreshing || isQueued) && styles.thumbnailRefreshing,
-              ]}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
-          )}
-          {isRefreshing && (
-            <View style={styles.thumbnailSpinner}>
-              <ActivityIndicator size="small" color="#6366f1" />
-            </View>
-          )}
-          {isQueued && (
-            <View style={styles.thumbnailSpinner}>
-              <Ionicons name="time-outline" size={18} color="#6366f1" />
-            </View>
-          )}
-        </View>
-        <View style={styles.productInfo}>
-          <Text style={styles.productName} numberOfLines={2}>
-            {item.title ?? 'Untitled'}
-          </Text>
-          {item.properties.price ? (
-            <Text style={styles.productPrice}>
-              {formatPrice(item.properties.price)}
+        <TouchableOpacity
+          style={[styles.productRow, isQueued && styles.productRowQueued]}
+          onPress={onOpen}
+          activeOpacity={0.7}
+        >
+          <View>
+            {item.properties.imageUrl ? (
+              <Image
+                source={{ uri: item.properties.imageUrl }}
+                style={[
+                  styles.thumbnail,
+                  (isRefreshing || isQueued) && styles.thumbnailRefreshing,
+                ]}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
+            )}
+            {isRefreshing && (
+              <View style={styles.thumbnailSpinner}>
+                <ActivityIndicator size="small" color="#6366f1" />
+              </View>
+            )}
+            {isQueued && (
+              <View style={styles.thumbnailSpinner}>
+                <Ionicons name="time-outline" size={18} color="#6366f1" />
+              </View>
+            )}
+          </View>
+          <View style={styles.productInfo}>
+            <Text style={styles.productName} numberOfLines={2}>
+              {item.title ?? 'Untitled'}
             </Text>
-          ) : null}
-        </View>
-        {onToggleSelected && (
-          <TouchableOpacity
-            onPress={onToggleSelected}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <View
-              style={[styles.checkbox, isSelected && styles.checkboxSelected]}
+            {item.properties.price ? (
+              <Text style={styles.productPrice}>
+                {formatPrice(item.properties.price)}
+              </Text>
+            ) : null}
+          </View>
+          {onToggleSelected && (
+            <TouchableOpacity
+              onPress={onToggleSelected}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              {isSelected && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-          </TouchableOpacity>
-        )}
-      </TouchableOpacity>
-    </Swipeable>
+              <View
+                style={[styles.checkbox, isSelected && styles.checkboxSelected]}
+              >
+                {isSelected && <Text style={styles.checkmark}>✓</Text>}
+              </View>
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </Swipeable>
+    </Animated.View>
   );
 }
 
@@ -1051,6 +1079,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     useState('ungrouped');
   const [isGridReorderReady, setIsGridReorderReady] = useState(false);
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { viewMode, setViewMode } = useViewMode();
   const { track, syncState, lastSavedAt } = useSyncStatus();
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -1264,10 +1293,12 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 
   function startBulkRefresh() {
     refresh();
-    const allProducts = localNodes.filter(
-      (n) => n.type !== 'section' && n.properties.url,
+    // Queue products in display order: section rank → item rank within section
+    const allProducts = sections.flatMap((sec) =>
+      sec.data.filter((n) => n.properties.url),
     );
     if (allProducts.length > 0) setRefreshQueue(allProducts);
+    setRefreshKey((k) => k + 1);
   }
 
   async function deleteSlot(slot: ProductItem) {
@@ -1523,6 +1554,18 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     );
   }
 
+  const sortedProductIds = useMemo(() => {
+    // Match the visual order: section items by section rank, then item rank within
+    // each section, with direct (ungrouped) items appended last
+    const ordered: string[] = [];
+    for (const sec of sections) {
+      for (const item of sec.data) {
+        if (item.properties.url) ordered.push(item.id);
+      }
+    }
+    return new Map(ordered.map((id, i) => [id, i]));
+  }, [sections]);
+
   function renderProduct({
     item,
     section,
@@ -1547,6 +1590,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         onDelete={() => deleteProduct(item)}
         onEdit={() => setEditingProduct(item)}
         onRefresh={() => setRefreshQueue([item])}
+        refreshKey={refreshKey}
+        itemIndex={sortedProductIds.get(item.id) ?? 0}
       />
     );
   }

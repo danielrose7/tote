@@ -1047,6 +1047,18 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
     clearPendingCapture,
   } = usePendingUrl();
   const { invite, clearInvite } = useInviteLink();
+
+  useEffect(() => {
+    if (pendingUrl) console.log('[AppScreens] pendingUrl set:', pendingUrl);
+  }, [pendingUrl]);
+  useEffect(() => {
+    if (pendingCapture)
+      console.log(
+        '[AppScreens] pendingCapture set:',
+        JSON.stringify(pendingCapture),
+      );
+  }, [pendingCapture]);
+
   const [defaultQueuedCollectionId, setDefaultQueuedCollectionId] = useState<
     string | undefined
   >(undefined);
