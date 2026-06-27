@@ -14,6 +14,7 @@ import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { AiCreditsPanel } from '@/components/Billing/AiCreditsPanel';
 import { Header } from '@/components/Header/Header';
 import { JazzAccount } from '@/schema';
+import { Main } from '@/components/Main/Main';
 import styles from './settings.module.css';
 
 type SettingsTab = 'account' | 'billing';
@@ -115,7 +116,7 @@ export function SettingsClient({
       <SignedIn>
         <Header />
 
-        <main className={styles.main}>
+        <Main className={styles.main}>
           <div className={styles.settingsRow}>
             <div className={styles.tabs} role="tablist" aria-label="Settings">
               <button
@@ -233,7 +234,7 @@ export function SettingsClient({
               <AiCreditsPanel returnPath="/settings?tab=billing" />
             </div>
           )}
-        </main>
+        </Main>
       </SignedIn>
     </div>
   );

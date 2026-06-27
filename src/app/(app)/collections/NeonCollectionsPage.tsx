@@ -8,6 +8,7 @@ import { useState } from 'react';
 import cardStyles from '@/components/CollectionCard/CollectionCard.module.css';
 import listStyles from '@/components/CollectionList/CollectionList.module.css';
 import { Header } from '@/components/Header';
+import { Main } from '@/components/Main/Main';
 import { useCollectionRealtime } from '@/hooks/useCollectionRealtime';
 import { exportClassicCollection } from '@/lib/collections/classicMigrationExport';
 import { getWaitingClassicSharedCollections } from '@/lib/collections/classicSharedMigration';
@@ -137,7 +138,7 @@ export function NeonCollectionsPage({
         showAddCollection
         onAddCollectionClick={() => setIsCreateOpen(true)}
       />
-      <main>
+      <Main fallbackMessage="Could not load your collections. Please refresh the page.">
         <div className={listStyles.container}>
           {showSearch && (
             <div className={listStyles.searchBar}>
@@ -249,7 +250,7 @@ export function NeonCollectionsPage({
             </>
           )}
         </div>
-      </main>
+      </Main>
       <NeonCreateCollectionDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}

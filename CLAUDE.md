@@ -92,6 +92,13 @@ The dev-only collection curator lives at `/dev/curate`.
 3. **Keep it simple** - Prefer boring solutions over clever ones
 4. **Surface errors, don't swallow them** - Show the user what went wrong and offer a retry. Empty `catch {}` blocks that hide failures are not acceptable; at minimum show an Alert or an error state with a retry action.
 
+## Error Boundaries
+
+- `src/components/ErrorBoundary/ErrorBoundary.tsx` — base class component; use directly when you need a custom fallback
+- `src/components/Main/Main.tsx` — drop-in replacement for `<main>` that wraps its children in an `ErrorBoundary`; accepts `className` and `fallbackMessage` props
+- All authenticated-app pages use `<Main>` instead of `<main>`; the `(app)/layout.tsx` also wraps children in a top-level `ErrorBoundary` as a last resort
+- Fallbacks show a "Refresh page" button (`window.location.reload()`) so users aren't stuck
+
 ## Route Groups
 
 - `(app)/` — authenticated routes; layout wraps in `Providers` (ClerkProvider + Jazz)

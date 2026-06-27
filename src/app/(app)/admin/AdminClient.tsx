@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { grantCreditsAction, seedUsersAction } from './actions';
+import { Main } from '@/components/Main/Main';
 import styles from './admin.module.css';
 
 export interface Balance {
@@ -197,7 +198,7 @@ export function AdminClient({
   }
 
   return (
-    <main className={styles.main}>
+    <Main className={styles.main}>
       <div className={styles.container}>
         <h1 className={styles.heading}>Admin dashboard</h1>
 
@@ -444,6 +445,6 @@ export function AdminClient({
           )}
         </section>
       </div>
-    </main>
+    </Main>
   );
 }

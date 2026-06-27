@@ -1,5 +1,10 @@
-import { Providers } from "../providers";
+import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
+import { Providers } from '../providers';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-	return <Providers>{children}</Providers>;
+  return (
+    <Providers>
+      <ErrorBoundary>{children}</ErrorBoundary>
+    </Providers>
+  );
 }
