@@ -114,7 +114,16 @@ function ShareExtension(props: Props) {
     let didSave = false;
     try {
       // Always enqueue — the main app saves immediately then enriches in the background
-      const capture = JSON.stringify({ url, title, collectionId, sectionId });
+      const capture = JSON.stringify({
+        url,
+        title,
+        collectionId,
+        sectionId,
+        imageUrl: pre?.imageUrl ?? undefined,
+        price: pre?.price ?? undefined,
+        currency: pre?.currency ?? undefined,
+        description: pre?.description ?? undefined,
+      });
       await AppGroupModule?.enqueuePendingCapture?.(capture);
       // Clear the legacy URL queue so the main app doesn't also show SaveProductSheet
       AppGroupModule?.clearPendingUrls?.();

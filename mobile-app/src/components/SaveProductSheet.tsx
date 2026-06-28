@@ -27,7 +27,6 @@ import { extractorScript } from '../lib/extractorScript';
 import { formatPrice } from '../lib/formatPrice';
 import { normalizeUrl } from '../lib/normalizeUrl';
 import { CollectionPicker } from './CollectionPicker';
-import { ProductSkeleton } from './ProductSkeleton';
 
 interface Metadata {
   url: string;
@@ -253,7 +252,7 @@ export function SaveProductSheet({
           <View style={styles.headerText}>
             <Text style={styles.headerTitle}>
               {stage === 'loading'
-                ? 'Saving…'
+                ? 'Reading page…'
                 : stage === 'saving' || stage === 'done'
                   ? 'Saved ✓'
                   : 'Save to Tote'}
@@ -289,9 +288,14 @@ export function SaveProductSheet({
           </TouchableOpacity>
         </View>
 
-        {/* Hidden WebView — does the extraction */}
+        {/* WebView — visible while extracting, hidden once metadata is ready */}
         {stage === 'loading' && (
-          <View style={styles.hidden}>
+          <View style={styles.webViewContainer}>
+            <View style={styles.urlBar}>
+              <Text style={styles.urlBarText} numberOfLines={1}>
+                {url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
+              </Text>
+            </View>
             <WebView
               ref={webViewRef}
               source={{ uri: url }}
@@ -303,9 +307,6 @@ export function SaveProductSheet({
             />
           </View>
         )}
-
-        {/* Loading skeleton */}
-        {stage === 'loading' && <ProductSkeleton />}
 
         {/* Preview + picker */}
         {(stage === 'preview' || stage === 'saving' || stage === 'done') &&
@@ -478,10 +479,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#6b7280',
   },
-  hidden: {
-    width: 0,
-    height: 0,
+  webViewContainer: {
+    height: 260,
     overflow: 'hidden',
+  },
+  urlBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#f9fafb',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e5e7eb',
+    alignItems: 'center',
+  },
+  urlBarText: {
+    fontSize: 13,
+    color: '#6b7280',
+    fontWeight: '500',
   },
   content: {
     flex: 1,

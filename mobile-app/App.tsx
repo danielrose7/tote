@@ -1043,21 +1043,10 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
     pendingUrl,
     clearPendingUrl,
     queueLength,
-    pendingCapture,
-    clearPendingCapture,
+    pendingCaptures,
+    clearPendingCaptures,
   } = usePendingUrl();
   const { invite, clearInvite } = useInviteLink();
-
-  useEffect(() => {
-    if (pendingUrl) console.log('[AppScreens] pendingUrl set:', pendingUrl);
-  }, [pendingUrl]);
-  useEffect(() => {
-    if (pendingCapture)
-      console.log(
-        '[AppScreens] pendingCapture set:',
-        JSON.stringify(pendingCapture),
-      );
-  }, [pendingCapture]);
 
   const [defaultQueuedCollectionId, setDefaultQueuedCollectionId] = useState<
     string | undefined
@@ -1066,41 +1055,49 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
   const [enrichToken, setEnrichToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!pendingCapture) return;
-    const capture = pendingCapture;
-    clearPendingCapture();
+    if (pendingCaptures.length === 0) return;
+    const captures = pendingCaptures;
+    clearPendingCaptures();
 
     (async () => {
-      try {
-        const token = await getToken();
-        if (!token) return;
-        // Always save immediately — URL as title is fine as a placeholder
-        const result = await captureUrl(token, {
-          collectionId: capture.collectionId,
-          sectionId: capture.sectionId,
-          url: capture.url,
-          title: capture.title || capture.url,
-        });
-        DeviceEventEmitter.emit('tote:collectionUpdated');
-        // If we didn't get a real title, queue background enrichment
-        const hasRealTitle = capture.title && capture.title !== capture.url;
-        if (!hasRealTitle) {
-          setEnrichToken(token);
-          setEnrichQueue((prev) => [
-            ...prev,
-            {
-              nodeId: result.id,
-              version: result.version,
+      const token = await getToken();
+      if (!token) return;
+
+      await Promise.all(
+        captures.map(async (capture) => {
+          try {
+            const result = await captureUrl(token, {
               collectionId: capture.collectionId,
+              sectionId: capture.sectionId,
               url: capture.url,
-            },
-          ]);
-        }
-      } catch {
-        // Save failed silently — item not added; user will see nothing changed
-      }
+              title: capture.title || capture.url,
+              imageUrl: capture.imageUrl,
+              price: capture.price,
+              description: capture.description,
+            });
+            // Skip enrichment if the share extension already extracted rich metadata
+            const hasRealTitle = capture.title && capture.title !== capture.url;
+            const hasRichData = hasRealTitle && capture.imageUrl;
+            if (!hasRichData) {
+              setEnrichToken(token);
+              setEnrichQueue((prev) => [
+                ...prev,
+                {
+                  nodeId: result.id,
+                  version: result.version,
+                  collectionId: capture.collectionId,
+                  url: capture.url,
+                },
+              ]);
+            }
+          } catch {
+            // Save failed silently — item not added; user will see nothing changed
+          }
+        }),
+      );
+      DeviceEventEmitter.emit('tote:collectionUpdated');
     })();
-  }, [pendingCapture]);
+  }, [pendingCaptures]);
 
   function handleDismissPendingUrl() {
     clearPendingUrl();

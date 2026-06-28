@@ -7,7 +7,7 @@
  */
 
 import { useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { updateNode } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
@@ -73,18 +73,27 @@ export function HeadlessExtractor({
   }
 
   return (
-    <WebView
-      ref={webViewRef}
-      source={{ uri: job.url }}
-      style={styles.hidden}
-      onLoadEnd={handleLoadEnd}
-      onMessage={handleMessage}
-      onError={finish}
-      javaScriptEnabled
-    />
+    <View style={styles.offscreen}>
+      <WebView
+        ref={webViewRef}
+        source={{ uri: job.url }}
+        onLoadEnd={handleLoadEnd}
+        onMessage={handleMessage}
+        onError={finish}
+        javaScriptEnabled
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  hidden: { width: 0, height: 0, opacity: 0, position: 'absolute' },
+  // WKWebView ignores width:0/height:0 briefly on first render — push off-screen instead
+  offscreen: {
+    position: 'absolute',
+    left: -9999,
+    top: -9999,
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
+  },
 });

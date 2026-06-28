@@ -16,6 +16,10 @@ export type PendingCapture = {
   title?: string;
   collectionId: string;
   sectionId?: string;
+  imageUrl?: string;
+  price?: string;
+  currency?: string;
+  description?: string;
 };
 
 async function fetchPendingCaptures(): Promise<PendingCapture[]> {
@@ -67,35 +71,41 @@ export function usePendingUrl() {
   const [captures, setCaptures] = useState<PendingCapture[]>([]);
   const appState = useRef(AppState.currentState);
   const loaded = useRef(false);
+  // Prevents concurrent check() calls from racing — the second call is dropped
+  // so a stale URL can't be read before the first call's clearPendingUrls() settles.
+  const checking = useRef(false);
 
   async function check() {
-    console.log('[usePendingUrl] check() start');
-    // Structured captures take priority — extension already picked a collection
-    const newCaptures = await fetchPendingCaptures();
-    console.log('[usePendingUrl] captures found:', newCaptures.length);
-    if (newCaptures.length > 0) {
-      AppGroupModule?.clearPendingCaptures?.();
-      AppGroupModule?.clearPendingUrls?.();
-      setQueue([]);
-      setCaptures((prev) => [...prev, ...newCaptures]);
-      console.log('[usePendingUrl] processed captures, cleared URL queue');
-      return;
-    }
+    if (checking.current) return;
+    checking.current = true;
+    try {
+      // Structured captures take priority — extension already picked a collection
+      const newCaptures = await fetchPendingCaptures();
+      if (newCaptures.length > 0) {
+        AppGroupModule?.clearPendingCaptures?.();
+        AppGroupModule?.clearPendingUrls?.();
+        setQueue([]);
+        setCaptures((prev) => [...prev, ...newCaptures]);
+        return;
+      }
 
-    // Fall through to plain URLs
-    const urls = await fetchPendingUrls();
-    console.log('[usePendingUrl] URLs found:', urls);
-    const debugEvents = await fetchPendingUrlDebugEvents();
-    if (__DEV__ && debugEvents.length > 0) {
-      console.log('[pending-url-debug]', debugEvents);
-      AppGroupModule.clearPendingUrlDebugEvents?.();
+      // Fall through to plain URLs
+      const urls = await fetchPendingUrls();
+      const debugEvents = await fetchPendingUrlDebugEvents();
+      if (__DEV__ && debugEvents.length > 0) {
+        console.log('[pending-url-debug]', debugEvents);
+        AppGroupModule.clearPendingUrlDebugEvents?.();
+      }
+      if (urls.length === 0) return;
+      AppGroupModule.clearPendingUrls();
+      setQueue((prev) =>
+        Array.from(
+          new Set([...prev, ...urls.filter((u) => !prev.includes(u))]),
+        ),
+      );
+    } finally {
+      checking.current = false;
     }
-    if (urls.length === 0) return;
-    console.log('[usePendingUrl] setting queue from URLs:', urls);
-    AppGroupModule.clearPendingUrls();
-    setQueue((prev) =>
-      Array.from(new Set([...prev, ...urls.filter((u) => !prev.includes(u))])),
-    );
   }
 
   useEffect(() => {
@@ -119,17 +129,15 @@ export function usePendingUrl() {
     setQueue((prev) => prev.slice(1));
   }
 
-  const pendingCapture = captures[0] ?? null;
-
-  function clearPendingCapture() {
-    setCaptures((prev) => prev.slice(1));
+  function clearPendingCaptures() {
+    setCaptures([]);
   }
 
   return {
     pendingUrl,
     clearPendingUrl,
     queueLength,
-    pendingCapture,
-    clearPendingCapture,
+    pendingCaptures: captures,
+    clearPendingCaptures,
   };
 }
