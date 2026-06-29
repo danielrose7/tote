@@ -642,38 +642,18 @@ function EditCollectionModal({
   visible,
   onClose,
   onSave,
-  slotCount,
-  onAddSlot,
 }: {
   collection: Collection;
   visible: boolean;
   onClose: () => void;
   onSave: (name: string, color: string) => void;
-  slotCount: number;
-  onAddSlot: (name: string) => Promise<void>;
 }) {
   const [name, setName] = useState(collection.name ?? '');
   const [color, setColor] = useState(collection.color ?? PRESET_COLORS[0]);
-  const [addingSlot, setAddingSlot] = useState(false);
-  const [slotName, setSlotName] = useState('');
-  const [savingSlot, setSavingSlot] = useState(false);
 
   function handleSave() {
     onSave(name.trim() || collection.name, color);
     onClose();
-  }
-
-  async function handleAddSlot() {
-    const trimmed = slotName.trim();
-    if (!trimmed) return;
-    setSavingSlot(true);
-    try {
-      await onAddSlot(trimmed);
-      setSlotName('');
-      setAddingSlot(false);
-    } finally {
-      setSavingSlot(false);
-    }
   }
 
   return (
@@ -725,47 +705,6 @@ function EditCollectionModal({
               </TouchableOpacity>
             ))}
           </View>
-
-          <Text style={styles.fieldLabel}>
-            Slots{slotCount > 0 ? ` · ${slotCount}` : ''}
-          </Text>
-          {addingSlot ? (
-            <View style={styles.addSlotRow}>
-              <TextInput
-                style={[styles.fieldInput, styles.addSlotInput]}
-                value={slotName}
-                onChangeText={setSlotName}
-                placeholder="Slot name"
-                autoFocus
-                returnKeyType="done"
-                onSubmitEditing={handleAddSlot}
-              />
-              <TouchableOpacity
-                style={[styles.addSlotConfirm, savingSlot && { opacity: 0.5 }]}
-                onPress={handleAddSlot}
-                disabled={savingSlot || !slotName.trim()}
-              >
-                <Text style={styles.addSlotConfirmText}>Add</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.addSlotCancel}
-                onPress={() => {
-                  setAddingSlot(false);
-                  setSlotName('');
-                }}
-              >
-                <Text style={styles.addSlotCancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={styles.addSlotButton}
-              onPress={() => setAddingSlot(true)}
-            >
-              <Ionicons name="add" size={16} color="#6366f1" />
-              <Text style={styles.addSlotButtonText}>Add slot</Text>
-            </TouchableOpacity>
-          )}
 
           <View style={styles.modalActions}>
             <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
@@ -838,6 +777,81 @@ function AddProductModal({
             </TouchableOpacity>
             <TouchableOpacity style={styles.modalSave} onPress={handleSubmit}>
               <Text style={styles.modalSaveText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+function AddSlotModal({
+  visible,
+  onClose,
+  onAdd,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onAdd: (name: string) => Promise<void>;
+}) {
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function handleAdd() {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setSaving(true);
+    try {
+      await onAdd(trimmed);
+      setName('');
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      />
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Add Slot</Text>
+          <Text style={styles.fieldLabel}>Name</Text>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Slot name"
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={handleAdd}
+          />
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.modalSave,
+                (saving || !name.trim()) && { opacity: 0.5 },
+              ]}
+              onPress={handleAdd}
+              disabled={saving || !name.trim()}
+            >
+              <Text style={styles.modalSaveText}>Add</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1073,6 +1087,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     null,
   );
   const [editingCollection, setEditingCollection] = useState(false);
+  const [addingSlot, setAddingSlot] = useState(false);
   const [sharingCollection, setSharingCollection] = useState(false);
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [activeReorderTargetId, setActiveReorderTargetId] =
@@ -1137,15 +1152,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     .sort((a, b) => a.positionKey.localeCompare(b.positionKey));
 
   const sections: Section[] = [
-    ...sectionNodes
-      .map((slot) => ({
-        title: slot.title ?? 'Untitled',
-        slot,
-        data: localNodes
-          .filter((n) => n.parentId === slot.id)
-          .sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
-      }))
-      .filter((s) => s.data.length > 0),
+    ...sectionNodes.map((slot) => ({
+      title: slot.title ?? 'Untitled',
+      slot,
+      data: localNodes
+        .filter((n) => n.parentId === slot.id)
+        .sort((a, b) => a.positionKey.localeCompare(b.positionKey)),
+    })),
     ...(directItems.length > 0
       ? [
           {
@@ -1424,7 +1437,14 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   }
 
   async function handleAddSlot(name: string) {
-    const nextPositionKey = String(sectionNodes.length + 1).padStart(8, '0');
+    const maxPositionKey = sectionNodes.reduce(
+      (max, n) => (n.positionKey > max ? n.positionKey : max),
+      '00000000',
+    );
+    const nextPositionKey = String(parseInt(maxPositionKey, 10) + 1).padStart(
+      8,
+      '0',
+    );
     const tempId = `temp-${Date.now()}`;
     const tempNode: CollectionNode = {
       id: tempId,
@@ -1533,14 +1553,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         if (buttonIndex === 1) {
           setEditingCollection(true);
         } else if (buttonIndex === 2) {
-          Alert.prompt(
-            'Add slot',
-            'Enter a name for the new slot.',
-            (name) => {
-              if (name?.trim()) handleAddSlot(name.trim());
-            },
-            'plain-text',
-          );
+          setAddingSlot(true);
         } else if (buttonIndex === 3) {
           setSharingCollection(true);
         } else if (buttonIndex === 4) {
@@ -2091,6 +2104,19 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
               />
             ) : null;
           }}
+          renderSectionFooter={({ section: rawSection }) => {
+            const section = rawSection as unknown as Section;
+            if (section.data.length === 0 && section.slot !== null) {
+              return (
+                <View style={styles.slotEmptyState}>
+                  <Text style={styles.slotEmptyText}>
+                    No items in this slot yet
+                  </Text>
+                </View>
+              );
+            }
+            return null;
+          }}
           ListHeaderComponent={pageHeader}
           contentContainerStyle={styles.list}
           stickySectionHeadersEnabled={false}
@@ -2112,10 +2138,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           visible
           onClose={() => setEditingCollection(false)}
           onSave={handleUpdateCollection}
-          slotCount={sectionNodes.length}
-          onAddSlot={handleAddSlot}
         />
       )}
+      <AddSlotModal
+        visible={addingSlot}
+        onClose={() => setAddingSlot(false)}
+        onAdd={handleAddSlot}
+      />
       <AddProductModal
         visible={addingProduct}
         onClose={() => setAddingProduct(false)}
@@ -2404,43 +2433,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalSaveText: { fontSize: 15, color: '#fff', fontWeight: '600' },
-  addSlotButton: {
-    flexDirection: 'row',
+  slotEmptyState: {
+    paddingVertical: 20,
     alignItems: 'center',
-    gap: 6,
-    marginTop: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#c7d2fe',
-    backgroundColor: '#eef2ff',
-    alignSelf: 'flex-start',
   },
-  addSlotButtonText: { fontSize: 14, fontWeight: '600', color: '#6366f1' },
-  addSlotRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
+  slotEmptyText: {
+    fontSize: 14,
+    color: '#9ca3af',
   },
-  addSlotInput: { flex: 1, marginTop: 0 },
-  addSlotConfirm: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    backgroundColor: '#6366f1',
-  },
-  addSlotConfirmText: { fontSize: 14, fontWeight: '600', color: '#fff' },
-  addSlotCancel: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  addSlotCancelText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 4 },
   swatch: {
     width: 32,
