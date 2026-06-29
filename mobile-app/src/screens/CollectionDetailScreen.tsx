@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as WebBrowser from 'expo-web-browser';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Image as ExpoImage } from 'expo-image';
 import {
   ActionSheetIOS,
   ActivityIndicator,
@@ -269,7 +270,7 @@ function ProductRow({
                   styles.thumbnail,
                   (isRefreshing || isQueued) && styles.thumbnailRefreshing,
                 ]}
-                resizeMode="cover"
+                contentFit="cover"
               />
             ) : (
               <View style={[styles.thumbnail, styles.thumbnailPlaceholder]} />
@@ -893,7 +894,7 @@ function ProductGridCard({
         <Image
           source={{ uri: imageUrl }}
           style={{ width: '100%', height: imageHeight }}
-          resizeMode="cover"
+          contentFit="cover"
         />
       ) : (
         <View style={styles.gridImagePlaceholder} />
@@ -920,7 +921,7 @@ function ReorderProductRow({ item }: { item: ProductItem }) {
           <Image
             source={{ uri: item.properties.imageUrl }}
             style={styles.reorderThumbnail}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <View
@@ -958,7 +959,7 @@ function ReorderGridCard({ item, size }: { item: ProductItem; size: number }) {
           <Image
             source={{ uri: item.properties.imageUrl }}
             style={styles.reorderGridImage}
-            resizeMode="cover"
+            contentFit="cover"
           />
         ) : (
           <View style={styles.reorderGridImagePlaceholder} />

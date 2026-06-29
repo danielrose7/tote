@@ -2,9 +2,9 @@ import { useAuth } from '@clerk/expo';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useRef, useState } from 'react';
+import { Image as ExpoImage } from 'expo-image';
 import {
   ActivityIndicator,
-  Image,
   Modal,
   SafeAreaView,
   StyleSheet,
@@ -318,7 +318,7 @@ export function SaveProductSheet({
                   <Image
                     source={{ uri: metadata.imageUrl }}
                     style={styles.productImage}
-                    resizeMode="cover"
+                    contentFit="cover"
                   />
                 ) : (
                   <View
