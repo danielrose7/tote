@@ -4,7 +4,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as WebBrowser from 'expo-web-browser';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Image as ExpoImage } from 'expo-image';
 import {
   ActionSheetIOS,
   ActivityIndicator,
@@ -17,7 +16,6 @@ import {
   Modal,
   Platform,
   RefreshControl,
-  ScrollView,
   SectionList,
   StyleSheet,
   Text,
@@ -37,6 +35,9 @@ import {
 } from 'react-native-reanimated-dnd';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
+import { Button } from '../components/Button';
+import { GridImage } from '../components/GridImage';
+import { MasonryGrid as MasonryFlatGrid } from '../components/MasonryGrid';
 import { SaveProductSheet } from '../components/SaveProductSheet';
 import { ShareCollectionSheet } from '../components/ShareCollectionSheet';
 import { useCollectionRealtime } from '../hooks/useCollectionRealtime';
@@ -52,6 +53,7 @@ import {
   updateCollection,
   updateNode,
   fetchCollectionDetail,
+  getTokenWithRetry,
 } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
 import { formatPrice } from '../lib/formatPrice';
@@ -118,7 +120,7 @@ function ProductRefresher({
         };
         const updatedTitle = d.title || item.title;
         try {
-          const token = await getToken();
+          const token = await getTokenWithRetry(getToken);
           if (token) {
             await updateNode(token, collectionId, item.id, {
               expectedVersion: item.version,
@@ -316,21 +318,40 @@ function ProductRow({
 
 function EditProductModal({
   item,
+  sections,
   visible,
   onClose,
   onSave,
 }: {
   item: ProductItem;
+  sections: ProductItem[];
   visible: boolean;
   onClose: () => void;
-  onSave: (title: string, price: string, notes: string) => void;
+  onSave: (
+    title: string,
+    price: string,
+    notes: string,
+    parentId: string | null | undefined,
+  ) => void;
 }) {
   const [name, setName] = useState(item.title ?? '');
   const [price, setPrice] = useState(item.properties.price ?? '');
   const [notes, setNotes] = useState(item.properties.notes ?? '');
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(
+    item.parentId,
+  );
+  const [slotPickerOpen, setSlotPickerOpen] = useState(false);
+
+  const selectedSlot = sections.find((s) => s.id === selectedSlotId) ?? null;
+  const parentChanged = selectedSlotId !== item.parentId;
 
   function handleSave() {
-    onSave(name.trim(), price.trim(), notes.trim());
+    onSave(
+      name.trim(),
+      price.trim(),
+      notes.trim(),
+      parentChanged ? selectedSlotId : undefined,
+    );
     onClose();
   }
 
@@ -382,13 +403,90 @@ function EditProductModal({
             numberOfLines={3}
           />
 
+          {sections.length > 0 && (
+            <>
+              <Text style={styles.fieldLabel}>Slot</Text>
+              <TouchableOpacity
+                style={styles.slotPickerTrigger}
+                onPress={() => setSlotPickerOpen((o) => !o)}
+              >
+                <Text style={styles.slotPickerValue}>
+                  {selectedSlot
+                    ? (selectedSlot.title ?? 'Untitled')
+                    : 'Ungrouped'}
+                </Text>
+                <Ionicons
+                  name={slotPickerOpen ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+              {slotPickerOpen && (
+                <View style={styles.slotPickerDropdown}>
+                  <TouchableOpacity
+                    style={[
+                      styles.slotPickerOption,
+                      selectedSlotId === null &&
+                        styles.slotPickerOptionSelected,
+                    ]}
+                    onPress={() => {
+                      setSelectedSlotId(null);
+                      setSlotPickerOpen(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.slotPickerOptionText,
+                        selectedSlotId === null &&
+                          styles.slotPickerOptionTextSelected,
+                      ]}
+                    >
+                      Ungrouped
+                    </Text>
+                    {selectedSlotId === null && (
+                      <Ionicons name="checkmark" size={15} color="#6366f1" />
+                    )}
+                  </TouchableOpacity>
+                  {sections.map((s) => (
+                    <TouchableOpacity
+                      key={s.id}
+                      style={[
+                        styles.slotPickerOption,
+                        selectedSlotId === s.id &&
+                          styles.slotPickerOptionSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedSlotId(s.id);
+                        setSlotPickerOpen(false);
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.slotPickerOptionText,
+                          selectedSlotId === s.id &&
+                            styles.slotPickerOptionTextSelected,
+                        ]}
+                      >
+                        {s.title ?? 'Untitled'}
+                      </Text>
+                      {selectedSlotId === s.id && (
+                        <Ionicons name="checkmark" size={15} color="#6366f1" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
+
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
-              <Text style={styles.modalSaveText}>Save</Text>
-            </TouchableOpacity>
+            <Button
+              label="Cancel"
+              variant="ghost"
+              onPress={onClose}
+              style={styles.modalBtn}
+            />
+            <Button label="Save" onPress={handleSave} style={styles.modalBtn} />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -513,12 +611,13 @@ function SlotEditModal({
           />
 
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
-              <Text style={styles.modalSaveText}>Save</Text>
-            </TouchableOpacity>
+            <Button
+              label="Cancel"
+              variant="ghost"
+              onPress={onClose}
+              style={styles.modalBtn}
+            />
+            <Button label="Save" onPress={handleSave} style={styles.modalBtn} />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -708,12 +807,13 @@ function EditCollectionModal({
           </View>
 
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalSave} onPress={handleSave}>
-              <Text style={styles.modalSaveText}>Save</Text>
-            </TouchableOpacity>
+            <Button
+              label="Cancel"
+              variant="ghost"
+              onPress={onClose}
+              style={styles.modalBtn}
+            />
+            <Button label="Save" onPress={handleSave} style={styles.modalBtn} />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -773,12 +873,17 @@ function AddProductModal({
             onSubmitEditing={handleSubmit}
           />
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.modalSave} onPress={handleSubmit}>
-              <Text style={styles.modalSaveText}>Save</Text>
-            </TouchableOpacity>
+            <Button
+              label="Cancel"
+              variant="ghost"
+              onPress={onClose}
+              style={styles.modalBtn}
+            />
+            <Button
+              label="Save"
+              onPress={handleSubmit}
+              style={styles.modalBtn}
+            />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -841,19 +946,19 @@ function AddSlotModal({
             onSubmitEditing={handleAdd}
           />
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.modalCancel} onPress={onClose}>
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.modalSave,
-                (saving || !name.trim()) && { opacity: 0.5 },
-              ]}
+            <Button
+              label="Cancel"
+              variant="ghost"
+              onPress={onClose}
+              style={styles.modalBtn}
+            />
+            <Button
+              label="Add"
               onPress={handleAdd}
-              disabled={saving || !name.trim()}
-            >
-              <Text style={styles.modalSaveText}>Add</Text>
-            </TouchableOpacity>
+              isLoading={saving}
+              disabled={!name.trim()}
+              style={styles.modalBtn}
+            />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -864,10 +969,12 @@ function AddSlotModal({
 function ProductGridCard({
   item,
   columnWidth,
+  isVisible = true,
   onPress,
 }: {
   item: ProductItem;
   columnWidth: number;
+  isVisible?: boolean;
   onPress: () => void;
 }) {
   const [imageHeight, setImageHeight] = useState(150);
@@ -891,10 +998,10 @@ function ProductGridCard({
       style={styles.gridCard}
     >
       {imageUrl ? (
-        <Image
-          source={{ uri: imageUrl }}
+        <GridImage
+          uri={imageUrl}
           style={{ width: '100%', height: imageHeight }}
-          contentFit="cover"
+          isVisible={isVisible}
         />
       ) : (
         <View style={styles.gridImagePlaceholder} />
@@ -918,10 +1025,9 @@ function ReorderProductRow({ item }: { item: ProductItem }) {
     <SortableItem.Handle style={styles.reorderWholeHandle}>
       <View style={styles.reorderRow}>
         {item.properties.imageUrl ? (
-          <Image
-            source={{ uri: item.properties.imageUrl }}
+          <GridImage
+            uri={item.properties.imageUrl}
             style={styles.reorderThumbnail}
-            contentFit="cover"
           />
         ) : (
           <View
@@ -956,10 +1062,9 @@ function ReorderGridCard({ item, size }: { item: ProductItem; size: number }) {
     >
       <View style={[styles.reorderGridMedia, { height: imageHeight }]}>
         {item.properties.imageUrl ? (
-          <Image
-            source={{ uri: item.properties.imageUrl }}
+          <GridImage
+            uri={item.properties.imageUrl}
             style={styles.reorderGridImage}
-            contentFit="cover"
           />
         ) : (
           <View style={styles.reorderGridImagePlaceholder} />
@@ -1031,11 +1136,11 @@ function MasonryGrid({
   const screenWidth = Dimensions.get('window').width;
   const columnWidth = Math.floor((screenWidth - 48) / 2);
 
-  const leftItems = items.filter((_, i) => i % 2 === 0);
-  const rightItems = items.filter((_, i) => i % 2 === 1);
-
   return (
-    <Animated.ScrollView
+    <MasonryFlatGrid
+      data={items}
+      keyExtractor={(item) => item.id}
+      gap={8}
       contentInsetAdjustmentBehavior="never"
       contentContainerStyle={styles.masonryContainer}
       onScroll={onScroll}
@@ -1049,31 +1154,16 @@ function MasonryGrid({
           />
         ) : undefined
       }
-    >
-      {header}
-      <View style={styles.masonryColumns}>
-        <View style={{ width: columnWidth }}>
-          {leftItems.map((item) => (
-            <ProductGridCard
-              key={item.id}
-              item={item}
-              columnWidth={columnWidth}
-              onPress={() => onPress(item)}
-            />
-          ))}
-        </View>
-        <View style={{ width: columnWidth }}>
-          {rightItems.map((item) => (
-            <ProductGridCard
-              key={item.id}
-              item={item}
-              columnWidth={columnWidth}
-              onPress={() => onPress(item)}
-            />
-          ))}
-        </View>
-      </View>
-    </Animated.ScrollView>
+      ListHeaderComponent={header ? () => <>{header}</> : undefined}
+      renderItem={(item, { isVisible }) => (
+        <ProductGridCard
+          item={item}
+          columnWidth={columnWidth}
+          isVisible={isVisible}
+          onPress={() => onPress(item)}
+        />
+      )}
+    />
   );
 }
 
@@ -1130,7 +1220,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
 
   async function refresh() {
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       const d = await fetchCollectionDetail(token, collectionId);
       setDetail(d);
@@ -1289,7 +1379,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     );
 
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(
         updateNode(token, collectionId, slot.id, {
@@ -1321,7 +1411,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       prev.filter((n) => n.id !== slot.id && n.parentId !== slot.id),
     );
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(deleteNode(token, collectionId, slot.id, slot.version));
     } catch {
@@ -1333,7 +1423,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     // Optimistic update
     setLocalNodes((prev) => prev.filter((n) => n.id !== item.id));
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(deleteNode(token, collectionId, item.id, item.version));
     } catch {
@@ -1346,6 +1436,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     title: string,
     price: string,
     notes: string,
+    parentId?: string | null,
   ) {
     const updatedTitle = title || item.title;
     const updatedProperties = {
@@ -1353,22 +1444,29 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       price: price || undefined,
       notes: notes || undefined,
     };
+    const updatedParentId = parentId !== undefined ? parentId : item.parentId;
     // Optimistic update
     setLocalNodes((prev) =>
       prev.map((n) =>
         n.id === item.id
-          ? { ...n, title: updatedTitle, properties: updatedProperties }
+          ? {
+              ...n,
+              title: updatedTitle,
+              properties: updatedProperties,
+              parentId: updatedParentId,
+            }
           : n,
       ),
     );
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(
         updateNode(token, collectionId, item.id, {
           expectedVersion: item.version,
           title: updatedTitle ?? undefined,
           properties: updatedProperties,
+          ...(parentId !== undefined ? { parentId } : {}),
         }),
       );
     } catch {
@@ -1399,7 +1497,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       ),
     );
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(
         updateNode(token, collectionId, slot.id, {
@@ -1422,7 +1520,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       });
     }
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(
         updateCollection(token, collectionId, {
@@ -1438,15 +1536,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   }
 
   async function handleAddSlot(name: string) {
-    const maxPositionKey = sectionNodes.reduce(
-      (max, n) => (n.positionKey > max ? n.positionKey : max),
-      '00000000',
-    );
-    const nextPositionKey = String(parseInt(maxPositionKey, 10) + 1).padStart(
-      8,
-      '0',
-    );
     const tempId = `temp-${Date.now()}`;
+    const nextPositionKey = `z${Date.now().toString(36)}:${tempId}`;
     const tempNode: CollectionNode = {
       id: tempId,
       collectionId,
@@ -1461,7 +1552,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     };
     setLocalNodes((prev) => [...prev, tempNode]);
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) throw new Error('Not authenticated');
       await track(
         createNode(token, collectionId, {
@@ -1473,9 +1564,15 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       await refresh();
     } catch (e) {
       setLocalNodes((prev) => prev.filter((n) => n.id !== tempId));
+      const isOffline =
+        e instanceof Error &&
+        (e.message.includes('offline') ||
+          e.message.includes('Network request failed'));
       Alert.alert(
         'Could not add slot',
-        e instanceof Error ? e.message : 'Please try again.',
+        isOffline
+          ? 'No internet connection. Please try again.'
+          : 'Please try again.',
       );
     }
   }
@@ -1491,7 +1588,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           style: 'destructive',
           onPress: async () => {
             try {
-              const token = await getToken();
+              const token = await getTokenWithRetry(getToken);
               if (!token) throw new Error('Not authenticated');
               await deleteCollection(token, collectionId, collectionVersion);
               navigation.reset({
@@ -1542,13 +1639,12 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           'Cancel',
           'Edit collection',
           'Add slot',
-          'Share collection',
           nextViewModeLabel,
           'Reorder items',
           'Delete collection',
         ],
         cancelButtonIndex: 0,
-        destructiveButtonIndex: 6,
+        destructiveButtonIndex: 5,
       },
       (buttonIndex) => {
         if (buttonIndex === 1) {
@@ -1556,12 +1652,10 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         } else if (buttonIndex === 2) {
           setAddingSlot(true);
         } else if (buttonIndex === 3) {
-          setSharingCollection(true);
-        } else if (buttonIndex === 4) {
           setViewMode((mode) => (mode === 'list' ? 'grid' : 'list'));
-        } else if (buttonIndex === 5) {
+        } else if (buttonIndex === 4) {
           setIsReorderMode(true);
-        } else if (buttonIndex === 6) {
+        } else if (buttonIndex === 5) {
           confirmDeleteCollection();
         }
       },
@@ -1678,7 +1772,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     });
 
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(reorderNodes(token, collectionId, reorderPayload));
     } catch {
@@ -1711,7 +1805,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     });
 
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await reorderNodes(token, collectionId, reorderPayload);
     } catch {
@@ -1879,6 +1973,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Ionicons name="add" size={20} color="#0f172a" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.floatingCircleButton}
+                onPress={() => setSharingCollection(true)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="share-outline" size={18} color="#0f172a" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.floatingCircleButton}
@@ -2154,11 +2255,18 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       {editingProduct && (
         <EditProductModal
           item={editingProduct}
+          sections={sectionNodes}
           visible
           onClose={() => setEditingProduct(null)}
-          onSave={(title, price, notes) => {
+          onSave={(title, price, notes, parentId) => {
             if (editingProduct) {
-              handleUpdateProduct(editingProduct, title, price, notes);
+              handleUpdateProduct(
+                editingProduct,
+                title,
+                price,
+                notes,
+                parentId,
+              );
             }
           }}
         />
@@ -2417,23 +2525,40 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 24 },
-  modalCancel: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
+  modalBtn: { flex: 1 },
+
+  // Slot picker in EditProductModal
+  slotPickerTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    alignItems: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#f9fafb',
   },
-  modalCancelText: { fontSize: 15, color: '#6b7280', fontWeight: '600' },
-  modalSave: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#6366f1',
-    alignItems: 'center',
+  slotPickerValue: { fontSize: 15, color: '#111827' },
+  slotPickerDropdown: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    marginTop: 4,
+    overflow: 'hidden',
   },
-  modalSaveText: { fontSize: 15, color: '#fff', fontWeight: '600' },
+  slotPickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#f3f4f6',
+  },
+  slotPickerOptionSelected: { backgroundColor: '#eef2ff' },
+  slotPickerOptionText: { fontSize: 15, color: '#374151' },
+  slotPickerOptionTextSelected: { color: '#6366f1', fontWeight: '600' },
   slotEmptyState: {
     paddingVertical: 20,
     alignItems: 'center',
@@ -2712,7 +2837,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     backgroundColor: '#f8fafc',
   },
-  masonryColumns: { flexDirection: 'row', gap: 8 },
   gridCard: {
     backgroundColor: '#f9fafb',
     borderRadius: 12,

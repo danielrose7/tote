@@ -114,7 +114,7 @@ target 'Tote' do
         end
       end
 
-      if target.name == 'ExpoModulesCore'
+      if ['ExpoModulesCore', 'ExpoImage'].include?(target.name)
         target.build_configurations.each do |config|
           config.build_settings['SWIFT_VERSION'] = '5'
           config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'

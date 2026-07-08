@@ -1,5 +1,6 @@
 import { Realtime } from 'ably';
 import { useEffect, useEffectEvent } from 'react';
+import { getTokenWithRetry } from '../lib/api';
 
 const API_BASE = process.env.EXPO_PUBLIC_APP_URL ?? 'https://tote.tools';
 
@@ -22,7 +23,7 @@ export function useCollectionRealtime({
     const client = new Realtime({
       authCallback: async (_, callback) => {
         try {
-          const bearerToken = await getToken();
+          const bearerToken = await getTokenWithRetry(getToken);
           if (!bearerToken) {
             callback(new Error('No auth token'), null);
             return;

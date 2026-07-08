@@ -2,6 +2,23 @@ import * as Crypto from 'expo-crypto';
 
 const API_BASE = process.env.EXPO_PUBLIC_APP_URL ?? 'https://tote.tools';
 
+// @clerk/expo can throw clerk_offline even when the device is online due to
+// unreliable network detection in React Native. Retry once after a short delay.
+export async function getTokenWithRetry(
+  getToken: () => Promise<string | null>,
+): Promise<string | null> {
+  try {
+    return await getToken();
+  } catch (e) {
+    const isClerkOffline =
+      e instanceof Error &&
+      (e.message.includes('clerk_offline') || e.message.includes('offline'));
+    if (!isClerkOffline) throw e;
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return await getToken();
+  }
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -56,9 +73,9 @@ export type CollectionDetail = {
 };
 
 export type PublicationStatus = {
-  publicationId: string;
+  id: string;
   slug: string;
-  shareUrl: string;
+  username: string | null;
   allowCloning: boolean;
   layout: string;
 } | null;
@@ -197,6 +214,7 @@ export async function updateNode(
     expectedVersion: number;
     title?: string | null;
     properties?: NodeProperties;
+    parentId?: string | null;
   },
 ): Promise<void> {
   await request(`/api/v2/collections/${collectionId}/nodes/${nodeId}`, token, {

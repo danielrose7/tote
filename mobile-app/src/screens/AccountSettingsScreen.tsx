@@ -2,17 +2,17 @@ import { useAuth, useUser } from '@clerk/expo';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   NativeModules,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
+import { Button } from '../components/Button';
+import { getTokenWithRetry } from '../lib/api';
 import { clearAllCachedData } from '../lib/localDb';
 
 const API_BASE_URL = 'https://tote.tools';
@@ -79,7 +79,7 @@ export function AccountSettingsScreen({ navigation }: Props) {
   async function confirmDeleteAccount() {
     setDeleting(true);
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       const res = await fetch(`${API_BASE_URL}/api/user/delete`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -138,23 +138,21 @@ export function AccountSettingsScreen({ navigation }: Props) {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <TouchableOpacity
-        style={styles.saveBtn}
+      <Button
+        label="Save"
         onPress={handleSave}
-        disabled={saving}
-      >
-        {saving ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.saveBtnText}>Save</Text>
-        )}
-      </TouchableOpacity>
+        isLoading={saving}
+        style={styles.saveBtn}
+      />
 
       <View style={styles.divider} />
 
-      <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
+      <Button
+        label="Sign Out"
+        variant="ghost"
+        onPress={handleSignOut}
+        style={styles.signOutBtn}
+      />
 
       <Text style={styles.email}>
         {user?.primaryEmailAddress?.emailAddress}
@@ -162,17 +160,12 @@ export function AccountSettingsScreen({ navigation }: Props) {
 
       <View style={styles.dangerDivider} />
 
-      <TouchableOpacity
-        style={styles.deleteBtn}
+      <Button
+        label="Delete account"
+        variant="danger"
         onPress={handleDeleteAccount}
-        disabled={deleting}
-      >
-        {deleting ? (
-          <ActivityIndicator color="#ef4444" />
-        ) : (
-          <Text style={styles.deleteText}>Delete account</Text>
-        )}
-      </TouchableOpacity>
+        isLoading={deleting}
+      />
     </ScrollView>
   );
 }
@@ -208,27 +201,13 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     marginTop: 12,
   },
-  saveBtn: {
-    backgroundColor: '#6366f1',
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: 'center',
-    marginTop: 28,
-  },
-  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  saveBtn: { marginTop: 28 },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: '#e5e7eb',
     marginVertical: 32,
   },
-  signOutBtn: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  signOutText: { fontSize: 15, color: '#ef4444', fontWeight: '600' },
+  signOutBtn: {},
   email: {
     textAlign: 'center',
     fontSize: 13,
@@ -239,13 +218,5 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: '#fee2e2',
     marginVertical: 32,
-  },
-  deleteBtn: {
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  deleteText: {
-    fontSize: 14,
-    color: '#ef4444',
   },
 });

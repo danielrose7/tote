@@ -12,7 +12,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   AppState,
   DeviceEventEmitter,
   Dimensions,
@@ -31,10 +30,12 @@ import {
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AcceptInviteSheet } from './src/components/AcceptInviteSheet';
+import { GridImage } from './src/components/GridImage';
 import {
   HeadlessExtractor,
   type EnrichJob,
 } from './src/components/HeadlessExtractor';
+import { MasonryGrid } from './src/components/MasonryGrid';
 import { SaveProductSheet } from './src/components/SaveProductSheet';
 import { useInviteLink } from './src/hooks/useInviteLink';
 import { usePendingUrl } from './src/hooks/usePendingUrl';
@@ -502,39 +503,14 @@ function SignInScreen() {
   );
 }
 
-function FadeImage({
-  uri,
-  style,
-  onError,
-}: {
-  uri: string;
-  style: any;
-  onError: () => void;
-}) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  return (
-    <Animated.Image
-      source={{ uri }}
-      style={[style, { opacity }]}
-      resizeMode="cover"
-      onLoad={() =>
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }).start()
-      }
-      onError={onError}
-    />
-  );
-}
-
 function PreviewImageGrid({
   images,
   color,
+  isVisible,
 }: {
   images: { url: string; title: string | null; nodeId: string }[];
   color?: string | null;
+  isVisible: boolean;
 }) {
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
   const visible = images.filter((img) => !failedUrls.has(img.url));
@@ -559,9 +535,10 @@ function PreviewImageGrid({
 
   if (count === 1) {
     return (
-      <FadeImage
+      <GridImage
         uri={visible[0].url}
         style={styles.previewGridFull}
+        isVisible={isVisible}
         onError={() => setFailedUrls((p) => new Set([...p, visible[0].url]))}
       />
     );
@@ -571,10 +548,11 @@ function PreviewImageGrid({
     return (
       <View style={styles.previewGridRow}>
         {visible.slice(0, 2).map((img) => (
-          <FadeImage
+          <GridImage
             key={img.nodeId}
             uri={img.url}
             style={styles.previewGridHalf}
+            isVisible={isVisible}
             onError={() => setFailedUrls((p) => new Set([...p, img.url]))}
           />
         ))}
@@ -585,17 +563,19 @@ function PreviewImageGrid({
   // 3 images: "L" — large left, two stacked right
   return (
     <View style={styles.previewGridRow}>
-      <FadeImage
+      <GridImage
         uri={visible[0].url}
         style={styles.previewGridLarge}
+        isVisible={isVisible}
         onError={() => setFailedUrls((p) => new Set([...p, visible[0].url]))}
       />
       <View style={styles.previewGridStack}>
         {visible.slice(1, 3).map((img) => (
-          <FadeImage
+          <GridImage
             key={img.nodeId}
             uri={img.url}
             style={styles.previewGridSmall}
+            isVisible={isVisible}
             onError={() => setFailedUrls((p) => new Set([...p, img.url]))}
           />
         ))}
@@ -606,9 +586,11 @@ function PreviewImageGrid({
 
 function CollectionCard({
   item,
+  isVisible,
   onPress,
 }: {
   item: Collection;
+  isVisible: boolean;
   onPress: () => void;
 }) {
   return (
@@ -626,6 +608,7 @@ function CollectionCard({
         <PreviewImageGrid
           images={item.previewImages ?? []}
           color={item.color}
+          isVisible={isVisible}
         />
         <View style={styles.collectionCount}>
           <Text style={styles.collectionCountText}>
@@ -882,12 +865,6 @@ function CollectionListContent({
   const collectionColumnWidth = Math.floor(
     (Dimensions.get('window').width - 52) / 2,
   );
-  const leftCollections = filteredCollections.filter(
-    (_collection, index) => index % 2 === 0,
-  );
-  const rightCollections = filteredCollections.filter(
-    (_collection, index) => index % 2 === 1,
-  );
 
   return (
     <View style={styles.container}>
@@ -905,19 +882,8 @@ function CollectionListContent({
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.collectionGrid}
-        keyboardDismissMode="on-drag"
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#6366f1"
-          />
-        }
-      >
-        {!loaded ? (
+      {!loaded ? (
+        <ScrollView contentContainerStyle={styles.collectionGrid}>
           <View style={styles.masonryColumns}>
             <View style={{ width: collectionColumnWidth }}>
               <CollectionSkeleton />
@@ -928,52 +894,59 @@ function CollectionListContent({
               <CollectionSkeleton />
             </View>
           </View>
-        ) : filteredCollections.length > 0 ? (
-          <View style={styles.masonryColumns}>
-            {[leftCollections, rightCollections].map(
-              (columnCollections, columnIndex) => (
-                <View
-                  key={columnIndex === 0 ? 'left' : 'right'}
-                  style={{ width: collectionColumnWidth }}
+        </ScrollView>
+      ) : (
+        <MasonryGrid
+          data={filteredCollections}
+          keyExtractor={(item) => item.id}
+          gap={12}
+          contentContainerStyle={styles.collectionGrid}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#6366f1"
+            />
+          }
+          renderItem={(item, { isVisible }) => (
+            <CollectionCard
+              item={item}
+              isVisible={isVisible}
+              onPress={() =>
+                navigation.navigate('CollectionDetail', {
+                  collectionId: item.id,
+                  collectionName: item.name ?? 'Collection',
+                })
+              }
+            />
+          )}
+          ListEmptyComponent={
+            normalizedSearch ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>No matching collections</Text>
+                <Text style={styles.emptySubtitle}>
+                  Try a different search term
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>No collections yet</Text>
+                <Text style={styles.emptySubtitle}>
+                  Add a collection to start saving products
+                </Text>
+                <TouchableOpacity
+                  style={styles.emptyButton}
+                  onPress={() => setShowAddCollection(true)}
                 >
-                  {columnCollections.map((item) => (
-                    <CollectionCard
-                      key={item.id}
-                      item={item}
-                      onPress={() =>
-                        navigation.navigate('CollectionDetail', {
-                          collectionId: item.id,
-                          collectionName: item.name ?? 'Collection',
-                        })
-                      }
-                    />
-                  ))}
-                </View>
-              ),
-            )}
-          </View>
-        ) : normalizedSearch ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No matching collections</Text>
-            <Text style={styles.emptySubtitle}>
-              Try a different search term
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No collections yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Add a collection to start saving products
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyButton}
-              onPress={() => setShowAddCollection(true)}
-            >
-              <Text style={styles.emptyButtonText}>Add Collection</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
+                  <Text style={styles.emptyButtonText}>Add Collection</Text>
+                </TouchableOpacity>
+              </View>
+            )
+          }
+        />
+      )}
       <View style={styles.collectionDock}>
         <View style={styles.collectionSearch}>
           <Ionicons name="search" size={19} color="#9ca3af" />

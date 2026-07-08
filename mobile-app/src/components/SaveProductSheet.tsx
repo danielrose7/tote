@@ -22,6 +22,7 @@ import {
   createNode,
   fetchCollectionDetail,
   fetchCollections,
+  getTokenWithRetry,
 } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
 import { formatPrice } from '../lib/formatPrice';
@@ -87,17 +88,17 @@ export function SaveProductSheet({
 
   async function loadCollections() {
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       const cols = await fetchCollections(token);
       setCollections(cols);
-      const token2 = await getToken();
+      const token2 = await getTokenWithRetry(getToken);
       if (!token2) return;
       const sectionMap: Record<string, CollectionNode[]> = {};
       await Promise.all(
         cols.map(async (col) => {
           try {
-            const t = await getToken();
+            const t = await getTokenWithRetry(getToken);
             if (!t) return;
             const detail = await fetchCollectionDetail(t, col.id);
             sectionMap[col.id] = detail.nodes.filter(
@@ -150,7 +151,7 @@ export function SaveProductSheet({
     setStage('saving');
 
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) {
         setStage('preview');
         return;
@@ -182,7 +183,7 @@ export function SaveProductSheet({
 
   async function handleCreateSlot(collection: Collection, slotName: string) {
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       // Determine position key based on current section count
       const existingSections = sections[collection.id] ?? [];
@@ -219,7 +220,7 @@ export function SaveProductSheet({
 
   async function handleCreateCollection(name: string) {
     try {
-      const token = await getToken();
+      const token = await getTokenWithRetry(getToken);
       if (!token) return;
       const result = await createCollection(token, { name, color: '#6366f1' });
       const newCollection: Collection = {
