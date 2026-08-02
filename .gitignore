@@ -44,3 +44,11 @@ chrome-extension/scripts/debug-screenshots/
 chrome-extension/dist.crx
 chrome-extension/dist.pem
 .env*.local
+
+# Accidental Expo prebuild at the repo root. The real mobile project lives in
+# mobile-app/ — these leading-slash rules anchor to the repo root so
+# mobile-app/ios and mobile-app/android are unaffected.
+/app.json
+/ios/
+/android/
+/.expo/

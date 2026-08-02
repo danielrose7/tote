@@ -2,19 +2,28 @@
 
 See [MOBILE_FEATURE_PARITY.md](./MOBILE_FEATURE_PARITY.md) for the full feature comparison between web and iOS.
 
+## Launch status
+
+The only outstanding item for App Store submission is **testing on a real
+device via TestFlight** — see [MOBILE_LAUNCH_PLAN.md](./MOBILE_LAUNCH_PLAN.md).
+Everything else on that checklist is done and verified: bundle id
+`tools.tote.app`, version 1.1.5 (build 4), Universal Links live, and all App
+Store Connect metadata.
+
 ## Up Next
 
-### 1. Reorder items/slots/collections
+### 1. Reorder collections
 
-_High effort_
+_Low effort_
 
-- Add drag-and-drop affordances for collections, slots, and products
-- Persist ordering in Jazz so mobile and web stay in sync
-- Parity item: **Reorder collections / slots / products**
+Products and slots already reorder via drag-and-drop on the collection detail
+screen (`react-native-reanimated-dnd`). The collections home list — rendered
+inline in `App.tsx` via `MasonryGrid` — has no drag affordance yet. This is the
+last remaining parity gap that applies to mobile.
 
-## Pending deployment steps
-
-- **Universal Links (invite flow):** Team ID set to `8RCZXVFHYN`. Deploy the web app and run `pnpm ios` to rebuild with the `associatedDomains` entitlement. Until then, `tote://invite/...` (custom scheme) links work but `https://tote.tools/invite/...` links open in Safari.
+No new API is needed: collection ordering is a `positionKey` on the collection
+row, so `PATCH /api/v2/collections/:id` already accepts it. The work is the
+drag UI plus persisting the new keys.
 
 ## Later
 
@@ -48,7 +57,9 @@ layout across the full window.
 - Swipe-to-delete product
 - Share extension → save via Safari share sheet
 - Save product sheet with metadata extraction + collection/slot picker
-- Jazz group ownership (matches web app sharing model)
+- Collection sharing and membership roles (matches the web app model)
+- Reorder products and slots (drag-and-drop on collection detail)
+- Universal Links for the invite flow (`applinks:tote.tools`, Team ID `8RCZXVFHYN`)
 - Save product manually (+ button on collection detail → URL input → SaveProductSheet)
 - Product selection (tap checkbox) + slot progress (count / budget)
 - Edit slot (gear icon → bottom sheet with name, max selections, budget)

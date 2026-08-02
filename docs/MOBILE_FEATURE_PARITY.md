@@ -75,8 +75,8 @@ Tracks which web app features exist on iOS. Updated as mobile catches up.
 
 ## Other
 
-| Feature                       | Web       | iOS       |
-| ----------------------------- | --------- | --------- |
-| Offline support               | ✅ (Jazz) | ✅ (Jazz) |
-| Real-time sync across devices | ✅        | ✅        |
-| Save open tabs (Chrome)       | ✅        | ❌        |
+| Feature                       | Web            | iOS         |
+| ----------------------------- | -------------- | ----------- |
+| Offline support               | ✅ (IndexedDB) | ✅ (SQLite) |
+| Real-time sync across devices | ✅             | ✅          |
+| Save open tabs (Chrome)       | ✅             | ❌          |
