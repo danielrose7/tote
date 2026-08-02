@@ -81,6 +81,33 @@ pnpm build        # Production build
 pnpm build:zip    # Build + zip for Chrome Web Store submission
 ```
 
+## Deployments
+
+**Pushing to `main` deploys to production automatically.** The Vercel Git
+integration is connected — you do not need to run `vercel deploy`, and doing so
+duplicates the deploy. Verify a release by fetching a string you just changed
+(e.g. `curl -s https://tote.tools/privacy | grep "Effective"`) rather than by
+reading the deployment list, which is easy to misread: git-triggered deploys
+show the linked GitHub account as the "username", exactly like CLI deploys, so
+that column does **not** tell you how a deploy was triggered.
+
+Other things worth knowing before you touch a deploy:
+
+- **`pnpm build` runs migrations first** — it is `node src/db/runner.ts && next build`.
+  A build failure may be a DB/env problem, not a compile problem. Read the log
+  before assuming the code is broken.
+- **Preview deploys cannot build.** All `NEON_DB_*` vars are scoped to
+  Production + Development only, so `src/db/runner.ts` throws
+  `NEON_DB_POSTGRES_URL_NON_POOLING or NEON_DB_POSTGRES_URL is required` before
+  `next build` runs. Add those vars to the Preview environment if you want
+  working previews.
+- **`vercel deploy` from the CLI needs `.vercelignore`.** It uploads the working
+  directory, and `mobile-app/` (~3.8G) plus `ios/` (~1G) blow past the 10mb
+  request limit. The git path is unaffected.
+- **`tsc --noEmit` at the repo root checks nothing** — the root tsconfig is
+  `"files": []` with project references. The real typecheck is `next build`
+  (`tsc -b` works but surfaces many pre-existing errors).
+
 ## Curator Dev UI
 
 The dev-only collection curator lives at `/dev/curate`.
