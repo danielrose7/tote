@@ -5,9 +5,7 @@ import {
 	createCollectionNodeInputSchema,
 	parseJsonRequest,
 } from "@/lib/collections/api";
-import {
-	createCollectionNode,
-} from "@/lib/collections/repository";
+import { createCollectionNode } from "@/lib/collections/repository";
 
 export async function POST(
 	request: Request,

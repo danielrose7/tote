@@ -1,20 +1,20 @@
-import { Suspense } from 'react';
-import { PublicProfileCard } from './PublicProfileCard';
-import { SettingsClient } from './SettingsClient';
-import styles from './settings.module.css';
+import { Suspense } from "react";
+import { PublicProfileCard } from "./PublicProfileCard";
+import { SettingsClient } from "./SettingsClient";
+import styles from "./settings.module.css";
 
 export default function SettingsPage() {
-  return (
-    // SettingsClient reads useSearchParams, so it needs its own boundary to
-    // stay prerenderable.
-    <Suspense>
-      <SettingsClient
-        publicProfileCard={
-          <Suspense fallback={<div className={styles.publicProfileSkeleton} />}>
-            <PublicProfileCard />
-          </Suspense>
-        }
-      />
-    </Suspense>
-  );
+	return (
+		// SettingsClient reads useSearchParams, so it needs its own boundary to
+		// stay prerenderable.
+		<Suspense>
+			<SettingsClient
+				publicProfileCard={
+					<Suspense fallback={<div className={styles.publicProfileSkeleton} />}>
+						<PublicProfileCard />
+					</Suspense>
+				}
+			/>
+		</Suspense>
+	);
 }

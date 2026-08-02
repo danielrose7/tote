@@ -1,8 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import {
-	collectionIdSchema,
-} from "@/lib/collections/api";
+import { collectionIdSchema } from "@/lib/collections/api";
 import { revokeCollectionInvite } from "@/lib/collections/teamRepository";
 
 type RouteContext = {

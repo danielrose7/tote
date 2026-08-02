@@ -5,9 +5,7 @@ import {
 	parseJsonRequest,
 	reorderCollectionNodesInputSchema,
 } from "@/lib/collections/api";
-import {
-	reorderCollectionNodes,
-} from "@/lib/collections/repository";
+import { reorderCollectionNodes } from "@/lib/collections/repository";
 
 export async function POST(
 	request: Request,

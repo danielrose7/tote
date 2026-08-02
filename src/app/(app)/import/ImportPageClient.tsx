@@ -1,204 +1,204 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { type FormEvent, useState } from 'react';
-import { Header } from '@/components/Header';
-import { useToast } from '@/components/ToastNotification';
-import { type ImportPayload, validatePayload } from '@/lib/importPayload';
-import { Main } from '@/components/Main/Main';
-import styles from './import.module.css';
+import { useRouter } from "next/navigation";
+import { type FormEvent, useState } from "react";
+import { Header } from "@/components/Header";
+import { Main } from "@/components/Main/Main";
+import { useToast } from "@/components/ToastNotification";
+import { type ImportPayload, validatePayload } from "@/lib/importPayload";
+import styles from "./import.module.css";
 
 export function ImportPageClient() {
-  const router = useRouter();
-  const { showToast } = useToast();
-  const [json, setJson] = useState('');
-  const [preview, setPreview] = useState<ImportPayload | null>(null);
-  const [parseError, setParseError] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
+	const router = useRouter();
+	const { showToast } = useToast();
+	const [json, setJson] = useState("");
+	const [preview, setPreview] = useState<ImportPayload | null>(null);
+	const [parseError, setParseError] = useState<string | null>(null);
+	const [importing, setImporting] = useState(false);
 
-  const handleParse = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setParseError(null);
-    setPreview(null);
+	const handleParse = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setParseError(null);
+		setPreview(null);
 
-    try {
-      const parsed = JSON.parse(json);
-      const validated = validatePayload(parsed);
-      setPreview(validated);
-    } catch (err) {
-      setParseError(
-        err instanceof Error ? err.message : 'Failed to parse JSON',
-      );
-    }
-  };
+		try {
+			const parsed = JSON.parse(json);
+			const validated = validatePayload(parsed);
+			setPreview(validated);
+		} catch (err) {
+			setParseError(
+				err instanceof Error ? err.message : "Failed to parse JSON",
+			);
+		}
+	};
 
-  const handleImport = async () => {
-    if (!preview) return;
-    setImporting(true);
+	const handleImport = async () => {
+		if (!preview) return;
+		setImporting(true);
 
-    try {
-      const response = await fetch('/api/v2/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payload: preview }),
-      });
-      const body = (await response.json().catch(() => null)) as {
-        id?: string;
-        error?: string;
-      } | null;
-      if (!response.ok || !body?.id) {
-        throw new Error(body?.error ?? 'Import failed');
-      }
+		try {
+			const response = await fetch("/api/v2/import", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ payload: preview }),
+			});
+			const body = (await response.json().catch(() => null)) as {
+				id?: string;
+				error?: string;
+			} | null;
+			if (!response.ok || !body?.id) {
+				throw new Error(body?.error ?? "Import failed");
+			}
 
-      const totalItems = preview.sections.reduce(
-        (sum, section) => sum + section.items.length,
-        0,
-      );
-      showToast({
-        title: 'Collection imported',
-        description: `"${preview.title}" — ${preview.sections.length} sections, ${totalItems} items`,
-        variant: 'success',
-      });
+			const totalItems = preview.sections.reduce(
+				(sum, section) => sum + section.items.length,
+				0,
+			);
+			showToast({
+				title: "Collection imported",
+				description: `"${preview.title}" — ${preview.sections.length} sections, ${totalItems} items`,
+				variant: "success",
+			});
 
-      router.push(`/collections/${body.id}`);
-    } catch (err) {
-      console.error('Import failed', err);
-      showToast({
-        title: 'Import failed',
-        description: err instanceof Error ? err.message : 'Unknown error',
-        variant: 'error',
-      });
-    } finally {
-      setImporting(false);
-    }
-  };
+			router.push(`/collections/${body.id}`);
+		} catch (err) {
+			console.error("Import failed", err);
+			showToast({
+				title: "Import failed",
+				description: err instanceof Error ? err.message : "Unknown error",
+				variant: "error",
+			});
+		} finally {
+			setImporting(false);
+		}
+	};
 
-  const totalItems =
-    preview?.sections.reduce((sum, section) => sum + section.items.length, 0) ??
-    0;
+	const totalItems =
+		preview?.sections.reduce((sum, section) => sum + section.items.length, 0) ??
+		0;
 
-  return (
-    <>
-      <Header />
-      <Main className={styles.main}>
-        <div className={styles.container}>
-          <h1 className={styles.heading}>Import Collection</h1>
-          <p className={styles.subheading}>
-            Paste a Tote Draft Import Payload JSON to create a collection.
-          </p>
+	return (
+		<>
+			<Header />
+			<Main className={styles.main}>
+				<div className={styles.container}>
+					<h1 className={styles.heading}>Import Collection</h1>
+					<p className={styles.subheading}>
+						Paste a Tote Draft Import Payload JSON to create a collection.
+					</p>
 
-          <form className={styles.form} onSubmit={handleParse}>
-            <div className={styles.inputGroup}>
-              <label className={styles.label} htmlFor="json-input">
-                Import JSON
-              </label>
-              <textarea
-                id="json-input"
-                className={styles.textarea}
-                value={json}
-                onChange={(e) => {
-                  setJson(e.target.value);
-                  setPreview(null);
-                  setParseError(null);
-                }}
-                placeholder={`{\n  "title": "My Collection",\n  "intro": "...",\n  "sections": [\n    {\n      "title": "Section 1",\n      "items": [\n        { "title": "Item", "sourceUrl": "https://..." }\n      ]\n    }\n  ]\n}`}
-                rows={16}
-                spellCheck={false}
-              />
-            </div>
+					<form className={styles.form} onSubmit={handleParse}>
+						<div className={styles.inputGroup}>
+							<label className={styles.label} htmlFor="json-input">
+								Import JSON
+							</label>
+							<textarea
+								id="json-input"
+								className={styles.textarea}
+								value={json}
+								onChange={(e) => {
+									setJson(e.target.value);
+									setPreview(null);
+									setParseError(null);
+								}}
+								placeholder={`{\n  "title": "My Collection",\n  "intro": "...",\n  "sections": [\n    {\n      "title": "Section 1",\n      "items": [\n        { "title": "Item", "sourceUrl": "https://..." }\n      ]\n    }\n  ]\n}`}
+								rows={16}
+								spellCheck={false}
+							/>
+						</div>
 
-            {parseError && <p className={styles.error}>{parseError}</p>}
+						{parseError && <p className={styles.error}>{parseError}</p>}
 
-            <div className={styles.parseActions}>
-              <p className={styles.parseHint}>
-                Paste your payload, then submit to preview before importing.
-              </p>
-              <button
-                className="btn btn-primary"
-                type="submit"
-                disabled={!json.trim()}
-              >
-                Preview Import
-              </button>
-            </div>
-          </form>
+						<div className={styles.parseActions}>
+							<p className={styles.parseHint}>
+								Paste your payload, then submit to preview before importing.
+							</p>
+							<button
+								className="btn btn-primary"
+								type="submit"
+								disabled={!json.trim()}
+							>
+								Preview Import
+							</button>
+						</div>
+					</form>
 
-          {preview && (
-            <div className={styles.preview}>
-              <h2 className={styles.previewTitle}>{preview.title}</h2>
-              {preview.intro && (
-                <p className={styles.previewIntro}>{preview.intro}</p>
-              )}
-              <p className={styles.previewMeta}>
-                {preview.sections.length} section
-                {preview.sections.length !== 1 ? 's' : ''}, {totalItems} item
-                {totalItems !== 1 ? 's' : ''}
-              </p>
+					{preview && (
+						<div className={styles.preview}>
+							<h2 className={styles.previewTitle}>{preview.title}</h2>
+							{preview.intro && (
+								<p className={styles.previewIntro}>{preview.intro}</p>
+							)}
+							<p className={styles.previewMeta}>
+								{preview.sections.length} section
+								{preview.sections.length !== 1 ? "s" : ""}, {totalItems} item
+								{totalItems !== 1 ? "s" : ""}
+							</p>
 
-              {preview.warnings && preview.warnings.length > 0 && (
-                <div className={styles.warnings}>
-                  {preview.warnings.map((warning) => (
-                    <p key={warning} className={styles.warning}>
-                      {warning}
-                    </p>
-                  ))}
-                </div>
-              )}
+							{preview.warnings && preview.warnings.length > 0 && (
+								<div className={styles.warnings}>
+									{preview.warnings.map((warning) => (
+										<p key={warning} className={styles.warning}>
+											{warning}
+										</p>
+									))}
+								</div>
+							)}
 
-              <div className={styles.sections}>
-                {preview.sections.map((section) => (
-                  <div key={section.title} className={styles.section}>
-                    <h3 className={styles.sectionTitle}>{section.title}</h3>
-                    <ul className={styles.itemList}>
-                      {section.items.map((item) => (
-                        <li
-                          key={item.sourceRowId || item.sourceUrl || item.title}
-                          className={styles.item}
-                        >
-                          <span className={styles.itemName}>
-                            {item.title || item.sourceUrl}
-                          </span>
-                          {item.sourceUrl && item.title && (
-                            <span className={styles.itemUrl}>
-                              {item.sourceUrl}
-                            </span>
-                          )}
-                          {item.price && (
-                            <span className={styles.itemPrice}>
-                              {item.price}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
+							<div className={styles.sections}>
+								{preview.sections.map((section) => (
+									<div key={section.title} className={styles.section}>
+										<h3 className={styles.sectionTitle}>{section.title}</h3>
+										<ul className={styles.itemList}>
+											{section.items.map((item) => (
+												<li
+													key={item.sourceRowId || item.sourceUrl || item.title}
+													className={styles.item}
+												>
+													<span className={styles.itemName}>
+														{item.title || item.sourceUrl}
+													</span>
+													{item.sourceUrl && item.title && (
+														<span className={styles.itemUrl}>
+															{item.sourceUrl}
+														</span>
+													)}
+													{item.price && (
+														<span className={styles.itemPrice}>
+															{item.price}
+														</span>
+													)}
+												</li>
+											))}
+										</ul>
+									</div>
+								))}
+							</div>
 
-              <div className={styles.actions}>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setPreview(null);
-                    setParseError(null);
-                  }}
-                  type="button"
-                >
-                  Back
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleImport}
-                  disabled={importing || !me.$isLoaded || !me.root}
-                  type="button"
-                >
-                  {importing ? 'Importing...' : `Import "${preview.title}"`}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Main>
-    </>
-  );
+							<div className={styles.actions}>
+								<button
+									className="btn btn-secondary"
+									onClick={() => {
+										setPreview(null);
+										setParseError(null);
+									}}
+									type="button"
+								>
+									Back
+								</button>
+								<button
+									className="btn btn-primary"
+									onClick={handleImport}
+									disabled={importing || !me.$isLoaded || !me.root}
+									type="button"
+								>
+									{importing ? "Importing..." : `Import "${preview.title}"`}
+								</button>
+							</div>
+						</div>
+					)}
+				</div>
+			</Main>
+		</>
+	);
 }

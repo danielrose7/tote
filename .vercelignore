@@ -1,0 +1,9 @@
+# The web app deploy only needs the Next.js app. Everything below is either
+# native build output or a separately-built artifact, and pushes the CLI upload
+# past its 10mb limit.
+mobile-app
+ios
+android
+.expo
+chrome-extension/dist
+fixtures
