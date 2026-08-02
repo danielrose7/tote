@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { readOutbox, writeCachedIndex } from "../lib/captureStore";
-import { NeonSaveUI } from "./NeonSaveUI";
+import { SaveUI } from "./SaveUI";
 
 const getTokenMock = vi.fn();
 
@@ -75,7 +75,7 @@ function renderSaveUI(overrides: {
 	onUnavailable?: () => void;
 }) {
 	return render(
-		<NeonSaveUI
+		<SaveUI
 			metadata={METADATA}
 			onSuccess={overrides.onSuccess ?? vi.fn()}
 			onQueued={overrides.onQueued ?? vi.fn()}
@@ -104,26 +104,7 @@ afterEach(async () => {
 	vi.unstubAllGlobals();
 });
 
-describe("NeonSaveUI", () => {
-	it("falls back to Classic Jazz when the rollout gate rejects the account", async () => {
-		getTokenMock.mockResolvedValue("token");
-		vi.stubGlobal(
-			"fetch",
-			vi.fn().mockResolvedValue(
-				new Response(
-					JSON.stringify({ error: "Neon collections are not enabled" }),
-					{
-						status: 409,
-					},
-				),
-			),
-		);
-		const onUnavailable = vi.fn();
-
-		await renderSaveUI({ onUnavailable });
-		await waitFor(() => expect(onUnavailable).toHaveBeenCalled());
-	});
-
+describe("SaveUI", () => {
 	it("offers collection creation in the signed-in empty state", async () => {
 		getTokenMock.mockResolvedValue("token");
 		vi.stubGlobal(

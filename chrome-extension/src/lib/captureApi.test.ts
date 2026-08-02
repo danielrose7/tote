@@ -2,10 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
 	buildCapturePayload,
 	createCaptureIds,
-	createNeonCollection,
-	fetchNeonCaptureCollections,
-	saveNeonCapture,
-} from "./neonCapture";
+	createCollection,
+	fetchCaptureCollections,
+	saveCapture,
+} from "./captureApi";
 
 afterEach(() => {
 	vi.unstubAllGlobals();
@@ -36,7 +36,7 @@ describe("Neon capture client", () => {
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(fetchNeonCaptureCollections("session-token")).resolves.toEqual(
+		await expect(fetchCaptureCollections("session-token")).resolves.toEqual(
 			[expect.objectContaining({ name: "Lighting" })],
 		);
 		expect(fetchMock).toHaveBeenCalledWith(
@@ -57,7 +57,7 @@ describe("Neon capture client", () => {
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		await saveNeonCapture({
+		await saveCapture({
 			token: "session-token",
 			ids: CAPTURE_IDS,
 			collectionId: "40000000-0000-4000-8000-000000000001",
@@ -95,8 +95,8 @@ describe("Neon capture client", () => {
 			sectionId: null,
 			metadata: { title: "Task lamp", url: "https://example.com/lamp" },
 		};
-		await expect(saveNeonCapture(attempt)).rejects.toThrow("Failed to fetch");
-		await expect(saveNeonCapture(attempt)).resolves.toEqual({
+		await expect(saveCapture(attempt)).rejects.toThrow("Failed to fetch");
+		await expect(saveCapture(attempt)).resolves.toEqual({
 			id: "node-id",
 			replayed: true,
 		});
@@ -156,7 +156,7 @@ describe("Neon capture client", () => {
 		vi.stubGlobal("fetch", fetchMock);
 
 		await expect(
-			createNeonCollection({
+			createCollection({
 				token: "session-token",
 				ids: CAPTURE_IDS,
 				name: "  Lighting  ",
@@ -178,7 +178,7 @@ describe("Neon capture client", () => {
 		expect(body).not.toHaveProperty("positionKey");
 	});
 
-	it("exposes HTTP status for Classic Jazz fallback decisions", async () => {
+	it("exposes HTTP status so callers can branch on the response", async () => {
 		vi.stubGlobal(
 			"fetch",
 			vi.fn().mockResolvedValue(
@@ -188,7 +188,7 @@ describe("Neon capture client", () => {
 			),
 		);
 
-		await expect(fetchNeonCaptureCollections("session-token")).rejects.toEqual(
+		await expect(fetchCaptureCollections("session-token")).rejects.toEqual(
 			expect.objectContaining<{ status: number }>({
 				status: 409,
 			}),

@@ -1,86 +1,86 @@
 {
-  "archivedAt": "2026-08-02T13:59:28.475Z",
-  "note": "Jazz-era publicMetadata.publishedCollections for dan@gobloom.io, removed from Clerk during the Jazz removal. Values are Jazz CoValue ids (co_z...). Entries flagged onlyInClerk:true have no published_collections row and exist nowhere else.",
-  "clerkUserId": "user_37xCqy2AeQoYCL595CprFzP8FGC",
-  "email": "dan@gobloom.io",
-  "entries": {
-    "ios-test-2": {
-      "value": {
-        "id": "co_zvy3fKi8tn2yVUrjTquaYYmWJK",
-        "name": "iOs test 2"
-      },
-      "onlyInClerk": true
-    },
-    "japow-2026": {
-      "value": "co_zYbXKRLjAcwdJjt3KiMfHaZJHxz",
-      "onlyInClerk": true
-    },
-    "testing-456": {
-      "value": {
-        "id": "co_zWc6MYcMeR87RMGH4miXsRJUtpA",
-        "name": "Testing 456"
-      },
-      "onlyInClerk": false
-    },
-    "the-considered-gardeners-kit": {
-      "value": {
-        "id": "co_zi7RStMTLNSD2gvgzhxZMKuzsQf",
-        "name": "The Considered Gardener's Kit",
-        "description": "Built around what serious gardeners actually reach for — tools forged to outlast decades, workwear designed for the job, and footwear worth wearing into the dirt. Sourced from independent makers and specialty retailers, not the garden center aisle."
-      },
-      "onlyInClerk": false
-    },
-    "baby-gear-that-earns-its-place": {
-      "value": {
-        "id": "co_zDpwxoWnkfcCjfD9cXHXMe3q7E1",
-        "name": "Baby Gear That Earns Its Place",
-        "description": "You're navigating a 3-month-old in a space where every item has to pull its weight — visually and practically. These picks use natural materials, hold up through daily use, and won't look out of place in a considered home."
-      },
-      "onlyInClerk": true
-    },
-    "baby-gear-that-earns-its-floor-space": {
-      "value": {
-        "id": "co_zTbxpbv8BhwGJwm7zm3hYajCCT6",
-        "name": "Baby Gear That Earns Its Floor Space"
-      },
-      "onlyInClerk": false
-    },
-    "us-made-everyday-rotation-supply-chain-honest": {
-      "value": {
-        "id": "co_zNgK9Za41ddmPmsBNbXhbvp7SvQ",
-        "name": "US-Made Everyday Rotation, Supply Chain Honest"
-      },
-      "onlyInClerk": false
-    },
-    "a-montessori-nursery-for-the-first-three-months": {
-      "value": {
-        "id": "co_zifSPx6xXZ8F8MhoHt1F2tQ8Rzm",
-        "name": "A Montessori Nursery for the First Three Months"
-      },
-      "onlyInClerk": false
-    },
-    "practical-gifts-for-a-grandmother-who-visits-the-baby": {
-      "value": {
-        "id": "co_zjFZip9hXE2VF1xAWwXDStvVrs7",
-        "name": "Practical Gifts for a Grandmother Who Visits the Baby"
-      },
-      "onlyInClerk": false
-    },
-    "gear-for-a-50-lb-dog-who-runs-hard-and-fetches-everything": {
-      "value": {
-        "id": "co_z6zcQk6pRCazKRPKeSjhN18Zq45",
-        "name": "Gear for a 50 lb Dog Who Runs Hard and Fetches Everything",
-        "description": "Your dog is athletic and ball-obsessed — the gear needs to keep up with daily fetch sessions and trail runs without falling apart in a month."
-      },
-      "onlyInClerk": true
-    },
-    "organic-feed-for-indoor-lemon-trees-what-enthusiasts-actually-use": {
-      "value": {
-        "id": "co_zWTwav7YphF3BHUQgNYRCnXkpTd",
-        "name": "Organic Feed for Indoor Lemon Trees: What Enthusiasts Actually Use",
-        "description": "Indoor citrus needs consistent, balanced feeding year-round — organic fertilizers that enthusiasts trust tend to be slow-release or liquid concentrates with a proven track record in citrus forums, not mass-market garden center impulse buys."
-      },
-      "onlyInClerk": true
-    }
-  }
+	"archivedAt": "2026-08-02T13:59:28.475Z",
+	"note": "Jazz-era publicMetadata.publishedCollections for dan@gobloom.io, removed from Clerk during the Jazz removal. Values are Jazz CoValue ids (co_z...). Entries flagged onlyInClerk:true have no published_collections row and exist nowhere else.",
+	"clerkUserId": "user_37xCqy2AeQoYCL595CprFzP8FGC",
+	"email": "dan@gobloom.io",
+	"entries": {
+		"ios-test-2": {
+			"value": {
+				"id": "co_zvy3fKi8tn2yVUrjTquaYYmWJK",
+				"name": "iOs test 2"
+			},
+			"onlyInClerk": true
+		},
+		"japow-2026": {
+			"value": "co_zYbXKRLjAcwdJjt3KiMfHaZJHxz",
+			"onlyInClerk": true
+		},
+		"testing-456": {
+			"value": {
+				"id": "co_zWc6MYcMeR87RMGH4miXsRJUtpA",
+				"name": "Testing 456"
+			},
+			"onlyInClerk": false
+		},
+		"the-considered-gardeners-kit": {
+			"value": {
+				"id": "co_zi7RStMTLNSD2gvgzhxZMKuzsQf",
+				"name": "The Considered Gardener's Kit",
+				"description": "Built around what serious gardeners actually reach for — tools forged to outlast decades, workwear designed for the job, and footwear worth wearing into the dirt. Sourced from independent makers and specialty retailers, not the garden center aisle."
+			},
+			"onlyInClerk": false
+		},
+		"baby-gear-that-earns-its-place": {
+			"value": {
+				"id": "co_zDpwxoWnkfcCjfD9cXHXMe3q7E1",
+				"name": "Baby Gear That Earns Its Place",
+				"description": "You're navigating a 3-month-old in a space where every item has to pull its weight — visually and practically. These picks use natural materials, hold up through daily use, and won't look out of place in a considered home."
+			},
+			"onlyInClerk": true
+		},
+		"baby-gear-that-earns-its-floor-space": {
+			"value": {
+				"id": "co_zTbxpbv8BhwGJwm7zm3hYajCCT6",
+				"name": "Baby Gear That Earns Its Floor Space"
+			},
+			"onlyInClerk": false
+		},
+		"us-made-everyday-rotation-supply-chain-honest": {
+			"value": {
+				"id": "co_zNgK9Za41ddmPmsBNbXhbvp7SvQ",
+				"name": "US-Made Everyday Rotation, Supply Chain Honest"
+			},
+			"onlyInClerk": false
+		},
+		"a-montessori-nursery-for-the-first-three-months": {
+			"value": {
+				"id": "co_zifSPx6xXZ8F8MhoHt1F2tQ8Rzm",
+				"name": "A Montessori Nursery for the First Three Months"
+			},
+			"onlyInClerk": false
+		},
+		"practical-gifts-for-a-grandmother-who-visits-the-baby": {
+			"value": {
+				"id": "co_zjFZip9hXE2VF1xAWwXDStvVrs7",
+				"name": "Practical Gifts for a Grandmother Who Visits the Baby"
+			},
+			"onlyInClerk": false
+		},
+		"gear-for-a-50-lb-dog-who-runs-hard-and-fetches-everything": {
+			"value": {
+				"id": "co_z6zcQk6pRCazKRPKeSjhN18Zq45",
+				"name": "Gear for a 50 lb Dog Who Runs Hard and Fetches Everything",
+				"description": "Your dog is athletic and ball-obsessed — the gear needs to keep up with daily fetch sessions and trail runs without falling apart in a month."
+			},
+			"onlyInClerk": true
+		},
+		"organic-feed-for-indoor-lemon-trees-what-enthusiasts-actually-use": {
+			"value": {
+				"id": "co_zWTwav7YphF3BHUQgNYRCnXkpTd",
+				"name": "Organic Feed for Indoor Lemon Trees: What Enthusiasts Actually Use",
+				"description": "Indoor citrus needs consistent, balanced feeding year-round — organic fertilizers that enthusiasts trust tend to be slow-release or liquid concentrates with a proven track record in citrus forums, not mass-market garden center impulse buys."
+			},
+			"onlyInClerk": true
+		}
+	}
 }
