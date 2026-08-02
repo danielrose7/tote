@@ -121,11 +121,14 @@ not referenced anywhere in the app and there is no migration path back.
 
 Two deliberate leftovers, both invisible to users:
 
-- **`legacy_jazz_id` / `source_jazz_id` / `jazz_published_id` columns.** These still hold the
-  id mapping for collections that _were_ migrated. Dropping them needs a DB migration; leave
-  them alone unless you are doing that deliberately.
+- **`legacy_jazz_id` / `source_jazz_id` / `jazz_published_id` columns — still load-bearing, do
+  not drop.** 59 of 65 collections carry a `legacy_jazz_id`, and `publicationRepository`
+  matches an existing publication by _either_ `source_collection_id` _or_ `source_jazz_id`.
+  Dropping these would make re-publishing a migrated collection create a duplicate publication
+  instead of updating the existing one. The names are historical; the data is live.
 - **The `account_data_sources` and `account_collection_migrations` tables.** No longer read or
-  written by application code. Safe to drop in a future migration.
+  written by application code (4 rows each, all terminal state). Safe to drop in a future
+  migration.
 
 ## UI Conventions
 
