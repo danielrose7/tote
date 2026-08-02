@@ -16,7 +16,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "tools.tote.app",
       "associatedDomains": ["applinks:tote.tools"],
-      "buildNumber": "1",
+      "buildNumber": "4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
