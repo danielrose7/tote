@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 
       <main className={styles.content}>
         <h1 className={styles.title}>Privacy Policy</h1>
-        <p className={styles.effective}>Effective June 19, 2026</p>
+        <p className={styles.effective}>Effective August 2, 2026</p>
 
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Who we are</h2>
@@ -242,22 +242,34 @@ export default function PrivacyPage() {
               .
             </li>
             <li>
-              <strong>Anthropic</strong> &mdash; Powers the AI chat feature.
-              When you use the chat assistant, your query and relevant product
-              and collection data are sent to Anthropic&rsquo;s API to generate
-              a response. This only occurs when you actively use the chat
-              feature.{' '}
+              <strong>AI providers</strong> &mdash; Tote is developing optional
+              AI-assisted features, such as a chat assistant that can answer
+              questions about your collections or help you find products. These
+              features are not generally available today. Where one is enabled
+              for your account and you choose to use it, the text you send and
+              the relevant product and collection data are passed to an AI
+              provider to generate a response. We currently use{' '}
               <a
                 href="https://www.anthropic.com/legal/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Anthropic Privacy Policy
-              </a>
-              .
+                Anthropic
+              </a>{' '}
+              and{' '}
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google
+              </a>{' '}
+              for this, and may add or change providers as these features
+              develop. Nothing is sent to an AI provider unless you actively use
+              such a feature.
             </li>
             <li>
-              <strong>Brave Search</strong> &mdash; The AI chat feature may
+              <strong>Brave Search</strong> &mdash; AI-assisted features may
               query Brave Search to look up current product information on your
               behalf. Search queries contain only product-related terms, not
               personal information.{' '}

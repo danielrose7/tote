@@ -36,9 +36,9 @@ describe("Neon capture client", () => {
 		);
 		vi.stubGlobal("fetch", fetchMock);
 
-		await expect(fetchCaptureCollections("session-token")).resolves.toEqual(
-			[expect.objectContaining({ name: "Lighting" })],
-		);
+		await expect(fetchCaptureCollections("session-token")).resolves.toEqual([
+			expect.objectContaining({ name: "Lighting" }),
+		]);
 		expect(fetchMock).toHaveBeenCalledWith(
 			expect.stringContaining("/api/v2/capture"),
 			expect.objectContaining({
