@@ -38,7 +38,6 @@
     "formik": "^2.4.9",
     "idb-keyval": "^6.2.5",
     "inngest": "^4.1.2",
-    "jazz-tools": "^0.19.8",
     "next": "^16.0.7",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -63,10 +62,5 @@
     "prettier": "^3.8.2",
     "typescript": "5.6.2",
     "vitest": "^4.0.16"
-  },
-  "pnpm": {
-    "overrides": {
-      "jazz-tools": "^0.19.8"
-    }
   }
 }

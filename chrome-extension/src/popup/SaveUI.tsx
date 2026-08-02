@@ -43,7 +43,6 @@ export function SaveUI({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [migrationRequired, setMigrationRequired] = useState(false);
   // True while the picker shows the cached index because the network read
   // failed; the user can still queue saves into the outbox.
   const [offline, setOffline] = useState(false);
@@ -120,11 +119,6 @@ export function SaveUI({
         if (loadError instanceof CaptureRequestError) {
           if ([404, 409].includes(loadError.status)) {
             onUnavailable();
-            return;
-          }
-          if (loadError.status === 403) {
-            setMigrationRequired(true);
-            setLoading(false);
             return;
           }
         }
@@ -256,21 +250,6 @@ export function SaveUI({
     await removeOutboxEntry(userId, nodeId);
     await refreshOutbox();
   };
-
-  if (migrationRequired) {
-    return (
-      <div className="migration-required">
-        <p>Migrate your data to use the extension.</p>
-        <button
-          type="button"
-          className="save-button"
-          onClick={() => chrome.tabs.create({ url: `${APP_URL}/collections` })}
-        >
-          Open Tote to migrate
-        </button>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

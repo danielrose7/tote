@@ -3,7 +3,6 @@ import { and, asc, eq, inArray, isNull, type SQL, sql } from 'drizzle-orm';
 import type { PgDatabase, PgQueryResultHKT } from 'drizzle-orm/pg-core';
 import type * as schema from '@/db/schema';
 import {
-  accountDataSources,
   type Collection,
   type CollectionNode,
   collectionLineage,
@@ -302,19 +301,6 @@ export async function getCollectionDetail(
     nodes,
     lineage,
   };
-}
-
-export async function getAccountCollectionDataSource(
-  actorUserId: string,
-  database: CollectionDatabase = productionDb,
-): Promise<(typeof accountDataSources.$inferSelect)['dataSource']> {
-  const [account] = await database
-    .select({ dataSource: accountDataSources.dataSource })
-    .from(accountDataSources)
-    .where(eq(accountDataSources.userId, actorUserId))
-    .limit(1);
-
-  return account?.dataSource ?? 'classic_jazz';
 }
 
 export type CreateCollectionInput = {

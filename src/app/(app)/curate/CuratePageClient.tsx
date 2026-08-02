@@ -1,15 +1,11 @@
 'use client';
 
 import { useRealtime } from 'inngest/react';
-import { Group } from 'jazz-tools';
-import { useAccount } from 'jazz-tools/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useToast } from '@/components/ToastNotification';
 import type { SectionToExtract } from '@/hooks/useCuratorSession';
 import { useCuratorSession } from '@/hooks/useCuratorSession';
 import { curationChannel } from '@/inngest/channels';
-import { createCollectionFromPayload } from '@/lib/importPayload';
-import { BlockList, JazzAccount } from '@/schema';
 import { useCuratorStore } from '@/store/curatorStore';
 import { fetchRealtimeToken } from './actions';
 import { Main } from '@/components/Main/Main';
@@ -109,9 +105,6 @@ export function CuratePageClient({
   }, [questions]);
 
   const { showToast } = useToast();
-  const me = useAccount(JazzAccount, {
-    resolve: { root: { blocks: true } },
-  });
 
   const topics = [
     'interview',
@@ -430,44 +423,42 @@ export function CuratePageClient({
   }
 
   async function handleImport() {
-    if (!importPayload || !me.$isLoaded || !me.root) return;
+    if (!importPayload) return;
     setImporting(true);
     try {
-      const collectionBlock = createCollectionFromPayload(importPayload, me, {
-        curatorSessionId: sessionId ?? undefined,
-        curatorTopic: topic || undefined,
-        curatorBriefJson: framingBrief
-          ? JSON.stringify(framingBrief)
-          : undefined,
-        curatorVersion: 1,
+      const response = await fetch('/api/v2/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payload: importPayload,
+          originType: 'curator',
+        }),
       });
-
-      if (!me.root.blocks) {
-        const group = Group.create({ owner: me });
-        me.root.$jazz.set('blocks', BlockList.create([collectionBlock], group));
-      } else if (me.root.blocks.$isLoaded) {
-        me.root.blocks.$jazz.push(collectionBlock);
+      const body = (await response.json().catch(() => null)) as {
+        id?: string;
+        error?: string;
+      } | null;
+      if (!response.ok || !body?.id) {
+        throw new Error(body?.error ?? 'Import failed');
       }
+      const collectionId = body.id;
 
       if (sessionId) {
         const linkRes = await fetch('/api/curate/link-collection', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId,
-            collectionId: collectionBlock.$jazz.id,
-          }),
+          body: JSON.stringify({ sessionId, collectionId }),
         });
         if (!linkRes.ok) {
           console.warn('[curate] failed to link collection to session', {
             sessionId,
-            collectionId: collectionBlock.$jazz.id,
+            collectionId,
             status: linkRes.status,
           });
         }
       }
 
-      window.location.href = `/collections/${collectionBlock.$jazz.id}`;
+      window.location.href = `/collections/${collectionId}`;
     } catch (err) {
       showToast({
         title: 'Import failed',
@@ -1016,7 +1007,7 @@ export function CuratePageClient({
                         type="button"
                         className={styles.primaryButton}
                         onClick={handleImport}
-                        disabled={importing || !me.$isLoaded || !me.root}
+                        disabled={importing}
                       >
                         {importing ? 'Importing...' : 'Add to Tote'}
                       </button>

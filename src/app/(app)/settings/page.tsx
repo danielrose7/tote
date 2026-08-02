@@ -5,12 +5,16 @@ import styles from './settings.module.css';
 
 export default function SettingsPage() {
   return (
-    <SettingsClient
-      publicProfileCard={
-        <Suspense fallback={<div className={styles.publicProfileSkeleton} />}>
-          <PublicProfileCard />
-        </Suspense>
-      }
-    />
+    // SettingsClient reads useSearchParams, so it needs its own boundary to
+    // stay prerenderable.
+    <Suspense>
+      <SettingsClient
+        publicProfileCard={
+          <Suspense fallback={<div className={styles.publicProfileSkeleton} />}>
+            <PublicProfileCard />
+          </Suspense>
+        }
+      />
+    </Suspense>
   );
 }

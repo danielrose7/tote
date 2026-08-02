@@ -77,7 +77,7 @@ chrome-extension/
 
 ## Architecture
 
-The extension uses Clerk for auth and talks directly to the Tote API — no local database or Jazz sync.
+The extension uses Clerk for auth and talks directly to the Tote API — no local database or sync layer.
 
 1. **Authentication**: `@clerk/chrome-extension` — `getToken()` provides a JWT for API requests
 2. **Collections**: fetched from `/api/v2/collections` on popup open, cached in IndexedDB

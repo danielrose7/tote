@@ -1,14 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import {
-	canUseNeonCollections,
 	collectionIdSchema,
 	collectionMemberUserIdSchema,
-	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	updateCollectionMemberInputSchema,
 } from "@/lib/collections/api";
-import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 import {
 	changeCollectionMemberRole,
 	removeCollectionMember,
@@ -27,21 +24,9 @@ async function parseContext(params: RouteContext["params"]) {
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
-	if (!neonCollectionsApiEnabled()) {
-		return NextResponse.json({ error: "Not found" }, { status: 404 });
-	}
-
 	const { userId } = await auth();
 	if (!userId) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
-
-	const dataSource = await getAccountCollectionDataSource(userId);
-	if (!canUseNeonCollections(dataSource)) {
-		return NextResponse.json(
-			{ error: "Neon collections are not enabled", dataSource },
-			{ status: 409 },
-		);
 	}
 
 	const parsedContext = await parseContext(params);
@@ -85,21 +70,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
-	if (!neonCollectionsApiEnabled()) {
-		return NextResponse.json({ error: "Not found" }, { status: 404 });
-	}
-
 	const { userId } = await auth();
 	if (!userId) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
-
-	const dataSource = await getAccountCollectionDataSource(userId);
-	if (!canUseNeonCollections(dataSource)) {
-		return NextResponse.json(
-			{ error: "Neon collections are not enabled", dataSource },
-			{ status: 409 },
-		);
 	}
 
 	const parsedContext = await parseContext(params);

@@ -8,27 +8,19 @@ import {
   listCaptureCollections,
   saveCapture,
 } from '@/lib/collections/captureRepository';
-import { getAccountCollectionDataSource } from '@/lib/collections/repository';
 import { db } from '@/lib/db';
 
-async function authorizedNeonUser() {
+async function authorizedUser() {
   const { userId } = await auth({ acceptsToken: ['session_token', 'api_key'] });
   if (!userId) return { status: 401 as const };
-  const dataSource = await getAccountCollectionDataSource(userId);
-  if (dataSource !== 'neon') {
-    return { status: 403 as const, reason: 'migration_required' as const };
-  }
   return { status: 200 as const, userId };
 }
 
 export async function GET() {
-  const authorized = await authorizedNeonUser();
+  const authorized = await authorizedUser();
   if (authorized.status !== 200) {
     return NextResponse.json(
-      {
-        error:
-          authorized.status === 401 ? 'Unauthorized' : 'migration_required',
-      },
+      { error: 'Unauthorized' },
       { status: authorized.status },
     );
   }
@@ -38,13 +30,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const authorized = await authorizedNeonUser();
+  const authorized = await authorizedUser();
   if (authorized.status !== 200) {
     return NextResponse.json(
-      {
-        error:
-          authorized.status === 401 ? 'Unauthorized' : 'migration_required',
-      },
+      { error: 'Unauthorized' },
       { status: authorized.status },
     );
   }

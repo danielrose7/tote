@@ -1,1 +1,0 @@
-export { LeaveCollectionDialog } from "./LeaveCollectionDialog";

@@ -1,11 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import {
-	canUseNeonCollections,
 	collectionIdSchema,
-	neonCollectionsApiEnabled,
 } from "@/lib/collections/api";
-import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 import { revokeCollectionInvite } from "@/lib/collections/teamRepository";
 
 type RouteContext = {
@@ -13,21 +10,9 @@ type RouteContext = {
 };
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
-	if (!neonCollectionsApiEnabled()) {
-		return NextResponse.json({ error: "Not found" }, { status: 404 });
-	}
-
 	const { userId } = await auth();
 	if (!userId) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-	}
-
-	const dataSource = await getAccountCollectionDataSource(userId);
-	if (!canUseNeonCollections(dataSource)) {
-		return NextResponse.json(
-			{ error: "Neon collections are not enabled", dataSource },
-			{ status: 409 },
-		);
 	}
 
 	const { id, inviteId } = await params;

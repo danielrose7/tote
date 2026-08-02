@@ -1,17 +1,10 @@
 'use client';
 
-import { Group } from 'jazz-tools';
-import { useAccount } from 'jazz-tools/react';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useState } from 'react';
 import { Header } from '@/components/Header';
 import { useToast } from '@/components/ToastNotification';
-import {
-  createCollectionFromPayload,
-  type ImportPayload,
-  validatePayload,
-} from '@/lib/importPayload';
-import { BlockList, JazzAccount } from '@/schema';
+import { type ImportPayload, validatePayload } from '@/lib/importPayload';
 import { Main } from '@/components/Main/Main';
 import styles from './import.module.css';
 
@@ -22,10 +15,6 @@ export function ImportPageClient() {
   const [preview, setPreview] = useState<ImportPayload | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-
-  const me = useAccount(JazzAccount, {
-    resolve: { root: { blocks: true } },
-  });
 
   const handleParse = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -44,17 +33,21 @@ export function ImportPageClient() {
   };
 
   const handleImport = async () => {
-    if (!preview || !me.$isLoaded || !me.root) return;
+    if (!preview) return;
     setImporting(true);
 
     try {
-      const collectionBlock = createCollectionFromPayload(preview, me);
-
-      if (!me.root.blocks) {
-        const group = Group.create({ owner: me });
-        me.root.$jazz.set('blocks', BlockList.create([collectionBlock], group));
-      } else if (me.root.blocks.$isLoaded) {
-        me.root.blocks.$jazz.push(collectionBlock);
+      const response = await fetch('/api/v2/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payload: preview }),
+      });
+      const body = (await response.json().catch(() => null)) as {
+        id?: string;
+        error?: string;
+      } | null;
+      if (!response.ok || !body?.id) {
+        throw new Error(body?.error ?? 'Import failed');
       }
 
       const totalItems = preview.sections.reduce(
@@ -67,7 +60,7 @@ export function ImportPageClient() {
         variant: 'success',
       });
 
-      router.push(`/collections/${collectionBlock.$jazz.id}`);
+      router.push(`/collections/${body.id}`);
     } catch (err) {
       console.error('Import failed', err);
       showToast({

@@ -12,7 +12,10 @@
 - **TanStack Query** - Server state, `staleTime: 30s`
 - **Next.js 16** - App Router, React 19
 - **TypeScript** - Strict mode
-- **Jazz** - Legacy local-first sync, being migrated out; still present for classic collection import/migration flows
+
+All collection data lives in Postgres. Jazz (the former local-first sync layer) has been
+removed from the app entirely — there is no `jazz-tools` dependency, no Jazz provider, and no
+classic/Neon split. See [Jazz Removal](#jazz-removal) below.
 
 ## Project Structure
 
@@ -37,7 +40,8 @@ docs/
 - `src/lib/collections/repository.ts` - All collection read/write operations
 - `src/lib/publishedCollectionsDb.ts` - Public collection queries (published/shared)
 - `src/lib/formatPrice.ts` - Shared price formatter; use everywhere prices are displayed
-- `src/app/providers.tsx` - Clerk + Jazz provider setup (Jazz kept for migration)
+- `src/app/providers.tsx` - Clerk + TanStack Query provider setup
+- `src/lib/collections/importRepository.ts` - Builds a Postgres collection from an `ImportPayload` (used by `/import` and `/curate`)
 - `src/hooks/useCollectionRealtime.ts` - Ably subscription hook
 - `chrome-extension/src/lib/extractors/` - Metadata extraction logic
 
@@ -105,14 +109,23 @@ The dev-only collection curator lives at `/dev/curate`.
 - `(public)/` — public routes; layout wraps in ClerkProvider only
 - Root layout is bare (html/body only, no providers)
 
-## Jazz Migration Notes
+## Jazz Removal
 
-Jazz is being phased out in favor of Neon. New features go to Neon. The Jazz schema (`src/schema.ts`) and `JazzReactProviderWithClerk` are kept only to support:
+Jazz is gone. All reads and writes go through Postgres via `src/lib/collections/repository.ts`
+and the `/api/v2/` routes. Removed in full: the `jazz-tools` dependency, `src/schema.ts`
+(Jazz CoValues), `JazzReactProviderWithClerk`, the Classic collection pages, and the
+`account_data_sources` gating that used to route accounts between Classic and Neon.
 
-- Classic collection import/migration UI
-- Shared collection handoff flows
+Accounts that only ever had Jazz data now see an ordinary empty account — their Jazz data is
+not referenced anywhere in the app and there is no migration path back.
 
-Do not add new Jazz CoValues or mutations. Use `src/lib/collections/repository.ts` and `/api/v2/` routes instead.
+Two deliberate leftovers, both invisible to users:
+
+- **`legacy_jazz_id` / `source_jazz_id` / `jazz_published_id` columns.** These still hold the
+  id mapping for collections that _were_ migrated. Dropping them needs a DB migration; leave
+  them alone unless you are doing that deliberately.
+- **The `account_data_sources` and `account_collection_migrations` tables.** No longer read or
+  written by application code. Safe to drop in a future migration.
 
 ## UI Conventions
 

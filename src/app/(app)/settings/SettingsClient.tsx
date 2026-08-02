@@ -7,13 +7,11 @@ import {
   UserProfile,
   useClerk,
 } from '@clerk/nextjs';
-import { useAccount } from 'jazz-tools/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { AiCreditsPanel } from '@/components/Billing/AiCreditsPanel';
 import { Header } from '@/components/Header/Header';
-import { JazzAccount } from '@/schema';
 import { Main } from '@/components/Main/Main';
 import styles from './settings.module.css';
 
@@ -24,56 +22,12 @@ export function SettingsClient({
 }: {
   publicProfileCard: ReactNode;
 }) {
-  const [syncStatus, setSyncStatus] = useState<'loading' | 'synced' | 'error'>(
-    'loading',
-  );
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SettingsTab>('account');
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { signOut } = useClerk();
-
-  const me = useAccount(JazzAccount, {
-    resolve: {
-      root: true,
-    },
-  });
-
-  const syncMetadata = useCallback(async () => {
-    setSyncStatus('loading');
-    try {
-      const checkResponse = await fetch('/api/user/debug-metadata');
-      const data = await checkResponse.json();
-
-      if (!data.publicMetadata?.jazzAccountId && me.$jazz?.id) {
-        const syncResponse = await fetch('/api/user/sync-metadata-now', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ jazzAccountId: me.$jazz?.id }),
-        });
-
-        if (syncResponse.ok) {
-          setSyncStatus('synced');
-        } else {
-          setSyncStatus('error');
-        }
-      } else if (data.publicMetadata?.jazzAccountId) {
-        setSyncStatus('synced');
-      } else {
-        setSyncStatus('error');
-      }
-    } catch (error) {
-      console.error('Error syncing metadata:', error);
-      setSyncStatus('error');
-    }
-  }, [me.$jazz?.id]);
-
-  useEffect(() => {
-    if (me.$jazz?.id) {
-      syncMetadata();
-    }
-  }, [me.$jazz?.id, syncMetadata]);
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -153,32 +107,6 @@ export function SettingsClient({
 
           {activeTab === 'account' && (
             <>
-              <div className={styles.syncStatus}>
-                <span className={styles.syncLabel}>Extension sync:</span>
-                <span
-                  className={
-                    syncStatus === 'synced'
-                      ? styles.statusSynced
-                      : syncStatus === 'error'
-                        ? styles.statusError
-                        : styles.statusLoading
-                  }
-                >
-                  {syncStatus === 'synced' && 'Ready'}
-                  {syncStatus === 'error' && 'Error - please refresh'}
-                  {syncStatus === 'loading' && 'Syncing...'}
-                </span>
-                {syncStatus === 'error' && (
-                  <button
-                    type="button"
-                    onClick={syncMetadata}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    Retry
-                  </button>
-                )}
-              </div>
-
               {publicProfileCard}
 
               <div className={styles.profileWrapper}>

@@ -1,9 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import {
-	canUseNeonCollections,
 	collectionIdSchema,
-	neonCollectionsApiEnabled,
 	parseJsonRequest,
 	publishCollectionInputSchema,
 } from "@/lib/collections/api";
@@ -12,27 +10,12 @@ import {
 	publishCollectionSnapshot,
 	unpublishCollectionSnapshot,
 } from "@/lib/collections/publicationRepository";
-import { getAccountCollectionDataSource } from "@/lib/collections/repository";
 
 async function getContext(id: string) {
-	if (!neonCollectionsApiEnabled()) {
-		return {
-			response: NextResponse.json({ error: "Not found" }, { status: 404 }),
-		};
-	}
 	const { userId } = await auth();
 	if (!userId) {
 		return {
 			response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-		};
-	}
-	const dataSource = await getAccountCollectionDataSource(userId);
-	if (!canUseNeonCollections(dataSource)) {
-		return {
-			response: NextResponse.json(
-				{ error: "Neon collections are not enabled", dataSource },
-				{ status: 409 },
-			),
 		};
 	}
 	const parsedId = collectionIdSchema.safeParse(id);

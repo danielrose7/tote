@@ -11,7 +11,6 @@ export interface Balance {
   email: string;
   curator: boolean;
   chatEnabled: boolean;
-  neonCollectionsEnabled: boolean;
   balance_cents: number;
   updated_at: string;
   run_count: number;
@@ -26,47 +25,16 @@ export interface Grant {
   created_at: string;
 }
 
-export interface MigrationHealth {
-  userId: string;
-  email: string;
-  dataSource:
-    | 'classic_jazz'
-    | 'migrating'
-    | 'neon_verifying'
-    | 'neon'
-    | 'migration_failed';
-  migrationVersion: number | null;
-  status:
-    | 'pending'
-    | 'exporting'
-    | 'importing'
-    | 'verifying'
-    | 'completed'
-    | 'failed'
-    | null;
-  collectionCount: number | null;
-  itemCount: number | null;
-  cutoverAt: string | null;
-  rollbackExpiresAt: string | null;
-  errorCode: string | null;
-  updatedAt: string;
-}
-
 interface AdminClientProps {
   balances: Balance[];
   recentGrants: Grant[];
-  migrationHealth: MigrationHealth[];
 }
 
 function formatDollars(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-export function AdminClient({
-  balances,
-  recentGrants,
-  migrationHealth,
-}: AdminClientProps) {
+export function AdminClient({ balances, recentGrants }: AdminClientProps) {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [amount, setAmount] = useState('');
@@ -80,13 +48,6 @@ export function AdminClient({
   const [chatEnabledToggles, setChatEnabledToggles] = useState<
     Record<string, boolean>
   >(Object.fromEntries(balances.map((b) => [b.clerk_user_id, b.chatEnabled])));
-  const [neonCollectionsToggles, setNeonCollectionsToggles] = useState<
-    Record<string, boolean>
-  >(
-    Object.fromEntries(
-      balances.map((b) => [b.clerk_user_id, b.neonCollectionsEnabled]),
-    ),
-  );
   const [togglingFeature, setTogglingFeature] = useState<string | null>(null);
 
   async function handleCuratorToggle(userId: string) {
@@ -117,29 +78,6 @@ export function AdminClient({
       });
       if (res.ok) {
         setChatEnabledToggles((prev) => ({ ...prev, [userId]: !current }));
-      }
-    } finally {
-      setTogglingFeature(null);
-    }
-  }
-
-  async function handleNeonCollectionsToggle(userId: string) {
-    const current = neonCollectionsToggles[userId];
-    setTogglingFeature(`neon:${userId}`);
-    try {
-      const res = await fetch('/api/admin/neon-collections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          neonCollectionsEnabled: !current,
-        }),
-      });
-      if (res.ok) {
-        setNeonCollectionsToggles((prev) => ({
-          ...prev,
-          [userId]: !current,
-        }));
       }
     } finally {
       setTogglingFeature(null);
@@ -223,53 +161,6 @@ export function AdminClient({
         </section>
 
         <section className={styles.section}>
-          <h2 className={styles.sectionHeading}>Collection migration health</h2>
-          {migrationHealth.length === 0 ? (
-            <p className={styles.empty}>No collection migrations yet.</p>
-          ) : (
-            <div className={styles.tableScroll}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th>Collections</th>
-                    <th>Items</th>
-                    <th>Failure</th>
-                    <th>Rollback until</th>
-                    <th>Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {migrationHealth.map((migration) => (
-                    <tr key={migration.userId}>
-                      <td>
-                        <div>{migration.email}</div>
-                        <code>{migration.userId}</code>
-                      </td>
-                      <td>{migration.dataSource}</td>
-                      <td>{migration.status ?? '—'}</td>
-                      <td>{migration.collectionCount ?? '—'}</td>
-                      <td>{migration.itemCount ?? '—'}</td>
-                      <td>{migration.errorCode ?? '—'}</td>
-                      <td>
-                        {migration.rollbackExpiresAt
-                          ? new Date(
-                              migration.rollbackExpiresAt,
-                            ).toLocaleDateString()
-                          : '—'}
-                      </td>
-                      <td>{new Date(migration.updatedAt).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section className={styles.section}>
           <h2 className={styles.sectionHeading}>Grant credits</h2>
           <form onSubmit={handleGrant} className={styles.form}>
             <input
@@ -316,7 +207,6 @@ export function AdminClient({
                   <th>Runs</th>
                   <th>Curator</th>
                   <th>Chat</th>
-                  <th>Neon collections</th>
                   <th>Credit</th>
                 </tr>
               </thead>
@@ -372,29 +262,6 @@ export function AdminClient({
                           onClick={() => handleChatToggle(b.clerk_user_id)}
                         >
                           {chatEnabledToggles[b.clerk_user_id] ? 'On' : 'Off'}
-                        </button>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className={styles.button}
-                          style={{
-                            padding: '0.25rem 0.625rem',
-                            fontSize: '0.8rem',
-                            background: neonCollectionsToggles[b.clerk_user_id]
-                              ? '#065f46'
-                              : undefined,
-                          }}
-                          disabled={
-                            togglingFeature === `neon:${b.clerk_user_id}`
-                          }
-                          onClick={() =>
-                            handleNeonCollectionsToggle(b.clerk_user_id)
-                          }
-                        >
-                          {neonCollectionsToggles[b.clerk_user_id]
-                            ? 'On'
-                            : 'Off'}
                         </button>
                       </td>
                       <td>
