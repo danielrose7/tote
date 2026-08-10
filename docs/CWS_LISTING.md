@@ -85,6 +85,11 @@ No. All code is bundled in the extension package. No remote JavaScript is fetche
 Paste the current version's entry into the "What's new" field when submitting a
 new package. Keep entries user-facing — no internal refactors.
 
+### 1.2.1
+
+- Fixed: the popup could stretch to roughly double its width after adding a
+  collection, leaving a large blank area beside the form.
+
 ### 1.2.0
 
 - Fixed: "Add collection" from the popup never completed — the button stayed on
