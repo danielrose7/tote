@@ -373,6 +373,234 @@
 	white-space: nowrap;
 }
 
+/* Selection swap dialog */
+.dialogOverlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.4);
+	z-index: 50;
+}
+
+.dialogContent {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: var(--color-background);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	padding: var(--spacing-lg);
+	width: 420px;
+	max-width: 90vw;
+	max-height: 85vh;
+	overflow-y: auto;
+	z-index: 51;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+}
+
+.dialogTitle {
+	margin: 0;
+	font-size: var(--font-size-base);
+	font-weight: var(--font-weight-semibold);
+}
+
+.dialogDescription {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--color-text-secondary);
+}
+
+.dialogActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--spacing-sm);
+}
+
+.dialogCancelButton,
+.dialogConfirmButton {
+	padding: var(--spacing-sm) var(--spacing-md);
+	border-radius: var(--radius-sm);
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-medium);
+	cursor: pointer;
+	transition: all var(--transition-fast);
+}
+
+.dialogCancelButton {
+	background: transparent;
+	border: 1px solid var(--color-border-medium);
+	color: var(--color-text-secondary);
+}
+
+.dialogCancelButton:hover {
+	background: var(--color-surface-hover);
+}
+
+.dialogConfirmButton {
+	background-color: var(--color-accent);
+	border: 1px solid var(--color-accent);
+	color: white;
+}
+
+.dialogConfirmButton:hover:not(:disabled) {
+	background-color: var(--color-accent-hover);
+	border-color: var(--color-accent-hover);
+}
+
+.dialogConfirmButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/*
+ * Green = joining the selection, rose = leaving it. Keeping the two on opposite
+ * sides of the colour wheel is what makes the swap readable at a glance; don't
+ * collapse them back onto the app accent. The +/− badges carry the same meaning
+ * without relying on hue.
+ */
+.swapLabel {
+	margin: 0 0 var(--spacing-xs);
+	font-size: var(--font-size-xs);
+	font-weight: var(--font-weight-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.swapLabelIn {
+	color: #047857;
+}
+
+.swapLabelOut {
+	color: #be123c;
+}
+
+.swapList {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-sm);
+}
+
+.swapRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-md);
+	width: 100%;
+	padding: var(--spacing-sm) var(--spacing-md);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+	text-align: left;
+}
+
+.swapRowOption {
+	cursor: pointer;
+	transition: all var(--transition-fast);
+}
+
+.swapRowOption:hover:not(:disabled) {
+	border-color: #fda4af;
+}
+
+.swapRowOption:disabled {
+	cursor: default;
+}
+
+.swapRowIn {
+	border-color: #a7f3d0;
+	background: #ecfdf5;
+}
+
+.swapRowOut {
+	border-color: #fda4af;
+	background: #fff1f2;
+}
+
+.swapItem {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-md);
+	flex: 1;
+	min-width: 0;
+}
+
+.swapItemImage {
+	width: 44px;
+	height: 44px;
+	object-fit: cover;
+	border-radius: var(--radius-sm);
+	flex-shrink: 0;
+}
+
+.swapItemImagePlaceholder {
+	background: var(--color-border-light);
+}
+
+.swapItemImageRemoved {
+	opacity: 0.5;
+}
+
+.swapItemText {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.swapItemName {
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-medium);
+	color: var(--color-text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.swapItemNameRemoved {
+	color: #9f1239;
+	text-decoration: line-through;
+}
+
+.swapItemPrice {
+	font-size: var(--font-size-xs);
+	color: var(--color-text-secondary);
+}
+
+.swapBadge,
+.swapRadio {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-full);
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-semibold);
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.swapBadgeIn {
+	background: #059669;
+	color: white;
+}
+
+.swapBadgeOut {
+	background: #e11d48;
+	color: white;
+}
+
+.swapRadio {
+	border: 1.5px solid var(--color-border-medium);
+	color: white;
+}
+
+.swapRadioActive {
+	background: #e11d48;
+	border-color: #e11d48;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
 	.header {

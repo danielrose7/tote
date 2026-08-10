@@ -21,6 +21,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type Dispatch, useEffect, useState } from 'react';
 import type { CollectionNode } from '@/db/schema';
+import type { RefreshAction, RefreshState } from '@/hooks/useRefreshQueue';
 import {
   deleteCollectionNodeMutation,
   reorderCollectionNodesMutation,
@@ -32,7 +33,6 @@ import {
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
 import { checkExtensionAvailable, refreshViaExtension } from '@/lib/extension';
-import type { RefreshAction, RefreshState } from '@/hooks/useRefreshQueue';
 import { formatPrice } from '@/lib/formatPrice';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
 import styles from '../SlotSection/SlotSection.module.css';
@@ -60,6 +60,47 @@ function propertiesFor(node: CollectionNode): NodeProperties {
 
 function sectionPropsFor(section: CollectionNode): SectionProperties {
   return section.properties as SectionProperties;
+}
+
+function SwapItemContent({
+  node,
+  removed = false,
+}: {
+  node: CollectionNode;
+  removed?: boolean;
+}) {
+  const properties = propertiesFor(node);
+  return (
+    <span className={styles.swapItem}>
+      {properties.imageUrl ? (
+        <img
+          src={properties.imageUrl}
+          alt=""
+          className={`${styles.swapItemImage} ${
+            removed ? styles.swapItemImageRemoved : ''
+          }`}
+        />
+      ) : (
+        <span
+          className={`${styles.swapItemImage} ${styles.swapItemImagePlaceholder}`}
+        />
+      )}
+      <span className={styles.swapItemText}>
+        <span
+          className={`${styles.swapItemName} ${
+            removed ? styles.swapItemNameRemoved : ''
+          }`}
+        >
+          {node.title || 'Untitled'}
+        </span>
+        {properties.price !== undefined && properties.price !== null && (
+          <span className={styles.swapItemPrice}>
+            {formatPrice(String(properties.price))}
+          </span>
+        )}
+      </span>
+    </span>
+  );
 }
 
 function formatBudget(cents: number): string {
@@ -448,6 +489,8 @@ export function NeonSlotSection({
   const [editBudget, setEditBudget] = useState(
     budget !== undefined ? String(budget / 100) : '',
   );
+  const [swapRequest, setSwapRequest] = useState<CollectionNode | null>(null);
+  const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteAction, setDeleteAction] = useState<
     'delete' | 'ungrouped' | 'section'
@@ -693,26 +736,7 @@ export function NeonSlotSection({
     setIsEditing(false);
   };
 
-  const handleToggleSelection = (itemId: string) => {
-    const isCurrentlySelected = selectedItemIds.includes(itemId);
-    let newIds: string[];
-    if (isCurrentlySelected) {
-      newIds = selectedItemIds.filter((id) => id !== itemId);
-    } else {
-      if (
-        maxSelections !== undefined &&
-        maxSelections > 0 &&
-        selectedItemIds.length >= maxSelections
-      ) {
-        showToast({
-          title: 'Selection limit reached',
-          description: `Maximum ${maxSelections} selection${maxSelections === 1 ? '' : 's'} allowed`,
-          variant: 'error',
-        });
-        return;
-      }
-      newIds = [...selectedItemIds, itemId];
-    }
+  const commitSelection = (newIds: string[]) => {
     updateSection.mutate({
       collectionId,
       nodeId: section.id,
@@ -727,6 +751,53 @@ export function NeonSlotSection({
         },
       },
     });
+  };
+
+  // Items currently picked, in section order. Ids that no longer resolve to an
+  // item (legacy Jazz ids, deleted products) are dropped so they can't hold a
+  // section permanently at its limit.
+  const selectedItems = items.filter((item) =>
+    selectedItemIds.includes(item.id),
+  );
+
+  const handleToggleSelection = (itemId: string) => {
+    if (selectedItemIds.includes(itemId)) {
+      commitSelection(selectedItemIds.filter((id) => id !== itemId));
+      return;
+    }
+
+    const atLimit =
+      maxSelections !== undefined &&
+      maxSelections > 0 &&
+      selectedItemIds.length >= maxSelections;
+    if (!atLimit) {
+      commitSelection([...selectedItemIds, itemId]);
+      return;
+    }
+
+    const incoming = items.find((item) => item.id === itemId);
+    if (!incoming || selectedItems.length === 0) {
+      commitSelection([itemId]);
+      return;
+    }
+
+    // At the limit: offer to swap something out rather than refusing the click.
+    setPendingRemovalId(
+      selectedItems.length === 1 ? selectedItems[0].id : null,
+    );
+    setSwapRequest(incoming);
+  };
+
+  const handleConfirmSwap = () => {
+    if (!swapRequest || !pendingRemovalId) return;
+    const incomingId = swapRequest.id;
+    const removedId = pendingRemovalId;
+    setSwapRequest(null);
+    setPendingRemovalId(null);
+    commitSelection([
+      ...selectedItemIds.filter((id) => id !== removedId),
+      incomingId,
+    ]);
   };
 
   const handleDelete = () => {
@@ -1141,6 +1212,103 @@ export function NeonSlotSection({
           </div>
         )}
       </section>
+
+      <Dialog.Root
+        open={swapRequest !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSwapRequest(null);
+            setPendingRemovalId(null);
+          }
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className={styles.dialogOverlay} />
+          <Dialog.Content className={styles.dialogContent}>
+            <Dialog.Title className={styles.dialogTitle}>
+              Selection limit reached
+            </Dialog.Title>
+            <p className={styles.dialogDescription}>
+              &ldquo;{section.title || 'This section'}&rdquo; allows{' '}
+              {maxSelections} selection{maxSelections === 1 ? '' : 's'}.{' '}
+              {selectedItems.length === 1
+                ? 'Swap your current pick for this one?'
+                : 'Choose one to unselect.'}
+            </p>
+
+            {swapRequest && (
+              <div>
+                <p className={`${styles.swapLabel} ${styles.swapLabelIn}`}>
+                  Selecting
+                </p>
+                <div className={`${styles.swapRow} ${styles.swapRowIn}`}>
+                  <SwapItemContent node={swapRequest} />
+                  <span className={`${styles.swapBadge} ${styles.swapBadgeIn}`}>
+                    +
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <p className={`${styles.swapLabel} ${styles.swapLabelOut}`}>
+                {selectedItems.length === 1 ? 'Replacing' : 'Unselect'}
+              </p>
+              <div className={styles.swapList}>
+                {selectedItems.map((node) => {
+                  const isPending = node.id === pendingRemovalId;
+                  const isOnlyOption = selectedItems.length === 1;
+                  return (
+                    <button
+                      key={node.id}
+                      type="button"
+                      className={`${styles.swapRow} ${styles.swapRowOption} ${
+                        isPending ? styles.swapRowOut : ''
+                      }`}
+                      onClick={() => setPendingRemovalId(node.id)}
+                      disabled={isOnlyOption}
+                      aria-pressed={isPending}
+                    >
+                      <SwapItemContent node={node} removed={isPending} />
+                      {isOnlyOption ? (
+                        <span
+                          className={`${styles.swapBadge} ${styles.swapBadgeOut}`}
+                        >
+                          −
+                        </span>
+                      ) : (
+                        <span
+                          className={`${styles.swapRadio} ${
+                            isPending ? styles.swapRadioActive : ''
+                          }`}
+                        >
+                          {isPending ? '−' : ''}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className={styles.dialogActions}>
+              <Dialog.Close asChild>
+                <button type="button" className={styles.dialogCancelButton}>
+                  Cancel
+                </button>
+              </Dialog.Close>
+              <button
+                type="button"
+                className={styles.dialogConfirmButton}
+                onClick={handleConfirmSwap}
+                disabled={!pendingRemovalId}
+              >
+                Swap
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       <Dialog.Root open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <Dialog.Portal>
