@@ -20,6 +20,17 @@ pnpm build
 pnpm build:zip
 ```
 
+### Releasing
+
+1. Bump `version` in **both** `manifest.json` and `package.json` — they must match.
+2. `pnpm build:zip`, then rename the output to `tote-extension-<version>.zip`.
+3. Add a "What's new" entry to the Release Notes section of
+   [../docs/CWS_LISTING.md](../docs/CWS_LISTING.md) and paste it on submission.
+
+`build:zip` deletes the old archive first. Without that, `zip` _updates_ the
+existing file and stale assets from previous builds ride along into the
+submitted package.
+
 ## Testing
 
 Comprehensive test suite using Vitest + jsdom for DOM extraction testing.
@@ -62,7 +73,7 @@ chrome-extension/
 │   │   ├── SaveUI.tsx      # Save flow UI (collection picker, save button)
 │   │   └── popup.css
 │   ├── lib/
-│   │   ├── captureApi.ts   # API client — fetchCaptureCollections, submitCapture, createCollection
+│   │   ├── captureApi.ts   # API client — fetchCaptureCollections, submitCapture, createCollection, createSection
 │   │   ├── captureStore.ts # Local IndexedDB cache + outbox for offline queuing
 │   │   ├── extractors/
 │   │   │   ├── index.ts    # Main extraction orchestrator
@@ -124,6 +135,11 @@ Problem sites that were originally failing:
   - `fetchCaptureCollections()` - list user's collections
   - `submitCapture()` - save a product to a collection
   - `createCollection()` - create a new collection
+  - `createSection()` - create a top-level section on a collection
+
+  Note: `SaveUI` defines local `createCollection`/`createSection` handlers, so
+  these are imported under `*Request` aliases. An unaliased import is shadowed
+  by the handler and recurses instead of calling the API.
 
 ## Extraction Logic — Keep Two Files in Sync
 

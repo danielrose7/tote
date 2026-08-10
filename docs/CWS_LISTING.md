@@ -19,7 +19,7 @@ Tote collects only the metadata you explicitly choose to save — no tracking, n
 
 - Save from any website with one click
 - Automatic metadata extraction (title, image, price, brand)
-- Organize products into collections
+- Organize products into collections, and into sections within a collection
 - Price refresh to see current prices
 - Syncs across devices in real time
 - Keeps working offline — saves queue and send when you reconnect
@@ -77,6 +77,25 @@ No.
 
 **Does your extension execute remote code?**
 No. All code is bundled in the extension package. No remote JavaScript is fetched or executed.
+
+---
+
+## Release Notes
+
+Paste the current version's entry into the "What's new" field when submitting a
+new package. Keep entries user-facing — no internal refactors.
+
+### 1.2.0
+
+- Fixed: "Add collection" from the popup never completed — the button stayed on
+  "..." and no collection was created.
+- New: add a section to a collection straight from the popup, and save into it
+  without leaving the page.
+
+### 1.1.0
+
+- Saving now goes through Tote's own API; collections sync in real time across
+  the web app, extension, and iOS app.
 
 ---
 

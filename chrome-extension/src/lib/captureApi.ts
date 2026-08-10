@@ -127,6 +127,39 @@ export async function createCollection({
   );
 }
 
+// Sections are top-level nodes on a collection. Like collection creation this
+// is online-only; the positionKey format matches the web app so sections
+// created here sort alongside the ones created there.
+export async function createSection({
+  token,
+  collectionId,
+  ids,
+  name,
+}: {
+  token: string;
+  collectionId: string;
+  ids: CaptureIds;
+  name: string;
+}) {
+  return request<{ id: string; replayed: boolean }>(
+    `/api/v2/collections/${collectionId}/nodes`,
+    token,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        id: ids.nodeId,
+        mutationId: ids.mutationId,
+        type: 'section',
+        title: name.trim(),
+        parentId: null,
+        properties: {},
+        positionKey: `${new Date().toISOString()}:${ids.nodeId}`,
+      }),
+    },
+  );
+}
+
 export type CapturePayload = ReturnType<typeof buildCapturePayload>;
 
 export async function sendCapturePayload(
