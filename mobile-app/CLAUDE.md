@@ -47,23 +47,42 @@ Jazz has been removed. All data flows through the Neon-backed API with a local S
 All API calls use `await getToken()` from `useAuth()` as a Bearer token:
 
 ```ts
-import { fetchCollections, fetchCollectionDetail, createCollection,
-         updateCollection, deleteCollection, createNode, updateNode,
-         deleteNode, reorderNodes, captureUrl,
-         getPublicationStatus, publishCollection, unpublishCollection,
-         createInvite, acceptInvite } from '../lib/api';
+import {
+  fetchCollections,
+  fetchCollectionDetail,
+  createCollection,
+  updateCollection,
+  deleteCollection,
+  createNode,
+  updateNode,
+  deleteNode,
+  reorderNodes,
+  captureUrl,
+  getPublicationStatus,
+  publishCollection,
+  unpublishCollection,
+  createInvite,
+  acceptInvite,
+} from '../lib/api';
 ```
 
 Key types:
+
 - `Collection` — `{ id, name, color, description, itemCount, positionKey, role, updatedAt }`
 - `CollectionNode` — `{ id, collectionId, parentId, type, title, properties, positionKey, version }`
-- `NodeProperties` — `{ url?, imageUrl?, price?, description?, notes?, body?, maxSelections?, budget?, selectedProductIds? }`
+- `NodeProperties` — `{ url?, imageUrl?, price?, description?, notes?, body?, maxSelections?, budget?, selectedItemIds? }`
+
+`updateNode` / `reorderNodes` bump the node's `version` server-side. Call sites
+must record the new version in local state (`applyNodeVersion` /
+`bumpNodeVersions` in `CollectionDetailScreen`) or the next optimistic mutation
+sends a stale `expectedVersion` and 409s.
 
 Node types: `"section"` (was slot), `"product"`, `"link"`, `"photo"`, `"note"`, `"text"`
 
 ### Local Cache (`src/lib/localDb.ts`)
 
 SQLite tables:
+
 - `collections` — mirrors `CollectionSummary` from the API
 - `collection_nodes` — mirrors `CollectionNode` from the API
 
@@ -71,24 +90,25 @@ Pattern: load from cache immediately → fetch from API in background → update
 
 ### Data Mapping (old Jazz → new Neon)
 
-| Jazz | Neon |
-|------|------|
-| `block.$jazz.id` | `node.id` |
-| `block.name` | `node.title` (nodes) / `collection.name` |
-| `block.type === "slot"` | `node.type === "section"` |
-| `block.productData?.url` | `node.properties.url` |
-| `block.productData?.imageUrl` | `node.properties.imageUrl` |
-| `block.productData?.price` | `node.properties.price` |
-| `block.productData?.notes` | `node.properties.notes` |
-| `block.slotData?.maxSelections` | `node.properties.maxSelections` |
-| `block.slotData?.budget` | `node.properties.budget` |
-| `block.slotData?.selectedProductIds` | `node.properties.selectedProductIds` |
-| `block.collectionData?.color` | `collection.color` |
-| `block.children` (slot children) | `nodes.filter(n => n.parentId === slot.id)` |
+| Jazz                                 | Neon                                                                                                                                                     |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `block.$jazz.id`                     | `node.id`                                                                                                                                                |
+| `block.name`                         | `node.title` (nodes) / `collection.name`                                                                                                                 |
+| `block.type === "slot"`              | `node.type === "section"`                                                                                                                                |
+| `block.productData?.url`             | `node.properties.url`                                                                                                                                    |
+| `block.productData?.imageUrl`        | `node.properties.imageUrl`                                                                                                                               |
+| `block.productData?.price`           | `node.properties.price`                                                                                                                                  |
+| `block.productData?.notes`           | `node.properties.notes`                                                                                                                                  |
+| `block.slotData?.maxSelections`      | `node.properties.maxSelections`                                                                                                                          |
+| `block.slotData?.budget`             | `node.properties.budget`                                                                                                                                 |
+| `block.slotData?.selectedProductIds` | `node.properties.selectedItemIds` (legacy rows may still carry `selectedProductIds`; read both, write `selectedItemIds` — the web app uses the same key) |
+| `block.collectionData?.color`        | `collection.color`                                                                                                                                       |
+| `block.children` (slot children)     | `nodes.filter(n => n.parentId === slot.id)`                                                                                                              |
 
 ## Share Extension
 
 The share extension (`index.share.tsx`) runs in a separate iOS process. It:
+
 1. Swift bridge (`ToteShareExtension`) intercepts the share sheet, writes URL to App Group UserDefaults, launches main app
 2. `index.share.tsx` shows a brief "Added to Tote" confirmation
 3. Main app reads pending URLs via `usePendingUrl()` and presents `SaveProductSheet`

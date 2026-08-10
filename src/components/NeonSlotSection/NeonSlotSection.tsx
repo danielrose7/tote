@@ -50,6 +50,8 @@ type SectionProperties = {
   maxSelections?: number;
   budget?: number; // stored in cents
   selectedItemIds?: string[];
+  /** Legacy key from the Jazz era — read for back-compat, never written. */
+  selectedProductIds?: string[];
 };
 
 function propertiesFor(node: CollectionNode): NodeProperties {
@@ -424,7 +426,8 @@ export function NeonSlotSection({
   forceCollapsed,
 }: NeonSlotSectionProps) {
   const sectionProps = sectionPropsFor(section);
-  const selectedItemIds = sectionProps.selectedItemIds ?? [];
+  const selectedItemIds =
+    sectionProps.selectedItemIds ?? sectionProps.selectedProductIds ?? [];
   const maxSelections = sectionProps.maxSelections;
   const budget = sectionProps.budget;
   const selectedCount = selectedItemIds.length;
@@ -716,7 +719,12 @@ export function NeonSlotSection({
       input: {
         expectedVersion: section.version,
         mutationId: crypto.randomUUID(),
-        properties: { ...sectionProps, selectedItemIds: newIds },
+        properties: {
+          ...sectionProps,
+          selectedItemIds: newIds,
+          // Drop the legacy key so the two can't drift apart.
+          selectedProductIds: undefined,
+        },
       },
     });
   };

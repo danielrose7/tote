@@ -16,6 +16,7 @@ import {
   Modal,
   Platform,
   RefreshControl,
+  ScrollView,
   SectionList,
   StyleSheet,
   Text,
@@ -83,6 +84,37 @@ type ReorderableBlockItem = {
   block: ProductItem;
 };
 
+// The web app stores section picks under `selectedItemIds`. Older data written
+// by Jazz (and by earlier builds of this app) used `selectedProductIds`; read
+// both so migrated collections keep their picks, but always write the new key.
+function getSelectedIds(slot: ProductItem): string[] {
+  return (
+    slot.properties.selectedItemIds ?? slot.properties.selectedProductIds ?? []
+  );
+}
+
+// Every mutation also lands as a realtime event, so a refresh routinely races
+// the write that triggered it. The server list decides which nodes exist, but a
+// node's local copy wins when it is newer than (or still being written to) the
+// server's — otherwise a stale read briefly flips a selection back to its old
+// value before settling, which reads as a flicker.
+function mergeNodes(
+  local: CollectionNode[],
+  server: CollectionNode[],
+  pendingWrites: React.RefObject<Map<string, number>>,
+): CollectionNode[] {
+  const localById = new Map(local.map((n) => [n.id, n]));
+  return server.map((serverNode) => {
+    const localNode = localById.get(serverNode.id);
+    if (!localNode) return serverNode;
+    const hasPendingWrite =
+      (pendingWrites.current?.get(serverNode.id) ?? 0) > 0;
+    return hasPendingWrite || localNode.version > serverNode.version
+      ? localNode
+      : serverNode;
+  });
+}
+
 function ProductRefresher({
   item,
   collectionId,
@@ -122,12 +154,16 @@ function ProductRefresher({
         try {
           const token = await getTokenWithRetry(getToken);
           if (token) {
-            await updateNode(token, collectionId, item.id, {
+            const { version } = await updateNode(token, collectionId, item.id, {
               expectedVersion: item.version,
               title: updatedTitle,
               properties: updatedProperties,
             });
-            onDone({ title: updatedTitle, properties: updatedProperties });
+            onDone({
+              title: updatedTitle,
+              properties: updatedProperties,
+              version,
+            });
             return;
           }
         } catch {}
@@ -625,6 +661,176 @@ function SlotEditModal({
   );
 }
 
+type SwapRequest = {
+  slot: ProductItem;
+  incoming: ProductItem;
+  current: ProductItem[];
+  selectedIds: string[];
+};
+
+function SelectionSwapSheet({
+  request,
+  onCancel,
+  onConfirm,
+}: {
+  request: SwapRequest | null;
+  onCancel: () => void;
+  onConfirm: (removed: ProductItem) => void;
+}) {
+  const [pendingRemovalId, setPendingRemovalId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Preselect when there is only one thing that could be swapped out.
+    setPendingRemovalId(
+      request?.current.length === 1 ? request.current[0].id : null,
+    );
+  }, [request]);
+
+  if (!request) return null;
+
+  const { slot, incoming, current } = request;
+  const maxSelections = slot.properties.maxSelections;
+  const isSingle = current.length === 1;
+
+  function handleConfirm() {
+    const removed = current.find((n) => n.id === pendingRemovalId);
+    if (removed) onConfirm(removed);
+  }
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onCancel}>
+      <TouchableOpacity
+        style={styles.modalBackdrop}
+        activeOpacity={1}
+        onPress={onCancel}
+      />
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalSheet}>
+          <View style={styles.modalHandle} />
+          <Text style={styles.modalTitle}>Selection limit reached</Text>
+          <Text style={styles.swapSubtitle}>
+            {slot.title ?? 'This slot'} allows {maxSelections} selection
+            {maxSelections === 1 ? '' : 's'}.{' '}
+            {isSingle
+              ? 'Swap your current pick for this one?'
+              : 'Choose one to unselect.'}
+          </Text>
+
+          <Text style={[styles.fieldLabel, styles.swapLabelIn]}>Selecting</Text>
+          <View style={styles.swapIncomingRow}>
+            <SwapThumbnail item={incoming} />
+            <View style={styles.swapRowInfo}>
+              <Text style={styles.swapRowTitle} numberOfLines={2}>
+                {incoming.title ?? 'Untitled'}
+              </Text>
+              {incoming.properties.price ? (
+                <Text style={styles.swapRowPrice}>
+                  {formatPrice(incoming.properties.price)}
+                </Text>
+              ) : null}
+            </View>
+            <View style={[styles.swapBadge, styles.swapBadgeIn]}>
+              <Ionicons name="add" size={16} color="#fff" />
+            </View>
+          </View>
+
+          <Text style={[styles.fieldLabel, styles.swapLabelOut]}>
+            {isSingle ? 'Replacing' : 'Unselect'}
+          </Text>
+          <ScrollView
+            style={current.length > 3 ? styles.swapList : undefined}
+            bounces={false}
+          >
+            {current.map((node) => {
+              const isPending = node.id === pendingRemovalId;
+              return (
+                <TouchableOpacity
+                  key={node.id}
+                  style={[
+                    styles.swapOptionRow,
+                    isPending && styles.swapOptionRowActive,
+                  ]}
+                  onPress={() => setPendingRemovalId(node.id)}
+                  activeOpacity={0.7}
+                  disabled={isSingle}
+                >
+                  <SwapThumbnail item={node} dimmed={isPending} />
+                  <View style={styles.swapRowInfo}>
+                    <Text
+                      style={[
+                        styles.swapRowTitle,
+                        isPending && styles.swapRowTitleRemoved,
+                      ]}
+                      numberOfLines={2}
+                    >
+                      {node.title ?? 'Untitled'}
+                    </Text>
+                    {node.properties.price ? (
+                      <Text style={styles.swapRowPrice}>
+                        {formatPrice(node.properties.price)}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {isSingle ? (
+                    <View style={[styles.swapBadge, styles.swapBadgeOut]}>
+                      <Ionicons name="remove" size={16} color="#fff" />
+                    </View>
+                  ) : (
+                    <View
+                      style={[
+                        styles.swapRadio,
+                        isPending && styles.swapRadioActive,
+                      ]}
+                    >
+                      {isPending && (
+                        <Ionicons name="remove" size={14} color="#fff" />
+                      )}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <View style={styles.modalActions}>
+            <Button
+              label="Cancel"
+              variant="ghost"
+              onPress={onCancel}
+              style={styles.modalBtn}
+            />
+            <Button
+              label="Swap"
+              onPress={handleConfirm}
+              disabled={!pendingRemovalId}
+              style={styles.modalBtn}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+function SwapThumbnail({
+  item,
+  dimmed = false,
+}: {
+  item: ProductItem;
+  dimmed?: boolean;
+}) {
+  const style = [styles.swapThumbnail, dimmed && styles.swapThumbnailRemoved];
+  return item.properties.imageUrl ? (
+    <Image
+      source={{ uri: item.properties.imageUrl }}
+      style={style}
+      resizeMode="cover"
+    />
+  ) : (
+    <View style={[...style, styles.thumbnailPlaceholder]} />
+  );
+}
+
 function SlotHeader({
   slot,
   title,
@@ -653,8 +859,7 @@ function SlotHeader({
     );
   }
 
-  const selectedIds =
-    (slot.properties.selectedProductIds as string[] | undefined) ?? [];
+  const selectedIds = getSelectedIds(slot);
   const maxSelections = slot.properties.maxSelections;
   const budget = slot.properties.budget;
 
@@ -1193,6 +1398,9 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [detail, setDetail] = useState<CollectionDetail | null>(null);
   const [localNodes, setLocalNodes] = useState<CollectionNode[]>([]);
   const [hasFetched, setHasFetched] = useState(false);
+  const refreshSeqRef = useRef(0);
+  const pendingWritesRef = useRef<Map<string, number>>(new Map());
+  const [swapRequest, setSwapRequest] = useState<SwapRequest | null>(null);
 
   useEffect(() => {
     // Load cached nodes immediately for fast display
@@ -1219,12 +1427,16 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   });
 
   async function refresh() {
+    const seq = ++refreshSeqRef.current;
     try {
       const token = await getTokenWithRetry(getToken);
       if (!token) return;
       const d = await fetchCollectionDetail(token, collectionId);
+      // A newer refresh already started; dropping this keeps an older, slower
+      // response from overwriting fresher data.
+      if (seq !== refreshSeqRef.current) return;
       setDetail(d);
-      setLocalNodes(d.nodes);
+      setLocalNodes((prev) => mergeNodes(prev, d.nodes, pendingWritesRef));
       upsertNodes(d.nodes).catch(() => {}); // background cache update
     } catch (e) {
       console.warn('CollectionDetail refresh error:', e);
@@ -1344,54 +1556,135 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     }
   }, [activeReorderTargetId, reorderSections, sectionNodes.length]);
 
+  // Mutations bump the server-side node version. Without recording it, the next
+  // optimistic mutation sends a stale expectedVersion and gets a 409 — which is
+  // why a second tap often appeared to do nothing until realtime caught up.
+  function applyNodeVersion(nodeId: string, version: number) {
+    setLocalNodes((prev) =>
+      prev.map((n) => (n.id === nodeId ? { ...n, version } : n)),
+    );
+  }
+
+  // While a node has a write in flight its local copy is authoritative — see
+  // mergeNodes.
+  function markWriteStarted(nodeId: string) {
+    const pending = pendingWritesRef.current;
+    pending.set(nodeId, (pending.get(nodeId) ?? 0) + 1);
+  }
+
+  function markWriteFinished(nodeId: string) {
+    const pending = pendingWritesRef.current;
+    const next = (pending.get(nodeId) ?? 1) - 1;
+    if (next > 0) pending.set(nodeId, next);
+    else pending.delete(nodeId);
+  }
+
+  // Reorder bumps every affected node's version by one server-side.
+  function bumpNodeVersions(nodeIds: string[]) {
+    const ids = new Set(nodeIds);
+    setLocalNodes((prev) =>
+      prev.map((n) => (ids.has(n.id) ? { ...n, version: n.version + 1 } : n)),
+    );
+  }
+
   function openProduct(item: ProductItem) {
     const url = item.properties.url;
     if (url) WebBrowser.openBrowserAsync(url);
   }
 
-  async function toggleSelected(item: ProductItem, slot: ProductItem) {
-    const selectedIds =
-      (slot.properties.selectedProductIds as string[] | undefined) ?? [];
-    const id = item.id;
-    const isSelected = selectedIds.includes(id);
+  function toggleSelected(item: ProductItem, slot: ProductItem) {
+    const selectedIds = getSelectedIds(slot);
+    const isSelected = selectedIds.includes(item.id);
     const maxSelections = slot.properties.maxSelections;
 
-    if (!isSelected && maxSelections && selectedIds.length >= maxSelections)
+    if (isSelected) {
+      commitSelection(
+        slot,
+        selectedIds.filter((sid) => sid !== item.id),
+      );
       return;
+    }
 
-    const newSelectedIds = isSelected
-      ? selectedIds.filter((sid) => sid !== id)
-      : [...selectedIds, id];
+    // maxSelections of 0 (or undefined) means unlimited, matching the web app.
+    const atLimit = Boolean(
+      maxSelections && selectedIds.length >= maxSelections,
+    );
+    if (!atLimit) {
+      commitSelection(slot, [...selectedIds, item.id]);
+      return;
+    }
+
+    // At the limit: offer to swap something out rather than silently no-op.
+    const currentlySelected = selectedIds
+      .map((sid) => localNodes.find((n) => n.id === sid))
+      .filter((n): n is ProductItem => Boolean(n));
+
+    if (currentlySelected.length === 0) {
+      // Selections point at items that no longer exist (e.g. legacy ids) —
+      // replace the whole list rather than leaving the user stuck.
+      commitSelection(slot, [item.id]);
+      return;
+    }
+
+    setSwapRequest({
+      slot,
+      incoming: item,
+      current: currentlySelected,
+      selectedIds,
+    });
+  }
+
+  function confirmSwap(removed: ProductItem) {
+    if (!swapRequest) return;
+    const { slot, incoming, selectedIds } = swapRequest;
+    setSwapRequest(null);
+    commitSelection(slot, [
+      ...selectedIds.filter((sid) => sid !== removed.id),
+      incoming.id,
+    ]);
+  }
+
+  async function commitSelection(slot: ProductItem, newSelectedIds: string[]) {
+    const newProperties = {
+      ...slot.properties,
+      selectedItemIds: newSelectedIds,
+      // Drop the legacy key so the two can't drift apart.
+      selectedProductIds: undefined,
+    };
 
     // Optimistic update
     setLocalNodes((prev) =>
       prev.map((n) =>
-        n.id === slot.id
-          ? {
-              ...n,
-              properties: {
-                ...n.properties,
-                selectedProductIds: newSelectedIds,
-              },
-            }
-          : n,
+        n.id === slot.id ? { ...n, properties: newProperties } : n,
       ),
     );
 
+    markWriteStarted(slot.id);
+    let error: unknown = null;
     try {
       const token = await getTokenWithRetry(getToken);
       if (!token) return;
-      await track(
+      const { version } = await track(
         updateNode(token, collectionId, slot.id, {
           expectedVersion: slot.version,
-          properties: {
-            ...slot.properties,
-            selectedProductIds: newSelectedIds,
-          },
+          properties: newProperties,
         }),
       );
-    } catch {
+      applyNodeVersion(slot.id, version);
+    } catch (e) {
+      error = e;
+    } finally {
+      // Cleared before the recovery refresh below, so that refresh is allowed
+      // to replace the optimistic state that failed to save.
+      markWriteFinished(slot.id);
+    }
+
+    if (error) {
       await refresh();
+      Alert.alert(
+        "Couldn't save selection",
+        error instanceof Error ? error.message : 'Please try again.',
+      );
     }
   }
 
@@ -1461,7 +1754,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     try {
       const token = await getTokenWithRetry(getToken);
       if (!token) return;
-      await track(
+      const { version } = await track(
         updateNode(token, collectionId, item.id, {
           expectedVersion: item.version,
           title: updatedTitle ?? undefined,
@@ -1469,6 +1762,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           ...(parentId !== undefined ? { parentId } : {}),
         }),
       );
+      applyNodeVersion(item.id, version);
     } catch {
       await refresh();
     }
@@ -1499,13 +1793,14 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     try {
       const token = await getTokenWithRetry(getToken);
       if (!token) return;
-      await track(
+      const { version } = await track(
         updateNode(token, collectionId, slot.id, {
           expectedVersion: slot.version,
           title: updatedTitle ?? undefined,
           properties: updatedProperties,
         }),
       );
+      applyNodeVersion(slot.id, version);
     } catch {
       await refresh();
     }
@@ -1682,9 +1977,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     section: Section;
   }) {
     const slot = section.slot;
-    const selectedIds = slot
-      ? ((slot.properties.selectedProductIds as string[] | undefined) ?? [])
-      : [];
+    const selectedIds = slot ? getSelectedIds(slot) : [];
     const isSelected = selectedIds.includes(item.id);
 
     return (
@@ -1758,7 +2051,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     const reorderPayload = orderedItems.map((item, i) => ({
       id: item.id,
       positionKey: String(i + 1).padStart(8, '0'),
-      expectedVersion: item.version,
+      expectedVersion: item.block.version,
     }));
 
     // Optimistic update
@@ -1775,6 +2068,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await track(reorderNodes(token, collectionId, reorderPayload));
+      bumpNodeVersions(reorderPayload.map((n) => n.id));
     } catch {
       await refresh();
     }
@@ -1791,7 +2085,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     const reorderPayload = orderedItems.map((item, i) => ({
       id: item.id,
       positionKey: String(i + 1).padStart(8, '0'),
-      expectedVersion: item.version,
+      expectedVersion: item.block.version,
     }));
 
     // Optimistic update
@@ -1808,6 +2102,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       const token = await getTokenWithRetry(getToken);
       if (!token) return;
       await reorderNodes(token, collectionId, reorderPayload);
+      bumpNodeVersions(reorderPayload.map((n) => n.id));
     } catch {
       await refresh();
     }
@@ -2271,6 +2566,11 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           }}
         />
       )}
+      <SelectionSwapSheet
+        request={swapRequest}
+        onCancel={() => setSwapRequest(null)}
+        onConfirm={confirmSwap}
+      />
       {refreshQueue.length > 0 && (
         <ProductRefresher
           key={refreshQueue[0].id}
@@ -2526,6 +2826,70 @@ const styles = StyleSheet.create({
   },
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 24 },
   modalBtn: { flex: 1 },
+
+  // Selection swap sheet
+  swapSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 20,
+    marginTop: 6,
+  },
+  swapList: { maxHeight: 264 },
+  // Green = joining the selection, rose = leaving it. Keeping the two on
+  // opposite sides of the colour wheel is what makes the swap readable at a
+  // glance; don't collapse them back onto the app's indigo accent.
+  swapLabelIn: { color: '#047857' },
+  swapLabelOut: { color: '#be123c' },
+  swapIncomingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    backgroundColor: '#ecfdf5',
+  },
+  swapOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  swapOptionRowActive: { borderColor: '#fda4af', backgroundColor: '#fff1f2' },
+  swapThumbnail: { width: 44, height: 44, borderRadius: 8 },
+  swapThumbnailRemoved: { opacity: 0.5 },
+  swapRowInfo: { flex: 1, gap: 2 },
+  swapRowTitle: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  swapRowTitleRemoved: {
+    color: '#9f1239',
+    textDecorationLine: 'line-through',
+  },
+  swapRowPrice: { fontSize: 13, color: '#6b7280' },
+  swapBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swapBadgeIn: { backgroundColor: '#059669' },
+  swapBadgeOut: { backgroundColor: '#e11d48' },
+  swapRadio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swapRadioActive: { backgroundColor: '#e11d48', borderColor: '#e11d48' },
 
   // Slot picker in EditProductModal
   slotPickerTrigger: {

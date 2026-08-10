@@ -50,6 +50,9 @@ export type NodeProperties = {
   body?: string;
   maxSelections?: number;
   budget?: number;
+  /** Ids of the nodes picked inside a section. Shared with the web app. */
+  selectedItemIds?: string[];
+  /** Legacy key from the Jazz era — read for back-compat, never written. */
   selectedProductIds?: string[];
 };
 
@@ -216,11 +219,15 @@ export async function updateNode(
     properties?: NodeProperties;
     parentId?: string | null;
   },
-): Promise<void> {
-  await request(`/api/v2/collections/${collectionId}/nodes/${nodeId}`, token, {
-    method: 'PATCH',
-    body: JSON.stringify({ mutationId: Crypto.randomUUID(), ...input }),
-  });
+): Promise<{ version: number }> {
+  return request<{ version: number }>(
+    `/api/v2/collections/${collectionId}/nodes/${nodeId}`,
+    token,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ mutationId: Crypto.randomUUID(), ...input }),
+    },
+  );
 }
 
 export async function deleteNode(
