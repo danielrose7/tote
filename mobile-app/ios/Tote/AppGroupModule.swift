@@ -192,4 +192,16 @@ class AppGroupModule: NSObject {
   func close() {
     NotificationCenter.default.post(name: NSNotification.Name("close"), object: nil)
   }
+
+  /// Opens the host app at the given path (e.g. "sign-in") and closes the
+  /// share extension. Used by the signed-out state, where `close()` alone
+  /// would just dismiss the sheet and strand the user in Safari.
+  @objc
+  func openHostApp(_ path: String) {
+    NotificationCenter.default.post(
+      name: NSNotification.Name("openHostApp"),
+      object: nil,
+      userInfo: ["path": path]
+    )
+  }
 }

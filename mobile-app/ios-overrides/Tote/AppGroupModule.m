@@ -33,4 +33,7 @@ RCT_EXTERN_METHOD(clearApiKey)
 // Close share extension
 RCT_EXTERN_METHOD(close)
 
+// Open host app (and close the share extension)
+RCT_EXTERN_METHOD(openHostApp:(NSString *)path)
+
 @end

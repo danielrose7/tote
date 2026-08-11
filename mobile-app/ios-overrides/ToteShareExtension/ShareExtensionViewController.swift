@@ -179,9 +179,9 @@ class ShareExtensionViewController: UIViewController {
     urlComponents.scheme = scheme
     urlComponents.host = ""
     
-    if let path = path {
+    if let path = path, !path.isEmpty {
       let pathComponents = path.split(separator: "?", maxSplits: 1)
-      let pathWithoutQuery = String(pathComponents[0])
+      let pathWithoutQuery = String(pathComponents.first ?? "")
       let queryString = pathComponents.count > 1 ? String(pathComponents[1]) : nil
       
       // Parse and set query items

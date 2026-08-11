@@ -210,6 +210,11 @@ function ShareExtension(props: Props) {
     AppGroupModule?.close?.();
   }
 
+  /** Opens the main app (e.g. so a signed-out user can sign in) and closes the sheet. */
+  function handleOpenHostApp() {
+    AppGroupModule?.openHostApp?.('');
+  }
+
   function openSections(col: CaptureCollection) {
     setSectionsFor(col);
     Animated.timing(slide, {
@@ -347,7 +352,7 @@ function ShareExtension(props: Props) {
         <Text allowFontScaling={false} style={styles.subtitle}>
           Open Tote and sign in, then try sharing again.
         </Text>
-        <TouchableOpacity style={styles.retryBtn} onPress={handleClose}>
+        <TouchableOpacity style={styles.retryBtn} onPress={handleOpenHostApp}>
           <Text allowFontScaling={false} style={styles.retryBtnText}>
             Open Tote
           </Text>
