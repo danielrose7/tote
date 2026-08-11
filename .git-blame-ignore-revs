@@ -1,0 +1,5 @@
+# Mechanical reformats — skipped by git blame.
+# Enable locally: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Reformat src/ under the aligned Biome config
+228d82e7f4af5baefc0d415e3a9181636d5fd160
