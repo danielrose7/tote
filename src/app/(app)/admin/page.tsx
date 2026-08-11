@@ -1,14 +1,14 @@
-import { clerkClient, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { sql } from "@/lib/db";
-import { AdminClient, type Balance, type Grant } from "./AdminClient";
+import { clerkClient, currentUser } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+import { sql } from '@/lib/db';
+import { AdminClient, type Balance, type Grant } from './AdminClient';
 
 export default async function AdminPage() {
-	const user = await currentUser();
-	if (!user) redirect("/sign-in");
-	if (user.publicMetadata?.admin !== true) redirect("/");
+  const user = await currentUser();
+  if (!user) redirect('/sign-in');
+  if (user.publicMetadata?.admin !== true) redirect('/');
 
-	const balances = await sql`
+  const balances = await sql`
     SELECT
       u.clerk_user_id,
       u.balance_cents,
@@ -21,56 +21,56 @@ export default async function AdminPage() {
     ORDER BY u.updated_at DESC
   `;
 
-	// Enrich with Clerk user data and feature access.
-	const clerk = await clerkClient();
-	const clerkUsers = balances.length
-		? (
-				await clerk.users.getUserList({
-					userId: balances.map((b) => b.clerk_user_id as string),
-				})
-			).data
-		: [];
+  // Enrich with Clerk user data and feature access.
+  const clerk = await clerkClient();
+  const clerkUsers = balances.length
+    ? (
+        await clerk.users.getUserList({
+          userId: balances.map((b) => b.clerk_user_id as string),
+        })
+      ).data
+    : [];
 
-	const clerkById = Object.fromEntries(clerkUsers.map((u) => [u.id, u]));
+  const clerkById = Object.fromEntries(clerkUsers.map((u) => [u.id, u]));
 
-	const enrichedBalances = balances.map((b) => {
-		const cu = clerkById[b.clerk_user_id as string];
-		return {
-			...b,
-			email: cu?.emailAddresses[0]?.emailAddress ?? "—",
-			curator: cu?.publicMetadata?.curator === true,
-			chatEnabled: cu?.publicMetadata?.chatEnabled === true,
-		};
-	});
+  const enrichedBalances = balances.map((b) => {
+    const cu = clerkById[b.clerk_user_id as string];
+    return {
+      ...b,
+      email: cu?.emailAddresses[0]?.emailAddress ?? '—',
+      curator: cu?.publicMetadata?.curator === true,
+      chatEnabled: cu?.publicMetadata?.chatEnabled === true,
+    };
+  });
 
-	const recentGrants = await sql`
+  const recentGrants = await sql`
     SELECT clerk_user_id, amount_cents, type, created_at
     FROM credit_transactions
     WHERE type IN ('free_grant', 'purchase')
     ORDER BY created_at DESC
     LIMIT 20
   `;
-	const recentGrantUsers = recentGrants.length
-		? (
-				await clerk.users.getUserList({
-					userId: recentGrants.map((g) => g.clerk_user_id as string),
-				})
-			).data
-		: [];
-	const recentGrantUserById = Object.fromEntries(
-		recentGrantUsers.map((u) => [u.id, u]),
-	);
-	const enrichedRecentGrants = recentGrants.map((g) => {
-		const cu = recentGrantUserById[g.clerk_user_id as string];
-		return {
-			...g,
-			email: cu?.emailAddresses[0]?.emailAddress ?? "—",
-		};
-	});
-	return (
-		<AdminClient
-			balances={enrichedBalances as Balance[]}
-			recentGrants={enrichedRecentGrants as Grant[]}
-		/>
-	);
+  const recentGrantUsers = recentGrants.length
+    ? (
+        await clerk.users.getUserList({
+          userId: recentGrants.map((g) => g.clerk_user_id as string),
+        })
+      ).data
+    : [];
+  const recentGrantUserById = Object.fromEntries(
+    recentGrantUsers.map((u) => [u.id, u]),
+  );
+  const enrichedRecentGrants = recentGrants.map((g) => {
+    const cu = recentGrantUserById[g.clerk_user_id as string];
+    return {
+      ...g,
+      email: cu?.emailAddresses[0]?.emailAddress ?? '—',
+    };
+  });
+  return (
+    <AdminClient
+      balances={enrichedBalances as Balance[]}
+      recentGrants={enrichedRecentGrants as Grant[]}
+    />
+  );
 }

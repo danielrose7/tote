@@ -1,11 +1,11 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import * as schema from "../db/schema";
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from '../db/schema';
 
 const databaseUrl = process.env.NEON_DB_POSTGRES_URL;
 
 if (!databaseUrl) {
-	throw new Error("NEON_DB_POSTGRES_URL is required");
+  throw new Error('NEON_DB_POSTGRES_URL is required');
 }
 
 // Single shared SQL client — safe to call at module level in serverless

@@ -135,12 +135,8 @@
           "name": "collection_invites_collection_id_collections_id_fk",
           "tableFrom": "collection_invites",
           "tableTo": "collections",
-          "columnsFrom": [
-            "collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -275,12 +271,8 @@
           "name": "collection_lineage_child_collection_id_collections_id_fk",
           "tableFrom": "collection_lineage",
           "tableTo": "collections",
-          "columnsFrom": [
-            "child_collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["child_collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -288,12 +280,8 @@
           "name": "collection_lineage_source_collection_id_collections_id_fk",
           "tableFrom": "collection_lineage",
           "tableTo": "collections",
-          "columnsFrom": [
-            "source_collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -388,12 +376,8 @@
           "name": "collection_members_collection_id_collections_id_fk",
           "tableFrom": "collection_members",
           "tableTo": "collections",
-          "columnsFrom": [
-            "collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -401,10 +385,7 @@
       "compositePrimaryKeys": {
         "collection_members_collection_id_user_id_pk": {
           "name": "collection_members_collection_id_user_id_pk",
-          "columns": [
-            "collection_id",
-            "user_id"
-          ]
+          "columns": ["collection_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -526,12 +507,8 @@
           "name": "collection_membership_events_collection_id_collections_id_fk",
           "tableFrom": "collection_membership_events",
           "tableTo": "collections",
-          "columnsFrom": [
-            "collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -539,12 +516,8 @@
           "name": "collection_membership_events_invite_id_collection_invites_id_fk",
           "tableFrom": "collection_membership_events",
           "tableTo": "collection_invites",
-          "columnsFrom": [
-            "invite_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invite_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -708,12 +681,8 @@
           "name": "collection_nodes_collection_id_collections_id_fk",
           "tableFrom": "collection_nodes",
           "tableTo": "collections",
-          "columnsFrom": [
-            "collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -721,12 +690,8 @@
           "name": "collection_nodes_parent_id_collection_nodes_id_fk",
           "tableFrom": "collection_nodes",
           "tableTo": "collection_nodes",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1051,10 +1016,7 @@
       "compositePrimaryKeys": {
         "account_collection_migrations_user_id_migration_version_pk": {
           "name": "account_collection_migrations_user_id_migration_version_pk",
-          "columns": [
-            "user_id",
-            "migration_version"
-          ]
+          "columns": ["user_id", "migration_version"]
         }
       },
       "uniqueConstraints": {},
@@ -1230,10 +1192,7 @@
       "compositePrimaryKeys": {
         "collection_mutation_receipts_user_id_mutation_id_pk": {
           "name": "collection_mutation_receipts_user_id_mutation_id_pk",
-          "columns": [
-            "user_id",
-            "mutation_id"
-          ]
+          "columns": ["user_id", "mutation_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1397,12 +1356,8 @@
           "name": "publication_snapshot_migrations_source_collection_id_collections_id_fk",
           "tableFrom": "publication_snapshot_migrations",
           "tableTo": "collections",
-          "columnsFrom": [
-            "source_collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1595,12 +1550,8 @@
           "name": "published_blocks_collection_id_published_collections_id_fk",
           "tableFrom": "published_blocks",
           "tableTo": "published_collections",
-          "columnsFrom": [
-            "collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1608,12 +1559,8 @@
           "name": "published_blocks_source_node_id_collection_nodes_id_fk",
           "tableFrom": "published_blocks",
           "tableTo": "collection_nodes",
-          "columnsFrom": [
-            "source_node_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_node_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1621,12 +1568,8 @@
           "name": "published_blocks_parent_block_id_published_blocks_id_fk",
           "tableFrom": "published_blocks",
           "tableTo": "published_blocks",
-          "columnsFrom": [
-            "parent_block_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_block_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1833,12 +1776,8 @@
           "name": "published_collections_source_collection_id_collections_id_fk",
           "tableFrom": "published_collections",
           "tableTo": "collections",
-          "columnsFrom": [
-            "source_collection_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["source_collection_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1848,10 +1787,7 @@
         "published_collections_owner_slug_unique": {
           "name": "published_collections_owner_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "owner_clerk_id",
-            "slug"
-          ]
+          "columns": ["owner_clerk_id", "slug"]
         }
       },
       "policies": {},
@@ -2026,21 +1962,12 @@
     "public.collection_copy_policy": {
       "name": "collection_copy_policy",
       "schema": "public",
-      "values": [
-        "disabled",
-        "members",
-        "public"
-      ]
+      "values": ["disabled", "members", "public"]
     },
     "public.collection_lineage_relationship": {
       "name": "collection_lineage_relationship",
       "schema": "public",
-      "values": [
-        "copied",
-        "imported",
-        "curated",
-        "templated"
-      ]
+      "values": ["copied", "imported", "curated", "templated"]
     },
     "public.collection_membership_action": {
       "name": "collection_membership_action",
@@ -2057,50 +1984,27 @@
     "public.collection_node_type": {
       "name": "collection_node_type",
       "schema": "public",
-      "values": [
-        "section",
-        "product",
-        "link",
-        "photo",
-        "note",
-        "text"
-      ]
+      "values": ["section", "product", "link", "photo", "note", "text"]
     },
     "public.collection_origin_type": {
       "name": "collection_origin_type",
       "schema": "public",
-      "values": [
-        "manual",
-        "import",
-        "curator",
-        "copy"
-      ]
+      "values": ["manual", "import", "curator", "copy"]
     },
     "public.collection_public_layout": {
       "name": "collection_public_layout",
       "schema": "public",
-      "values": [
-        "minimal",
-        "feature"
-      ]
+      "values": ["minimal", "feature"]
     },
     "public.collection_role": {
       "name": "collection_role",
       "schema": "public",
-      "values": [
-        "owner",
-        "admin",
-        "editor",
-        "viewer"
-      ]
+      "values": ["owner", "admin", "editor", "viewer"]
     },
     "public.collection_view_mode": {
       "name": "collection_view_mode",
       "schema": "public",
-      "values": [
-        "grid",
-        "table"
-      ]
+      "values": ["grid", "table"]
     },
     "public.account_data_source": {
       "name": "account_data_source",

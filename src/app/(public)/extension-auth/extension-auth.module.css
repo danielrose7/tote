@@ -10,8 +10,7 @@
       circle at top right,
       rgba(200, 217, 230, 0.75),
       transparent 32%
-    ),
-    linear-gradient(180deg, #fffdf9 0%, #ffffff 28%, #f8f7fb 100%);
+    ), linear-gradient(180deg, #fffdf9 0%, #ffffff 28%, #f8f7fb 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
