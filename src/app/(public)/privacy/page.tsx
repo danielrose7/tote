@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 
       <main className={styles.content}>
         <h1 className={styles.title}>Privacy Policy</h1>
-        <p className={styles.effective}>Effective August 2, 2026</p>
+        <p className={styles.effective}>Effective August 10, 2026</p>
 
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Who we are</h2>
@@ -53,8 +53,12 @@ export default function PrivacyPage() {
             collect data from pages you don&rsquo;t save.
           </p>
           <p>
-            The iOS Share Extension reads only the URL you share to it. It does
-            not access any other content from the app you are sharing from.
+            When you share a page to Tote from Safari, the iOS Share Extension
+            runs a small script in that page to read the same metadata listed
+            above &mdash; title, description, image URL, price, currency, and
+            brand. It reads only the page you explicitly shared, only at the
+            moment you share it, and it sends nothing anywhere else. It does not
+            read other tabs, other apps, or any page you have not shared.
           </p>
         </div>
 
@@ -79,6 +83,14 @@ export default function PrivacyPage() {
             using SQLite. This cache is stored in your app&rsquo;s private
             sandbox, is never shared with other apps, and is deleted when you
             delete the app or sign out.
+          </p>
+          <p>
+            So that the Share Extension can show you which collection to save
+            into, Tote keeps a small copy of your collection names, colors,
+            section names, item counts, and preview image URLs in a shared
+            container on your device. This container is readable only by Tote
+            and its own Share Extension &mdash; never by other apps &mdash; and
+            it is cleared when you sign out or delete the app.
           </p>
           <p>
             Tote uses{' '}
@@ -127,11 +139,10 @@ export default function PrivacyPage() {
           </p>
           <p>
             On iOS, Tote stores a long-lived access credential in your
-            device&rsquo;s secure Keychain. This credential is shared between
-            the main app and the iOS Share Extension so that you can save
-            products directly from Safari without opening the app. The
-            credential never leaves your device except as an authentication
-            header on requests to Tote&rsquo;s own servers.
+            device&rsquo;s secure Keychain, shared between the main app and the
+            Share Extension so that saving from the share sheet works without
+            signing in again. The credential never leaves your device except as
+            an authentication header on requests to Tote&rsquo;s own servers.
           </p>
         </div>
 
@@ -139,8 +150,10 @@ export default function PrivacyPage() {
           <h2 className={styles.sectionTitle}>Aggregate usage data</h2>
           <p>
             We may sync roll-up statistics to your account &mdash; for example,
-            the number of collections, saved links, or shares &mdash; for
-            subscription management and service limits. These stats contain no
+            the number of collections, saved links, or shares &mdash; to apply
+            service limits, and to support plan management if paid plans become
+            available. Tote does not currently process payments and does not
+            collect payment or financial information. These stats contain no
             browsing history, page content, or personally identifiable
             information beyond what is already in your account.
           </p>

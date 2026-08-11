@@ -172,6 +172,20 @@ class AppGroupModule: NSObject {
     }
   }
 
+  /// Removes the shared credential. Called on sign out and account deletion so
+  /// the Share Extension cannot keep acting for an account that is no longer
+  /// signed in on this device.
+  @objc
+  func clearApiKey() {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrService as String: keychainService,
+      kSecAttrAccount as String: keychainAccount,
+      kSecAttrAccessGroup as String: keychainAccessGroup,
+    ]
+    SecItemDelete(query as CFDictionary)
+  }
+
   // MARK: - Close share extension
 
   @objc

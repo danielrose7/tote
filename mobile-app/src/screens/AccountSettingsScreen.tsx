@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import type { RootStackParamList } from '../navigation/types';
 import { Button } from '../components/Button';
-import { getTokenWithRetry } from '../lib/api';
+import { getTokenWithRetry, revokeApiKey } from '../lib/api';
 import { clearAllCachedData } from '../lib/localDb';
 
 const API_BASE_URL = 'https://tote.tools';
@@ -48,10 +48,35 @@ export function AccountSettingsScreen({ navigation }: Props) {
     }
   }
 
+  /**
+   * Drops everything this device holds for the current account: the local
+   * cache, the collection list the Share Extension reads, and the long-lived
+   * Share Extension credential in the Keychain.
+   */
+  async function clearDeviceData() {
+    await clearAllCachedData();
+    NativeModules.AppGroupModule?.clearCollectionsCache?.();
+    NativeModules.AppGroupModule?.clearApiKey?.();
+  }
+
   async function handleSignOut() {
     try {
-      await clearAllCachedData();
-      NativeModules.AppGroupModule?.clearCollectionsCache?.();
+      // Revoke server-side first — this needs a session token, which signOut
+      // is about to take away. Best effort: if it fails (offline, say), the
+      // credential is still removed from this device below, so signing out is
+      // never blocked by it. The orphaned key is logged, not surfaced, because
+      // there is no action the user could take about it.
+      try {
+        const secret = await NativeModules.AppGroupModule?.getApiKey?.();
+        if (secret) {
+          const token = await getTokenWithRetry(getToken);
+          if (token) await revokeApiKey(token, secret);
+        }
+      } catch (e) {
+        console.warn('Failed to revoke Share Extension key:', e);
+      }
+
+      await clearDeviceData();
       await signOut();
     } catch (e: any) {
       const message = e?.message ?? '';
@@ -92,8 +117,9 @@ export function AccountSettingsScreen({ navigation }: Props) {
         );
         return;
       }
-      await clearAllCachedData();
-      NativeModules.AppGroupModule?.clearCollectionsCache?.();
+      // No explicit revoke here — deleting the Clerk user takes its API keys
+      // with it, so only this device's copy needs clearing.
+      await clearDeviceData();
       await signOut();
     } catch {
       Alert.alert('Error', 'Something went wrong. Please try again.');

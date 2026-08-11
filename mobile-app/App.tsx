@@ -780,8 +780,21 @@ function CollectionListContent({
       // Populate cache and provision API key for share extension
       try {
         const captureCollections = await fetchCaptureCollections(token);
+        // Enrich with preview images + item counts so the share extension can
+        // show collection thumbnails instead of a bare list of names.
+        const detailById = new Map(result.map((c) => [c.id, c]));
+        const enriched = captureCollections.map((c) => {
+          const detail = detailById.get(c.id);
+          return {
+            ...c,
+            itemCount: detail?.itemCount ?? 0,
+            previewImages: (detail?.previewImages ?? [])
+              .slice(0, 3)
+              .map((img) => img.url),
+          };
+        });
         NativeModules.AppGroupModule?.setCollectionsCache?.(
-          JSON.stringify(captureCollections),
+          JSON.stringify(enriched),
         );
         // Provision a long-lived API key once per app session
         if (!apiKeyProvisioned.current) {

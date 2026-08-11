@@ -28,6 +28,7 @@ RCT_EXTERN_METHOD(clearCollectionsCache)
 RCT_EXTERN_METHOD(setApiKey:(NSString *)secret)
 RCT_EXTERN_METHOD(getApiKey:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(clearApiKey)
 
 // Close share extension
 RCT_EXTERN_METHOD(close)

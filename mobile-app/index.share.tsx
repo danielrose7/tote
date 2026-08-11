@@ -17,16 +17,26 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   AppRegistry,
+  Dimensions,
+  Easing,
+  Image,
   NativeModules,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 
 const { AppGroupModule } = NativeModules;
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+/** Show the filter field only once scanning the list stops being trivial. */
+const SEARCH_THRESHOLD = 8;
 
 function generateId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -42,7 +52,96 @@ type CaptureCollection = {
   color: string | null;
   role: 'owner' | 'admin' | 'editor';
   sections: Section[];
+  /** Added by the main app when it writes the cache; absent on older caches. */
+  itemCount?: number;
+  previewImages?: string[];
 };
+
+function hostname(u: string): string {
+  const match = /^https?:\/\/([^/?#]+)/i.exec(u);
+  return match ? match[1].replace(/^www\./, '') : '';
+}
+
+/**
+ * Disclosure chevron, drawn as a bordered corner rather than a text glyph so it
+ * sits on an exact optical centre at any size and needs no font. It points
+ * right and stays there: the row navigates, it does not expand.
+ */
+function Chevron({ back }: { back?: boolean }) {
+  return (
+    <View style={styles.chevronBox}>
+      <View
+        style={[styles.chevron, back ? styles.chevronBack : styles.chevronNext]}
+      />
+    </View>
+  );
+}
+
+/**
+ * Collection thumbnail — a mosaic of up to three preview images, mirroring the
+ * collection cards in the main app. Falls back to a neutral monogram tile.
+ */
+function CollectionThumb({ images, name }: { images: string[]; name: string }) {
+  const [failed, setFailed] = useState<Record<string, true>>({});
+  const usable = images.filter((url) => url && !failed[url]).slice(0, 3);
+  const markFailed = (url: string) =>
+    setFailed((prev) => ({ ...prev, [url]: true }));
+
+  if (usable.length === 0) {
+    return (
+      <View style={[styles.thumb, styles.thumbFallback]}>
+        <Text allowFontScaling={false} style={styles.thumbMonogram}>
+          {(name.trim()[0] || '?').toUpperCase()}
+        </Text>
+      </View>
+    );
+  }
+
+  if (usable.length === 1) {
+    return (
+      <View style={styles.thumb}>
+        <Image
+          source={{ uri: usable[0] }}
+          style={styles.thumbFull}
+          onError={() => markFailed(usable[0])}
+        />
+      </View>
+    );
+  }
+
+  // 2 images: split down the middle. 3: large left, two stacked right.
+  return (
+    <View style={[styles.thumb, styles.thumbRow]}>
+      <Image
+        source={{ uri: usable[0] }}
+        style={usable.length === 2 ? styles.thumbHalf : styles.thumbLarge}
+        onError={() => markFailed(usable[0])}
+      />
+      <View style={styles.thumbDivider} />
+      {usable.length === 2 ? (
+        <Image
+          source={{ uri: usable[1] }}
+          style={styles.thumbHalf}
+          onError={() => markFailed(usable[1])}
+        />
+      ) : (
+        <View style={styles.thumbStack}>
+          <Image
+            source={{ uri: usable[1] }}
+            style={styles.thumbSmall}
+            onError={() => markFailed(usable[1])}
+          />
+          <View style={styles.thumbDividerH} />
+          <Image
+            source={{ uri: usable[2] }}
+            style={styles.thumbSmall}
+            onError={() => markFailed(usable[2])}
+          />
+        </View>
+      )}
+    </View>
+  );
+}
 
 type PreprocessingResults = {
   title?: string | null;
@@ -69,7 +168,15 @@ function ShareExtension(props: Props) {
   const [collections, setCollections] = useState<CaptureCollection[] | null>(
     null,
   );
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  /**
+   * The collection whose sections are on screen. Kept set through the back
+   * animation so the outgoing pane still has content to draw.
+   */
+  const [sectionsFor, setSectionsFor] = useState<CaptureCollection | null>(
+    null,
+  );
+  const slide = useRef(new Animated.Value(0)).current; // 0 = list, 1 = sections
   const [saveState, setSaveState] = useState<
     'idle' | 'saving' | 'saved' | 'error'
   >('idle');
@@ -89,9 +196,7 @@ function ShareExtension(props: Props) {
           setCollections([]);
         } else {
           setSignedIn(true);
-          const parsed = JSON.parse(json) as CaptureCollection[];
-          setCollections(parsed);
-          if (parsed.length > 0) setExpandedId(parsed[0].id);
+          setCollections(JSON.parse(json) as CaptureCollection[]);
         }
       } catch {
         setSignedIn(false);
@@ -103,6 +208,27 @@ function ShareExtension(props: Props) {
 
   function handleClose() {
     AppGroupModule?.close?.();
+  }
+
+  function openSections(col: CaptureCollection) {
+    setSectionsFor(col);
+    Animated.timing(slide, {
+      toValue: 1,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }
+
+  function closeSections() {
+    Animated.timing(slide, {
+      toValue: 0,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setSectionsFor(null);
+    });
   }
 
   async function handlePick(collectionId: string, sectionId?: string) {
@@ -154,7 +280,7 @@ function ShareExtension(props: Props) {
   if (saveState === 'saving') {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#111111" />
       </View>
     );
   }
@@ -247,94 +373,238 @@ function ShareExtension(props: Props) {
     );
   }
 
-  return (
-    <View style={styles.sheet}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text allowFontScaling={false} style={styles.headerTitle}>
-          Add to collection
-        </Text>
-        <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-          <Text allowFontScaling={false} style={styles.closeBtnText}>
-            Cancel
-          </Text>
-        </TouchableOpacity>
-      </View>
+  const filtered =
+    query.trim().length > 0
+      ? collections.filter((c) =>
+          c.name.toLowerCase().includes(query.trim().toLowerCase()),
+        )
+      : collections;
+  const showSearch = collections.length >= SEARCH_THRESHOLD;
 
-      {/* URL preview */}
-      {(title || url) && (
-        <View style={styles.urlPreview}>
+  // The list pane slides out to the left with a slight parallax as the section
+  // pane comes in from the right — the standard iOS push, so back feels native.
+  const listTransform = {
+    transform: [
+      {
+        translateX: slide.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -SCREEN_WIDTH * 0.28],
+        }),
+      },
+    ],
+    opacity: slide.interpolate({ inputRange: [0, 1], outputRange: [1, 0.4] }),
+  };
+  const sectionTransform = {
+    transform: [
+      {
+        translateX: slide.interpolate({
+          inputRange: [0, 1],
+          outputRange: [SCREEN_WIDTH, 0],
+        }),
+      },
+    ],
+  };
+
+  const itemPreview =
+    title || url ? (
+      <View style={styles.itemPreview}>
+        {pre?.imageUrl ? (
+          <Image
+            source={{ uri: pre.imageUrl }}
+            style={styles.itemImage}
+            resizeMode="cover"
+          />
+        ) : null}
+        <View style={styles.itemText}>
           <Text
             allowFontScaling={false}
-            style={styles.urlTitle}
-            numberOfLines={1}
+            style={styles.itemTitle}
+            numberOfLines={2}
           >
             {title || url}
           </Text>
+          {url ? (
+            <Text
+              allowFontScaling={false}
+              style={styles.itemHost}
+              numberOfLines={1}
+            >
+              {hostname(url)}
+            </Text>
+          ) : null}
         </View>
-      )}
+      </View>
+    ) : null;
 
-      {/* Collection + section list */}
-      <ScrollView
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
+  return (
+    <View style={styles.sheet}>
+      {/* Collection list */}
+      <Animated.View
+        style={[styles.pane, listTransform]}
+        pointerEvents={sectionsFor ? 'none' : 'auto'}
       >
-        {collections.map((col) => {
-          const isExpanded = expandedId === col.id;
-          const dot = col.color ?? '#6366f1';
-          return (
-            <View key={col.id} style={styles.collectionGroup}>
+        <View style={styles.header}>
+          <Text allowFontScaling={false} style={styles.headerTitle}>
+            Save to
+          </Text>
+          <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+            <Text allowFontScaling={false} style={styles.closeBtnText}>
+              Cancel
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {itemPreview}
+
+        {showSearch && (
+          <View style={styles.searchWrap}>
+            <TextInput
+              style={styles.searchInput}
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search collections"
+              placeholderTextColor="#a0a0a5"
+              autoCapitalize="none"
+              autoCorrect={false}
+              clearButtonMode="while-editing"
+              returnKeyType="search"
+              allowFontScaling={false}
+            />
+          </View>
+        )}
+
+        <ScrollView
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+          {filtered.length === 0 && (
+            <Text allowFontScaling={false} style={styles.emptyResult}>
+              No collections match “{query.trim()}”
+            </Text>
+          )}
+          {filtered.map((col) => {
+            const sectionCount = col.sections.length;
+            const meta = [
+              col.itemCount != null
+                ? `${col.itemCount} ${col.itemCount === 1 ? 'item' : 'items'}`
+                : null,
+              sectionCount > 0
+                ? `${sectionCount} ${
+                    sectionCount === 1 ? 'section' : 'sections'
+                  }`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ');
+
+            return (
               <TouchableOpacity
+                key={col.id}
                 style={styles.collectionRow}
+                activeOpacity={0.6}
                 onPress={() => {
-                  if (col.sections.length > 0) {
-                    setExpandedId(isExpanded ? null : col.id);
-                  } else {
-                    handlePick(col.id);
-                  }
+                  // No sections means there is nothing to choose — save now.
+                  if (sectionCount > 0) openSections(col);
+                  else handlePick(col.id);
                 }}
               >
-                <View style={[styles.dot, { backgroundColor: dot }]} />
-                <Text allowFontScaling={false} style={styles.collectionName}>
-                  {col.name}
-                </Text>
-                {col.sections.length > 0 && (
-                  <Text allowFontScaling={false} style={styles.chevron}>
-                    {isExpanded ? '▾' : '›'}
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              {isExpanded && (
-                <>
-                  {col.sections.map((sec) => (
-                    <TouchableOpacity
-                      key={sec.id}
-                      style={styles.sectionRow}
-                      onPress={() => handlePick(col.id, sec.id)}
-                    >
-                      <Text allowFontScaling={false} style={styles.sectionName}>
-                        {sec.name}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                  <TouchableOpacity
-                    style={styles.sectionRow}
-                    onPress={() => handlePick(col.id)}
+                <CollectionThumb
+                  images={col.previewImages ?? []}
+                  name={col.name}
+                />
+                <View style={styles.collectionText}>
+                  <Text
+                    allowFontScaling={false}
+                    style={styles.collectionName}
+                    numberOfLines={1}
                   >
+                    {col.name}
+                  </Text>
+                  {meta ? (
                     <Text
                       allowFontScaling={false}
-                      style={[styles.sectionName, styles.noSection]}
+                      style={styles.collectionMeta}
                     >
-                      No section
+                      {meta}
                     </Text>
-                  </TouchableOpacity>
-                </>
-              )}
+                  ) : null}
+                </View>
+                {sectionCount > 0 && <Chevron />}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </Animated.View>
+
+      {/* Section picker for one collection */}
+      <Animated.View
+        style={[styles.pane, sectionTransform]}
+        pointerEvents={sectionsFor ? 'auto' : 'none'}
+      >
+        {sectionsFor && (
+          <>
+            <View style={styles.header}>
+              <TouchableOpacity
+                onPress={closeSections}
+                style={styles.backBtn}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Chevron back />
+              </TouchableOpacity>
+              <Text
+                allowFontScaling={false}
+                style={styles.navTitle}
+                numberOfLines={1}
+              >
+                {sectionsFor.name}
+              </Text>
+              <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+                <Text allowFontScaling={false} style={styles.closeBtnText}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
             </View>
-          );
-        })}
-      </ScrollView>
+
+            {itemPreview}
+
+            <ScrollView
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+            >
+              <TouchableOpacity
+                style={styles.sectionRow}
+                activeOpacity={0.6}
+                onPress={() => handlePick(sectionsFor.id)}
+              >
+                <Text
+                  allowFontScaling={false}
+                  style={[styles.sectionName, styles.noSection]}
+                >
+                  No section
+                </Text>
+              </TouchableOpacity>
+              {sectionsFor.sections.map((sec) => (
+                <TouchableOpacity
+                  key={sec.id}
+                  style={styles.sectionRow}
+                  activeOpacity={0.6}
+                  onPress={() => handlePick(sectionsFor.id, sec.id)}
+                >
+                  <Text
+                    allowFontScaling={false}
+                    style={styles.sectionName}
+                    numberOfLines={1}
+                  >
+                    {sec.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
+      </Animated.View>
     </View>
   );
 }
@@ -348,33 +618,34 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   checkmark: {
-    fontSize: 48,
-    color: '#22c55e',
+    fontSize: 44,
+    color: '#111111',
     marginBottom: 8,
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#111',
+    fontWeight: '600',
+    color: '#111111',
+    letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: '#8a8a8e',
     marginTop: 6,
     textAlign: 'center',
   },
   errorTitle: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#ef4444',
+    fontWeight: '600',
+    color: '#111111',
     marginBottom: 6,
   },
   retryBtn: {
     marginTop: 20,
     paddingHorizontal: 28,
     paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#6366f1',
+    borderRadius: 999,
+    backgroundColor: '#111111',
   },
   retryBtnText: {
     color: '#fff',
@@ -383,10 +654,16 @@ const styles = StyleSheet.create({
   },
   loading: {
     fontSize: 16,
-    color: '#9ca3af',
+    color: '#8a8a8e',
   },
   sheet: {
     flex: 1,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+  },
+  // Both panes are stacked; only their transforms differ.
+  pane: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#fff',
   },
   header: {
@@ -394,83 +671,197 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 18,
     paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e7eb',
   },
   headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111111',
+    letterSpacing: -0.5,
+  },
+  backBtn: {
+    paddingRight: 6,
+    paddingVertical: 6,
+  },
+  navTitle: {
+    flex: 1,
     fontSize: 17,
     fontWeight: '600',
-    color: '#111827',
+    color: '#111111',
+    letterSpacing: -0.3,
+    marginHorizontal: 4,
   },
   closeBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 4,
     paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: '#f3f4f6',
   },
   closeBtnText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#8a8a8e',
+  },
+  itemPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginBottom: 8,
+    padding: 10,
+    borderRadius: 14,
+    backgroundColor: '#f6f6f7',
+  },
+  itemImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    marginRight: 12,
+    backgroundColor: '#ebebed',
+  },
+  itemText: {
+    flex: 1,
+  },
+  itemTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#6b7280',
+    fontWeight: '500',
+    color: '#111111',
+    lineHeight: 18,
   },
-  urlPreview: {
+  itemHost: {
+    fontSize: 12,
+    color: '#8a8a8e',
+    marginTop: 2,
+  },
+  searchWrap: {
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e5e7eb',
-    backgroundColor: '#f9fafb',
+    paddingBottom: 8,
   },
-  urlTitle: {
-    fontSize: 13,
-    color: '#6b7280',
+  searchInput: {
+    height: 38,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    color: '#111111',
+    backgroundColor: '#f0f0f2',
+  },
+  emptyResult: {
+    fontSize: 14,
+    color: '#8a8a8e',
+    textAlign: 'center',
+    paddingVertical: 28,
+    paddingHorizontal: 24,
   },
   list: {
     flex: 1,
   },
   listContent: {
-    paddingVertical: 8,
-  },
-  collectionGroup: {
-    marginBottom: 2,
+    paddingTop: 4,
+    paddingBottom: 16,
   },
   collectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 8,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 12,
+  collectionText: {
+    flex: 1,
+    marginLeft: 14,
   },
   collectionName: {
-    flex: 1,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#111827',
+    fontWeight: '600',
+    color: '#111111',
+    letterSpacing: -0.2,
+  },
+  collectionMeta: {
+    fontSize: 13,
+    color: '#8a8a8e',
+    marginTop: 2,
+  },
+  chevronBox: {
+    width: 22,
+    height: 22,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chevron: {
-    fontSize: 18,
-    color: '#9ca3af',
-    marginLeft: 8,
+    width: 9,
+    height: 9,
+    borderTopWidth: 1.75,
+    borderRightWidth: 1.75,
+    // Nudge so the corner's optical centre sits on the box centre — the stroke
+    // mass sits up and to the right of the geometric centre.
+    marginLeft: -2,
+  },
+  chevronNext: {
+    borderColor: '#b4b4b8',
+    transform: [{ rotate: '45deg' }],
+  },
+  chevronBack: {
+    borderColor: '#111111',
+    transform: [{ rotate: '-135deg' }],
+    marginLeft: 2,
+  },
+  thumb: {
+    width: 52,
+    height: 52,
+    borderRadius: 13,
+    overflow: 'hidden',
+    backgroundColor: '#f0f0f2',
+  },
+  thumbRow: {
+    flexDirection: 'row',
+  },
+  thumbFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbMonogram: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#b4b4b8',
+  },
+  thumbFull: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbHalf: {
+    flex: 1,
+    height: '100%',
+  },
+  thumbLarge: {
+    width: 32,
+    height: '100%',
+  },
+  thumbStack: {
+    flex: 1,
+  },
+  thumbSmall: {
+    flex: 1,
+    width: '100%',
+  },
+  // Hairline gaps between mosaic tiles, so images never bleed together
+  thumbDivider: {
+    width: 1,
+    backgroundColor: '#fff',
+  },
+  thumbDividerH: {
+    height: 1,
+    backgroundColor: '#fff',
   },
   sectionRow: {
-    paddingHorizontal: 44,
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#f3f4f6',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#ececee',
   },
   sectionName: {
-    fontSize: 15,
-    color: '#374151',
+    fontSize: 16,
+    color: '#111111',
   },
   noSection: {
-    color: '#9ca3af',
-    fontStyle: 'italic',
+    color: '#8a8a8e',
   },
 });
 

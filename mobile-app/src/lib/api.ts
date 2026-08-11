@@ -125,6 +125,17 @@ export async function provisionApiKey(token: string): Promise<string> {
   return data.secret;
 }
 
+/** Revokes this device's Share Extension key server-side. */
+export async function revokeApiKey(
+  token: string,
+  secret: string,
+): Promise<void> {
+  await request<{ revoked: boolean }>('/api/v2/auth/api-key', token, {
+    method: 'DELETE',
+    body: JSON.stringify({ secret }),
+  });
+}
+
 export async function fetchCaptureCollections(
   token: string,
 ): Promise<CaptureCollection[]> {
