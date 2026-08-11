@@ -617,12 +617,6 @@ function CollectionCard({
         </View>
       </View>
       <View style={styles.collectionCardInfo}>
-        <View
-          style={[
-            styles.collectionColorDot,
-            { backgroundColor: item.color ?? '#6366f1' },
-          ]}
-        />
         <Text style={styles.collectionName} numberOfLines={2}>
           {item.name}
         </Text>
@@ -1424,17 +1418,8 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   collectionCardInfo: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
     padding: 10,
     paddingBottom: 12,
-  },
-  collectionColorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 5,
   },
   collectionName: {
     flex: 1,
