@@ -251,6 +251,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Tote" */;
 			buildPhases = (
+				F7A3C21B9E4D48A6B0C15E92 /* [Tote] Check iOS overrides in sync */,
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
 				B52FD9879030616D44050494 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
@@ -282,6 +283,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 90B221C767334168AF08679A /* Build configuration list for PBXNativeTarget "ToteShareExtension" */;
 			buildPhases = (
+				C4E81D5A73B2496F8AD30C77 /* [Tote] Check iOS overrides in sync */,
 				13228728C9175DF591EBFDF8 /* [CP] Check Pods Manifest.lock */,
 				A828FF5CEEC348B3965262AB /* Start Packager */,
 				8D153A8404BDC9619560BE9B /* [Expo] Configure project */,
@@ -548,6 +550,21 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToteShareExtension/Pods-ToteShareExtension-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		C4E81D5A73B2496F8AD30C77 /* [Tote] Check iOS overrides in sync */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[Tote] Check iOS overrides in sync";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Fail the build when ios/ has drifted from ios-overrides/, so an Xcode build\n# or App Store archive can never ship a stale copy of the hand-maintained\n# native files. Xcode never runs 'pnpm ios', so nothing else guards this.\nif [[ -f \"$SRCROOT/.xcode.env\" ]]; then\n  source \"$SRCROOT/.xcode.env\"\nfi\nif [[ -f \"$SRCROOT/.xcode.env.local\" ]]; then\n  source \"$SRCROOT/.xcode.env.local\"\nfi\nNODE_BINARY=${NODE_BINARY:-node}\n\nif ! \"$NODE_BINARY\" \"$SRCROOT/../scripts/check-ios-overrides.mjs\"; then\n  echo \"error: ios/ has drifted from ios-overrides/. Run 'pnpm ios:sync-overrides', or copy your ios/ edit back into ios-overrides/, then build again.\" >&2\n  exit 1\nfi\n";
+		};
 		A828FF5CEEC348B3965262AB /* Start Packager */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -561,6 +578,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
+		};
+		F7A3C21B9E4D48A6B0C15E92 /* [Tote] Check iOS overrides in sync */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[Tote] Check iOS overrides in sync";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Fail the build when ios/ has drifted from ios-overrides/, so an Xcode build\n# or App Store archive can never ship a stale copy of the hand-maintained\n# native files. Xcode never runs 'pnpm ios', so nothing else guards this.\nif [[ -f \"$SRCROOT/.xcode.env\" ]]; then\n  source \"$SRCROOT/.xcode.env\"\nfi\nif [[ -f \"$SRCROOT/.xcode.env.local\" ]]; then\n  source \"$SRCROOT/.xcode.env.local\"\nfi\nNODE_BINARY=${NODE_BINARY:-node}\n\nif ! \"$NODE_BINARY\" \"$SRCROOT/../scripts/check-ios-overrides.mjs\"; then\n  echo \"error: ios/ has drifted from ios-overrides/. Run 'pnpm ios:sync-overrides', or copy your ios/ edit back into ios-overrides/, then build again.\" >&2\n  exit 1\nfi\n";
 		};
 		B52FD9879030616D44050494 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;

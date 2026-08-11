@@ -29,6 +29,29 @@ pnpm ios
 
 Jazz has been removed. All data flows through the Neon-backed API with a local SQLite cache layer.
 
+## Native iOS Files — Edit `ios-overrides/`, Never `ios/`
+
+`expo-share-extension` is a config plugin that **generates** the `ToteShareExtension`
+target during `expo prebuild` (which `expo run:ios` runs). Prebuild overwrites
+hand-written native files, so the canonical copies live in `ios-overrides/` and are
+copied into `ios/` by `pnpm ios:sync-overrides`.
+
+**Rule: make every native change in `ios-overrides/`, then run `pnpm ios:sync-overrides`.**
+Editing `ios/` directly means your change is reverted the next time anything syncs.
+
+Both trees are committed, so a native change should show up **twice** in `git status`.
+If it only appears once, something is out of sync.
+
+- `pnpm ios` — syncs automatically before building
+- `pnpm ios:check-overrides` — reports drift, exits non-zero
+- **Xcode does not run pnpm scripts.** A `[Tote] Check iOS overrides in sync` build
+  phase (first phase on both targets) runs the check and fails the build on drift, so
+  an Xcode build or App Store archive can't ship a stale `ios/` copy. It resolves node
+  via `ios/.xcode.env{,.local}`.
+
+Caveat: the build phase lives in `ios/Tote.xcodeproj/project.pbxproj`, which prebuild
+also regenerates. After a prebuild, re-add it (or restore the pbxproj from git).
+
 ## Key Files
 
 - `App.tsx` — Main app (sign-in + collection list)
