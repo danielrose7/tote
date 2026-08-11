@@ -503,6 +503,11 @@ function SignInScreen() {
   );
 }
 
+/** Collection colors are 6-digit hex; anything else can't take an alpha suffix. */
+function normalizeHex(color?: string | null): string | null {
+  return color && /^#[0-9a-f]{6}$/i.test(color) ? color : null;
+}
+
 function PreviewImageGrid({
   images,
   color,
@@ -517,18 +522,18 @@ function PreviewImageGrid({
   const count = Math.min(visible.length, 3);
 
   if (count === 0) {
+    const tint = normalizeHex(color) ?? '#6366f1';
     return (
       <View
         style={[
           styles.previewGridFallback,
-          { backgroundColor: color ?? 'rgba(99,102,241,0.18)' },
+          {
+            backgroundColor: `${tint}1f`,
+            experimental_backgroundImage: `linear-gradient(160deg, ${tint}59 0%, ${tint}1f 55%, ${tint}0d 100%)`,
+          },
         ]}
       >
-        <Ionicons
-          name="albums-outline"
-          size={30}
-          color="rgba(255,255,255,0.8)"
-        />
+        <Ionicons name="albums-outline" size={30} color={`${tint}b3`} />
       </View>
     );
   }
@@ -599,12 +604,7 @@ function CollectionCard({
       onPress={onPress}
       activeOpacity={0.75}
     >
-      <View
-        style={[
-          styles.collectionPreview,
-          { backgroundColor: item.color ?? 'rgba(99,102,241,0.18)' },
-        ]}
-      >
+      <View style={styles.collectionPreview}>
         <PreviewImageGrid
           images={item.previewImages ?? []}
           color={item.color}
@@ -1381,6 +1381,8 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 4 / 3,
     overflow: 'hidden',
+    // White, not the collection color — product shots are often transparent PNGs
+    backgroundColor: '#fff',
   },
   previewGridFallback: {
     flex: 1,
