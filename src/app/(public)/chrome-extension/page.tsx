@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { InstallLabel } from '@/components/InstallLabel';
 import { LandingAuthButtons } from '@/components/LandingAuthButtons';
 import { PublicFooter } from '@/components/PublicFooter';
 import { CHROME_WEB_STORE_URL } from '@/lib/constants';
@@ -61,8 +62,25 @@ export default function ChromeExtensionPage() {
               href={CHROME_WEB_STORE_URL}
               target="_blank"
               rel="noopener noreferrer"
+              className={styles.navCta}
             >
               Chrome Web Store
+              <svg
+                viewBox="0 0 12 12"
+                width="11"
+                height="11"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M4 2h6v6M10 2 2.5 9.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </a>
           </div>
         </nav>
@@ -85,7 +103,7 @@ export default function ChromeExtensionPage() {
                 rel="noopener noreferrer"
                 className={styles.primaryButton}
               >
-                Add to Chrome
+                <InstallLabel />
               </a>
               <Link href="/docs/extension" className={styles.secondaryButton}>
                 Read setup guide
@@ -170,7 +188,7 @@ export default function ChromeExtensionPage() {
               rel="noopener noreferrer"
               className={styles.secondaryButton}
             >
-              Add to Chrome
+              <InstallLabel />
             </a>
           </div>
         </section>

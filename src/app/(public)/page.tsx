@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Fragment } from 'react';
+import { InstallLabel } from '@/components/InstallLabel';
 import { LandingAuthButtons } from '@/components/LandingAuthButtons';
 import { PublicFooter } from '@/components/PublicFooter';
 import { CHROME_WEB_STORE_URL } from '@/lib/constants';
@@ -297,7 +298,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className={styles.chromeLink}
             >
-              Add to Chrome
+              <InstallLabel />
             </a>
             <LandingAuthButtons />
           </div>
@@ -343,7 +344,7 @@ export default function HomePage() {
                   rel="noopener noreferrer"
                   className={styles.mobileChromeLink}
                 >
-                  Add to Chrome
+                  <InstallLabel />
                 </a>
                 <div className={styles.mobileMenuAuth}>
                   <LandingAuthButtons />
@@ -358,7 +359,7 @@ export default function HomePage() {
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
             <Link href="/ios-app" className={styles.announcementPill}>
-              Tote for iPhone is coming soon &rarr;
+              Tote for iPhone and iPad is coming soon &rarr;
             </Link>
             <p className={styles.eyebrow}>
               A cart that doesn&apos;t belong to a store
@@ -381,7 +382,7 @@ export default function HomePage() {
                 rel="noopener noreferrer"
                 className={styles.secondaryButton}
               >
-                Add to Chrome
+                <InstallLabel />
               </a>
             </div>
             <p className={styles.heroNote}>
@@ -640,7 +641,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className={styles.secondaryButton}
             >
-              Add to Chrome
+              <InstallLabel />
             </a>
           </div>
         </section>

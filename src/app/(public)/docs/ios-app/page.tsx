@@ -5,12 +5,12 @@ import styles from '../docs.module.css';
 export const metadata: Metadata = {
   title: 'iOS App',
   description:
-    'Install and use the Tote iOS app to save products with the Share Sheet from Safari or any app, browse your collections, and sign in with Apple. Covers setup, saving, syncing, and troubleshooting.',
+    "Install and use the Tote iOS app to save products with your phone's Share button from Safari or any app, browse your collections, and sign in with Apple. Covers setup, saving, syncing, and troubleshooting.",
   alternates: { canonical: '/docs/ios-app' },
   openGraph: {
     title: 'iOS App — Tote',
     description:
-      'Save products from Safari or any app using the Tote iOS Share Sheet extension, then browse and organize your collections on the go.',
+      'Tap Share, then Tote, to save a product from Safari or any app, then browse and organize your collections on the go.',
   },
 };
 
@@ -19,9 +19,9 @@ export default function IosAppDocsPage() {
     <article className={styles.article}>
       <h1>iOS App</h1>
       <p className={styles.lead}>
-        The Tote iOS app brings your collections to your phone and adds a Share
-        Sheet extension so you can save a product from Safari, or from any app
-        that can share a link, without opening a browser.
+        The Tote iOS app brings your collections to your phone and hooks into
+        the <strong>Share</strong> button, so you can save a product from Safari
+        — or from any app that can share a link — without opening a browser.
       </p>
       <p>
         Looking for the short version? Visit the{' '}
@@ -34,9 +34,11 @@ export default function IosAppDocsPage() {
       </AnchorHeading>
       <p>
         Tote for iOS is finishing App Store review. Once it's approved, it will
-        be a free download for iPhone. In the meantime, everything you save is
-        stored in your Tote account, so it will be there the moment you sign in
-        on the app — nothing to migrate or import.
+        be a free universal download — one app that runs on both iPhone and
+        iPad, with the iPad layout using the extra width for a wider collection
+        grid. In the meantime, everything you save is stored in your Tote
+        account, so it will be there the moment you sign in on the app — nothing
+        to migrate or import.
       </p>
 
       <AnchorHeading as="h2" id="signing-in">
@@ -49,21 +51,23 @@ export default function IosAppDocsPage() {
         between the app, the web app, and the browser extension.
       </p>
 
-      <AnchorHeading as="h2" id="saving-with-the-share-sheet">
-        Saving with the Share Sheet
+      <AnchorHeading as="h2" id="saving-with-the-share-button">
+        Saving with the Share Button
       </AnchorHeading>
       <p>
-        The fastest way to save on iOS is the Share Sheet extension. It works
-        anywhere iOS lets you share a link — Safari, Instagram, Messages, a
-        retailer's own app, and more.
+        The fastest way to save on iOS is the <strong>Share</strong> button —
+        the square with an arrow pointing out of it. It works anywhere iOS lets
+        you share a link: Safari, Instagram, Messages, a retailer's own app, and
+        more.
       </p>
       <ol>
         <li>
           On a product page or post, tap the <strong>Share</strong> icon
         </li>
         <li>
-          Choose <strong>Tote</strong> from the share sheet (scroll the app row
-          if you don't see it, then tap <strong>More</strong> to enable it once)
+          Choose <strong>Tote</strong> from the row of apps that slides up
+          (scroll that row if you don't see it, then tap <strong>More</strong>{' '}
+          to enable it once)
         </li>
         <li>Pick a collection, and a slot if the collection has one</li>
         <li>
@@ -73,8 +77,8 @@ export default function IosAppDocsPage() {
       <div className={styles.tip}>
         <p>
           <span className={styles.tipLabel}>Tip:</span>
-          The Share Sheet extension works before you've opened the main Tote app
-          that session — it saves directly using your signed-in account.
+          Sharing to Tote works before you've opened the main Tote app that
+          session — it saves directly using your signed-in account.
         </p>
       </div>
 
@@ -98,9 +102,6 @@ export default function IosAppDocsPage() {
         <li>
           <strong>URL</strong> — a link back to the original page
         </li>
-        <li>
-          <strong>Platform</strong> — the store or marketplace, when detectable
-        </li>
       </ul>
 
       <AnchorHeading as="h2" id="using-the-app">
@@ -116,13 +117,13 @@ export default function IosAppDocsPage() {
         Troubleshooting
       </AnchorHeading>
 
-      <AnchorHeading as="h3" id="tote-missing-from-share-sheet">
-        Tote isn't in the share sheet
+      <AnchorHeading as="h3" id="tote-missing-from-share-options">
+        Tote isn't in my Share options
       </AnchorHeading>
       <p>
-        Tap <strong>More</strong> at the end of the app row in the share sheet,
-        find <strong>Tote</strong>, and turn it on. iOS remembers this choice,
-        and Tote will appear in the main row from then on. If Tote still doesn't
+        Tap <strong>More</strong> at the end of the row of apps, find{' '}
+        <strong>Tote</strong>, and turn it on. iOS remembers this choice, and
+        Tote will appear in the main row from then on. If Tote still doesn't
         appear, confirm the app is installed and you've opened it at least once.
       </p>
 
@@ -150,7 +151,7 @@ export default function IosAppDocsPage() {
       </AnchorHeading>
       <p>
         Pull to refresh the collection in the app. If it's still missing, check
-        that you saved to the collection you expected — the share sheet
+        that you saved to the collection you expected — the save screen
         remembers your last-used collection by default.
       </p>
 
@@ -193,8 +194,13 @@ export default function IosAppDocsPage() {
         Is there an Android app?
       </AnchorHeading>
       <p>
-        Not yet. The iOS app is first, and Android is on the roadmap. The web
-        app works on any Android browser in the meantime.
+        No, and there isn't one on the current roadmap. The web app works in any
+        Android browser in the meantime. If you'd like an Android app, tell us
+        at{' '}
+        <a href="mailto:support@gobloom.io?subject=Android%20app%20request">
+          support@gobloom.io
+        </a>{' '}
+        — requests are how we decide what to build next.
       </p>
 
       <AnchorHeading as="h3" id="faq-same-account">
@@ -202,7 +208,10 @@ export default function IosAppDocsPage() {
       </AnchorHeading>
       <p>
         No. Sign in with the same account you use on tote.tools or in the
-        browser extension, and everything you've already saved is there.
+        browser extension, and everything you've already saved is there. One
+        account covers all of Tote — the web app, the browser extension, and the
+        iPhone and iPad app all talk to each other, so a change in one shows up
+        in the others.
       </p>
 
       <AnchorHeading as="h3" id="faq-offline">
@@ -226,7 +235,7 @@ export default function IosAppDocsPage() {
                 name: 'Is there an Android app?',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'Not yet. The iOS app is first, and Android is on the roadmap. The web app works on any Android browser in the meantime.',
+                  text: "No, and there isn't one on the current roadmap. The web app works in any Android browser in the meantime. If you'd like an Android app, tell us at support@gobloom.io — requests are how we decide what to build next.",
                 },
               },
               {
@@ -234,7 +243,7 @@ export default function IosAppDocsPage() {
                 name: 'Do I need a separate account for the app?',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: "No. Sign in with the same account you use on tote.tools or in the browser extension, and everything you've already saved is there.",
+                  text: "No. Sign in with the same account you use on tote.tools or in the browser extension, and everything you've already saved is there. One account covers all of Tote — the web app, the browser extension, and the iPhone and iPad app all talk to each other, so a change in one shows up in the others.",
                 },
               },
               {

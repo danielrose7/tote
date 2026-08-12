@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CHROME_WEB_STORE_URL } from '../lib/constants';
+import { InstallLabel } from './InstallLabel';
 import styles from './PublicFooter.module.css';
 
 const footerGroups = [
@@ -54,7 +55,7 @@ export function PublicFooter() {
               rel="noopener noreferrer"
               className={styles.storeButton}
             >
-              Add to Chrome
+              <InstallLabel />
             </a>
           </div>
 

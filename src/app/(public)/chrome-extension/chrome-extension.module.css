@@ -10,7 +10,8 @@
       circle at 92% 18%,
       rgba(200, 217, 230, 0.7),
       transparent 34%
-    ), linear-gradient(180deg, #fffdf9 0%, #ffffff 36%, #f8f7fb 100%);
+    ),
+    linear-gradient(180deg, #fffdf9 0%, #ffffff 36%, #f8f7fb 100%);
   color: var(--color-text-primary);
 }
 
@@ -65,6 +66,44 @@
 .navLinks a:hover {
   color: var(--color-text-primary);
   background: rgba(45, 49, 66, 0.05);
+}
+
+/* The one nav item that leaves the site is a button, not a text link. */
+.navLinks a.navCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.35rem;
+  padding: 0.7rem 1.1rem;
+  border: 1px solid rgba(45, 49, 66, 0.1);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+  box-shadow: 0 2px 6px rgba(45, 49, 66, 0.08);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.navLinks a.navCta svg {
+  opacity: 0.55;
+  transition: opacity var(--transition-fast);
+}
+
+.navLinks a.navCta:hover {
+  transform: translateY(-1px);
+  border-color: rgba(45, 49, 66, 0.2);
+  background: var(--color-white);
+  box-shadow: 0 8px 18px rgba(45, 49, 66, 0.14);
+}
+
+.navLinks a.navCta:hover svg {
+  opacity: 0.9;
+}
+
+.navLinks a.navCta:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(45, 49, 66, 0.1);
 }
 
 .hero,
