@@ -76,6 +76,15 @@ export default function DocsPage() {
       </div>
 
       <div className={styles.card}>
+        <h3 className={styles.cardTitle}>iOS App</h3>
+        <p className={styles.cardDescription}>
+          Save with the Share Sheet from Safari or any app, and browse your
+          collections on the go. Currently finishing App Store review.
+        </p>
+        <Link href="/docs/ios-app">Learn about the iOS app &rarr;</Link>
+      </div>
+
+      <div className={styles.card}>
         <h3 className={styles.cardTitle}>Selections &amp; Budgets</h3>
         <p className={styles.cardDescription}>
           Mark favorite products, set selection limits, and track spending with

@@ -283,6 +283,9 @@ export default function HomePage() {
             <Link href="/chrome-extension" className={styles.navLink}>
               Extension
             </Link>
+            <Link href="/ios-app" className={styles.navLink}>
+              iOS App
+            </Link>
             <Link href="/docs" className={styles.navLink}>
               Docs
             </Link>
@@ -326,6 +329,9 @@ export default function HomePage() {
                 >
                   Extension
                 </Link>
+                <Link href="/ios-app" className={styles.mobileMenuLink}>
+                  iOS App
+                </Link>
                 <Link href="/docs" className={styles.mobileMenuLink}>
                   Docs
                 </Link>
@@ -351,6 +357,9 @@ export default function HomePage() {
       <main>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
+            <Link href="/ios-app" className={styles.announcementPill}>
+              Tote for iPhone is coming soon &rarr;
+            </Link>
             <p className={styles.eyebrow}>
               A cart that doesn&apos;t belong to a store
             </p>
