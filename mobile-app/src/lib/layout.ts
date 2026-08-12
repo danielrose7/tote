@@ -6,6 +6,20 @@ import { useWindowDimensions } from 'react-native';
 // device and the grid just gets wider — the opposite of hardcoding 2 columns and
 // letting each tile balloon to half an iPad.
 
+/**
+ * Default ideal tile width for card grids.
+ *
+ * Tuned to land on 4 columns across both iPads in portrait, which is a narrow
+ * target: the 11" has 778pt of content (778/4.5 = 173, 778/3.5 = 222) and the
+ * 13" has 968pt (968/4.5 = 215, 968/3.5 = 277), so only 215–222 gives 4 on
+ * both. 218 sits in the middle of that window. Landscape exceeds MAX_GRID_WIDTH
+ * and settles at 5.
+ *
+ * Because the window is tight, changing `gutter` or adding a device size can
+ * tip one of them to 3 or 5 — re-check the arithmetic above if you touch either.
+ */
+export const IDEAL_TILE_WIDTH = 218;
+
 /** Below this the window is a phone (or a narrow iPad Split View pane). */
 const REGULAR_WIDTH = 700;
 

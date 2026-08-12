@@ -51,7 +51,7 @@ import {
   setupDatabase,
   upsertCollections,
 } from './src/lib/localDb';
-import { useGridLayout } from './src/lib/layout';
+import { IDEAL_TILE_WIDTH, useGridLayout } from './src/lib/layout';
 import type { RootStackParamList } from './src/navigation/types';
 import { Providers } from './src/providers';
 import { AccountSettingsScreen } from './src/screens/AccountSettingsScreen';
@@ -881,7 +881,7 @@ function CollectionListContent({
         (collection.name ?? '').toLocaleLowerCase().includes(normalizedSearch),
       )
     : collections;
-  const grid = useGridLayout(200);
+  const grid = useGridLayout(IDEAL_TILE_WIDTH);
   const dockInset = Math.max(
     grid.sideInset,
     Math.round((grid.width - 600) / 2),

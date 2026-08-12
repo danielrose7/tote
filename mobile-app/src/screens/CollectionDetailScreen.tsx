@@ -58,7 +58,11 @@ import {
 } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
 import { formatPrice } from '../lib/formatPrice';
-import { useGridLayout, useReadableInset } from '../lib/layout';
+import {
+  IDEAL_TILE_WIDTH,
+  useGridLayout,
+  useReadableInset,
+} from '../lib/layout';
 import { getCachedNodes, upsertNodes } from '../lib/localDb';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -1347,7 +1351,7 @@ function MasonryGrid({
   onRefresh?: () => void;
   refreshing?: boolean;
 }) {
-  const grid = useGridLayout(190);
+  const grid = useGridLayout(IDEAL_TILE_WIDTH);
   // Resolve every image's aspect ratio before laying out, so cards can be
   // assigned to columns by their real heights.
   useImageRatios(items.map((item) => item.properties.imageUrl));
@@ -1409,7 +1413,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const { viewMode, setViewMode } = useViewMode();
-  const reorderGrid = useGridLayout(190);
+  const reorderGrid = useGridLayout(IDEAL_TILE_WIDTH);
   const listInset = useReadableInset();
   const { track, syncState, lastSavedAt } = useSyncStatus();
   const scrollY = useRef(new Animated.Value(0)).current;
