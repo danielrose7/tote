@@ -1,5 +1,14 @@
 import { sql } from './db';
 
+// Postgres 'infinity'/'-infinity' timestamps come back from the driver as the
+// JS number Infinity/-Infinity rather than a Date, which the sitemap route
+// would otherwise serialize as the literal string "Infinity" in <lastmod>.
+function toValidDate(value: unknown, fallback: Date): Date {
+  return value instanceof Date && !Number.isNaN(value.getTime())
+    ? value
+    : fallback;
+}
+
 export type PublishedProduct = {
   id: string;
   title: string | null;
@@ -51,7 +60,7 @@ export async function getAllPublishedCollectionSlugs(): Promise<
   return rows.map((r) => ({
     username: r.username as string,
     slug: r.slug as string,
-    updatedAt: r.updated_at as Date,
+    updatedAt: toValidDate(r.updated_at, new Date()),
   }));
 }
 
