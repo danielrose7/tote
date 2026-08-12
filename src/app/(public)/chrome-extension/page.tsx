@@ -56,6 +56,7 @@ export default function ChromeExtensionPage() {
           </Link>
           <div className={styles.navLinks}>
             <Link href="/docs/extension">Docs</Link>
+            <Link href="/ios-app">iOS App</Link>
             <a
               href={CHROME_WEB_STORE_URL}
               target="_blank"

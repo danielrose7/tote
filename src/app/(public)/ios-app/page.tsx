@@ -5,6 +5,15 @@ import { PublicFooter } from '@/components/PublicFooter';
 import { APP_STORE_URL } from '@/lib/constants';
 import styles from './ios-app.module.css';
 
+const platforms = [
+  { label: 'Web app', status: 'live' as const },
+  { label: 'Chrome, Edge, Brave, Arc', status: 'live' as const },
+  {
+    label: APP_STORE_URL ? 'iPhone' : 'iPhone — pending App Store review',
+    status: APP_STORE_URL ? ('live' as const) : ('pending' as const),
+  },
+];
+
 export const metadata: Metadata = {
   title: 'iOS App — Tote',
   description:
@@ -79,19 +88,41 @@ export default function IosAppPage() {
                   Get it on the App Store
                 </a>
               ) : (
-                <span className={styles.comingSoonButton}>
-                  Coming soon on the App Store
-                </span>
+                <LandingAuthButtons
+                  showSignIn={false}
+                  signUpLabel="Create a Tote account"
+                  signedInLabel="Open Tote"
+                />
               )}
-              <Link href="/docs/ios-app" className={styles.secondaryButton}>
-                Read setup guide
-              </Link>
             </div>
             <p className={styles.heroNote}>
-              Tote for iOS is finishing App Store review. Everything you save
-              today on the web or with the browser extension will already be
-              there the moment you sign in on the app.
+              {APP_STORE_URL
+                ? 'Sign in with the same account you already use on tote.tools or in the browser extension — everything you’ve saved is waiting for you.'
+                : 'Tote for iOS is finishing App Store review. Sign up today with the same account that already works on the web and in the browser extension, and everything will be waiting the moment the app goes live.'}
             </p>
+            <p className={styles.trustLine}>
+              Private by design — no ads, no tracking, no selling your shopping
+              data, on the web app, the browser extension, and the iOS app
+              alike. Read the <Link href="/privacy">privacy policy</Link>.
+            </p>
+            <ul
+              className={styles.platformList}
+              aria-label="Tote platform availability"
+            >
+              {platforms.map((platform) => (
+                <li
+                  key={platform.label}
+                  className={
+                    platform.status === 'live'
+                      ? styles.platformItemLive
+                      : styles.platformItemPending
+                  }
+                >
+                  <span className={styles.platformDot} aria-hidden="true" />
+                  {platform.label}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className={styles.heroVisual} aria-hidden="true">
@@ -175,24 +206,21 @@ export default function IosAppPage() {
           <p className={styles.eyebrow}>Start saving</p>
           <h2>Your collections are ready before the app is.</h2>
           <div className={styles.actions}>
-            <LandingAuthButtons
-              showSignIn={false}
-              signUpLabel="Create a Tote account"
-              signedInLabel="Open Tote"
-            />
             {APP_STORE_URL ? (
               <a
                 href={APP_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={styles.secondaryButton}
+                className={styles.primaryButton}
               >
                 Get it on the App Store
               </a>
             ) : (
-              <span className={styles.comingSoonButton}>
-                Coming soon on the App Store
-              </span>
+              <LandingAuthButtons
+                showSignIn={false}
+                signUpLabel="Create a Tote account"
+                signedInLabel="Open Tote"
+              />
             )}
           </div>
         </section>

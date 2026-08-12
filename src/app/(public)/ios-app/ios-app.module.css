@@ -121,8 +121,7 @@
 }
 
 .primaryButton,
-.secondaryButton,
-.comingSoonButton {
+.secondaryButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -151,13 +150,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-.comingSoonButton {
-  border: 1px dashed rgba(45, 49, 66, 0.22);
-  background: rgba(45, 49, 66, 0.04);
-  color: var(--color-text-tertiary);
-  cursor: default;
-}
-
 .primaryButton:hover,
 .secondaryButton:hover {
   transform: translateY(-1px);
@@ -174,6 +166,63 @@
   color: var(--color-text-tertiary);
   font-size: var(--font-size-sm);
   line-height: 1.6;
+}
+
+.trustLine {
+  margin: 0.6rem 0 0;
+  max-width: 52ch;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+}
+
+.trustLine a {
+  color: var(--color-text-secondary);
+  text-decoration-color: currentColor;
+  text-underline-offset: 3px;
+}
+
+.trustLine a:hover {
+  color: var(--color-text-primary);
+}
+
+.platformList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.platformItemLive,
+.platformItemPending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 49, 66, 0.08);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.platformDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--color-text-tertiary);
+}
+
+.platformItemLive .platformDot {
+  background: #3fae5c;
+}
+
+.platformItemPending .platformDot {
+  background: #d8a341;
 }
 
 .heroVisual {
