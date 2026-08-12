@@ -52,37 +52,23 @@ export default function ChromeExtensionPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <nav className={styles.nav} aria-label="Chrome extension page">
-          <Link href="/" className={styles.wordmark}>
-            tote
-          </Link>
-          <div className={styles.navLinks}>
-            <Link href="/docs/extension">Docs</Link>
-            <Link href="/ios-app">iOS App</Link>
-            <a
-              href={CHROME_WEB_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.navCta}
-            >
-              Chrome Web Store
-              <svg
-                viewBox="0 0 12 12"
-                width="11"
-                height="11"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  d="M4 2h6v6M10 2 2.5 9.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
+          <div className={styles.navBar}>
+            <Link href="/" className={styles.wordmark}>
+              tote
+            </Link>
+            <div className={styles.navLinks}>
+              <Link href="/docs/extension">Docs</Link>
+              <Link href="/ios-app">iOS App</Link>
+            </div>
           </div>
+          <a
+            href={CHROME_WEB_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.navCta}
+          >
+            <InstallLabel />
+          </a>
         </nav>
       </header>
 
