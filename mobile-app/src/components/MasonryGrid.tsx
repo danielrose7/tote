@@ -1,67 +1,102 @@
-import { useRef, useState } from 'react';
+import type React from 'react';
+import { useMemo } from 'react';
 import {
   Animated,
-  FlatList,
+  type ScrollViewProps,
+  type StyleProp,
   View,
-  type FlatListProps,
-  type ViewToken,
+  type ViewStyle,
 } from 'react-native';
 
-const AnimatedFlatList = Animated.createAnimatedComponent(
-  FlatList,
-) as unknown as new <T>(
-  props: Animated.AnimatedProps<FlatListProps<T>>,
-) => FlatList<T>;
-
-type MasonryGridProps<T> = Omit<
-  FlatListProps<T>,
-  'renderItem' | 'numColumns' | 'columnWrapperStyle'
-> & {
+type MasonryGridProps<T> = Omit<ScrollViewProps, 'children'> & {
   data: T[];
   keyExtractor: (item: T, index: number) => string;
   renderItem: (item: T, opts: { isVisible: boolean }) => React.ReactElement;
+  /**
+   * Estimated rendered height of a card at `columnWidth`. Only used to decide
+   * which column each card goes in, so a rough estimate is fine — being off
+   * makes the bottom edge less even, it never opens a gap mid-column.
+   * Memoize it; it's a dependency of the layout.
+   */
+  estimateHeight: (item: T, columnWidth: number) => number;
+  columns?: number;
+  columnWidth?: number;
   gap?: number;
+  ListHeaderComponent?: React.ReactNode;
+  ListEmptyComponent?: React.ReactNode;
+  contentContainerStyle?: StyleProp<ViewStyle>;
 };
 
-// A 2-column grid that only fetches images for cards near the viewport:
-// it tracks which rows are actually visible and passes that down as
-// `isVisible` so callers can prioritize (or defer) their image loads.
+/**
+ * A true masonry grid: cards keep their natural heights and each one goes to
+ * whichever column is currently shortest, so columns stay level and no card
+ * leaves dead space beneath it.
+ *
+ * This is deliberately a ScrollView rather than a FlatList. FlatList lays out
+ * fixed rows — every row as tall as its tallest card — which is what produced
+ * the ragged gaps this replaces. The cost is that every card mounts up front;
+ * collections here are curated and small, but if they grow into the thousands
+ * this wants windowing based on the offsets the layout below already knows.
+ */
 export function MasonryGrid<T>({
+  data,
   keyExtractor,
   renderItem,
+  estimateHeight,
+  columns = 2,
+  columnWidth,
   gap = 12,
-  ...rest
+  ListHeaderComponent,
+  ListEmptyComponent,
+  contentContainerStyle,
+  ...scrollProps
 }: MasonryGridProps<T>) {
-  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const columnItems = useMemo(() => {
+    const buckets = Array.from({ length: columns }, (_, column) => ({
+      key: `column-${column}`,
+      items: [] as { item: T; index: number }[],
+    }));
+    const heights = new Array<number>(columns).fill(0);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      setVisibleKeys(new Set(viewableItems.map((v) => String(v.key))));
-    },
-  ).current;
+    data.forEach((item, index) => {
+      let shortest = 0;
+      for (let i = 1; i < columns; i++) {
+        if (heights[i] < heights[shortest]) shortest = i;
+      }
+      buckets[shortest].items.push({ item, index });
+      heights[shortest] += estimateHeight(item, columnWidth ?? 0) + gap;
+    });
 
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 20 }).current;
+    return buckets;
+  }, [data, columns, columnWidth, gap, estimateHeight]);
 
   return (
-    <AnimatedFlatList
-      keyExtractor={keyExtractor}
-      numColumns={2}
-      columnWrapperStyle={{ flexDirection: 'row', gap }}
-      initialNumToRender={6}
-      maxToRenderPerBatch={4}
-      updateCellsBatchingPeriod={50}
-      windowSize={5}
-      removeClippedSubviews
-      onViewableItemsChanged={onViewableItemsChanged}
-      viewabilityConfig={viewabilityConfig}
-      renderItem={({ item, index }) => (
-        <View style={{ flex: 1 }}>
-          {renderItem(item, {
-            isVisible: visibleKeys.has(String(keyExtractor(item, index))),
-          })}
+    <Animated.ScrollView
+      contentContainerStyle={contentContainerStyle}
+      {...scrollProps}
+    >
+      {ListHeaderComponent}
+      {data.length === 0 ? (
+        ListEmptyComponent
+      ) : (
+        <View style={{ flexDirection: 'row', gap }}>
+          {columnItems.map(({ key, items }) => (
+            <View
+              key={key}
+              style={[
+                columnWidth ? { width: columnWidth } : { flex: 1 },
+                { gap },
+              ]}
+            >
+              {items.map(({ item, index }) => (
+                <View key={keyExtractor(item, index)}>
+                  {renderItem(item, { isVisible: true })}
+                </View>
+              ))}
+            </View>
+          ))}
         </View>
       )}
-      {...rest}
-    />
+    </Animated.ScrollView>
   );
 }

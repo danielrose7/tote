@@ -198,7 +198,13 @@ export function AccountSettingsScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 20, paddingBottom: 60 },
+  content: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    padding: 20,
+    paddingBottom: 60,
+  },
   fieldLabel: {
     fontSize: 12,
     fontWeight: '600',

@@ -14,7 +14,6 @@ import {
   Alert,
   AppState,
   DeviceEventEmitter,
-  Dimensions,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -52,6 +51,7 @@ import {
   setupDatabase,
   upsertCollections,
 } from './src/lib/localDb';
+import { useGridLayout } from './src/lib/layout';
 import type { RootStackParamList } from './src/navigation/types';
 import { Providers } from './src/providers';
 import { AccountSettingsScreen } from './src/screens/AccountSettingsScreen';
@@ -589,6 +589,18 @@ function PreviewImageGrid({
   );
 }
 
+// Rough height of a CollectionCard, for column balancing only. Mirrors the
+// collection* styles below.
+function estimateCollectionCardHeight(item: Collection, width: number): number {
+  const previewHeight = width * (3 / 4); // collectionPreview aspectRatio 4/3
+  const charsPerLine = Math.max(1, width / 7.5); // ~7.5pt per char at fontSize 14
+  const nameLines = Math.min(
+    2, // collectionName numberOfLines
+    Math.max(1, Math.ceil((item.name ?? '').length / charsPerLine)),
+  );
+  return previewHeight + 22 + nameLines * 19;
+}
+
 function CollectionCard({
   item,
   isVisible,
@@ -869,14 +881,18 @@ function CollectionListContent({
         (collection.name ?? '').toLocaleLowerCase().includes(normalizedSearch),
       )
     : collections;
-  const collectionColumnWidth = Math.floor(
-    (Dimensions.get('window').width - 52) / 2,
+  const grid = useGridLayout(200);
+  const dockInset = Math.max(
+    grid.sideInset,
+    Math.round((grid.width - 600) / 2),
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingHorizontal: grid.sideInset }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Tote</Text>
+        <Text style={[styles.title, grid.isRegular && styles.titleRegular]}>
+          Tote
+        </Text>
         <TouchableOpacity
           onPress={() => navigation.navigate('AccountSettings')}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -891,22 +907,25 @@ function CollectionListContent({
 
       {!loaded ? (
         <ScrollView contentContainerStyle={styles.collectionGrid}>
-          <View style={styles.masonryColumns}>
-            <View style={{ width: collectionColumnWidth }}>
-              <CollectionSkeleton />
-              <CollectionSkeleton />
-            </View>
-            <View style={{ width: collectionColumnWidth }}>
-              <CollectionSkeleton />
-              <CollectionSkeleton />
-            </View>
+          <View style={[styles.masonryColumns, { gap: grid.gap }]}>
+            {Array.from({ length: grid.columns }, (_, i) => `col-${i}`).map(
+              (key) => (
+                <View key={key} style={{ width: grid.columnWidth }}>
+                  <CollectionSkeleton />
+                  <CollectionSkeleton />
+                </View>
+              ),
+            )}
           </View>
         </ScrollView>
       ) : (
         <MasonryGrid
           data={filteredCollections}
           keyExtractor={(item) => item.id}
-          gap={12}
+          columns={grid.columns}
+          columnWidth={grid.columnWidth}
+          gap={grid.gap}
+          estimateHeight={estimateCollectionCardHeight}
           contentContainerStyle={styles.collectionGrid}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
@@ -954,7 +973,14 @@ function CollectionListContent({
           }
         />
       )}
-      <View style={styles.collectionDock}>
+      <View
+        style={[
+          styles.collectionDock,
+          // Keep the floating dock a comfortable thumb-width, not the full
+          // 1024pt of an iPad — a search field that long looks unfinished.
+          { left: dockInset, right: dockInset },
+        ]}
+      >
         <View style={styles.collectionSearch}>
           <Ionicons name="search" size={19} color="#9ca3af" />
           <TextInput
@@ -1260,6 +1286,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  // iPadOS large titles run bigger than the iPhone equivalent.
+  titleRegular: {
+    fontSize: 34,
+    letterSpacing: -0.6,
+  },
   subtitle: {
     fontSize: 16,
     color: '#6b7280',
@@ -1280,7 +1311,8 @@ const styles = StyleSheet.create({
   },
   authStack: {
     width: '100%',
-    alignSelf: 'stretch',
+    maxWidth: 480,
+    alignSelf: 'center',
     paddingHorizontal: 24,
   },
   authHero: {
@@ -1381,7 +1413,6 @@ const styles = StyleSheet.create({
   collectionCard: {
     backgroundColor: '#f9fafb',
     borderRadius: 14,
-    marginBottom: 12,
     overflow: 'hidden',
   },
   collectionPreview: {
@@ -1507,8 +1538,16 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  modalOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  modalOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
   modalSheet: {
+    width: '100%',
+    maxWidth: 560,
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -1585,6 +1624,9 @@ const styles = StyleSheet.create({
   },
   onboardingContent: {
     flex: 1,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 16,
@@ -1626,6 +1668,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   onboardingFooter: {
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
     alignItems: 'center',
     gap: 24,
   },

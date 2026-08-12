@@ -19,7 +19,6 @@ import {
   ActivityIndicator,
   Animated,
   AppRegistry,
-  Dimensions,
   Easing,
   Image,
   NativeModules,
@@ -28,12 +27,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 
 const { AppGroupModule } = NativeModules;
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
 
 /** Show the filter field only once scanning the list stops being trivial. */
 const SEARCH_THRESHOLD = 8;
@@ -160,6 +158,9 @@ type Props = {
 };
 
 function ShareExtension(props: Props) {
+  // Read live so the push transition still travels the right distance if the
+  // extension is presented in landscape.
+  const { width: screenWidth } = useWindowDimensions();
   const url = props.url || props.text;
   const pre = props.preprocessingResults;
   const title = pre?.title || props.title;
@@ -393,7 +394,7 @@ function ShareExtension(props: Props) {
       {
         translateX: slide.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -SCREEN_WIDTH * 0.28],
+          outputRange: [0, -screenWidth * 0.28],
         }),
       },
     ],
@@ -404,7 +405,7 @@ function ShareExtension(props: Props) {
       {
         translateX: slide.interpolate({
           inputRange: [0, 1],
-          outputRange: [SCREEN_WIDTH, 0],
+          outputRange: [screenWidth, 0],
         }),
       },
     ],

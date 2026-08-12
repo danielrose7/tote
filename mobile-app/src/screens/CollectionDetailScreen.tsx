@@ -10,7 +10,6 @@ import {
   Alert,
   Animated,
   AppState,
-  Dimensions,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -42,6 +41,7 @@ import { MasonryGrid as MasonryFlatGrid } from '../components/MasonryGrid';
 import { SaveProductSheet } from '../components/SaveProductSheet';
 import { ShareCollectionSheet } from '../components/ShareCollectionSheet';
 import { useCollectionRealtime } from '../hooks/useCollectionRealtime';
+import { getImageRatio, useImageRatios } from '../hooks/useImageRatios';
 import { useViewMode } from '../hooks/useViewMode';
 import { fromNow, useSyncStatus } from '../hooks/useSyncStatus';
 import type { Collection, CollectionDetail, CollectionNode } from '../lib/api';
@@ -58,8 +58,11 @@ import {
 } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
 import { formatPrice } from '../lib/formatPrice';
+import { useGridLayout, useReadableInset } from '../lib/layout';
 import { getCachedNodes, upsertNodes } from '../lib/localDb';
 import type { RootStackParamList } from '../navigation/types';
+
+const REORDER_GRID_GAP = 12;
 
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
 
@@ -1182,19 +1185,9 @@ function ProductGridCard({
   isVisible?: boolean;
   onPress: () => void;
 }) {
-  const [imageHeight, setImageHeight] = useState(150);
   const imageUrl = item.properties.imageUrl;
-
-  useEffect(() => {
-    if (!imageUrl) return;
-    Image.getSize(
-      imageUrl,
-      (w, h) => {
-        if (w > 0) setImageHeight(Math.round((columnWidth * h) / w));
-      },
-      () => {},
-    );
-  }, [imageUrl, columnWidth]);
+  // Measured by the grid before layout — see useImageRatios.
+  const imageHeight = Math.round(columnWidth / getImageRatio(imageUrl));
 
   return (
     <TouchableOpacity
@@ -1323,6 +1316,22 @@ function ReorderSlotCard({
   );
 }
 
+// Rough height of a ProductGridCard, for column balancing only. Mirrors the
+// gridCard* styles below; being a little off just makes the bottom edge of the
+// columns less even.
+function estimateProductCardHeight(item: ProductItem, width: number): number {
+  const imageHeight = item.properties.imageUrl
+    ? width / getImageRatio(item.properties.imageUrl)
+    : 130; // gridImagePlaceholder
+  const charsPerLine = Math.max(1, width / 7); // ~7pt per char at fontSize 13
+  const titleLines = Math.min(
+    3, // gridCardName numberOfLines
+    Math.max(1, Math.ceil((item.title ?? 'Untitled').length / charsPerLine)),
+  );
+  const priceHeight = item.properties.price ? 18 : 0;
+  return imageHeight + 18 + titleLines * 18 + priceHeight;
+}
+
 function MasonryGrid({
   items,
   onPress,
@@ -1338,16 +1347,24 @@ function MasonryGrid({
   onRefresh?: () => void;
   refreshing?: boolean;
 }) {
-  const screenWidth = Dimensions.get('window').width;
-  const columnWidth = Math.floor((screenWidth - 48) / 2);
+  const grid = useGridLayout(190);
+  // Resolve every image's aspect ratio before laying out, so cards can be
+  // assigned to columns by their real heights.
+  useImageRatios(items.map((item) => item.properties.imageUrl));
 
   return (
     <MasonryFlatGrid
       data={items}
       keyExtractor={(item) => item.id}
-      gap={8}
+      columns={grid.columns}
+      columnWidth={grid.columnWidth}
+      gap={grid.gap}
+      estimateHeight={estimateProductCardHeight}
       contentInsetAdjustmentBehavior="never"
-      contentContainerStyle={styles.masonryContainer}
+      contentContainerStyle={[
+        styles.masonryContainer,
+        { paddingHorizontal: grid.sideInset },
+      ]}
       onScroll={onScroll}
       scrollEventThrottle={16}
       refreshControl={
@@ -1359,11 +1376,11 @@ function MasonryGrid({
           />
         ) : undefined
       }
-      ListHeaderComponent={header ? () => <>{header}</> : undefined}
+      ListHeaderComponent={header}
       renderItem={(item, { isVisible }) => (
         <ProductGridCard
           item={item}
-          columnWidth={columnWidth}
+          columnWidth={grid.columnWidth}
           isVisible={isVisible}
           onPress={() => onPress(item)}
         />
@@ -1392,6 +1409,8 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [refreshQueue, setRefreshQueue] = useState<ProductItem[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const { viewMode, setViewMode } = useViewMode();
+  const reorderGrid = useGridLayout(190);
+  const listInset = useReadableInset();
   const { track, syncState, lastSavedAt } = useSyncStatus();
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -2001,7 +2020,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
     reorderSections.find((section) => section.id === activeReorderTargetId) ??
     reorderSections[0];
   const hasMultipleSlots = sectionNodes.length > 1;
-  const gridItemSize = Math.floor((Dimensions.get('window').width - 64) / 2);
+  // The reorder grid is laid out by SortableGrid, which needs explicit pixel
+  // dimensions — so it can't reuse MasonryGrid's flex sizing, only its column count.
+  const reorderColumns = reorderGrid.columns;
+  const gridItemSize = Math.floor(
+    (reorderGrid.width - 52 - REORDER_GRID_GAP * (reorderColumns - 1)) /
+      reorderColumns,
+  );
   const reorderSlotItems: ReorderableBlockItem[] = sectionNodes.map((slot) => ({
     id: slot.id,
     block: slot,
@@ -2012,9 +2037,9 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       block: item,
     })) ?? [];
   const reorderGridHeight =
-    Math.ceil(activeReorderItems.length / 2) *
-      (Math.round(gridItemSize * 0.72) + 106 + 12) -
-    12;
+    Math.ceil(activeReorderItems.length / reorderColumns) *
+      (Math.round(gridItemSize * 0.72) + 106 + REORDER_GRID_GAP) -
+    REORDER_GRID_GAP;
   const reorderGridKey = `${activeReorderSection?.id ?? 'none'}:${activeReorderItems
     .map((item) => item.id)
     .join(',')}`;
@@ -2434,11 +2459,11 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
                         renderItem={renderReorderGridItem}
                         itemKeyExtractor={(item) => item.id}
                         dimensions={{
-                          columns: 2,
+                          columns: reorderColumns,
                           itemWidth: gridItemSize,
                           itemHeight: Math.round(gridItemSize * 0.72) + 106,
-                          columnGap: 12,
-                          rowGap: 12,
+                          columnGap: REORDER_GRID_GAP,
+                          rowGap: REORDER_GRID_GAP,
                         }}
                         scrollEnabled={false}
                         style={styles.reorderGrid}
@@ -2515,7 +2540,10 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
             return null;
           }}
           ListHeaderComponent={pageHeader}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[
+            styles.list,
+            { paddingHorizontal: listInset },
+          ]}
           stickySectionHeadersEnabled={false}
           onRefresh={startBulkRefresh}
           refreshing={refreshQueue.length > 0}
@@ -2778,8 +2806,16 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  modalOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  modalOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
   modalSheet: {
+    width: '100%',
+    maxWidth: 560,
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -3204,7 +3240,6 @@ const styles = StyleSheet.create({
   gridCard: {
     backgroundColor: '#f9fafb',
     borderRadius: 12,
-    marginBottom: 8,
     overflow: 'hidden',
   },
   gridImagePlaceholder: { height: 130, backgroundColor: '#e5e7eb' },

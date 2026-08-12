@@ -6,7 +6,6 @@ import {
   ActionSheetIOS,
   ActivityIndicator,
   Alert,
-  Dimensions,
   Linking,
   Modal,
   ScrollView,
@@ -16,6 +15,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import type {
@@ -52,6 +52,10 @@ interface Props {
 export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
   const { getToken } = useAuth();
   const { user } = useUser();
+  // Recomputed on rotation — a module-scope Dimensions read would freeze the
+  // sheet at whatever height the window had when the app launched.
+  const { height: windowHeight } = useWindowDimensions();
+  const overlayHeight = Math.round(windowHeight * 0.45) + 120;
 
   const [activeTab, setActiveTab] = useState<Tab>('invite');
 
@@ -437,7 +441,7 @@ export function ShareCollectionSheet({ collection, visible, onClose }: Props) {
         activeOpacity={1}
         onPress={onClose}
       />
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { height: overlayHeight }]}>
         <View style={styles.sheet}>
           <View style={styles.handle} />
           <Text style={styles.title}>Share Collection</Text>
@@ -933,10 +937,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: Math.round(Dimensions.get('window').height * 0.45) + 120,
+    alignItems: 'center',
   },
   sheet: {
     flex: 1,
+    width: '100%',
+    maxWidth: 560,
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,

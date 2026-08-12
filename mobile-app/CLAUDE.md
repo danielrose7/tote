@@ -59,6 +59,7 @@ also regenerates. After a prebuild, re-add it (or restore the pbxproj from git).
 - `src/providers.tsx` — Clerk provider only (no Jazz)
 - `src/tokenCache.ts` — Shared Keychain token cache (App Group `group.tools.tote.app`)
 - `src/config.ts` — Environment config (`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`, `EXPO_PUBLIC_APP_URL`)
+- `src/lib/layout.ts` — Adaptive layout hooks (see [Layout](#layout) below)
 - `src/lib/api.ts` — All v2 API calls (typed, Bearer token auth via Clerk)
 - `src/lib/localDb.ts` — SQLite schema and cache functions (`collections`, `collection_nodes` tables)
 - `metro.config.js` — Metro resolver with share extension config
@@ -127,6 +128,40 @@ Pattern: load from cache immediately → fetch from API in background → update
 | `block.slotData?.selectedProductIds` | `node.properties.selectedItemIds` (legacy rows may still carry `selectedProductIds`; read both, write `selectedItemIds` — the web app uses the same key) |
 | `block.collectionData?.color`        | `collection.color`                                                                                                                                       |
 | `block.children` (slot children)     | `nodes.filter(n => n.parentId === slot.id)`                                                                                                              |
+
+## Layout
+
+The app runs on iPad (`supportsTablet: true`), so **never hardcode a column count
+or read `Dimensions.get('window')` at render time** — the latter doesn't update on
+rotation or Split View resize.
+
+Use `src/lib/layout.ts`:
+
+- `useGridLayout(idealTileWidth)` → `{ columns, columnWidth, gap, sideInset, width, isRegular }`.
+  Column count is derived from how many `idealTileWidth`-ish tiles fit, the way Photos,
+  Pinterest and SwiftUI's `LazyVGrid(.adaptive(minimum:))` do it. Tiles stay the same
+  physical size on every device; the grid gains columns instead of stretching them.
+  `sideInset` both pads and centers, capping grids at 1100pt.
+- `useReadableInset(maxWidth?)` — centers a single column of rows/forms (default 720pt).
+- `useBreakpoints()` — raw `{ width, isRegular, gutter, gap }` if you need the primitives.
+
+For full-width sheets and forms, the cheap fix is `width: '100%'` + `maxWidth` +
+`alignSelf: 'center'` in the stylesheet — a no-op on phones, since the caps never bind
+below ~480pt.
+
+`MasonryGrid` is a **true masonry grid**: it assigns each card to whichever column is
+currently shortest, so columns stay level. It needs an `estimateHeight(item, width)`
+prop to do that, and estimators must be kept roughly in sync with their card's styles
+(they only choose a column, so being a little off just makes the bottom edge less even).
+
+Because masonry needs heights up front, image aspect ratios are resolved _before_
+layout by `useImageRatios` (`src/hooks/useImageRatios.ts`) and read with `getImageRatio` —
+don't measure images inside a card that lives in the grid.
+
+It's a `ScrollView`, not a `FlatList` (FlatList lays out fixed rows, which is what caused
+the ragged gaps this replaced), so **every card mounts up front**. Fine for curated
+collections; if collections grow into the thousands, add windowing using the offsets the
+layout already computes.
 
 ## Share Extension
 
