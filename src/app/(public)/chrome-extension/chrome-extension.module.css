@@ -21,9 +21,19 @@
   padding: var(--spacing-lg) var(--spacing-lg) 0;
 }
 
+/* The nav pill holds only the site's own links; the one link that leaves the
+   site sits outside it as its own button. */
 .nav {
   width: min(1160px, 100%);
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navBar {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -65,6 +75,36 @@
 .navLinks a:hover {
   color: var(--color-text-primary);
   background: rgba(45, 49, 66, 0.05);
+}
+
+.navCta {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  background: var(--color-text-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px rgba(45, 49, 66, 0.18);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.navCta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(45, 49, 66, 0.24);
+}
+
+.navCta:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(45, 49, 66, 0.2);
 }
 
 .hero,
@@ -334,17 +374,32 @@
   }
 
   .nav {
-    border-radius: 28px;
-    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  /* One row, tighter — the CTA outside the pill is what needs the space. */
+  .navBar {
+    gap: 0.25rem;
+    padding: 0.55rem 0.5rem 0.55rem 0.9rem;
+  }
+
+  .wordmark {
+    font-size: 1.4rem;
   }
 
   .navLinks {
-    width: 100%;
-    justify-content: space-between;
+    gap: 0;
   }
 
   .navLinks a {
-    padding: 0.7rem 0.75rem;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  .navCta {
+    min-height: 40px;
+    padding: 0 0.85rem;
+    font-size: 0.82rem;
   }
 
   .hero,

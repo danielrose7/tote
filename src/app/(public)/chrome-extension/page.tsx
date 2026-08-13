@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { InstallLabel } from '@/components/InstallLabel';
 import { LandingAuthButtons } from '@/components/LandingAuthButtons';
 import { PublicFooter } from '@/components/PublicFooter';
 import { CHROME_WEB_STORE_URL } from '@/lib/constants';
@@ -51,19 +52,23 @@ export default function ChromeExtensionPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <nav className={styles.nav} aria-label="Chrome extension page">
-          <Link href="/" className={styles.wordmark}>
-            tote
-          </Link>
-          <div className={styles.navLinks}>
-            <Link href="/docs/extension">Docs</Link>
-            <a
-              href={CHROME_WEB_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Chrome Web Store
-            </a>
+          <div className={styles.navBar}>
+            <Link href="/" className={styles.wordmark}>
+              tote
+            </Link>
+            <div className={styles.navLinks}>
+              <Link href="/docs/extension">Docs</Link>
+              <Link href="/ios-app">iOS App</Link>
+            </div>
           </div>
+          <a
+            href={CHROME_WEB_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.navCta}
+          >
+            <InstallLabel />
+          </a>
         </nav>
       </header>
 
@@ -84,7 +89,7 @@ export default function ChromeExtensionPage() {
                 rel="noopener noreferrer"
                 className={styles.primaryButton}
               >
-                Add to Chrome
+                <InstallLabel />
               </a>
               <Link href="/docs/extension" className={styles.secondaryButton}>
                 Read setup guide
@@ -169,7 +174,7 @@ export default function ChromeExtensionPage() {
               rel="noopener noreferrer"
               className={styles.secondaryButton}
             >
-              Add to Chrome
+              <InstallLabel />
             </a>
           </div>
         </section>
