@@ -9,6 +9,7 @@ import styles from './PublicNav.module.css';
 type NavLink = { href: string; label: string };
 
 const LINKS: NavLink[] = [
+  { href: '/use-cases', label: 'Use cases' },
   { href: '/templates', label: 'Templates' },
   { href: '/chrome-extension', label: 'Extension' },
   { href: '/ios-app', label: 'iOS App' },
