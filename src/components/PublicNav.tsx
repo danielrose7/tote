@@ -54,6 +54,22 @@ export function PublicNav({
     setMenuOpen(false);
   }, [pathname]);
 
+  // The hamburger disappears above 760px, so a sheet left open across a
+  // resize or a rotation would have no way to be closed. Match the breakpoint
+  // in the stylesheet.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const wide = window.matchMedia('(min-width: 761px)');
+    const onChange = () => {
+      if (wide.matches) setMenuOpen(false);
+    };
+    onChange();
+    wide.addEventListener('change', onChange);
+
+    return () => wide.removeEventListener('change', onChange);
+  }, [menuOpen]);
+
   // While the sheet is up it owns the screen: the page behind it must not
   // scroll, and Escape closes it.
   useEffect(() => {

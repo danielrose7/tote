@@ -5,6 +5,7 @@ import { Fragment } from 'react';
 import { InstallLabel } from '@/components/InstallLabel';
 import { LandingAuthButtons } from '@/components/LandingAuthButtons';
 import { PublicFooter } from '@/components/PublicFooter';
+import { PublicNav } from '@/components/PublicNav';
 import { CHROME_WEB_STORE_URL } from '@/lib/constants';
 import heroImage from '@/product-images-01.png';
 import collectionImage from '@/product-images-02.png';
@@ -263,87 +264,7 @@ export default function HomePage() {
     <div className={styles.page}>
       <div className={styles.backgroundGlow} aria-hidden="true" />
 
-      <header className={styles.header}>
-        <nav className={styles.nav}>
-          <div className={styles.navBar}>
-            <Link href="/" className={styles.wordmark}>
-              tote
-            </Link>
-            <div className={`${styles.navLinks} ${styles.desktopOnly}`}>
-              <Link href="/use-cases" className={styles.navLink}>
-                Use cases
-              </Link>
-              <Link href="/templates" className={styles.navLink}>
-                Templates
-              </Link>
-              <Link href="/chrome-extension" className={styles.navLink}>
-                Extension
-              </Link>
-              <Link href="/ios-app" className={styles.navLink}>
-                iOS App
-              </Link>
-              <Link href="/docs" className={styles.navLink}>
-                Docs
-              </Link>
-            </div>
-          </div>
-          <div className={`${styles.navActions} ${styles.desktopOnly}`}>
-            <a
-              href={CHROME_WEB_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.chromeLink}
-            >
-              <InstallLabel />
-            </a>
-            <LandingAuthButtons />
-          </div>
-          <details className={styles.mobileMenu}>
-            <summary className={styles.mobileMenuButton} aria-label="Open menu">
-              <span className={styles.mobileMenuIcon} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </span>
-            </summary>
-            <div className={styles.mobileMenuPanel}>
-              <div className={styles.mobileMenuLinks}>
-                <Link href="/use-cases" className={styles.mobileMenuLink}>
-                  Use cases
-                </Link>
-                <Link href="/templates" className={styles.mobileMenuLink}>
-                  Templates
-                </Link>
-                <Link
-                  href="/chrome-extension"
-                  className={styles.mobileMenuLink}
-                >
-                  Extension
-                </Link>
-                <Link href="/ios-app" className={styles.mobileMenuLink}>
-                  iOS App
-                </Link>
-                <Link href="/docs" className={styles.mobileMenuLink}>
-                  Docs
-                </Link>
-              </div>
-              <div className={styles.mobileMenuActions}>
-                <a
-                  href={CHROME_WEB_STORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.mobileChromeLink}
-                >
-                  <InstallLabel />
-                </a>
-                <div className={styles.mobileMenuAuth}>
-                  <LandingAuthButtons />
-                </div>
-              </div>
-            </div>
-          </details>
-        </nav>
-      </header>
+      <PublicNav />
 
       <main>
         <section className={styles.hero}>
