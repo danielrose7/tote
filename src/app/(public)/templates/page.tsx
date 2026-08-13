@@ -77,14 +77,7 @@ const TEMPLATES: { username: string; slug: string; category: string }[] = [
 export default function TemplatesPage() {
   return (
     <div className={styles.page}>
-      <PublicNav
-        label="Templates page"
-        links={[
-          { href: '/chrome-extension', label: 'Extension' },
-          { href: '/ios-app', label: 'iOS App' },
-          { href: '/docs', label: 'Docs' },
-        ]}
-      />
+      <PublicNav label="Templates page" />
       <header className={styles.header}>
         <h1 className={styles.heading}>Templates</h1>
         <p className={styles.subheading}>

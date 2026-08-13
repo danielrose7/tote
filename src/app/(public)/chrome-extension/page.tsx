@@ -51,14 +51,7 @@ const browserSupport = ['Chrome', 'Edge', 'Brave', 'Arc'];
 export default function ChromeExtensionPage() {
   return (
     <div className={styles.page}>
-      <PublicNav
-        label="Chrome extension page"
-        links={[
-          { href: '/templates', label: 'Templates' },
-          { href: '/ios-app', label: 'iOS App' },
-          { href: '/docs/extension', label: 'Docs' },
-        ]}
-      />
+      <PublicNav label="Chrome extension page" />
 
       <main>
         <section className={styles.hero}>

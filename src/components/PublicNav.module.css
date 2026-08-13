@@ -71,6 +71,13 @@
   background: rgba(45, 49, 66, 0.05);
 }
 
+/* The page you're on stays in the nav, marked rather than removed. */
+.navLinkActive,
+.navLinkActive:hover {
+  color: var(--color-accent);
+  background: var(--color-accent-subtle);
+}
+
 .navCta {
   flex: none;
   display: inline-flex;

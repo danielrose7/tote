@@ -188,14 +188,7 @@ const gridGlyphs = [
 export default function IosAppPage() {
   return (
     <div className={styles.page}>
-      <PublicNav
-        label="iOS app page"
-        links={[
-          { href: '/templates', label: 'Templates' },
-          { href: '/chrome-extension', label: 'Extension' },
-          { href: '/docs/ios-app', label: 'Docs' },
-        ]}
-      />
+      <PublicNav label="iOS app page" />
 
       <main>
         <section className={styles.hero}>
