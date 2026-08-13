@@ -93,7 +93,7 @@ export function PublicFooter() {
             rel="noopener noreferrer"
             className={styles.mountainLink}
           >
-            Made in Silverton, CO
+            <span className={styles.mountainLabel}>Made in Silverton, CO</span>
           </a>
         </div>
       </div>

@@ -94,6 +94,11 @@
   font-size: var(--font-size-sm);
 }
 
+/* The Bloom signature: a flat gradient rule under the wordmark that becomes a
+   drawn mountain ridge on hover, with the gradient scrolling behind it. Both
+   states are inline SVG data URIs so the effect costs no extra request. Kept in
+   Bloom's own citrus palette rather than Tote's, because it belongs to the
+   gobloom.io link, not to this site. */
 .mountainLink {
   color: inherit;
   text-decoration: none;
@@ -101,6 +106,29 @@
 
 .mountainLink:hover {
   color: var(--color-text-primary);
+}
+
+.mountainLabel {
+  display: inline;
+  padding-bottom: 10px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 16px;
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 16'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='300' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23fb923c'/%3E%3Cstop offset='.5' stop-color='%23facc15'/%3E%3Cstop offset='1' stop-color='%235eead4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cline x1='0' y1='12' x2='300' y2='12' stroke='url(%23g)' stroke-width='2'/%3E%3C/svg%3E");
+}
+
+.mountainLink:hover .mountainLabel,
+.mountainLink:focus-visible .mountainLabel {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 16'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='600' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23fb923c'/%3E%3Cstop offset='.17' stop-color='%23facc15'/%3E%3Cstop offset='.33' stop-color='%235eead4'/%3E%3Cstop offset='.5' stop-color='%23fb923c'/%3E%3Cstop offset='.67' stop-color='%23facc15'/%3E%3Cstop offset='.83' stop-color='%235eead4'/%3E%3Cstop offset='1' stop-color='%23fb923c'/%3E%3CanimateTransform attributeName='gradientTransform' type='translate' from='0' to='-300' dur='3s' repeatCount='indefinite'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='none' stroke='url(%23g)' stroke-width='2' stroke-linejoin='round' d='M0,14 L15,12 L35,10 L55,4 L65,8 L80,7 L100,6 L120,6 L140,5 L155,3 L165,5 L175,4 L185,6 L205,1 L220,5 L240,7 L255,4 L270,8 L285,11 L300,13'/%3E%3C/svg%3E");
+}
+
+/* The scroll lives inside the SVG as SMIL, which no CSS media query can reach,
+   so reduced motion gets the same ridge drawn over a still gradient. */
+@media (prefers-reduced-motion: reduce) {
+  .mountainLink:hover .mountainLabel,
+  .mountainLink:focus-visible .mountainLabel {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 16'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='300' y2='0' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23fb923c'/%3E%3Cstop offset='.5' stop-color='%23facc15'/%3E%3Cstop offset='1' stop-color='%235eead4'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='none' stroke='url(%23g)' stroke-width='2' stroke-linejoin='round' d='M0,14 L15,12 L35,10 L55,4 L65,8 L80,7 L100,6 L120,6 L140,5 L155,3 L165,5 L175,4 L185,6 L205,1 L220,5 L240,7 L255,4 L270,8 L285,11 L300,13'/%3E%3C/svg%3E");
+  }
 }
 
 @media (max-width: 860px) {
