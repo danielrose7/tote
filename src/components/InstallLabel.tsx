@@ -4,6 +4,37 @@ import { useEffect, useState } from 'react';
 
 type BrowserName = 'Chrome' | 'Edge' | 'Brave' | 'Arc';
 
+const STORAGE_KEY = 'tote:browser';
+
+/**
+ * Resolved once per page load and shared by every InstallLabel on the page.
+ * Without this, each client-side navigation remounts the label, restarts
+ * detection, and flashes "Chrome" before settling on the real name.
+ *
+ * The answer is also cached in localStorage, which is per-browser — Arc's
+ * storage is not Chrome's, so a cached value can never belong to a different
+ * browser. Detection still re-runs in the background on each load, so a value
+ * that was wrong once (Brave withholding its API, say) corrects itself.
+ */
+let resolved: BrowserName | null = null;
+let inFlight: Promise<BrowserName> | null = null;
+
+function readCachedBrowser(): BrowserName | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored === 'Chrome' ||
+      stored === 'Edge' ||
+      stored === 'Brave' ||
+      stored === 'Arc'
+      ? stored
+      : null;
+  } catch {
+    // Storage can be unavailable (private mode, blocked cookies); detection
+    // still works, it just re-runs on the next load.
+    return null;
+  }
+}
+
 /**
  * Best-effort detection of the Chromium browser the visitor is using, so the
  * install CTA can say "Add to Brave" instead of "Add to Chrome". Every one of
@@ -30,32 +61,67 @@ async function detectBrowser(): Promise<BrowserName> {
   if (brands?.some((entry) => entry.brand === 'Microsoft Edge')) return 'Edge';
   if (!brands && / Edg\//.test(navigator.userAgent)) return 'Edge';
 
-  // Arc has no API. It injects a palette of CSS custom properties onto :root,
-  // but only once the page has finished loading — hence the caller's delay.
-  const arcPalette = getComputedStyle(
-    document.documentElement,
-  ).getPropertyValue('--arc-palette-background');
-  if (arcPalette.trim() !== '') return 'Arc';
+  if (isArc()) return 'Arc';
 
-  return 'Chrome';
+  // Arc injects its palette only after the page finishes loading, so a miss
+  // here isn't final — check once more before settling on Chrome.
+  await new Promise((r) => window.setTimeout(r, 400));
+  return isArc() ? 'Arc' : 'Chrome';
+}
+
+/** Arc has no API; it injects --arc-palette-* custom properties onto :root. */
+function isArc(): boolean {
+  return (
+    getComputedStyle(document.documentElement)
+      .getPropertyValue('--arc-palette-background')
+      .trim() !== ''
+  );
+}
+
+function resolveBrowser(): Promise<BrowserName> {
+  if (!inFlight) {
+    inFlight = detectBrowser().then((name) => {
+      resolved = name;
+      try {
+        localStorage.setItem(STORAGE_KEY, name);
+      } catch {
+        // Non-fatal; see readCachedBrowser.
+      }
+      return name;
+    });
+  }
+  return inFlight;
 }
 
 export function InstallLabel({ prefix = 'Add to ' }: { prefix?: string }) {
-  const [browser, setBrowser] = useState<BrowserName>('Chrome');
+  // Later mounts start from the resolved value, so navigating between pages
+  // never flashes. The first mount still starts at Chrome to match the
+  // server-rendered HTML.
+  const [browser, setBrowser] = useState<BrowserName>(
+    () => resolved ?? 'Chrome',
+  );
 
   useEffect(() => {
-    let cancelled = false;
+    if (resolved) {
+      setBrowser(resolved);
+      return;
+    }
 
-    // Give Arc a moment to inject its palette before we decide.
-    const timer = window.setTimeout(() => {
-      void detectBrowser().then((name) => {
-        if (!cancelled) setBrowser(name);
-      });
-    }, 400);
+    // A previous load already worked it out — show that straight away, then
+    // re-detect underneath and correct it if it disagrees.
+    const cached = readCachedBrowser();
+    if (cached) {
+      resolved = cached;
+      setBrowser(cached);
+    }
+
+    let cancelled = false;
+    void resolveBrowser().then((name) => {
+      if (!cancelled) setBrowser(name);
+    });
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
     };
   }, []);
 
