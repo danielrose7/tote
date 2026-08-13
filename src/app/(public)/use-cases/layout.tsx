@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { PublicFooter } from '@/components/PublicFooter';
 import { PublicNav } from '@/components/PublicNav';
-import styles from '../docs/docs.module.css';
+import styles from '../templates/templates.module.css';
 
 const navItems = [
   { href: '/use-cases', label: 'Overview' },
@@ -35,51 +35,42 @@ export default function UseCasesLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div className={styles.container}>
+    <div className={styles.page}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <PublicNav label="Use cases" solid />
+      <PublicNav label="Use cases" />
 
-      <div className={styles.sectionBar}>
-        <span className={styles.docsLabel}>Use Cases</span>
-        <button
-          type="button"
-          className={styles.menuToggle}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-expanded={menuOpen}
-        >
-          {menuOpen ? 'Close' : 'Menu'}
-        </button>
-        <Link href="/collections" className={styles.backLink}>
-          Back to app
-        </Link>
-      </div>
-
-      <div className={styles.main}>
-        <aside className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`}>
-          <nav className={styles.sidebarNav}>
+      <div className={styles.layout}>
+        {/* Page links, not filters — but they behave like the templates
+            sidebar: sticky on desktop, a row of chips on mobile. */}
+        <aside className={styles.sidebar}>
+          <p className={styles.sidebarLabel}>Use cases</p>
+          <ul className={styles.categoryList}>
             {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`${styles.navItem} ${
-                  pathname === item.href ? styles.navItemActive : ''
-                }`}
-                onClick={() => setMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className={styles.categoryItem}
+                  data-active={pathname === item.href}
+                  aria-current={pathname === item.href ? 'page' : undefined}
+                >
+                  {item.label}
+                </Link>
+              </li>
             ))}
-          </nav>
+          </ul>
         </aside>
 
-        <main className={styles.content}>{children}</main>
+        <main className={`${styles.main} ${styles.mainReadable}`}>
+          {children}
+        </main>
       </div>
+
+      <PublicFooter />
     </div>
   );
 }

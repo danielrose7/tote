@@ -36,14 +36,29 @@
   max-width: var(--max-width-container);
   margin: 0 auto;
   width: 100%;
-  padding: 0 var(--spacing-xl) var(--spacing-3xl);
+  padding: var(--spacing-2xl) var(--spacing-xl) var(--spacing-3xl);
   align-items: start;
+}
+
+/* When a page header sits above it, the header already provides the top gap. */
+.header + .layout {
+  padding-top: 0;
 }
 
 /* Sidebar */
 .sidebar {
   position: sticky;
   top: var(--spacing-xl);
+}
+
+/* Names the sidebar when its items are page links rather than filters. */
+.sidebarLabel {
+  margin: 0 0 var(--spacing-sm) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
 }
 
 .categoryList {
@@ -79,7 +94,7 @@
   color: var(--color-text-primary);
 }
 
-.categoryItem[data-active="true"] {
+.categoryItem[data-active='true'] {
   background: var(--color-border);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
@@ -92,13 +107,18 @@
   margin-left: var(--spacing-sm);
 }
 
-.categoryItem[data-active="true"] .categoryCount {
+.categoryItem[data-active='true'] .categoryCount {
   color: var(--color-text-secondary);
 }
 
 /* Card grid */
 .main {
   min-width: 0;
+}
+
+/* Long-form pages cap the measure; the card grid uses the full width. */
+.mainReadable {
+  max-width: 860px;
 }
 
 .grid {
@@ -283,7 +303,7 @@
   .layout,
   .skeletonLayout {
     grid-template-columns: 1fr;
-    padding: 0 var(--spacing-md) var(--spacing-2xl);
+    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-2xl);
     gap: var(--spacing-lg);
   }
 
@@ -303,13 +323,13 @@
     padding: var(--spacing-xs) var(--spacing-md);
   }
 
-  .categoryItem[data-active="true"] {
+  .categoryItem[data-active='true'] {
     background: var(--color-text-primary);
     color: var(--color-surface);
     border-color: var(--color-text-primary);
   }
 
-  .categoryItem[data-active="true"] .categoryCount {
+  .categoryItem[data-active='true'] .categoryCount {
     color: rgba(255, 255, 255, 0.7);
   }
 
