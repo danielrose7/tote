@@ -5,6 +5,15 @@
   padding: var(--spacing-lg) var(--spacing-xl) 0;
 }
 
+/* Long-form pages (docs, use cases) scroll text right past the pill, so they
+   opt into a backdrop rather than letting content show through the gaps. */
+.headerSolid {
+  padding-bottom: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
 /* The pill hugs the wordmark and links instead of stretching, so the links
    stay left and the CTA sits off on its own at the right. */
 /* Lines up with the page's own content container by default; a page with a

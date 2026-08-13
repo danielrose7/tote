@@ -34,11 +34,23 @@ function isActive(pathname: string, href: string) {
  * the wordmark and links, with the install CTA outside it as its own button.
  * Every page shows the same links — the current one is marked, not removed.
  */
-export function PublicNav({ label = 'Site' }: { label?: string }) {
+export function PublicNav({
+  label = 'Site',
+  solid = false,
+}: {
+  label?: string;
+  /** Paint a backdrop behind the nav, for pages whose content would
+   * otherwise scroll through the gaps around the pill. */
+  solid?: boolean;
+}) {
   const pathname = usePathname() ?? '';
 
   return (
-    <header className={styles.header}>
+    <header
+      className={
+        solid ? `${styles.header} ${styles.headerSolid}` : styles.header
+      }
+    >
       <nav className={styles.nav} aria-label={label}>
         <div className={styles.navBar}>
           <Link href="/" className={styles.wordmark}>

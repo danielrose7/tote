@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { PublicNav } from '@/components/PublicNav';
 import styles from './docs.module.css';
 
 const navItems = [
@@ -45,25 +46,22 @@ export default function DocsLayout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <Link href="/" className={styles.logo}>
-            tote
-          </Link>
-          <span className={styles.divider} aria-hidden="true" />
-          <span className={styles.docsLabel}>Help</span>
-        </div>
+      <PublicNav label="Help center" solid />
+
+      <div className={styles.sectionBar}>
+        <span className={styles.docsLabel}>Help</span>
         <button
+          type="button"
           className={styles.menuToggle}
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
+          aria-expanded={menuOpen}
         >
           {menuOpen ? 'Close' : 'Menu'}
         </button>
         <Link href="/collections" className={styles.backLink}>
           Back to app
         </Link>
-      </header>
+      </div>
 
       <div className={styles.main}>
         <aside className={`${styles.sidebar} ${menuOpen ? styles.open : ''}`}>
