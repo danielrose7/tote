@@ -38,8 +38,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 - ✅ **Collections** - Organize product links into visual collections
 - ✅ **Rich Metadata** - Automatically extract title, description, images, and prices
 - ✅ **Product Cards** - Beautiful visual cards with hover animations
-- ✅ **Real-time Sync** - Jazz handles cross-device synchronization
-- ✅ **Offline Support** - Works offline, syncs when reconnected
+- ✅ **Real-time Sync** - Postgres outbox → Ably keeps devices in step
+- ✅ **Queued Writes** - Edits made on a flaky connection replay once it returns
 
 ## Chrome Extension
 

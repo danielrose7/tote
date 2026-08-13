@@ -78,9 +78,14 @@ const questions = [
       'That’s the point. Save now, revisit later, refresh prices when it matters, and keep the decision moving in one place.',
   },
   {
+    question: 'Is Tote free?',
+    answer:
+      'Yes. Saving, organizing, and sharing are free, and that core is meant to stay free. Anything paid later would do extra work for you — watching prices, say — rather than fencing off what you already use.',
+  },
+  {
     question: 'Is Tote private?',
     answer:
-      'Yes. No ads, no tracking, and no selling your shopping behavior. Sharing is opt-in, and your saved links stay useful offline.',
+      'Yes. No ads, no tracking, and no selling your shopping behavior. Sharing is opt-in — a collection stays private until you publish it.',
   },
 ];
 
@@ -108,7 +113,7 @@ const principles = [
   {
     title: 'Private by design',
     description:
-      'No ads. No tracking. No selling your shopping habits. Sharing is opt-in, and your saved links stay useful even when you’re offline.',
+      'No ads. No tracking. No selling your shopping habits. Sharing is opt-in, and a collection stays private until you publish it.',
   },
 ];
 
@@ -248,7 +253,7 @@ const comparisonRows = [
     },
   },
   {
-    feature: 'Private by design + offline',
+    feature: 'Private by design',
     values: {
       bookmarks: true,
       wishlists: false,
@@ -297,8 +302,8 @@ export default function HomePage() {
               </a>
             </div>
             <p className={styles.heroNote}>
-              Save what you find now. Come back with fewer tabs, a clearer
-              budget, and a shortlist you can actually use.
+              Save what you find now — it&apos;s free. Come back with fewer
+              tabs, a clearer budget, and a shortlist you can actually use.
             </p>
           </div>
 
@@ -525,8 +530,8 @@ export default function HomePage() {
             </h2>
             <p className={styles.sectionBody}>
               No tracking, no ads, and no selling your behavior to someone else.
-              Save privately, share when you choose, and keep your saved links
-              useful even when you&apos;re offline.
+              Save privately and share when you choose — a collection stays
+              yours until you decide to publish it.
             </p>
           </div>
         </section>
@@ -538,7 +543,8 @@ export default function HomePage() {
           </h2>
           <p className={styles.finalBody}>
             Use Tote the next time you start a gift list, plan a room, save
-            outfit ideas, or source options for someone else.
+            outfit ideas, or source options for someone else. Saving,
+            organizing, and sharing are free.
           </p>
           <div className={styles.heroActions}>
             <LandingAuthButtons
