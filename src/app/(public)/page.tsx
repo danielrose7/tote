@@ -265,31 +265,33 @@ export default function HomePage() {
 
       <header className={styles.header}>
         <nav className={styles.nav}>
-          <Link href="/" className={styles.wordmark}>
-            tote
-          </Link>
-          <div className={`${styles.navLinks} ${styles.desktopOnly}`}>
-            <a href="#use-cases" className={styles.navLink}>
-              Use cases
-            </a>
-            <a href="#audiences" className={styles.navLink}>
-              Who it&apos;s for
-            </a>
-            <a href="#comparison" className={styles.navLink}>
-              Why Tote
-            </a>
-            <Link href="/templates" className={styles.navLink}>
-              Templates
+          <div className={styles.navBar}>
+            <Link href="/" className={styles.wordmark}>
+              tote
             </Link>
-            <Link href="/chrome-extension" className={styles.navLink}>
-              Extension
-            </Link>
-            <Link href="/ios-app" className={styles.navLink}>
-              iOS App
-            </Link>
-            <Link href="/docs" className={styles.navLink}>
-              Docs
-            </Link>
+            <div className={`${styles.navLinks} ${styles.desktopOnly}`}>
+              <a href="#use-cases" className={styles.navLink}>
+                Use cases
+              </a>
+              <a href="#audiences" className={styles.navLink}>
+                Who it&apos;s for
+              </a>
+              <a href="#comparison" className={styles.navLink}>
+                Why Tote
+              </a>
+              <Link href="/templates" className={styles.navLink}>
+                Templates
+              </Link>
+              <Link href="/chrome-extension" className={styles.navLink}>
+                Extension
+              </Link>
+              <Link href="/ios-app" className={styles.navLink}>
+                iOS App
+              </Link>
+              <Link href="/docs" className={styles.navLink}>
+                Docs
+              </Link>
+            </div>
           </div>
           <div className={`${styles.navActions} ${styles.desktopOnly}`}>
             <a

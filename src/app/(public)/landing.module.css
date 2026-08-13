@@ -11,7 +11,8 @@
       circle at top right,
       rgba(200, 217, 230, 0.75),
       transparent 32%
-    ), linear-gradient(180deg, #fffdf9 0%, #ffffff 28%, #f8f7fb 100%);
+    ),
+    linear-gradient(180deg, #fffdf9 0%, #ffffff 28%, #f8f7fb 100%);
   position: relative;
   overflow-x: clip;
 }
@@ -45,9 +46,20 @@
   padding: var(--spacing-lg) var(--spacing-lg) 0;
 }
 
+/* The pill carries the site's own navigation; the CTAs sit outside it as
+   buttons, so nothing reads as a pill inside a pill. */
 .nav {
   width: min(1240px, 100%);
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.navBar {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -58,7 +70,6 @@
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(20px);
   box-shadow: 0 18px 50px rgba(45, 49, 66, 0.08);
-  position: relative;
 }
 
 .wordmark {
@@ -71,13 +82,13 @@
 
 .navLinks,
 .navActions {
+  flex: none;
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 0.5rem;
 }
 
-.navLink,
-.chromeLink {
+.navLink {
   color: var(--color-text-secondary);
   text-decoration: none;
   font-size: var(--font-size-sm);
@@ -89,10 +100,60 @@
     color var(--transition-fast);
 }
 
-.navLink:hover,
-.chromeLink:hover {
+.navLink:hover {
   color: var(--color-text-primary);
   background: rgba(45, 49, 66, 0.05);
+}
+
+/* Install CTA: a solid button outside the pill, matched in height to the
+   Clerk auth buttons sitting next to it. */
+.chromeLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  background: var(--color-text-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px rgba(45, 49, 66, 0.18);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.chromeLink:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(45, 49, 66, 0.24);
+}
+
+.chromeLink:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(45, 49, 66, 0.2);
+}
+
+/* The auth buttons ride along outside the pill too. The ghost "Log in" needs a
+   surface of its own now that the pill isn't sitting behind it. */
+/* Element and attribute selectors aren't hashed by CSS Modules, so these reach
+   the Clerk auth buttons without :global(). */
+.navActions button,
+.navActions a {
+  min-height: 44px;
+}
+
+.navActions button:not([class*='buttonPrimary']) {
+  border: 1px solid rgba(45, 49, 66, 0.1);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
+  box-shadow: 0 2px 8px rgba(45, 49, 66, 0.08);
+}
+
+.navActions button:not([class*='buttonPrimary']):hover {
+  background: #ffffff;
 }
 
 .desktopOnly {
@@ -898,7 +959,7 @@
     padding: 1rem 1rem 0;
   }
 
-  .nav {
+  .navBar {
     border-radius: 28px;
     padding: 1rem;
   }
@@ -940,20 +1001,17 @@
   }
 }
 
-@media (max-width: 640px) {
-  .page {
-    background:
-      radial-gradient(
-        circle at top left,
-        rgba(245, 198, 213, 0.5),
-        transparent 34%
-      ), linear-gradient(180deg, #fffdf9 0%, #ffffff 32%, #f8f7fb 100%);
-  }
-
+/* The nav collapses to the menu earlier than the rest of the phone styling:
+   seven links plus the CTAs outside the pill run out of room well before
+   640px. */
+@media (max-width: 1000px) {
   .nav {
     align-items: center;
     flex-wrap: wrap;
-    padding-right: 5rem;
+  }
+
+  .navBar {
+    flex-wrap: wrap;
   }
 
   .desktopOnly {
@@ -968,43 +1026,51 @@
     flex: 0 0 3rem;
   }
 
+  /* Opening drops a panel under the whole nav; the button itself stays put
+     beside the pill instead of wrapping onto its own row. */
   .mobileMenu[open] {
-    width: 100%;
-    flex-basis: 100%;
+    width: 3rem;
+    flex: 0 0 3rem;
     margin-left: 0;
-    padding-top: 0.85rem;
   }
 
+  /* The menu button is its own button beside the pill now, not an overlay
+     tucked inside it, so it can sit in the flow and self-center. */
   .mobileMenuButton {
     margin-left: 0;
-    position: absolute;
-    top: 0.9rem;
-    right: 1rem;
+    position: static;
   }
 
   .mobileMenuPanel {
-    position: static;
-    width: 100%;
-    margin: 0 0.1rem;
-    border-top-left-radius: 18px;
-    border-top-right-radius: 18px;
-    box-shadow: none;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-color: transparent;
-  }
-
-  .mobileMenu[open] .mobileMenuPanel {
-    margin-top: 0.85rem;
-    padding-top: 0.85rem;
-    padding-bottom: 0.85rem;
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 0;
+    right: 0;
+    width: auto;
+    margin: 0;
+    border-radius: 24px;
+    padding: 0.85rem;
     border-color: rgba(45, 49, 66, 0.08);
+    /* Fully opaque: it now floats over the hero instead of sitting in flow. */
+    background: #ffffff;
+    box-shadow: 0 22px 50px rgba(45, 49, 66, 0.16);
   }
 
-  .navLink,
-  .chromeLink {
+  .navLink {
     padding: 0.65rem 0.85rem;
     flex-shrink: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    background:
+      radial-gradient(
+        circle at top left,
+        rgba(245, 198, 213, 0.5),
+        transparent 34%
+      ),
+      linear-gradient(180deg, #fffdf9 0%, #ffffff 32%, #f8f7fb 100%);
   }
 
   .heroTitle {
