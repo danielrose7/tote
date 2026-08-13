@@ -10,9 +10,7 @@ const platforms = [
   { label: 'Web app', status: 'live' as const },
   { label: 'Chrome, Edge, Brave, Arc', status: 'live' as const },
   {
-    label: APP_STORE_URL
-      ? 'iPhone and iPad'
-      : 'iPhone and iPad — pending App Store review',
+    label: APP_STORE_URL ? 'iPhone and iPad' : 'iPhone and iPad — coming soon',
     status: APP_STORE_URL ? ('live' as const) : ('pending' as const),
   },
 ];
@@ -221,7 +219,7 @@ export default function IosAppPage() {
             <p className={styles.heroNote}>
               {APP_STORE_URL
                 ? 'Sign in with the same account you already use on tote.tools or in the browser extension — everything you’ve saved is waiting for you.'
-                : 'Tote for iOS is finishing App Store review. Sign up today with the same account that already works on the web and in the browser extension, and everything will be waiting the moment the app goes live.'}
+                : 'Tote for iPhone and iPad is coming soon. Sign up today with the same account that already works on the web and in the browser extension, and everything will be waiting the moment the app goes live.'}
             </p>
             <p className={styles.trustLine}>
               Private by design — no ads, no tracking, no selling your shopping

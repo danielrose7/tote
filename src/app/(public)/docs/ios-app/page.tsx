@@ -33,12 +33,12 @@ export default function IosAppDocsPage() {
         Getting the App
       </AnchorHeading>
       <p>
-        Tote for iOS is finishing App Store review. Once it's approved, it will
-        be a free universal download — one app that runs on both iPhone and
-        iPad, with the iPad layout using the extra width for a wider collection
-        grid. In the meantime, everything you save is stored in your Tote
-        account, so it will be there the moment you sign in on the app — nothing
-        to migrate or import.
+        Tote for iPhone and iPad is coming soon. When it lands it will be a free
+        universal download — one app that runs on both iPhone and iPad, with the
+        iPad layout using the extra width for a wider collection grid. In the
+        meantime, everything you save is stored in your Tote account, so it will
+        be there the moment you sign in on the app — nothing to migrate or
+        import.
       </p>
 
       <AnchorHeading as="h2" id="signing-in">
