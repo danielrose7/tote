@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { CHROME_WEB_STORE_URL } from '../lib/constants';
 import { InstallLabel } from './InstallLabel';
 import { LandingAuthButtons } from './LandingAuthButtons';
@@ -45,6 +46,35 @@ export function PublicNav({
   solid?: boolean;
 }) {
   const pathname = usePathname() ?? '';
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // A tap on a menu link navigates without unmounting the nav, so the sheet
+  // has to be closed by the route change itself.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  // While the sheet is up it owns the screen: the page behind it must not
+  // scroll, and Escape closes it.
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [menuOpen]);
+
+  const resolveHref = (href: string) =>
+    href === '/docs' ? (CONTEXTUAL_DOCS[pathname] ?? href) : href;
 
   return (
     <header
@@ -54,21 +84,29 @@ export function PublicNav({
     >
       <nav className={styles.nav} aria-label={label}>
         <div className={styles.navBar}>
+          {/* Narrow screens can't fit five links, so they get this instead —
+              it's display:none on desktop, where the links are right there. */}
+          <button
+            type="button"
+            className={styles.menuButton}
+            aria-label="Open menu"
+            aria-expanded={menuOpen}
+            aria-controls="public-nav-menu"
+            onClick={() => setMenuOpen(true)}
+          >
+            <MenuIcon />
+          </button>
           <Link href="/" className={styles.wordmark}>
             tote
           </Link>
           <div className={styles.navLinks}>
             {LINKS.map((link) => {
               const active = isActive(pathname, link.href);
-              const href =
-                link.href === '/docs'
-                  ? (CONTEXTUAL_DOCS[pathname] ?? link.href)
-                  : link.href;
 
               return (
                 <Link
                   key={link.href}
-                  href={href}
+                  href={resolveHref(link.href)}
                   className={active ? styles.navLinkActive : undefined}
                   aria-current={active ? 'page' : undefined}
                 >
@@ -93,6 +131,100 @@ export function PublicNav({
           <LandingAuthButtons />
         </div>
       </nav>
+
+      {menuOpen ? (
+        <div className={styles.sheet}>
+          {/* A button, not a div, so tapping outside is a real control rather
+              than a click handler on nothing. Escape does the same thing. */}
+          <button
+            type="button"
+            className={styles.sheetScrim}
+            aria-label="Close menu"
+            tabIndex={-1}
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className={styles.sheetPanel} id="public-nav-menu">
+            <div className={styles.sheetHeader}>
+              <button
+                type="button"
+                className={styles.sheetClose}
+                aria-label="Close menu"
+                onClick={() => setMenuOpen(false)}
+              >
+                <CloseIcon />
+              </button>
+              <Link href="/" className={styles.wordmark}>
+                tote
+              </Link>
+            </div>
+
+            <div className={styles.sheetLinks}>
+              {LINKS.map((link) => {
+                const active = isActive(pathname, link.href);
+
+                return (
+                  <Link
+                    key={link.href}
+                    href={resolveHref(link.href)}
+                    className={active ? styles.sheetLinkActive : undefined}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* The install CTA can't run on the phone you're reading this on,
+                so it moves out of the bar and down here with the rest. */}
+            <div className={styles.sheetActions}>
+              <a
+                href={CHROME_WEB_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.sheetCta}
+              >
+                <InstallLabel />
+              </a>
+              <LandingAuthButtons />
+            </div>
+          </div>
+        </div>
+      ) : null}
     </header>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h14M3 10h14M3 14h14" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M5 5l10 10M15 5L5 15" />
+    </svg>
   );
 }

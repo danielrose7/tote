@@ -48,6 +48,26 @@
   box-shadow: 0 18px 50px rgba(45, 49, 66, 0.08);
 }
 
+/* Replaces the link row below 760px; see the media query at the bottom. */
+.menuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin: -0.15rem -0.35rem -0.15rem -0.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: rgba(45, 49, 66, 0.05);
+}
+
 .wordmark {
   color: var(--color-text-primary);
   text-decoration: none;
@@ -154,60 +174,185 @@
   }
 }
 
-/* Below this the links wrap under the wordmark rather than squeezing the CTA
-   off the row. */
+/* The sheet only ever opens below 760px, but it's positioned against the
+   viewport rather than the header so a `solid` backdrop can't clip it. */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+.sheetScrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: none;
+  cursor: default;
+  background: rgba(45, 49, 66, 0.35);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: sheetFade var(--transition-fast) ease-out;
+}
+
+/* Sits where the pill was and grows down out of it, so the menu reads as the
+   nav opening rather than a separate screen arriving. */
+.sheetPanel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  left: 1rem;
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.9rem 1.35rem 1.35rem;
+  border-radius: 28px;
+  background: var(--color-white, #ffffff);
+  box-shadow: 0 24px 60px rgba(45, 49, 66, 0.22);
+  animation: sheetIn var(--transition-fast) ease-out;
+}
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  min-height: 44px;
+}
+
+.sheetClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-left: -0.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.sheetClose:hover {
+  background: rgba(45, 49, 66, 0.05);
+  color: var(--color-text-primary);
+}
+
+.sheetLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem 0 1rem;
+}
+
+.sheetLinks a {
+  padding: 0.85rem 0;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sheetLinks a.sheetLinkActive {
+  color: var(--color-accent);
+}
+
+/* Full-width and stacked: these are the actions you came here to take, and
+   there's no reason to make them share a row on a phone. */
+.sheetActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(45, 49, 66, 0.08);
+}
+
+/* Clerk's own wrapper is a flex row; `> div` outweighs it so the pair stacks. */
+.sheetActions > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sheetActions button,
+.sheetActions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 50px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.sheetCta {
+  background: var(--color-text-primary);
+  color: var(--color-white);
+}
+
+/* Clerk's "Log in" is a bare button in the bar; here it needs a border to sit
+   as an equal beside the two filled buttons. */
+.sheetActions button:not([class*='buttonPrimary']) {
+  border: 1px solid rgba(45, 49, 66, 0.12);
+  background: transparent;
+  color: var(--color-text-primary);
+}
+
+@keyframes sheetFade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheetScrim,
+  .sheetPanel {
+    animation: none;
+  }
+}
+
+/* Below this the five links stop fitting on a row, so they move into the
+   sheet and the bar keeps only the wordmark and the sign-up CTA. */
 @media (max-width: 760px) {
   .header {
     padding: 1rem 1rem 0;
   }
 
   .navBar {
-    gap: 0.25rem;
-    padding: 0.55rem 0.5rem 0.55rem 0.9rem;
+    gap: var(--spacing-md);
+    padding: 0.55rem 1.1rem 0.55rem 1rem;
   }
 
   .wordmark {
     font-size: 1.4rem;
   }
 
+  .menuButton {
+    display: inline-flex;
+  }
+
   .navLinks {
-    gap: 0;
+    display: none;
   }
 
-  .navLinks a {
-    padding: 0.55rem 0.5rem;
-    font-size: 0.82rem;
-  }
-
+  /* Installing the extension isn't something you can do from a phone anyway,
+     so the CTA waits in the sheet. */
   .navCta {
-    min-height: 40px;
-    padding: 0 0.85rem;
-    font-size: 0.82rem;
-  }
-}
-
-@media (max-width: 560px) {
-  .nav {
-    flex-wrap: wrap;
+    display: none;
   }
 
-  .navBar {
-    flex: 1 1 100%;
-    justify-content: space-between;
-  }
-
-  /* Buttons take their own row under the pill and split it evenly. */
-  .navActions {
-    flex: 1 1 100%;
-  }
-
-  .navCta {
-    flex: 1 1 auto;
-  }
-
-  .navActions button,
-  .navActions > a:not(.navCta) {
-    flex: 1 1 auto;
-    justify-content: center;
+  .navActions button[class*='buttonPrimary'],
+  .navActions a[class*='buttonPrimary'] {
+    min-height: 44px;
+    padding: 0 1.35rem;
   }
 }
