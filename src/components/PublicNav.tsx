@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { CHROME_WEB_STORE_URL } from '../lib/constants';
 import { InstallLabel } from './InstallLabel';
+import { LandingAuthButtons } from './LandingAuthButtons';
 import styles from './PublicNav.module.css';
 
 type NavLink = { href: string; label: string };
@@ -77,14 +78,20 @@ export function PublicNav({
             })}
           </div>
         </div>
-        <a
-          href={CHROME_WEB_STORE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.navCta}
-        >
-          <InstallLabel />
-        </a>
+        <div className={styles.navActions}>
+          <a
+            href={CHROME_WEB_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.navCta}
+          >
+            <InstallLabel />
+          </a>
+          {/* Signed out this is Log in / Sign up; signed in it collapses to a
+              single "Open Tote", which is how you get back into the app from
+              docs and the marketing pages. */}
+          <LandingAuthButtons />
+        </div>
       </nav>
     </header>
   );

@@ -87,6 +87,34 @@
   background: var(--color-accent-subtle);
 }
 
+.navActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* The auth buttons sit outside the pill too, so the ghost "Log in" needs a
+   surface of its own. Element and attribute selectors aren't hashed by CSS
+   Modules, so these reach the Clerk buttons without :global(). */
+.navActions button,
+.navActions a {
+  min-height: 46px;
+}
+
+.navActions button:not([class*='buttonPrimary']) {
+  padding: 0 1.1rem;
+  border: 1px solid rgba(45, 49, 66, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-primary);
+  box-shadow: 0 2px 8px rgba(45, 49, 66, 0.08);
+}
+
+.navActions button:not([class*='buttonPrimary']):hover {
+  background: #ffffff;
+}
+
 .navCta {
   flex: none;
   display: inline-flex;
@@ -115,6 +143,15 @@
 .navCta:active {
   transform: translateY(0);
   box-shadow: 0 6px 16px rgba(45, 49, 66, 0.2);
+}
+
+/* Five links plus three buttons stop fitting here. "Log in" is the one to
+   drop: Clerk's sign-up modal offers a sign-in link, so returning users still
+   have a way through. */
+@media (max-width: 1080px) {
+  .navActions button:not([class*='buttonPrimary']) {
+    display: none;
+  }
 }
 
 /* Below this the links wrap under the wordmark rather than squeezing the CTA
@@ -159,7 +196,18 @@
     justify-content: space-between;
   }
 
-  .navCta {
+  /* Buttons take their own row under the pill and split it evenly. */
+  .navActions {
     flex: 1 1 100%;
+  }
+
+  .navCta {
+    flex: 1 1 auto;
+  }
+
+  .navActions button,
+  .navActions > a:not(.navCta) {
+    flex: 1 1 auto;
+    justify-content: center;
   }
 }
