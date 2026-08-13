@@ -62,19 +62,19 @@ type GlyphProps = { className?: string };
 function StatusIcons({ className }: GlyphProps) {
   return (
     <span className={className}>
-      <svg viewBox="0 0 18 12">
+      <svg viewBox="0 0 18 12" role="presentation">
         <path
           fill="currentColor"
           d="M0 9h3v3H0zM5 6h3v6H5zM10 3h3v9h-3zM15 0h3v12h-3z"
         />
       </svg>
-      <svg viewBox="0 0 16 12">
+      <svg viewBox="0 0 16 12" role="presentation">
         <path
           fill="currentColor"
           d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.4 6.8 1.7 5.1a9 9 0 0 1 12.6 0l-1.7 1.7a6.6 6.6 0 0 0-9.2 0z"
         />
       </svg>
-      <svg viewBox="0 0 26 12">
+      <svg viewBox="0 0 26 12" role="presentation">
         <rect
           x="0.5"
           y="0.5"
@@ -260,6 +260,7 @@ export default function IosAppPage() {
                     {Array.from({ length: 12 }).map((_, index) => {
                       const Glyph = gridGlyphs[index % gridGlyphs.length];
                       return (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: fixed decorative grid
                         <span key={index} className={styles.tabletCard}>
                           <Glyph className={styles.tabletCardGlyph} />
                         </span>
@@ -317,7 +318,10 @@ export default function IosAppPage() {
                                   <i />
                                   <i />
                                 </span>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                {/* biome-ignore lint/performance/noImgElement: a
+                                    4.5KB static PNG at a fixed 38px — next/image
+                                    would bill an optimization transform for no
+                                    gain. */}
                                 <img
                                   src="/tote-app-icon.png"
                                   alt=""
