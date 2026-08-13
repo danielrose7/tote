@@ -1,43 +1,37 @@
 # Tote
 
-> A cart that doesn't belong to a store.
+> Tote is a free cross-store shopping organizer: save products from any online store into one place, then compare, budget, and decide. It works on the web, as a browser extension for Chrome, Edge, Brave, and Arc, and as an iPhone and iPad app. No ads, no tracking, and no selling of shopping data.
 
-Tote is a free cross-store shopping organizer. It saves products from any online store in one place so you can organize, compare, and track them across every retailer.
+Save a product from any store with one click in the browser extension, or by tapping Share then Tote on iPhone and iPad. Tote captures the product name, image, price, and source URL, and files it into a collection you control. Collections can be subdivided into slots (for example "Seating" or "Lighting"), given budgets and selection limits, refreshed for current pricing, and shared by invite link or published publicly. Everything syncs across the web app, the browser extension, and the iOS app under one account.
 
-## Key Features
+## Product
 
-- **One-click saving**: browser extension (Chrome, Edge, Brave, Arc) saves any product page instantly
-- **iPhone and iPad**: tap Share, then Tote, to save from Safari or any app
-- **Collections**: Organize saved products into folders by project, season, or theme
-- **Slots**: Subdivide collections into categories (e.g., "Seating", "Lighting")
-- **Selections & budgets**: Mark favorites, set selection limits, track spending
-- **Price refresh**: Update saved product prices on demand
-- **Sharing**: Share collections via invite links or make them publicly viewable
-- **Privacy-first**: No tracking, no ads, no data selling. Local-first architecture.
-- **Offline support**: Works without network, syncs when reconnected
+- [Tote](https://tote.tools): Home page — what Tote is and who it's for.
+- [Browser extension](https://tote.tools/chrome-extension): One-click saving in Chrome, Edge, Brave, and Arc.
+- [iPhone and iPad app](https://tote.tools/ios-app): Save with the Share button from Safari or any app.
+- [Templates](https://tote.tools/templates): Curated collections ready to clone and make your own.
 
-## Links
+## Documentation
 
-- Website: https://tote.tools
-- Help Center: https://tote.tools/docs
-- Getting Started: https://tote.tools/docs/getting-started
-- Browser Extension Guide: https://tote.tools/docs/extension
-- iOS App Guide: https://tote.tools/docs/ios-app
-- Browser Extension: https://tote.tools/chrome-extension
-- iOS App: https://tote.tools/ios-app
-- Templates: https://tote.tools/templates
-- Collections: https://tote.tools/docs/collections
-- Slots: https://tote.tools/docs/slots
-- Adding Links: https://tote.tools/docs/adding-links
-- Selections & Budgets: https://tote.tools/docs/selections-and-budgets
-- Sharing: https://tote.tools/docs/sharing
-- Privacy Policy: https://tote.tools/privacy
+- [Help center](https://tote.tools/docs): Index of all guides.
+- [Getting started](https://tote.tools/docs/getting-started): Sign up, install the extension, save a first product.
+- [Collections](https://tote.tools/docs/collections): Top-level folders for organizing saved products.
+- [Slots](https://tote.tools/docs/slots): Subdividing a collection into categories.
+- [Adding links](https://tote.tools/docs/adding-links): One-click saving, right-click saving, and manual entry.
+- [Browser extension guide](https://tote.tools/docs/extension): Install and use the extension.
+- [iOS app guide](https://tote.tools/docs/ios-app): Install, sign in, save with the Share button, troubleshoot.
+- [Selections and budgets](https://tote.tools/docs/selections-and-budgets): Shortlists, selection limits, and spend tracking.
+- [Sharing](https://tote.tools/docs/sharing): Invite links, roles, and public collections.
 
-## Use Cases
+## Use cases
 
-- Use Cases Overview: https://tote.tools/use-cases
-- Gift Lists & Wishlists: https://tote.tools/use-cases/gift-shopping
-- Home Renovation & Furnishing: https://tote.tools/use-cases/home-renovation
-- Wardrobe & Style Board: https://tote.tools/use-cases/personal-style
-- Shared Family Shopping: https://tote.tools/use-cases/family-shopping
-- Professional Design & Client Projects: https://tote.tools/use-cases/professional-projects
+- [Use cases overview](https://tote.tools/use-cases): How people use Tote, by scenario.
+- [Gift lists and wishlists](https://tote.tools/use-cases/gift-shopping): Gift ideas from every store in one shareable list.
+- [Home renovation](https://tote.tools/use-cases/home-renovation): Furniture, fixtures, and materials organized room by room.
+- [Wardrobe and style](https://tote.tools/use-cases/personal-style): Style boards across boutiques, resale, and brand stores.
+- [Family shopping](https://tote.tools/use-cases/family-shopping): Shared collections for joint decisions and budgets.
+- [Client sourcing](https://tote.tools/use-cases/professional-projects): Sourcing boards for designers and stylists.
+
+## Optional
+
+- [Privacy policy](https://tote.tools/privacy): What Tote stores, and what it deliberately doesn't.
