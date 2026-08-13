@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LandingAuthButtons } from '@/components/LandingAuthButtons';
 import { PublicFooter } from '@/components/PublicFooter';
+import { PublicNav } from '@/components/PublicNav';
 import { APP_STORE_URL } from '@/lib/constants';
 import styles from './ios-app.module.css';
 
@@ -187,17 +188,14 @@ const gridGlyphs = [
 export default function IosAppPage() {
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <nav className={styles.nav} aria-label="iOS app page">
-          <Link href="/" className={styles.wordmark}>
-            tote
-          </Link>
-          <div className={styles.navLinks}>
-            <Link href="/docs/ios-app">Docs</Link>
-            <Link href="/chrome-extension">Chrome Extension</Link>
-          </div>
-        </nav>
-      </header>
+      <PublicNav
+        label="iOS app page"
+        links={[
+          { href: '/templates', label: 'Templates' },
+          { href: '/chrome-extension', label: 'Extension' },
+          { href: '/docs/ios-app', label: 'Docs' },
+        ]}
+      />
 
       <main>
         <section className={styles.hero}>

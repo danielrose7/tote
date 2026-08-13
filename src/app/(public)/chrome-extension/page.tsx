@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { InstallLabel } from '@/components/InstallLabel';
 import { LandingAuthButtons } from '@/components/LandingAuthButtons';
 import { PublicFooter } from '@/components/PublicFooter';
+import { PublicNav } from '@/components/PublicNav';
 import { CHROME_WEB_STORE_URL } from '@/lib/constants';
 import extensionImage from '@/product-images-01.png';
 import styles from './chrome-extension.module.css';
@@ -50,27 +51,14 @@ const browserSupport = ['Chrome', 'Edge', 'Brave', 'Arc'];
 export default function ChromeExtensionPage() {
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <nav className={styles.nav} aria-label="Chrome extension page">
-          <div className={styles.navBar}>
-            <Link href="/" className={styles.wordmark}>
-              tote
-            </Link>
-            <div className={styles.navLinks}>
-              <Link href="/docs/extension">Docs</Link>
-              <Link href="/ios-app">iOS App</Link>
-            </div>
-          </div>
-          <a
-            href={CHROME_WEB_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.navCta}
-          >
-            <InstallLabel />
-          </a>
-        </nav>
-      </header>
+      <PublicNav
+        label="Chrome extension page"
+        links={[
+          { href: '/templates', label: 'Templates' },
+          { href: '/ios-app', label: 'iOS App' },
+          { href: '/docs/extension', label: 'Docs' },
+        ]}
+      />
 
       <main>
         <section className={styles.hero}>

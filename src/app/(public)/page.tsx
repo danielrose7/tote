@@ -270,15 +270,6 @@ export default function HomePage() {
               tote
             </Link>
             <div className={`${styles.navLinks} ${styles.desktopOnly}`}>
-              <a href="#use-cases" className={styles.navLink}>
-                Use cases
-              </a>
-              <a href="#audiences" className={styles.navLink}>
-                Who it&apos;s for
-              </a>
-              <a href="#comparison" className={styles.navLink}>
-                Why Tote
-              </a>
               <Link href="/templates" className={styles.navLink}>
                 Templates
               </Link>
@@ -314,15 +305,6 @@ export default function HomePage() {
             </summary>
             <div className={styles.mobileMenuPanel}>
               <div className={styles.mobileMenuLinks}>
-                <a href="#use-cases" className={styles.mobileMenuLink}>
-                  Use cases
-                </a>
-                <a href="#audiences" className={styles.mobileMenuLink}>
-                  Who it&apos;s for
-                </a>
-                <a href="#comparison" className={styles.mobileMenuLink}>
-                  Why Tote
-                </a>
                 <Link href="/templates" className={styles.mobileMenuLink}>
                   Templates
                 </Link>
