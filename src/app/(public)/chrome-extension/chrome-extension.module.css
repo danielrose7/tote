@@ -10,7 +10,8 @@
       circle at 92% 18%,
       rgba(200, 217, 230, 0.7),
       transparent 34%
-    ), linear-gradient(180deg, #fffdf9 0%, #ffffff 36%, #f8f7fb 100%);
+    ),
+    linear-gradient(180deg, #fffdf9 0%, #ffffff 36%, #f8f7fb 100%);
   color: var(--color-text-primary);
 }
 
@@ -28,15 +29,18 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
 }
 
+/* The pill hugs the wordmark and links instead of stretching, so the links
+   stay left and the CTA sits off on its own at the right. */
 .navBar {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--spacing-md);
   padding: 0.9rem 1rem 0.9rem 1.35rem;
   border: 1px solid rgba(45, 49, 66, 0.08);

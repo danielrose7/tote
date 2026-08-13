@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { PreFooterCta } from '@/components/PreFooterCta';
 import { PublicFooter } from '@/components/PublicFooter';
+import { PublicNav } from '@/components/PublicNav';
 import { StickyCtaBar } from '@/components/StickyCtaBar';
 import { getPublishedCollectionSummariesByUsernameAndSlugs } from '@/lib/publishedCollectionsDb';
 import type { TemplateEntry } from './TemplatesClient';
@@ -76,6 +77,14 @@ const TEMPLATES: { username: string; slug: string; category: string }[] = [
 export default function TemplatesPage() {
   return (
     <div className={styles.page}>
+      <PublicNav
+        label="Templates page"
+        links={[
+          { href: '/chrome-extension', label: 'Extension' },
+          { href: '/ios-app', label: 'iOS App' },
+          { href: '/docs', label: 'Docs' },
+        ]}
+      />
       <header className={styles.header}>
         <h1 className={styles.heading}>Templates</h1>
         <p className={styles.subheading}>

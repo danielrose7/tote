@@ -1,0 +1,149 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: var(--spacing-lg) var(--spacing-xl) 0;
+}
+
+/* The pill hugs the wordmark and links instead of stretching, so the links
+   stay left and the CTA sits off on its own at the right. */
+/* Lines up with the page's own content container by default; a page with a
+   different width can override --public-nav-width. */
+.nav {
+  width: min(
+    calc(
+      var(--public-nav-width, var(--max-width-container)) - 2 *
+        var(--spacing-xl)
+    ),
+    100%
+  );
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.navBar {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--spacing-md);
+  padding: 0.9rem 1rem 0.9rem 1.35rem;
+  border: 1px solid rgba(45, 49, 66, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 18px 50px rgba(45, 49, 66, 0.08);
+}
+
+.wordmark {
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.navLinks a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.navLinks a:hover {
+  color: var(--color-text-primary);
+  background: rgba(45, 49, 66, 0.05);
+}
+
+.navCta {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  background: var(--color-text-primary);
+  color: var(--color-white);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px rgba(45, 49, 66, 0.18);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.navCta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(45, 49, 66, 0.24);
+}
+
+.navCta:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(45, 49, 66, 0.2);
+}
+
+/* Below this the links wrap under the wordmark rather than squeezing the CTA
+   off the row. */
+@media (max-width: 760px) {
+  .header {
+    padding: 1rem 1rem 0;
+  }
+
+  .navBar {
+    gap: 0.25rem;
+    padding: 0.55rem 0.5rem 0.55rem 0.9rem;
+  }
+
+  .wordmark {
+    font-size: 1.4rem;
+  }
+
+  .navLinks {
+    gap: 0;
+  }
+
+  .navLinks a {
+    padding: 0.55rem 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  .navCta {
+    min-height: 40px;
+    padding: 0 0.85rem;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav {
+    flex-wrap: wrap;
+  }
+
+  .navBar {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .navCta {
+    flex: 1 1 100%;
+  }
+}
