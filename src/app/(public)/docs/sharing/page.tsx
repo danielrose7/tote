@@ -236,7 +236,7 @@ export default function SharingPage() {
           account before accepting invite links
         </li>
         <li>
-          <a href="/docs/extension">Chrome Extension</a> — save products to
+          <a href="/docs/extension">Browser Extension</a> — save products to
           shared collections from any store
         </li>
       </ul>

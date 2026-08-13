@@ -27,7 +27,7 @@ export default function ExtensionPage() {
       </p>
       <p>
         Looking for the short version? Visit the{' '}
-        <a href="/chrome-extension">Tote Chrome extension landing page</a> for
+        <a href="/chrome-extension">Tote browser extension landing page</a> for
         the install link, supported browsers, and a quick product overview.
       </p>
 

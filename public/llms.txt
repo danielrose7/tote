@@ -6,7 +6,8 @@ Tote is a free cross-store shopping organizer. It saves products from any online
 
 ## Key Features
 
-- **One-click saving**: Chrome extension saves any product page instantly
+- **One-click saving**: browser extension (Chrome, Edge, Brave, Arc) saves any product page instantly
+- **iPhone and iPad**: tap Share, then Tote, to save from Safari or any app
 - **Collections**: Organize saved products into folders by project, season, or theme
 - **Slots**: Subdivide collections into categories (e.g., "Seating", "Lighting")
 - **Selections & budgets**: Mark favorites, set selection limits, track spending
@@ -20,7 +21,11 @@ Tote is a free cross-store shopping organizer. It saves products from any online
 - Website: https://tote.tools
 - Help Center: https://tote.tools/docs
 - Getting Started: https://tote.tools/docs/getting-started
-- Chrome Extension Guide: https://tote.tools/docs/extension
+- Browser Extension Guide: https://tote.tools/docs/extension
+- iOS App Guide: https://tote.tools/docs/ios-app
+- Browser Extension: https://tote.tools/chrome-extension
+- iOS App: https://tote.tools/ios-app
+- Templates: https://tote.tools/templates
 - Collections: https://tote.tools/docs/collections
 - Slots: https://tote.tools/docs/slots
 - Adding Links: https://tote.tools/docs/adding-links

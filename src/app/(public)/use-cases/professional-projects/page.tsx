@@ -169,7 +169,7 @@ export default function ProfessionalProjectsPage() {
           <span>
             <strong>Source from anywhere.</strong> Browse supplier websites,
             retail stores, and trade sites. Save products to the right client
-            collection using the Chrome extension.
+            collection using the browser extension.
           </span>
         </li>
         <li>

@@ -68,7 +68,7 @@ function ExtensionAuthContent() {
         </div>
         <h1 className={styles.heading}>Sign in to Tote</h1>
         <p className={styles.text}>
-          Save products from any store with the Chrome extension
+          Save products from any store with the browser extension
         </p>
         <SignIn
           routing="hash"

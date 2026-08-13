@@ -163,7 +163,7 @@ export default function FamilyShoppingPage() {
         <li>
           <span>
             <strong>Both save products.</strong> Each person browses stores and
-            saves products to the shared collection using the Chrome extension.
+            saves products to the shared collection using the browser extension.
             Everything appears in one board.
           </span>
         </li>

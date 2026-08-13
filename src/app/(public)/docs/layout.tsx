@@ -12,7 +12,7 @@ const navItems = [
   { href: '/docs/collections', label: 'Collections' },
   { href: '/docs/slots', label: 'Slots' },
   { href: '/docs/adding-links', label: 'Adding Links' },
-  { href: '/docs/extension', label: 'Chrome Extension' },
+  { href: '/docs/extension', label: 'Browser Extension' },
   { href: '/docs/ios-app', label: 'iOS App' },
   { href: '/docs/selections-and-budgets', label: 'Selections & Budgets' },
   { href: '/docs/sharing', label: 'Sharing' },

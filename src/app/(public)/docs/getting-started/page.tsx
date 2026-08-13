@@ -6,12 +6,12 @@ import styles from '../docs.module.css';
 export const metadata: Metadata = {
   title: 'Getting Started',
   description:
-    'Get started with Tote in minutes. Sign up, install the Chrome extension, save your first product, and organize your shopping across every store.',
+    'Get started with Tote in minutes. Sign up, install the browser extension, save your first product, and organize your shopping across every store.',
   alternates: { canonical: '/docs/getting-started' },
   openGraph: {
     title: 'Getting Started — Tote',
     description:
-      'Get started with Tote in minutes. Sign up, install the Chrome extension, and save your first product.',
+      'Get started with Tote in minutes. Sign up, install the browser extension, and save your first product.',
   },
 };
 
@@ -153,7 +153,7 @@ export default function GettingStartedPage() {
         Does Tote work on my phone?
       </AnchorHeading>
       <p>
-        The Tote web app works on any device with a browser. The Chrome
+        The Tote web app works on any device with a browser. The browser
         extension is desktop-only, but you can add links manually from your
         phone by pasting product URLs.
       </p>
@@ -194,7 +194,7 @@ export default function GettingStartedPage() {
                 name: 'Does Tote work on my phone?',
                 acceptedAnswer: {
                   '@type': 'Answer',
-                  text: 'The Tote web app works on any device with a browser. The Chrome extension is desktop-only, but you can add links manually from your phone by pasting product URLs.',
+                  text: 'The Tote web app works on any device with a browser. The browser extension is desktop-only, but you can add links manually from your phone by pasting product URLs.',
                 },
               },
             ],

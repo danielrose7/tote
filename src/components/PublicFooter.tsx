@@ -27,7 +27,7 @@ const footerGroups = [
     title: 'Product',
     links: [
       { href: '/templates', label: 'Templates' },
-      { href: '/chrome-extension', label: 'Chrome extension' },
+      { href: '/chrome-extension', label: 'Browser extension' },
       { href: '/ios-app', label: 'iOS app' },
       { href: '/docs', label: 'Help docs' },
       { href: '/docs/getting-started', label: 'Getting started' },

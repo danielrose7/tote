@@ -5,7 +5,7 @@ import styles from './docs.module.css';
 export const metadata: Metadata = {
   title: 'Help Center',
   description:
-    'Learn how to use Tote to save, organize, and track products from anywhere on the web. Guides for collections, slots, sharing, and the Chrome extension.',
+    'Learn how to use Tote to save, organize, and track products from anywhere on the web. Guides for collections, slots, sharing, and the browser extension.',
   alternates: { canonical: '/docs' },
   openGraph: {
     title: 'Help Center — Tote',

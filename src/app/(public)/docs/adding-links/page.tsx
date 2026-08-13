@@ -5,12 +5,12 @@ import styles from '../docs.module.css';
 export const metadata: Metadata = {
   title: 'Adding Links',
   description:
-    'Learn how to save products to Tote using the Chrome extension or by adding links manually. Covers one-click saving, right-click context menu, and product notes.',
+    'Learn how to save products to Tote using the browser extension or by adding links manually. Covers one-click saving, right-click context menu, and product notes.',
   alternates: { canonical: '/docs/adding-links' },
   openGraph: {
     title: 'Adding Links — Tote',
     description:
-      'Learn how to save products to Tote using the Chrome extension or by adding links manually.',
+      'Learn how to save products to Tote using the browser extension or by adding links manually.',
   },
 };
 
@@ -20,7 +20,7 @@ export default function AddingLinksPage() {
       <h1>Adding Links</h1>
       <p className={styles.lead}>
         Tote is a free cross-store shopping organizer. Save products using the
-        Chrome extension for one-click saving, or add links manually from any
+        browser extension for one-click saving, or add links manually from any
         device.
       </p>
 
@@ -28,9 +28,9 @@ export default function AddingLinksPage() {
         Using the Browser Extension
       </AnchorHeading>
       <p>
-        The fastest way to save products is with the Tote browser extension for
-        Chrome. Once installed, you can save any product page with a single
-        click.
+        The fastest way to save products is with the Tote browser extension,
+        which works in Chrome, Edge, Brave, and Arc. Once installed, you can
+        save any product page with a single click.
       </p>
 
       <AnchorHeading as="h3" id="installing-the-extension">
@@ -108,7 +108,7 @@ export default function AddingLinksPage() {
         Right-Click "Save to Tote"
       </AnchorHeading>
       <p>
-        With the Chrome extension installed, you can right-click any product
+        With the browser extension installed, you can right-click any product
         page and select <strong>"Save to Tote"</strong> from the context menu.
         This saves the product to your most recently used collection without
         opening the extension popup.
@@ -156,7 +156,7 @@ export default function AddingLinksPage() {
       </AnchorHeading>
       <ul>
         <li>
-          <a href="/docs/extension">Chrome Extension</a> — detailed extension
+          <a href="/docs/extension">Browser Extension</a> — detailed extension
           setup, pinning, and troubleshooting
         </li>
         <li>

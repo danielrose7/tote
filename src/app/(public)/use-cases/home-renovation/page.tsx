@@ -174,7 +174,7 @@ export default function HomeRenovationPage() {
       <ol className={styles.stepList}>
         <li>
           <span>
-            <strong>Save as you browse.</strong> Install the Chrome extension.
+            <strong>Save as you browse.</strong> Install the browser extension.
             When you find a piece of furniture or material you like, click to
             save it to the right room&apos;s collection. Tote captures the
             image, price, and link.
