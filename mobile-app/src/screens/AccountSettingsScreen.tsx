@@ -13,6 +13,7 @@ import {
 import type { RootStackParamList } from '../navigation/types';
 import { Button } from '../components/Button';
 import { getTokenWithRetry, revokeApiKey } from '../lib/api';
+import { useReadableInset } from '../lib/layout';
 import { clearAllCachedData } from '../lib/localDb';
 
 const API_BASE_URL = 'https://tote.tools';
@@ -29,6 +30,7 @@ export function AccountSettingsScreen({ navigation }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const inset = useReadableInset(560);
 
   async function handleSave() {
     if (!user) return;
@@ -129,7 +131,10 @@ export function AccountSettingsScreen({ navigation }: Props) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={[styles.content, { paddingHorizontal: inset }]}
+    >
       <Text style={styles.fieldLabel}>First name</Text>
       <TextInput
         style={styles.fieldInput}
@@ -199,10 +204,7 @@ export function AccountSettingsScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   content: {
-    width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    padding: 20,
+    paddingVertical: 20,
     paddingBottom: 60,
   },
   fieldLabel: {
