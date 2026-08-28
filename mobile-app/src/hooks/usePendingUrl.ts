@@ -40,6 +40,15 @@ async function fetchPendingCaptures(): Promise<PendingCapture[]> {
   }
 }
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 async function fetchPendingUrls(): Promise<string[]> {
   try {
     const urls = await AppGroupModule.getPendingUrls();
@@ -47,7 +56,11 @@ async function fetchPendingUrls(): Promise<string[]> {
       new Set(
         (Array.isArray(urls) ? urls : [])
           .map((url) => (typeof url === 'string' ? url.trim() : ''))
-          .filter(Boolean),
+          .filter(Boolean)
+          // Defense in depth: a stray non-URL string (e.g. shared plain text
+          // queued by an older extension build, or a cancelled/raced share)
+          // must never reach SaveProductSheet's WebView unguarded.
+          .filter(isHttpUrl),
       ),
     );
   } catch {

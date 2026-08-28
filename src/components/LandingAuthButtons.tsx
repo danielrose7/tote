@@ -1,6 +1,6 @@
 'use client';
 
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs';
+import { Show, SignInButton, SignUpButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import styles from '../AuthButton.module.css';
@@ -15,10 +15,14 @@ interface LandingAuthButtonsProps {
 function AuthButtonsFallback() {
   return (
     <div className={styles.buttons}>
-      <button className={styles.button} disabled>
+      <button type="button" className={styles.button} disabled>
         Log in
       </button>
-      <button className={`${styles.button} ${styles.buttonPrimary}`} disabled>
+      <button
+        type="button"
+        className={`${styles.button} ${styles.buttonPrimary}`}
+        disabled
+      >
         Sign up
       </button>
     </div>
@@ -33,28 +37,33 @@ function LandingAuthButtonsInner({
 }: LandingAuthButtonsProps) {
   return (
     <>
-      <SignedOut>
+      <Show when="signed-out">
         <div className={styles.buttons}>
           {showSignIn ? (
             <SignInButton mode="modal" fallbackRedirectUrl="/collections">
-              <button className={styles.button}>{signInLabel}</button>
+              <button type="button" className={styles.button}>
+                {signInLabel}
+              </button>
             </SignInButton>
           ) : null}
           <SignUpButton mode="modal" fallbackRedirectUrl="/collections">
-            <button className={`${styles.button} ${styles.buttonPrimary}`}>
+            <button
+              type="button"
+              className={`${styles.button} ${styles.buttonPrimary}`}
+            >
               {signUpLabel}
             </button>
           </SignUpButton>
         </div>
-      </SignedOut>
-      <SignedIn>
+      </Show>
+      <Show when="signed-in">
         <Link
           href="/collections"
           className={`${styles.button} ${styles.buttonPrimary}`}
         >
           {signedInLabel}
         </Link>
-      </SignedIn>
+      </Show>
     </>
   );
 }

@@ -8,37 +8,30 @@
 
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		37A4C5C12FC5E1C4007AFD50 /* ClerkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5C29B0B34A7D411CAE6AA6E9 /* ClerkKit */; };
-		37A4C5C22FC5E1C4007AFD50 /* ClerkKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = B42AC54AE28B4CA9AFF7FC31 /* ClerkKitUI */; };
+		165002A3458044FD94C155FA /* ToteShareExtension.appex in Copy Files */ = {isa = PBXBuildFile; fileRef = 987DDF398913436D8A49988E /* ToteShareExtension.appex */; };
+		298CCAA1E93E4721946B0D2E /* ShareExtensionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9FFE0C8014442596472CDD /* ShareExtensionViewController.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		4D059F33CE3D630585D347AB /* libPods-Tote.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A4DE36215F5B28925C117E58 /* libPods-Tote.a */; };
-		6271B06F5D2B1D060982D3EF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F63ADE7DA70FA1089A0A5F6E /* PrivacyInfo.xcprivacy */; };
-		652C1ECF6583A942AFAB68C2 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1F9B15DFFCF120E00E2170 /* ExpoModulesProvider.swift */; };
-		8B44CAF14B32F95FC37516F4 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E846117E45F3775A5AB8AFE3 /* ExpoModulesProvider.swift */; };
-		9B3687C7E8E44663BA9F2E30 /* ToteShareExtension.appex in Copy Files */ = {isa = PBXBuildFile; fileRef = 7D75A8D406CA4267B4EBC293 /* ToteShareExtension.appex */; };
-		9FCC31A23AE64C1D8FB494EC /* ShareExtensionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C25499830824171A93205B6 /* ShareExtensionViewController.swift */; };
+		4F6752B652BAF65B1CD92CE6 /* libPods-Tote.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE5AFB16DF14915765274C32 /* libPods-Tote.a */; };
+		6AB4F2A65B1DB4B14BC69FAE /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = BC1C329E9F7E8C507D5BED97 /* PrivacyInfo.xcprivacy */; };
+		AA7DBB0B80867E1BA3155A04 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D50EF645C62880858381B6 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		CA887B8474AB1C0DA3D717C9 /* libPods-ToteShareExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 03D0E0CAB8065AC8DF36DA68 /* libPods-ToteShareExtension.a */; };
-		D1A001000000000000000001 /* AppGroupModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000002 /* AppGroupModule.swift */; };
-		D1A001000000000000000003 /* AppGroupModule.m in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000004 /* AppGroupModule.m */; };
-		D1A001000000000000000005 /* AppGroupModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000002 /* AppGroupModule.swift */; };
-		D1A001000000000000000006 /* AppGroupModule.m in Sources */ = {isa = PBXBuildFile; fileRef = D1A001000000000000000004 /* AppGroupModule.m */; };
-		EF0A9B5566DB4785B78748FE /* ClerkViewFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20BE5A05F9344A5A18ECCAF /* ClerkViewFactory.swift */; };
+		BD45DDBFE28A8815F9E0D286 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EDD1C4FB0027481196CCC72 /* ExpoModulesProvider.swift */; };
+		D7E1179C7BE66510EC628412 /* libPods-ToteShareExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3339F70AD15CC140E25FDBED /* libPods-ToteShareExtension.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		54022F826DB04F3FA7B10EBE /* PBXContainerItemProxy */ = {
+		2C228340EA4D479E9FEFBBFD /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 7D12177554AC4AF4A4260915;
+			remoteGlobalIDString = DDCF9FAE1562441FABCBFA1E;
 			remoteInfo = ToteShareExtension;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		4778578B65FF4206B419D1BC /* Embed Foundation Extensions */ = {
+		22DDAC48C0F146A290D9E06B /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
@@ -48,33 +41,13 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D47F831D17D84CE8BEDEF2F2 /* Embed Foundation Extensions */ = {
+		A9793AB3DCB845659EDB5BB8 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-			);
-			name = "Embed Foundation Extensions";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E7E98F37C9694A488F0B0C63 /* Copy Files */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-			);
-			name = "Copy Files";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F315F8A8B6BB47799B3F3FE3 /* Copy Files */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 13;
-			files = (
-				9B3687C7E8E44663BA9F2E30 /* ToteShareExtension.appex in Copy Files */,
+				165002A3458044FD94C155FA /* ToteShareExtension.appex in Copy Files */,
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -82,30 +55,27 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		03D0E0CAB8065AC8DF36DA68 /* libPods-ToteShareExtension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ToteShareExtension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		0C25499830824171A93205B6 /* ShareExtensionViewController.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; path = ShareExtensionViewController.swift; sourceTree = "<group>"; };
-		11377C77A85144E4A2F77817 /* ToteShareExtension.entitlements */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; path = ToteShareExtension.entitlements; sourceTree = "<group>"; };
+		007E1845B1CF440BAE11CE14 /* ToteShareExtension.entitlements */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ToteShareExtension.entitlements; path = ToteShareExtension.entitlements; sourceTree = "<group>"; };
+		02A09A2EA144AB31790DC46A /* Pods-Tote.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tote.debug.xcconfig"; path = "Target Support Files/Pods-Tote/Pods-Tote.debug.xcconfig"; sourceTree = "<group>"; };
+		0A20F340D5E6CFB61AAB3CB9 /* Pods-ToteShareExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToteShareExtension.debug.xcconfig"; path = "Target Support Files/Pods-ToteShareExtension/Pods-ToteShareExtension.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Tote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Tote/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Tote/Info.plist; sourceTree = "<group>"; };
-		369E815012A04E2BBC92435A /* Pods-ToteShareExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToteShareExtension.release.xcconfig"; path = "Target Support Files/Pods-ToteShareExtension/Pods-ToteShareExtension.release.xcconfig"; sourceTree = "<group>"; };
-		7D75A8D406CA4267B4EBC293 /* ToteShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; fileEncoding = 9; includeInIndex = 0; path = ToteShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		7EC8B4E71CF39DBFE9D47C4A /* Pods-Tote.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tote.release.xcconfig"; path = "Target Support Files/Pods-Tote/Pods-Tote.release.xcconfig"; sourceTree = "<group>"; };
-		A4DE36215F5B28925C117E58 /* libPods-Tote.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Tote.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A5CD91793F97C5B66CDABC83 /* Pods-Tote.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tote.debug.xcconfig"; path = "Target Support Files/Pods-Tote/Pods-Tote.debug.xcconfig"; sourceTree = "<group>"; };
+		2309641DA20E4374A37D86DF /* Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = Info.plist; path = Info.plist; sourceTree = "<group>"; };
+		3339F70AD15CC140E25FDBED /* libPods-ToteShareExtension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ToteShareExtension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		43DF7DE28AD299B4442C22F6 /* Pods-ToteShareExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToteShareExtension.release.xcconfig"; path = "Target Support Files/Pods-ToteShareExtension/Pods-ToteShareExtension.release.xcconfig"; sourceTree = "<group>"; };
+		6D9FFE0C8014442596472CDD /* ShareExtensionViewController.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = ShareExtensionViewController.swift; path = ShareExtensionViewController.swift; sourceTree = "<group>"; };
+		7EB9292DB2547D53B3EFE5D8 /* Pods-Tote.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Tote.release.xcconfig"; path = "Target Support Files/Pods-Tote/Pods-Tote.release.xcconfig"; sourceTree = "<group>"; };
+		86D50EF645C62880858381B6 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ToteShareExtension/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		987DDF398913436D8A49988E /* ToteShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = undefined; name = ToteShareExtension.appex; path = ToteShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		9EDD1C4FB0027481196CCC72 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Tote/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Tote/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AE5AFB16DF14915765274C32 /* libPods-Tote.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Tote.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		CE1F9B15DFFCF120E00E2170 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Tote/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		D1A001000000000000000002 /* AppGroupModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppGroupModule.swift; path = Tote/AppGroupModule.swift; sourceTree = "<group>"; };
-		D1A001000000000000000004 /* AppGroupModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = AppGroupModule.m; path = Tote/AppGroupModule.m; sourceTree = "<group>"; };
-		E0D92B63AD2243BCB4A07538 /* Pods-ToteShareExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ToteShareExtension.debug.xcconfig"; path = "Target Support Files/Pods-ToteShareExtension/Pods-ToteShareExtension.debug.xcconfig"; sourceTree = "<group>"; };
-		E20BE5A05F9344A5A18ECCAF /* ClerkViewFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClerkViewFactory.swift; path = Tote/ClerkViewFactory.swift; sourceTree = "<group>"; };
-		E846117E45F3775A5AB8AFE3 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-ToteShareExtension/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		BC1C329E9F7E8C507D5BED97 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Tote/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Tote/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Tote-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Tote-Bridging-Header.h"; path = "Tote/Tote-Bridging-Header.h"; sourceTree = "<group>"; };
-		F63ADE7DA70FA1089A0A5F6E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = Tote/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		FFF64AADAD5F46DD82EBFFC0 /* Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,17 +83,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37A4C5C22FC5E1C4007AFD50 /* ClerkKitUI in Frameworks */,
-				37A4C5C12FC5E1C4007AFD50 /* ClerkKit in Frameworks */,
-				4D059F33CE3D630585D347AB /* libPods-Tote.a in Frameworks */,
+				4F6752B652BAF65B1CD92CE6 /* libPods-Tote.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E8C6E18D56B345CD93A93E8E /* Frameworks */ = {
+		4691D8EA739F400B9B816AA7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CA887B8474AB1C0DA3D717C9 /* libPods-ToteShareExtension.a in Frameworks */,
+				D7E1179C7BE66510EC628412 /* libPods-ToteShareExtension.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,15 +102,28 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				D1A001000000000000000002 /* AppGroupModule.swift */,
-				D1A001000000000000000004 /* AppGroupModule.m */,
 				F11748442D0722820044C1D9 /* Tote-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				F63ADE7DA70FA1089A0A5F6E /* PrivacyInfo.xcprivacy */,
-				E20BE5A05F9344A5A18ECCAF /* ClerkViewFactory.swift */,
+				BC1C329E9F7E8C507D5BED97 /* PrivacyInfo.xcprivacy */,
+			);
+			name = Tote;
+			sourceTree = "<group>";
+		};
+		14A22D04E65DAD157A2A6948 /* ToteShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				86D50EF645C62880858381B6 /* ExpoModulesProvider.swift */,
+			);
+			name = ToteShareExtension;
+			sourceTree = "<group>";
+		};
+		23547BEDCEFD5AD1CB0DA39A /* Tote */ = {
+			isa = PBXGroup;
+			children = (
+				9EDD1C4FB0027481196CCC72 /* ExpoModulesProvider.swift */,
 			);
 			name = Tote;
 			sourceTree = "<group>";
@@ -151,46 +132,42 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				A4DE36215F5B28925C117E58 /* libPods-Tote.a */,
-				03D0E0CAB8065AC8DF36DA68 /* libPods-ToteShareExtension.a */,
+				AE5AFB16DF14915765274C32 /* libPods-Tote.a */,
+				3339F70AD15CC140E25FDBED /* libPods-ToteShareExtension.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		4E610283A10525B19AFA9A6A /* Pods */ = {
+		30195AF5BF22481C911FBE13 /* ToteShareExtension */ = {
 			isa = PBXGroup;
 			children = (
-				A5CD91793F97C5B66CDABC83 /* Pods-Tote.debug.xcconfig */,
-				7EC8B4E71CF39DBFE9D47C4A /* Pods-Tote.release.xcconfig */,
-				E0D92B63AD2243BCB4A07538 /* Pods-ToteShareExtension.debug.xcconfig */,
-				369E815012A04E2BBC92435A /* Pods-ToteShareExtension.release.xcconfig */,
+				6D9FFE0C8014442596472CDD /* ShareExtensionViewController.swift */,
+				2309641DA20E4374A37D86DF /* Info.plist */,
+				007E1845B1CF440BAE11CE14 /* ToteShareExtension.entitlements */,
 			);
+			name = ToteShareExtension;
+			path = ToteShareExtension;
+			sourceTree = "<group>";
+		};
+		3D16EDC610A68C1CD896AF02 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				02A09A2EA144AB31790DC46A /* Pods-Tote.debug.xcconfig */,
+				7EB9292DB2547D53B3EFE5D8 /* Pods-Tote.release.xcconfig */,
+				0A20F340D5E6CFB61AAB3CB9 /* Pods-ToteShareExtension.debug.xcconfig */,
+				43DF7DE28AD299B4442C22F6 /* Pods-ToteShareExtension.release.xcconfig */,
+			);
+			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
-		507C4FBA29B85CD551FDBE71 /* ExpoModulesProviders */ = {
+		66E7584636ADCCF063C3452B /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				650ECD596DB4FF565B22FB25 /* Tote */,
-				6A066944E6D18789C3131169 /* ToteShareExtension */,
+				23547BEDCEFD5AD1CB0DA39A /* Tote */,
+				14A22D04E65DAD157A2A6948 /* ToteShareExtension */,
 			);
 			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
-		650ECD596DB4FF565B22FB25 /* Tote */ = {
-			isa = PBXGroup;
-			children = (
-				CE1F9B15DFFCF120E00E2170 /* ExpoModulesProvider.swift */,
-			);
-			name = Tote;
-			sourceTree = "<group>";
-		};
-		6A066944E6D18789C3131169 /* ToteShareExtension */ = {
-			isa = PBXGroup;
-			children = (
-				E846117E45F3775A5AB8AFE3 /* ExpoModulesProvider.swift */,
-			);
-			name = ToteShareExtension;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -207,9 +184,9 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				CD2E49528B164F21A2B7A0A1 /* ToteShareExtension */,
-				4E610283A10525B19AFA9A6A /* Pods */,
-				507C4FBA29B85CD551FDBE71 /* ExpoModulesProviders */,
+				30195AF5BF22481C911FBE13 /* ToteShareExtension */,
+				3D16EDC610A68C1CD896AF02 /* Pods */,
+				66E7584636ADCCF063C3452B /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -220,7 +197,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Tote.app */,
-				7D75A8D406CA4267B4EBC293 /* ToteShareExtension.appex */,
+				987DDF398913436D8A49988E /* ToteShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -234,16 +211,6 @@
 			path = Tote/Supporting;
 			sourceTree = "<group>";
 		};
-		CD2E49528B164F21A2B7A0A1 /* ToteShareExtension */ = {
-			isa = PBXGroup;
-			children = (
-				0C25499830824171A93205B6 /* ShareExtensionViewController.swift */,
-				FFF64AADAD5F46DD82EBFFC0 /* Info.plist */,
-				11377C77A85144E4A2F77817 /* ToteShareExtension.entitlements */,
-			);
-			path = ToteShareExtension;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -251,47 +218,39 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Tote" */;
 			buildPhases = (
-				F7A3C21B9E4D48A6B0C15E92 /* [Tote] Check iOS overrides in sync */,
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				B52FD9879030616D44050494 /* [Expo] Configure project */,
+				F4EBADFB3CF4B933A6640742 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				4778578B65FF4206B419D1BC /* Embed Foundation Extensions */,
-				F315F8A8B6BB47799B3F3FE3 /* Copy Files */,
-				F25E5E0355E6DC1A61DECBD1 /* [CP] Embed Pods Frameworks */,
-				D47F831D17D84CE8BEDEF2F2 /* Embed Foundation Extensions */,
-				E7E98F37C9694A488F0B0C63 /* Copy Files */,
+				22DDAC48C0F146A290D9E06B /* Embed Foundation Extensions */,
+				A9793AB3DCB845659EDB5BB8 /* Copy Files */,
+				E66408385CC3F5BFDDF7C23C /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				0856355183DF4BEBB3607B73 /* PBXTargetDependency */,
+				34ABCB3C847146C79C72F068 /* PBXTargetDependency */,
 			);
 			name = Tote;
-			packageProductDependencies = (
-				5C29B0B34A7D411CAE6AA6E9 /* ClerkKit */,
-				B42AC54AE28B4CA9AFF7FC31 /* ClerkKitUI */,
-			);
 			productName = Tote;
 			productReference = 13B07F961A680F5B00A75B9A /* Tote.app */;
 			productType = "com.apple.product-type.application";
 		};
-		7D12177554AC4AF4A4260915 /* ToteShareExtension */ = {
+		DDCF9FAE1562441FABCBFA1E /* ToteShareExtension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 90B221C767334168AF08679A /* Build configuration list for PBXNativeTarget "ToteShareExtension" */;
+			buildConfigurationList = CA76956965EC4111B8852C2B /* Build configuration list for PBXNativeTarget "ToteShareExtension" */;
 			buildPhases = (
-				C4E81D5A73B2496F8AD30C77 /* [Tote] Check iOS overrides in sync */,
-				13228728C9175DF591EBFDF8 /* [CP] Check Pods Manifest.lock */,
-				A828FF5CEEC348B3965262AB /* Start Packager */,
-				8D153A8404BDC9619560BE9B /* [Expo] Configure project */,
-				40E7B6A3AE2F43468E2C3552 /* Sources */,
-				E8C6E18D56B345CD93A93E8E /* Frameworks */,
-				A604F576D7E244E69FBFA8C6 /* Resources */,
-				638C16DF542B4E6988900B9E /* Bundle React Native code and images */,
-				A3D1E5E2A060CA5F290500BF /* [CP] Copy Pods Resources */,
+				68BDEF9FE8013416260EBD5A /* [CP] Check Pods Manifest.lock */,
+				DFEC850A464241D197F7FFFF /* Start Packager */,
+				176844C30558451191939D8A /* [Expo] Configure project */,
+				3190BC5F560F4A928ED52A33 /* Sources */,
+				4691D8EA739F400B9B816AA7 /* Frameworks */,
+				27FA90BD7C37456F91358D64 /* Resources */,
+				1C144A6EE07340A3A4DD658B /* Bundle React Native code and images */,
+				328DE56F04091B198D7B0CB7 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -299,7 +258,7 @@
 			);
 			name = ToteShareExtension;
 			productName = ToteShareExtension;
-			productReference = 7D75A8D406CA4267B4EBC293 /* ToteShareExtension.appex */;
+			productReference = 987DDF398913436D8A49988E /* ToteShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -308,14 +267,17 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1620;
+				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = 8RCZXVFHYN;
 						LastSwiftMigration = 1250;
+						ProvisioningStyle = Automatic;
 					};
-					7D12177554AC4AF4A4260915 = {
+					DDCF9FAE1562441FABCBFA1E = {
+						DevelopmentTeam = 8RCZXVFHYN;
 						LastSwiftMigration = 1250;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -328,15 +290,12 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
-			packageReferences = (
-				0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */,
-			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Tote */,
-				7D12177554AC4AF4A4260915 /* ToteShareExtension */,
+				DDCF9FAE1562441FABCBFA1E /* ToteShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -349,11 +308,11 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				6271B06F5D2B1D060982D3EF /* PrivacyInfo.xcprivacy in Resources */,
+				6AB4F2A65B1DB4B14BC69FAE /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A604F576D7E244E69FBFA8C6 /* Resources */ = {
+		27FA90BD7C37456F91358D64 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -402,87 +361,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		13228728C9175DF591EBFDF8 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-ToteShareExtension-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		638C16DF542B4E6988900B9E /* Bundle React Native code and images */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Bundle React Native code and images";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -e\n  NODE_BINARY=${NODE_BINARY:-node}\n  \n  # Source environment files\n  if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n    source \"$PODS_ROOT/../.xcode.env\"\n  fi\n  if [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n    source \"$PODS_ROOT/../.xcode.env.local\"\n  fi\n  \n  # Set project root\n  export PROJECT_ROOT=\"$PROJECT_DIR\"/..\n  \n  # Set entry file\n  export ENTRY_FILE=\"$PROJECT_ROOT/index.share.tsx\"\n  \n  # Set up Expo CLI\n  if [[ -z \"$CLI_PATH\" ]]; then\n    export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\n  fi\n  \n  if [[ -z \"$BUNDLE_COMMAND\" ]]; then\n    export BUNDLE_COMMAND=\"export:embed\"\n  fi\n  \n  REACT_NATIVE_SCRIPTS_PATH=$(\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts'\")\n  WITH_ENVIRONMENT=\"$REACT_NATIVE_SCRIPTS_PATH/xcode/with-environment.sh\"\n  REACT_NATIVE_XCODE=\"$REACT_NATIVE_SCRIPTS_PATH/react-native-xcode.sh\"\n  \n  /bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"";
-		};
-		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-resources.sh",
-				"${PODS_CONFIGURATION_BUILD_DIR}/AppAuth/AppAuthCore_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/GTMAppAuth/GTMAppAuth_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleSignIn/GoogleSignIn.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUtilities/GoogleUtilities_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesObjC/FBLPromises_Privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage/SDWebImage.bundle",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AppAuthCore_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GTMAppAuth_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GTMSessionFetcher_Core_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleSignIn.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleUtilities_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FBLPromises_Privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SDWebImage.bundle",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		8D153A8404BDC9619560BE9B /* [Expo] Configure project */ = {
+		176844C30558451191939D8A /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -506,7 +385,21 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-ToteShareExtension/expo-configure-project.sh\"\n";
 		};
-		A3D1E5E2A060CA5F290500BF /* [CP] Copy Pods Resources */ = {
+		1C144A6EE07340A3A4DD658B /* Bundle React Native code and images */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle React Native code and images";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\n  NODE_BINARY=${NODE_BINARY:-node}\n  \n  # Source environment files\n  if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n    source \"$PODS_ROOT/../.xcode.env\"\n  fi\n  if [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n    source \"$PODS_ROOT/../.xcode.env.local\"\n  fi\n  \n  # Set project root\n  export PROJECT_ROOT=\"$PROJECT_DIR\"/..\n  \n  # Set entry file\n  export ENTRY_FILE=\"$PROJECT_ROOT/index.share.js\"\n  \n  # Set up Expo CLI\n  if [[ -z \"$CLI_PATH\" ]]; then\n    export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\n  fi\n  \n  if [[ -z \"$BUNDLE_COMMAND\" ]]; then\n    export BUNDLE_COMMAND=\"export:embed\"\n  fi\n  \n  REACT_NATIVE_SCRIPTS_PATH=$(\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts'\")\n  WITH_ENVIRONMENT=\"$REACT_NATIVE_SCRIPTS_PATH/xcode/with-environment.sh\"\n  REACT_NATIVE_XCODE=\"$REACT_NATIVE_SCRIPTS_PATH/react-native-xcode.sh\"\n  \n  /bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"";
+		};
+		328DE56F04091B198D7B0CB7 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -523,6 +416,7 @@
 				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleSignIn/GoogleSignIn.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUtilities/GoogleUtilities_Privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesObjC/FBLPromises_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesSwift/Promises_Privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
@@ -540,6 +434,7 @@
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleSignIn.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleUtilities_Privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FBLPromises_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Promises_Privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
@@ -550,22 +445,75 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ToteShareExtension/Pods-ToteShareExtension-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		C4E81D5A73B2496F8AD30C77 /* [Tote] Check iOS overrides in sync */ = {
+		68BDEF9FE8013416260EBD5A /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ToteShareExtension-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/AppAuth/AppAuthCore_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/GTMAppAuth/GTMAppAuth_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/GTMSessionFetcher/GTMSessionFetcher_Core_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleSignIn/GoogleSignIn.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/GoogleUtilities/GoogleUtilities_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesObjC/FBLPromises_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/PromisesSwift/Promises_Privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage/SDWebImage.bundle",
 			);
-			name = "[Tote] Check iOS overrides in sync";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AppAuthCore_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GTMAppAuth_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GTMSessionFetcher_Core_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleSignIn.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleUtilities_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/FBLPromises_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Promises_Privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SDWebImage.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Fail the build when ios/ has drifted from ios-overrides/, so an Xcode build\n# or App Store archive can never ship a stale copy of the hand-maintained\n# native files. Xcode never runs 'pnpm ios', so nothing else guards this.\nif [[ -f \"$SRCROOT/.xcode.env\" ]]; then\n  source \"$SRCROOT/.xcode.env\"\nfi\nif [[ -f \"$SRCROOT/.xcode.env.local\" ]]; then\n  source \"$SRCROOT/.xcode.env.local\"\nfi\nNODE_BINARY=${NODE_BINARY:-node}\n\nif ! \"$NODE_BINARY\" \"$SRCROOT/../scripts/check-ios-overrides.mjs\"; then\n  echo \"error: ios/ has drifted from ios-overrides/. Run 'pnpm ios:sync-overrides', or copy your ios/ edit back into ios-overrides/, then build again.\" >&2\n  exit 1\nfi\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-resources.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
-		A828FF5CEEC348B3965262AB /* Start Packager */ = {
+		DFEC850A464241D197F7FFFF /* Start Packager */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -579,22 +527,29 @@
 			shellPath = /bin/sh;
 			shellScript = "export RCT_METRO_PORT=\"${RCT_METRO_PORT:=8081}\"\necho \"export RCT_METRO_PORT=${RCT_METRO_PORT}\" > \"${SRCROOT}/../node_modules/react-native/scripts/.packager.env\"\nif [ -z \"${RCT_NO_LAUNCH_PACKAGER+xxx}\" ] ; then\n  if nc -w 5 -z localhost ${RCT_METRO_PORT} ; then\n    if ! curl -s \"http://localhost:${RCT_METRO_PORT}/status\" | grep -q \"packager-status:running\" ; then\n      echo \"Port ${RCT_METRO_PORT} already in use, packager is either not running or not running correctly\"\n      exit 2\n    fi\n  else\n    open \"$SRCROOT/../node_modules/react-native/scripts/launchPackager.command\" || echo \"Can't start packager automatically\"\n  fi\nfi\n";
 		};
-		F7A3C21B9E4D48A6B0C15E92 /* [Tote] Check iOS overrides in sync */ = {
+		E66408385CC3F5BFDDF7C23C /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermesvm.framework/hermesvm",
 			);
-			name = "[Tote] Check iOS overrides in sync";
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermesvm.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Fail the build when ios/ has drifted from ios-overrides/, so an Xcode build\n# or App Store archive can never ship a stale copy of the hand-maintained\n# native files. Xcode never runs 'pnpm ios', so nothing else guards this.\nif [[ -f \"$SRCROOT/.xcode.env\" ]]; then\n  source \"$SRCROOT/.xcode.env\"\nfi\nif [[ -f \"$SRCROOT/.xcode.env.local\" ]]; then\n  source \"$SRCROOT/.xcode.env.local\"\nfi\nNODE_BINARY=${NODE_BINARY:-node}\n\nif ! \"$NODE_BINARY\" \"$SRCROOT/../scripts/check-ios-overrides.mjs\"; then\n  echo \"error: ios/ has drifted from ios-overrides/. Run 'pnpm ios:sync-overrides', or copy your ios/ edit back into ios-overrides/, then build again.\" >&2\n  exit 1\nfi\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
-		B52FD9879030616D44050494 /* [Expo] Configure project */ = {
+		F4EBADFB3CF4B933A6640742 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -618,28 +573,6 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Tote/expo-configure-project.sh\"\n";
 		};
-		F25E5E0355E6DC1A61DECBD1 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermesvm.framework/hermesvm",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermesvm.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Tote/Pods-Tote-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -648,52 +581,47 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				D1A001000000000000000001 /* AppGroupModule.swift in Sources */,
-				D1A001000000000000000003 /* AppGroupModule.m in Sources */,
-				652C1ECF6583A942AFAB68C2 /* ExpoModulesProvider.swift in Sources */,
-				EF0A9B5566DB4785B78748FE /* ClerkViewFactory.swift in Sources */,
+				BD45DDBFE28A8815F9E0D286 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		40E7B6A3AE2F43468E2C3552 /* Sources */ = {
+		3190BC5F560F4A928ED52A33 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9FCC31A23AE64C1D8FB494EC /* ShareExtensionViewController.swift in Sources */,
-				8B44CAF14B32F95FC37516F4 /* ExpoModulesProvider.swift in Sources */,
-				D1A001000000000000000005 /* AppGroupModule.swift in Sources */,
-				D1A001000000000000000006 /* AppGroupModule.m in Sources */,
+				298CCAA1E93E4721946B0D2E /* ShareExtensionViewController.swift in Sources */,
+				AA7DBB0B80867E1BA3155A04 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		0856355183DF4BEBB3607B73 /* PBXTargetDependency */ = {
+		34ABCB3C847146C79C72F068 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 7D12177554AC4AF4A4260915 /* ToteShareExtension */;
-			targetProxy = 54022F826DB04F3FA7B10EBE /* PBXContainerItemProxy */;
+			target = DDCF9FAE1562441FABCBFA1E /* ToteShareExtension */;
+			targetProxy = 2C228340EA4D479E9FEFBBFD /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A5CD91793F97C5B66CDABC83 /* Pods-Tote.debug.xcconfig */;
+			baseConfigurationReference = 02A09A2EA144AB31790DC46A /* Pods-Tote.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Tote/Tote.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8RCZXVFHYN;
 				ENABLE_BITCODE = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = Tote/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tote;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -718,16 +646,16 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7EC8B4E71CF39DBFE9D47C4A /* Pods-Tote.release.xcconfig */;
+			baseConfigurationReference = 7EB9292DB2547D53B3EFE5D8 /* Pods-Tote.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Tote/Tote.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8RCZXVFHYN;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = Tote/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tote;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -749,58 +677,19 @@
 			};
 			name = Release;
 		};
-		16731667BB314A2C9CBD6102 /* Release */ = {
+		55749EF4BD6F4FDCB8CA0503 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 369E815012A04E2BBC92435A /* Pods-ToteShareExtension.release.xcconfig */;
+			baseConfigurationReference = 0A20F340D5E6CFB61AAB3CB9 /* Pods-ToteShareExtension.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = ToteShareExtension/ToteShareExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 8RCZXVFHYN;
 				ENABLE_ON_DEMAND_RESOURCES = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ToteShareExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "$(PRODUCT_NAME) Share Extension";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.2.0;
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = tools.tote.app.share;
-				PRODUCT_NAME = ToteShareExtension;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VERSIONING_SYSTEM = "apple-generic";
-			};
-			name = Release;
-		};
-		6F87D58CCE7A4165AAFD2DB3 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = E0D92B63AD2243BCB4A07538 /* Pods-ToteShareExtension.debug.xcconfig */;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = ToteShareExtension/ToteShareExtension.entitlements;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8RCZXVFHYN;
-				ENABLE_ON_DEMAND_RESOURCES = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ToteShareExtension/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "$(PRODUCT_NAME) Share Extension";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -813,7 +702,6 @@
 				PRODUCT_NAME = ToteShareExtension;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -841,7 +729,6 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -851,7 +738,6 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -877,7 +763,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../node_modules/.pnpm/react-native@0.83.2_@babel+core@7.28.5_@react-native+metro-config@0.84.1_@babel+core@7._eee25aae5663a7b4565bfb2c500673cc/node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../node_modules/.pnpm/react-native@0.83.2_@babel+core@7.28.5_@react-native+metro-config@0.84.1_@babel+core@7._0a83c93a34573a63189280e7d8042777/node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
@@ -908,7 +794,6 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -918,7 +803,6 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -936,12 +820,39 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
-				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../node_modules/.pnpm/react-native@0.83.2_@babel+core@7.28.5_@react-native+metro-config@0.84.1_@babel+core@7._eee25aae5663a7b4565bfb2c500673cc/node_modules/react-native";
+				REACT_NATIVE_PATH = "${PODS_ROOT}/../../../node_modules/.pnpm/react-native@0.83.2_@babel+core@7.28.5_@react-native+metro-config@0.84.1_@babel+core@7._0a83c93a34573a63189280e7d8042777/node_modules/react-native";
 				SDKROOT = iphoneos;
-				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C7C050885CDE4E1288B30C86 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 43DF7DE28AD299B4442C22F6 /* Pods-ToteShareExtension.release.xcconfig */;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ToteShareExtension/ToteShareExtension.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8RCZXVFHYN;
+				ENABLE_ON_DEMAND_RESOURCES = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ToteShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2.0;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
+				PRODUCT_BUNDLE_IDENTIFIER = tools.tote.app.share;
+				PRODUCT_NAME = ToteShareExtension;
+				SWIFT_VERSION = 5.0;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};
@@ -966,40 +877,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		90B221C767334168AF08679A /* Build configuration list for PBXNativeTarget "ToteShareExtension" */ = {
+		CA76956965EC4111B8852C2B /* Build configuration list for PBXNativeTarget "ToteShareExtension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F87D58CCE7A4165AAFD2DB3 /* Debug */,
-				16731667BB314A2C9CBD6102 /* Release */,
+				55749EF4BD6F4FDCB8CA0503 /* Debug */,
+				C7C050885CDE4E1288B30C86 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/clerk/clerk-ios.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		5C29B0B34A7D411CAE6AA6E9 /* ClerkKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */;
-			productName = ClerkKit;
-		};
-		B42AC54AE28B4CA9AFF7FC31 /* ClerkKitUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 0325AE4BCA8742F1AEE427AF /* XCRemoteSwiftPackageReference "clerk-ios" */;
-			productName = ClerkKitUI;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

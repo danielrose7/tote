@@ -294,6 +294,18 @@ class ShareExtensionViewController: UIViewController {
       return
     }
 
+    // The text provider branch hands us arbitrary shared plain text (e.g. a
+    // page title), not just URLs — only queue it if it actually parses as an
+    // http(s) URL, otherwise a stray string ends up in the same queue the
+    // main app loads unguarded into a WebView.
+    guard let parsed = URL(string: normalizedUrl),
+          let scheme = parsed.scheme?.lowercased(),
+          scheme == "http" || scheme == "https",
+          parsed.host != nil else {
+      appendPendingUrlDebugEvent("skip-not-a-url|\(normalizedUrl)")
+      return
+    }
+
     guard queuedPendingUrlsThisSession.insert(normalizedUrl).inserted else {
       appendPendingUrlDebugEvent("skip-duplicate-session|\(normalizedUrl)")
       print("[ShareExtension] Skipping duplicate pending URL in current share session: \(normalizedUrl)")

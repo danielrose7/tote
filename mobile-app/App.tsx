@@ -1,13 +1,11 @@
-import { useAuth, useUser } from '@clerk/expo';
+import { useAuth, useSignIn, useSignUp, useUser } from '@clerk/expo';
 import { useSignInWithApple } from '@clerk/expo/apple';
-import { useSignIn, useSignUp } from '@clerk/expo/legacy';
+import { useSignInWithGoogle } from '@clerk/expo/google';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as AuthSession from 'expo-auth-session';
 import { StatusBar } from 'expo-status-bar';
-import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -56,8 +54,6 @@ import type { RootStackParamList } from './src/navigation/types';
 import { Providers } from './src/providers';
 import { AccountSettingsScreen } from './src/screens/AccountSettingsScreen';
 import { CollectionDetailScreen } from './src/screens/CollectionDetailScreen';
-
-WebBrowser.maybeCompleteAuthSession();
 
 // Initialize SQLite on startup
 setupDatabase().catch((e) => console.warn('DB setup error:', e));
@@ -154,31 +150,32 @@ function OnboardingScreen({
 }
 
 function SignInScreen() {
-  const {
-    isLoaded: isSignInLoaded,
-    signIn,
-    setActive: setActiveSignIn,
-  } = useSignIn();
-  const {
-    isLoaded: isSignUpLoaded,
-    signUp,
-    setActive: setActiveSignUp,
-  } = useSignUp();
+  const { fetchStatus: signInFetchStatus, signIn } = useSignIn();
+  const { fetchStatus: signUpFetchStatus, signUp } = useSignUp();
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [emailMode, setEmailMode] = useState<'signIn' | 'signUp'>('signIn');
+  const [emailStep, setEmailStep] = useState<
+    'credentials' | 'verifySignUp' | 'secondFactor'
+  >('credentials');
+  const [secondFactorStrategy, setSecondFactorStrategy] = useState<
+    'email_code' | 'phone_code' | 'totp' | 'backup_code' | null
+  >(null);
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
-  const [awaitingVerification, setAwaitingVerification] = useState(false);
   const { startAppleAuthenticationFlow } = useSignInWithApple();
+  const { startGoogleAuthenticationFlow } = useSignInWithGoogle();
   const [oauthLoading, setOauthLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
-  const emailActionLabel = awaitingVerification
-    ? 'Verify email'
-    : emailMode === 'signIn'
-      ? 'Sign in with email'
-      : 'Create account';
+  const emailActionLabel =
+    emailStep === 'verifySignUp'
+      ? 'Verify email'
+      : emailStep === 'secondFactor'
+        ? 'Verify code'
+        : emailMode === 'signIn'
+          ? 'Sign in with email'
+          : 'Create account';
 
   function formatClerkError(err: unknown) {
     const firstError = (
@@ -190,52 +187,116 @@ function SignInScreen() {
     return 'Please try again.';
   }
 
-  async function handleSignIn(strategy: 'oauth_google' | 'oauth_apple') {
+  function throwIfClerkError(result: { error: unknown | null }) {
+    if (result.error) throw result.error;
+  }
+
+  async function prepareSecondFactor() {
+    if (!signIn) return false;
+
+    const emailCodeFactor = signIn.supportedSecondFactors.find(
+      (factor) => factor.strategy === 'email_code',
+    );
+
+    if (emailCodeFactor) {
+      throwIfClerkError(await signIn.mfa.sendEmailCode());
+      setSecondFactorStrategy('email_code');
+      setEmailStep('secondFactor');
+      Alert.alert(
+        'Verification required',
+        `Enter the code Clerk emailed to ${emailCodeFactor.safeIdentifier}.`,
+      );
+      return true;
+    }
+
+    const phoneCodeFactor = signIn.supportedSecondFactors.find(
+      (factor) => factor.strategy === 'phone_code',
+    );
+
+    if (phoneCodeFactor) {
+      throwIfClerkError(await signIn.mfa.sendPhoneCode());
+      setSecondFactorStrategy('phone_code');
+      setEmailStep('secondFactor');
+      Alert.alert(
+        'Verification required',
+        `Enter the code Clerk sent to ${phoneCodeFactor.safeIdentifier}.`,
+      );
+      return true;
+    }
+
+    if (
+      signIn.supportedSecondFactors.some((factor) => factor.strategy === 'totp')
+    ) {
+      setSecondFactorStrategy('totp');
+      setEmailStep('secondFactor');
+      Alert.alert(
+        'Verification required',
+        'Enter the code from your authenticator app.',
+      );
+      return true;
+    }
+
+    if (
+      signIn.supportedSecondFactors.some(
+        (factor) => factor.strategy === 'backup_code',
+      )
+    ) {
+      setSecondFactorStrategy('backup_code');
+      setEmailStep('secondFactor');
+      Alert.alert('Verification required', 'Enter one of your backup codes.');
+      return true;
+    }
+
+    return false;
+  }
+
+  async function verifySecondFactor(code: string) {
+    if (!signIn || !secondFactorStrategy) return;
+
+    if (secondFactorStrategy === 'email_code') {
+      throwIfClerkError(await signIn.mfa.verifyEmailCode({ code }));
+      return;
+    }
+
+    if (secondFactorStrategy === 'phone_code') {
+      throwIfClerkError(await signIn.mfa.verifyPhoneCode({ code }));
+      return;
+    }
+
+    if (secondFactorStrategy === 'totp') {
+      throwIfClerkError(await signIn.mfa.verifyTOTP({ code }));
+      return;
+    }
+
+    throwIfClerkError(await signIn.mfa.verifyBackupCode({ code }));
+  }
+
+  function getSecondFactorPrompt() {
+    if (secondFactorStrategy === 'totp') {
+      return 'Enter the code from your authenticator app.';
+    }
+
+    if (secondFactorStrategy === 'backup_code') {
+      return 'Enter one of your backup codes.';
+    }
+
+    if (secondFactorStrategy === 'phone_code') {
+      return 'Enter the verification code Clerk sent to your phone.';
+    }
+
+    return 'Enter the verification code Clerk emailed to your account.';
+  }
+
+  async function handleGoogleSignIn() {
     if (oauthLoading) return;
 
     setOauthLoading(true);
 
     try {
-      if (!isSignInLoaded || !isSignUpLoaded || !signIn || !signUp) return;
-
-      const redirectUrl = AuthSession.makeRedirectUri({
-        path: 'oauth-native-callback',
-      });
-
-      await signIn.create({ strategy, redirectUrl });
-
-      const externalVerificationRedirectURL =
-        signIn.firstFactorVerification.externalVerificationRedirectURL;
-
-      if (!externalVerificationRedirectURL) {
-        throw new Error('OAuth redirect URL was not returned by Clerk.');
-      }
-
-      WebBrowser.dismissAuthSession();
-      const authSessionResult = await WebBrowser.openAuthSessionAsync(
-        externalVerificationRedirectURL.toString(),
-        redirectUrl,
-      );
-
-      if (authSessionResult.type !== 'success') return;
-
-      const rotatingTokenNonce =
-        new URL(authSessionResult.url).searchParams.get(
-          'rotating_token_nonce',
-        ) || '';
-
-      await signIn.reload({ rotatingTokenNonce });
-
-      let createdSessionId = '';
-      if (signIn.status === 'complete') {
-        createdSessionId = signIn.createdSessionId || '';
-      } else if (signIn.firstFactorVerification.status === 'transferable') {
-        await signUp.create({ transfer: true });
-        createdSessionId = signUp.createdSessionId || '';
-      }
-
-      if (createdSessionId && setActiveSignIn) {
-        await setActiveSignIn({ session: createdSessionId });
+      const { createdSessionId, setActive } =
+        await startGoogleAuthenticationFlow();
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
       }
     } catch (err) {
       const msg = formatClerkError(err);
@@ -274,15 +335,17 @@ function SignInScreen() {
     setEmailLoading(true);
 
     try {
-      if (awaitingVerification) {
-        if (!isSignUpLoaded || !signUp || !setActiveSignUp) return;
+      if (emailStep === 'verifySignUp') {
+        if (signUpFetchStatus === 'fetching' || !signUp) return;
 
-        const attempt = await signUp.attemptEmailAddressVerification({
-          code: verificationCode.trim(),
-        });
+        throwIfClerkError(
+          await signUp.verifications.verifyEmailCode({
+            code: verificationCode.trim(),
+          }),
+        );
 
-        if (attempt.status === 'complete' && attempt.createdSessionId) {
-          await setActiveSignUp({ session: attempt.createdSessionId });
+        if (signUp.status === 'complete' && signUp.createdSessionId) {
+          throwIfClerkError(await signUp.finalize({ navigate: () => {} }));
           return;
         }
 
@@ -293,31 +356,75 @@ function SignInScreen() {
         return;
       }
 
-      if (emailMode === 'signIn') {
-        if (!isSignInLoaded || !signIn || !setActiveSignIn) return;
+      if (emailStep === 'secondFactor') {
+        if (signInFetchStatus === 'fetching' || !signIn) return;
 
-        const result = await signIn.create({
-          identifier: emailAddress.trim(),
-          password,
-        });
+        await verifySecondFactor(verificationCode.trim());
 
-        if (result.status === 'complete' && result.createdSessionId) {
-          await setActiveSignIn({ session: result.createdSessionId });
+        if (signIn.status === 'complete' && signIn.createdSessionId) {
+          throwIfClerkError(await signIn.finalize({ navigate: () => {} }));
           return;
         }
 
-        Alert.alert("Email sign in didn't finish", 'Please try again.');
+        console.error('Email second factor incomplete:', signIn.status);
+        Alert.alert(
+          "Email sign in didn't finish",
+          `Please try again. (status: ${signIn.status})`,
+        );
         return;
       }
 
-      if (!isSignUpLoaded || !signUp) return;
+      if (emailMode === 'signIn') {
+        if (signInFetchStatus === 'fetching' || !signIn) return;
 
-      await signUp.create({
-        emailAddress: emailAddress.trim(),
-        password,
-      });
-      await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      setAwaitingVerification(true);
+        throwIfClerkError(
+          await signIn.password({
+            emailAddress: emailAddress.trim(),
+            password,
+          }),
+        );
+
+        if (signIn.status === 'complete' && signIn.createdSessionId) {
+          throwIfClerkError(await signIn.finalize({ navigate: () => {} }));
+          return;
+        }
+
+        if (signIn.status === 'needs_second_factor') {
+          const prepared = await prepareSecondFactor();
+          if (prepared) return;
+
+          const supportedStrategies = signIn.supportedSecondFactors
+            .map((factor) => factor.strategy)
+            .join(', ');
+          console.error(
+            'Unsupported email sign in second factors:',
+            supportedStrategies,
+          );
+          Alert.alert(
+            'More verification required',
+            'This account requires a second factor this sign-in form does not support yet. Try signing in with Google or Apple.',
+          );
+          return;
+        }
+
+        console.error('Email sign in incomplete:', signIn.status);
+        Alert.alert(
+          "Email sign in didn't finish",
+          `Please try again. (status: ${signIn.status})`,
+        );
+        return;
+      }
+
+      if (signUpFetchStatus === 'fetching' || !signUp) return;
+
+      throwIfClerkError(
+        await signUp.password({
+          emailAddress: emailAddress.trim(),
+          password,
+        }),
+      );
+      throwIfClerkError(await signUp.verifications.sendEmailCode());
+      setEmailStep('verifySignUp');
     } catch (err) {
       console.error('Email auth error:', err);
       Alert.alert(
@@ -332,7 +439,8 @@ function SignInScreen() {
   }
 
   function resetEmailFlow(nextMode?: 'signIn' | 'signUp') {
-    setAwaitingVerification(false);
+    setEmailStep('credentials');
+    setSecondFactorStrategy(null);
     setVerificationCode('');
     setPassword('');
     if (nextMode) setEmailMode(nextMode);
@@ -356,7 +464,7 @@ function SignInScreen() {
           <View style={styles.authButtons}>
             <TouchableOpacity
               style={[styles.button, oauthLoading && styles.buttonDisabled]}
-              onPress={() => handleSignIn('oauth_google')}
+              onPress={handleGoogleSignIn}
               disabled={oauthLoading}
             >
               <Text style={styles.buttonText}>Continue with Google</Text>
@@ -387,7 +495,7 @@ function SignInScreen() {
 
           {showEmailForm && (
             <View style={styles.emailCard}>
-              {!awaitingVerification && (
+              {emailStep === 'credentials' && (
                 <View style={styles.emailModeRow}>
                   <TouchableOpacity
                     style={[
@@ -426,11 +534,25 @@ function SignInScreen() {
                 </View>
               )}
 
-              {awaitingVerification ? (
+              {emailStep === 'verifySignUp' ? (
                 <>
                   <Text style={styles.emailHelper}>
                     Enter the verification code Clerk emailed to{' '}
                     {emailAddress.trim()}.
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    value={verificationCode}
+                    onChangeText={setVerificationCode}
+                    placeholder="Verification code"
+                    autoCapitalize="none"
+                    keyboardType="number-pad"
+                  />
+                </>
+              ) : emailStep === 'secondFactor' ? (
+                <>
+                  <Text style={styles.emailHelper}>
+                    {getSecondFactorPrompt()}
                   </Text>
                   <TextInput
                     style={styles.input}
@@ -478,7 +600,7 @@ function SignInScreen() {
                 </Text>
               </TouchableOpacity>
 
-              {awaitingVerification ? (
+              {emailStep !== 'credentials' ? (
                 <TouchableOpacity onPress={() => resetEmailFlow('signUp')}>
                   <Text style={styles.link}>Start over</Text>
                 </TouchableOpacity>
@@ -768,10 +890,12 @@ function CollectionListContent({
   const apiKeyProvisioned = useRef(false);
 
   async function loadCollections(force = false) {
+    if (!user?.id) return;
+
     // 1. Load from cache first (fast path)
     if (!force) {
       try {
-        const cached = await getCachedCollections();
+        const cached = await getCachedCollections(user.id);
         if (cached.length > 0) {
           setCollections(cached);
           setLoaded(true);
@@ -786,7 +910,7 @@ function CollectionListContent({
         return;
       }
       const result = await fetchCollections(token);
-      await upsertCollections(result);
+      await upsertCollections(user.id, result);
       setCollections(result);
       setLoaded(true);
       // Populate cache and provision API key for share extension
@@ -1171,10 +1295,19 @@ function AuthScreen() {
   const [autoAdd, setAutoAdd] = useState(false);
 
   useEffect(() => {
+    setOnboardingDone(null);
+    setAutoAdd(false);
     if (!userId) return;
+
+    let cancelled = false;
     AsyncStorage.getItem(onboardingKey(userId)).then((val) => {
+      if (cancelled) return;
       setOnboardingDone(val === 'true');
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   if (!isLoaded || (userId && !user) || (userId && onboardingDone === null)) {
@@ -1201,7 +1334,7 @@ function AuthScreen() {
     );
   }
 
-  return <AppScreens autoAdd={autoAdd} />;
+  return <AppScreens key={userId} autoAdd={autoAdd} />;
 }
 
 export default function App() {

@@ -12,9 +12,21 @@ function getDb(): SQLite.SQLiteDatabase {
 
 export async function setupDatabase(): Promise<void> {
   const database = getDb();
+  const collectionColumns = await database.getAllAsync<{ name: string }>(
+    'PRAGMA table_info(collections)',
+  );
+  const hasUnscopedCollectionsTable =
+    collectionColumns.length > 0 &&
+    !collectionColumns.some((column) => column.name === 'cached_for_user_id');
+
+  if (hasUnscopedCollectionsTable) {
+    await database.execAsync('DROP TABLE collections');
+  }
+
   await database.execAsync(`
     CREATE TABLE IF NOT EXISTS collections (
-      id TEXT PRIMARY KEY,
+      cached_for_user_id TEXT NOT NULL,
+      id TEXT NOT NULL,
       name TEXT NOT NULL,
       description TEXT,
       color TEXT,
@@ -23,7 +35,8 @@ export async function setupDatabase(): Promise<void> {
       role TEXT NOT NULL,
       owner_user_id TEXT NOT NULL,
       updated_at TEXT NOT NULL,
-      synced_at TEXT NOT NULL
+      synced_at TEXT NOT NULL,
+      PRIMARY KEY (cached_for_user_id, id)
     );
 
     CREATE TABLE IF NOT EXISTS collection_nodes (
@@ -40,7 +53,9 @@ export async function setupDatabase(): Promise<void> {
   `);
 }
 
-export async function getCachedCollections(): Promise<Collection[]> {
+export async function getCachedCollections(
+  userId: string,
+): Promise<Collection[]> {
   try {
     const database = getDb();
     const rows = await database.getAllAsync<{
@@ -54,7 +69,8 @@ export async function getCachedCollections(): Promise<Collection[]> {
       owner_user_id: string;
       updated_at: string;
     }>(
-      'SELECT id, name, description, color, item_count, position_key, role, owner_user_id, updated_at FROM collections ORDER BY position_key ASC',
+      'SELECT id, name, description, color, item_count, position_key, role, owner_user_id, updated_at FROM collections WHERE cached_for_user_id = ? ORDER BY position_key ASC',
+      [userId],
     );
     return rows.map((r) => ({
       id: r.id,
@@ -74,6 +90,7 @@ export async function getCachedCollections(): Promise<Collection[]> {
 }
 
 export async function upsertCollections(
+  userId: string,
   collections: Collection[],
 ): Promise<void> {
   try {
@@ -82,9 +99,9 @@ export async function upsertCollections(
     await database.withTransactionAsync(async () => {
       for (const col of collections) {
         await database.runAsync(
-          `INSERT INTO collections (id, name, description, color, item_count, position_key, role, owner_user_id, updated_at, synced_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-           ON CONFLICT(id) DO UPDATE SET
+          `INSERT INTO collections (cached_for_user_id, id, name, description, color, item_count, position_key, role, owner_user_id, updated_at, synced_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ON CONFLICT(cached_for_user_id, id) DO UPDATE SET
              name = excluded.name,
              description = excluded.description,
              color = excluded.color,
@@ -95,6 +112,7 @@ export async function upsertCollections(
              updated_at = excluded.updated_at,
              synced_at = excluded.synced_at`,
           [
+            userId,
             col.id,
             col.name,
             col.description ?? null,

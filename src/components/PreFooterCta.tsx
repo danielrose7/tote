@@ -1,11 +1,11 @@
 'use client';
 
-import { SignedOut, SignUpButton } from '@clerk/nextjs';
+import { Show, SignUpButton } from '@clerk/nextjs';
 import styles from './PreFooterCta.module.css';
 
 export function PreFooterCta({ cloneHref }: { cloneHref?: string }) {
   return (
-    <SignedOut>
+    <Show when="signed-out">
       <section className={styles.section}>
         <div className={styles.card}>
           <div className={styles.cardInner}>
@@ -34,6 +34,6 @@ export function PreFooterCta({ cloneHref }: { cloneHref?: string }) {
           </div>
         </div>
       </section>
-    </SignedOut>
+    </Show>
   );
 }

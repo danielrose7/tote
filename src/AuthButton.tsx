@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  useUser,
-} from '@clerk/nextjs';
+import { Show, SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import styles from './AuthButton.module.css';
 
@@ -19,19 +13,24 @@ export function AuthButton({ variant = 'app' }: AuthButtonProps) {
 
   return (
     <>
-      <SignedOut>
+      <Show when="signed-out">
         <div className={styles.buttons}>
           <SignInButton mode="modal" fallbackRedirectUrl="/collections">
-            <button className={styles.button}>Log in</button>
+            <button type="button" className={styles.button}>
+              Log in
+            </button>
           </SignInButton>
           <SignUpButton mode="modal" fallbackRedirectUrl="/collections">
-            <button className={`${styles.button} ${styles.buttonPrimary}`}>
+            <button
+              type="button"
+              className={`${styles.button} ${styles.buttonPrimary}`}
+            >
               Sign up
             </button>
           </SignUpButton>
         </div>
-      </SignedOut>
-      <SignedIn>
+      </Show>
+      <Show when="signed-in">
         {variant === 'landing' ? (
           <Link
             href="/collections"
@@ -54,7 +53,7 @@ export function AuthButton({ variant = 'app' }: AuthButtonProps) {
             )}
           </Link>
         )}
-      </SignedIn>
+      </Show>
     </>
   );
 }

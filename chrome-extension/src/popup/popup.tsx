@@ -1,10 +1,4 @@
-import {
-  SignedIn,
-  SignedOut,
-  useAuth,
-  useClerk,
-  useUser,
-} from '@clerk/chrome-extension';
+import { Show, useAuth, useClerk, useUser } from '@clerk/chrome-extension';
 import {
   Component,
   type ErrorInfo,
@@ -224,7 +218,7 @@ function PopupHeader() {
         <img src="/assets/icons/icon48.png" alt="" className="logo" />
         <h1>Save to Tote</h1>
       </div>
-      <SignedIn>
+      <Show when="signed-in">
         <div className="header-menu">
           <button
             className="header-avatar"
@@ -268,7 +262,7 @@ function PopupHeader() {
             </>
           )}
         </div>
-      </SignedIn>
+      </Show>
     </header>
   );
 }
@@ -438,12 +432,12 @@ function PopupContent() {
             onImageSelect={setSelectedImageUrl}
           />
 
-          <SignedOut>
+          <Show when="signed-out">
             <PurgeNeonCaptureData />
             <SignInPrompt />
-          </SignedOut>
+          </Show>
 
-          <SignedIn>
+          <Show when="signed-in">
             <AuthenticatedSaveUI
               metadata={{
                 ...metadata,
@@ -452,7 +446,7 @@ function PopupContent() {
               onSuccess={handleSuccess}
               onQueued={handleQueued}
             />
-          </SignedIn>
+          </Show>
         </>
       )}
     </div>

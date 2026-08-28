@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  SignedIn,
-  SignedOut,
-  SignOutButton,
-  UserProfile,
-  useClerk,
-} from '@clerk/nextjs';
+import { Show, SignOutButton, UserProfile, useClerk } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -60,14 +54,14 @@ export function SettingsClient({
 
   return (
     <div className={styles.container}>
-      <SignedOut>
+      <Show when="signed-out">
         <div className={styles.center}>
           <p>Please sign in to access settings.</p>
           <Link href="/">Back to home</Link>
         </div>
-      </SignedOut>
+      </Show>
 
-      <SignedIn>
+      <Show when="signed-in">
         <Header />
 
         <Main className={styles.main}>
@@ -163,7 +157,7 @@ export function SettingsClient({
             </div>
           )}
         </Main>
-      </SignedIn>
+      </Show>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { SignedIn, SignedOut, SignUpButton } from '@clerk/nextjs';
+import { Show, SignUpButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import styles from '@/app/(public)/view/[id]/page.module.css';
 
@@ -27,20 +27,20 @@ export function MakeCopyButton({ neonId }: { neonId: string }) {
   const cloneHref = `/clone/${neonId}`;
   return (
     <>
-      <SignedIn>
+      <Show when="signed-in">
         <Link href={cloneHref} className={styles.headerActionButton}>
           <CopyIcon />
           <span>Save a copy</span>
         </Link>
-      </SignedIn>
-      <SignedOut>
+      </Show>
+      <Show when="signed-out">
         <SignUpButton mode="modal" fallbackRedirectUrl={cloneHref}>
           <button type="button" className={styles.headerActionButton}>
             <CopyIcon />
             <span>Save a copy</span>
           </button>
         </SignUpButton>
-      </SignedOut>
+      </Show>
     </>
   );
 }

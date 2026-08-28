@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  useUser,
-} from '@clerk/nextjs';
+import { Show, SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -111,16 +105,16 @@ export default function CloneCollectionPage() {
           <h1 className={styles.title}>Unable to copy</h1>
           <p className={styles.description}>{errorMessage}</p>
           <div style={{ marginTop: '1rem' }}>
-            <SignedIn>
+            <Show when="signed-in">
               <Link href="/collections" className={styles.footerLink}>
                 Back to collections
               </Link>
-            </SignedIn>
-            <SignedOut>
+            </Show>
+            <Show when="signed-out">
               <Link href="/" className={styles.footerLink}>
                 Back to home
               </Link>
-            </SignedOut>
+            </Show>
           </div>
         </div>
       </div>

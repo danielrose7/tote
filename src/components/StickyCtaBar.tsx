@@ -1,6 +1,6 @@
 'use client';
 
-import { SignedOut, SignUpButton } from '@clerk/nextjs';
+import { Show, SignUpButton } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import styles from './StickyCtaBar.module.css';
 
@@ -21,7 +21,7 @@ export function StickyCtaBar({ cloneHref }: { cloneHref?: string }) {
   if (dismissed) return null;
 
   return (
-    <SignedOut>
+    <Show when="signed-out">
       <div
         className={`${styles.bar} ${visible ? styles.barVisible : ''}`}
         aria-hidden={!visible}
@@ -48,6 +48,6 @@ export function StickyCtaBar({ cloneHref }: { cloneHref?: string }) {
           </button>
         </div>
       </div>
-    </SignedOut>
+    </Show>
   );
 }

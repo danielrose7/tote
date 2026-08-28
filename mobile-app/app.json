@@ -23,6 +23,7 @@
     },
     "plugins": [
       "@clerk/expo",
+      "@clerk/expo-google-signin",
       "expo-apple-authentication",
       [
         "expo-share-extension",

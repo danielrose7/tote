@@ -53,27 +53,6 @@ target 'Tote' do
   )
 
   post_install do |installer|
-    # Clerk: Resolve SPM packages synchronously during pod install
-    # This ensures packages are downloaded before the user opens Xcode
-    # We wait until the end of post_install to ensure workspace is fully written
-    at_exit do
-      workspace_path = File.join(__dir__, 'Tote.xcworkspace')
-      if File.exist?(workspace_path)
-        puts ""
-        puts "📦 [Clerk] Resolving Swift Package dependencies..."
-        puts "   This may take a minute on first run..."
-        # Use backticks to capture output and check exit status
-        output = `xcodebuild -resolvePackageDependencies -workspace "#{workspace_path}" -scheme "Tote" 2>&1`
-        if $?.success?
-          puts "✅ [Clerk] Swift Package dependencies resolved successfully"
-        else
-          puts "⚠️  [Clerk] SPM resolution output:"
-          puts output.lines.last(10).join
-        end
-        puts ""
-      end
-    end
-
     react_native_post_install(
       installer,
       config[:reactNativePath],
@@ -82,55 +61,40 @@ target 'Tote' do
     )
 # @generated begin post-install-build-settings - expo prebuild (DO NOT MODIFY) sync-f4e2a1acf7da60b403fcf5c1d5d9517cb9953853
     installer.pods_project.targets.each do |target|
-      if target.name == 'ReactCodegen'
-        target.shell_script_build_phases.each do |phase|
-          next unless phase.name&.include?('Generate Specs')
-
-          fallback_sync = <<~'SCRIPT'
-
-            COJSON_OUT_DIR="$PODS_ROOT/../build/generated/ios/ReactCodegen"
-            COJSON_SPEC_DIR="$COJSON_OUT_DIR/CojsonCoreRnSpec"
-            if [ ! -f "$COJSON_SPEC_DIR/CojsonCoreRnSpec-generated.mm" ]; then
-              COJSON_TMP_DIR=$(find "${TMPDIR:-/tmp}" -maxdepth 4 -type f -path '*/CojsonCoreRnSpec*/out/CojsonCoreRnSpec/CojsonCoreRnSpec-generated.mm' -print 2>/dev/null | head -n 1 | xargs -I {} dirname "{}")
-              COJSON_TMP_ROOT=$(find "${TMPDIR:-/tmp}" -maxdepth 4 -type f -path '*/CojsonCoreRnSpec*/out/CojsonCoreRnSpecJSI.h' -print 2>/dev/null | head -n 1 | xargs -I {} dirname "{}")
-              if [ -n "$COJSON_TMP_DIR" ] && [ -n "$COJSON_TMP_ROOT" ]; then
-                mkdir -p "$COJSON_SPEC_DIR"
-                cp "$COJSON_TMP_DIR/CojsonCoreRnSpec-generated.mm" "$COJSON_SPEC_DIR/CojsonCoreRnSpec-generated.mm"
-                cp "$COJSON_TMP_DIR/CojsonCoreRnSpec.h" "$COJSON_SPEC_DIR/CojsonCoreRnSpec.h"
-                cp "$COJSON_TMP_ROOT/CojsonCoreRnSpecJSI.h" "$COJSON_OUT_DIR/CojsonCoreRnSpecJSI.h"
-              fi
-            fi
-          SCRIPT
-
-          unless phase.shell_script.include?('COJSON_OUT_DIR="$PODS_ROOT/../build/generated/ios/ReactCodegen"')
-            phase.shell_script = "#{phase.shell_script}\n#{fallback_sync}"
-          end
-        end
-      end
-
       unless target.name == 'Sentry'
         target.build_configurations.each do |config|
           config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'No'
         end
       end
+    end
+# @generated end post-install-build-settings
 
+    # Swift 6 strict concurrency in these pods' SwiftUI hosting-view protocol
+    # conformances trips "crosses into main actor-isolated code" errors under
+    # the project's default toolchain. Pin them to Swift 5 / minimal
+    # concurrency checking until upstream addresses it.
+    installer.pods_project.targets.each do |target|
       if ['ExpoModulesCore', 'ExpoImage'].include?(target.name)
         target.build_configurations.each do |config|
           config.build_settings['SWIFT_VERSION'] = '5'
           config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
         end
       end
+    end
 
+    # Xcode's build-script sandboxing breaks some CocoaPods script build
+    # phases (Hermes replacement, RN codegen) used here.
+    installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
       end
     end
-# @generated end post-install-build-settings
+
     installer.pods_project.save
   end
 end
 
-target 'ToteShareExtension' do     
+target 'ToteShareExtension' do
   exclude = ["expo-updates"]
   use_expo_modules!(exclude: exclude)
   

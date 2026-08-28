@@ -15,7 +15,7 @@
     "corpus:benchmark": "npx tsx scripts/benchmark-cf.ts"
   },
   "dependencies": {
-    "@clerk/chrome-extension": "^2.3.1",
+    "@clerk/chrome-extension": "^3.1.76",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
