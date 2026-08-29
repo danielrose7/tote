@@ -1,6 +1,6 @@
 {
   "name": "tote-ios",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.ts",
   "scripts": {
     "ios:sync-overrides": "node ./scripts/sync-ios-overrides.mjs",
@@ -16,7 +16,7 @@
   "dependencies": {
     "@azure/core-asynciterator-polyfill": "^1.0.2",
     "@bacons/text-decoder": "^0.0.0",
-    "@clerk/expo": "^4.6.0",
+    "@clerk/expo": "^4.6.1",
     "@clerk/expo-google-signin": "^1.0.2",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",
