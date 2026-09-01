@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AnchorHeading } from '../AnchorHeading';
+import { APP_STORE_URL } from '@/lib/constants';
 import styles from '../docs.module.css';
 
 export const metadata: Metadata = {
@@ -26,19 +27,25 @@ export default function IosAppDocsPage() {
       <p>
         Looking for the short version? Visit the{' '}
         <a href="/ios-app">Tote iOS app landing page</a> for a quick overview
-        and the current App Store status.
+        and the App Store download link.
       </p>
 
       <AnchorHeading as="h2" id="getting-the-app">
         Getting the App
       </AnchorHeading>
       <p>
-        Tote for iPhone and iPad is coming soon. When it lands it will be a free
-        universal download — one app that runs on both iPhone and iPad, with the
-        iPad layout using the extra width for a wider collection grid. In the
-        meantime, everything you save is stored in your Tote account, so it will
-        be there the moment you sign in on the app — nothing to migrate or
-        import.
+        <a
+          href={APP_STORE_URL ?? '/ios-app'}
+          target={APP_STORE_URL ? '_blank' : undefined}
+          rel={APP_STORE_URL ? 'noopener noreferrer' : undefined}
+        >
+          Download Tote on the App Store
+        </a>{' '}
+        — it&apos;s a free universal download: one app that runs on both iPhone
+        and iPad, with the iPad layout using the extra width for a wider
+        collection grid. Everything you save is stored in your Tote account, so
+        it&apos;s there the moment you sign in on the app — nothing to migrate
+        or import.
       </p>
 
       <AnchorHeading as="h2" id="signing-in">

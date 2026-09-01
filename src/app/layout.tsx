@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { APP_STORE_ID } from '@/lib/constants';
 import '../index.css';
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
     'Save products from any online store in one place. Organize with collections, track prices, and share wishlists — all with complete privacy.',
   metadataBase: new URL('https://tote.tools'),
   manifest: '/site.webmanifest',
+  itunes: { appId: APP_STORE_ID },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },

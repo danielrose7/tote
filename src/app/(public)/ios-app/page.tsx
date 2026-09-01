@@ -406,7 +406,7 @@ export default function IosAppPage() {
 
         <section className={styles.finalCta}>
           <p className={styles.eyebrow}>Start saving</p>
-          <h2>Your collections are ready before the app is.</h2>
+          <h2>Everything you&apos;ve saved is already in the app.</h2>
           <div className={styles.actions}>
             {APP_STORE_URL ? (
               <a

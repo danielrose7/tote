@@ -79,7 +79,7 @@ export default function DocsPage() {
         <h3 className={styles.cardTitle}>iOS App</h3>
         <p className={styles.cardDescription}>
           Tap Share, then Tote, to save from Safari or any app, and browse your
-          collections on the go. Coming soon.
+          collections on the go.
         </p>
         <Link href="/docs/ios-app">Learn about the iOS app &rarr;</Link>
       </div>

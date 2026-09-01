@@ -275,7 +275,7 @@ export default function HomePage() {
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
             <Link href="/ios-app" className={styles.announcementPill}>
-              Tote for iPhone and iPad is coming soon &rarr;
+              Tote for iPhone and iPad is now on the App Store &rarr;
             </Link>
             <p className={styles.eyebrow}>
               A cart that doesn&apos;t belong to a store
