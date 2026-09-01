@@ -2,11 +2,10 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Fragment } from 'react';
-import { InstallLabel } from '@/components/InstallLabel';
+import { InstallCta } from '@/components/InstallCta';
 import { LandingAuthButtons } from '@/components/LandingAuthButtons';
 import { PublicFooter } from '@/components/PublicFooter';
 import { PublicNav } from '@/components/PublicNav';
-import { CHROME_WEB_STORE_URL } from '@/lib/constants';
 import heroImage from '@/product-images-01.png';
 import collectionImage from '@/product-images-02.png';
 import styles from './landing.module.css';
@@ -292,14 +291,7 @@ export default function HomePage() {
                 signUpLabel="Save your first item"
                 signedInLabel="Save your next item"
               />
-              <a
-                href={CHROME_WEB_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.secondaryButton}
-              >
-                <InstallLabel />
-              </a>
+              <InstallCta className={styles.secondaryButton} />
             </div>
             <p className={styles.heroNote}>
               Save what you find now — it&apos;s free. Come back with fewer
@@ -552,14 +544,7 @@ export default function HomePage() {
               signUpLabel="Save your first item"
               signedInLabel="Save your next item"
             />
-            <a
-              href={CHROME_WEB_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.secondaryButton}
-            >
-              <InstallLabel />
-            </a>
+            <InstallCta className={styles.secondaryButton} />
           </div>
         </section>
       </main>
