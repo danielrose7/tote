@@ -26,8 +26,8 @@ export default function IosAppDocsPage() {
       </p>
       <p>
         Looking for the short version? Visit the{' '}
-        <a href="/ios-app">Tote iOS app landing page</a> for a quick overview
-        and the App Store download link.
+        <a href="/ios-app">Tote for iPhone and iPad</a> page for a quick
+        overview and the App Store download link.
       </p>
 
       <AnchorHeading as="h2" id="getting-the-app">
