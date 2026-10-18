@@ -28,7 +28,6 @@ const itemNodeTypes = new Set<CollectionNode['type']>([
   'link',
   'photo',
 ]);
-const deletePhrase = 'delete me';
 
 type MutationContext = {
   previousDetail: CollectionDetail | undefined;
@@ -69,7 +68,7 @@ export function NeonEditNodeDialog({
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
   const [body, setBody] = useState('');
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [extraSections, setExtraSections] = useState<CollectionNode[]>([]);
   const baseSections = detail.nodes.filter(
@@ -93,7 +92,7 @@ export function NeonEditNodeDialog({
       typeof properties.description === 'string' ? properties.description : '',
     );
     setBody(typeof properties.body === 'string' ? properties.body : '');
-    setDeleteConfirmation('');
+    setDeleteOpen(false);
     setError(null);
   }, [open, node]);
 
@@ -347,7 +346,6 @@ export function NeonEditNodeDialog({
   };
 
   const handleDelete = () => {
-    if (deleteConfirmation.toLowerCase() !== deletePhrase) return;
     deleteNode.mutate({
       collectionId: detail.collection.id,
       nodeId: node.id,
@@ -476,41 +474,41 @@ export function NeonEditNodeDialog({
 
             {error && <div className={editStyles.error}>{error}</div>}
 
-            <div className={editStyles.dangerZone}>
-              <div className={editStyles.dangerHeader}>
-                <span className={editStyles.dangerTitle}>Delete Content</span>
-                <span className={editStyles.dangerDescription}>
-                  {node.type === 'section'
-                    ? 'This also deletes every block currently inside the section.'
-                    : 'This removes the block from the collection.'}
-                </span>
-              </div>
-              <div className={editStyles.dangerConfirm}>
-                <label
-                  htmlFor="neon-delete-node-confirm"
-                  className={editStyles.dangerLabel}
-                >
-                  Type <strong>{deletePhrase}</strong> to confirm
-                </label>
-                <input
-                  id="neon-delete-node-confirm"
-                  value={deleteConfirmation}
-                  onChange={(event) =>
-                    setDeleteConfirmation(event.target.value)
-                  }
-                  className={editStyles.dangerInput}
-                  placeholder={deletePhrase}
-                  autoComplete="off"
-                />
+            <div className={editStyles.deleteSection}>
+              {deleteOpen ? (
+                <div className={editStyles.deleteConfirm}>
+                  <p className={editStyles.deleteConfirmText}>
+                    {node.type === 'section'
+                      ? 'Delete this section and every block inside it? There’s no undo.'
+                      : 'Remove this block from the collection? There’s no undo.'}
+                  </p>
+                  <div className={editStyles.deleteConfirmActions}>
+                    <button
+                      type="button"
+                      className={editStyles.deleteConfirmCancel}
+                      onClick={() => setDeleteOpen(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      className="btn btn-danger"
+                      autoFocus
+                    >
+                      Delete {node.type}
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <button
                   type="button"
-                  onClick={handleDelete}
-                  disabled={deleteConfirmation.toLowerCase() !== deletePhrase}
-                  className="btn btn-danger"
+                  className={editStyles.deleteTrigger}
+                  onClick={() => setDeleteOpen(true)}
                 >
-                  Delete Content
+                  Delete {node.type}
                 </button>
-              </div>
+              )}
             </div>
 
             <div className={editStyles.actions}>
