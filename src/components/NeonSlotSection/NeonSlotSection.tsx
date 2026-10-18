@@ -476,6 +476,13 @@ export function NeonSlotSection({
     if (!selectedItemIds.includes(item.id)) return sum;
     return sum + (parsePriceToCents(propertiesFor(item).price) ?? 0);
   }, 0);
+  const itemsTotal = items.reduce(
+    (sum, item) => sum + (parsePriceToCents(propertiesFor(item).price) ?? 0),
+    0,
+  );
+  // Selection sections measure the budget against what's picked; open
+  // sections have no selection, so measure against every item.
+  const budgetTotal = maxSelections !== undefined ? selectedTotal : itemsTotal;
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -1046,12 +1053,18 @@ export function NeonSlotSection({
                         {items.length} {items.length === 1 ? 'item' : 'items'}
                       </span>
                     )}
-                    {budget !== undefined && (
+                    {budget !== undefined ? (
                       <span
-                        className={`${styles.budget} ${selectedTotal > budget ? styles.overBudget : ''}`}
+                        className={`${styles.budget} ${budgetTotal > budget ? styles.overBudget : ''}`}
                       >
-                        {formatBudget(selectedTotal)} / {formatBudget(budget)}
+                        {formatBudget(budgetTotal)} / {formatBudget(budget)}
                       </span>
+                    ) : (
+                      itemsTotal > 0 && (
+                        <span className={styles.budget}>
+                          {formatBudget(itemsTotal)}
+                        </span>
+                      )
                     )}
                   </>
                 )}
