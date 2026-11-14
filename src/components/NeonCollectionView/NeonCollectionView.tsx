@@ -38,6 +38,7 @@ import {
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
+import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import { checkExtensionAvailable } from '@/lib/extension';
 import {
   describeRefreshOutcome,
@@ -532,11 +533,24 @@ export function NeonCollectionView({
     },
   });
 
+  // Failures are toasts. The "get the extension" nudge is a dismissible inline
+  // banner instead: it has links and the user may want to act on it, which a
+  // timed toast handles poorly. It respects the dismissal snooze.
+  const [refreshTip, setRefreshTip] = useState<{
+    message: string;
+    showLinks: boolean;
+  } | null>(null);
   const notifyRefreshOutcome = (outcome: RefreshOutcome) => {
     const message = describeRefreshOutcome(outcome);
     if (!message) return;
-    // The "get the extension" nudge respects the dismissal snooze; errors never do.
-    if (message.variant === 'info' && isExtractionHintSnoozed()) return;
+    if (message.variant === 'info') {
+      if (isExtractionHintSnoozed()) return;
+      setRefreshTip({
+        message: message.description,
+        showLinks: !outcome.extensionAvailable,
+      });
+      return;
+    }
     showToast(message);
   };
 
@@ -750,6 +764,13 @@ export function NeonCollectionView({
 
   return (
     <>
+      {refreshTip && (
+        <ExtractionTip
+          message={refreshTip.message}
+          showLinks={refreshTip.showLinks}
+          onDismiss={() => setRefreshTip(null)}
+        />
+      )}
       {showActionsBar && (
         <div className={pageStyles.actions}>
           <ViewModeToggle mode={viewMode} onChange={handleViewModeChange} />

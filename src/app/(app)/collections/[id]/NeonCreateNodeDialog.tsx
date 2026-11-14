@@ -17,19 +17,19 @@ import {
   collectionMutationKeys,
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
-import {
-  isExtractionHintSnoozed,
-  needsEnhancedExtraction,
-} from '@/lib/extractionHint';
+import type {
+  CollectionDetail,
+  CollectionSummary,
+} from '@/lib/collections/repository';
 import {
   checkExtensionAvailable,
   type ExtractedMetadata,
   refreshViaExtension,
 } from '@/lib/extension';
-import type {
-  CollectionDetail,
-  CollectionSummary,
-} from '@/lib/collections/repository';
+import {
+  isExtractionHintSnoozed,
+  needsEnhancedExtraction,
+} from '@/lib/extractionHint';
 
 const nodeTypes = [
   'product',
@@ -423,7 +423,11 @@ export function NeonCreateNodeDialog({
                     {isFetchingUrl ? 'Fetching…' : 'Fetch'}
                   </button>
                 </div>
-                {showExtractionTip && <ExtractionTip />}
+                {showExtractionTip && (
+                  <ExtractionTip
+                    onDismiss={() => setShowExtractionTip(false)}
+                  />
+                )}
               </div>
             )}
 

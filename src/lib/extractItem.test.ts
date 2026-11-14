@@ -23,7 +23,6 @@ describe('describeRefreshOutcome', () => {
     expect(msg?.description).toContain('2 items');
     expect(msg?.description).toContain('extension');
     expect(msg?.description).toContain('browser');
-    expect(msg?.actions?.map((a) => a.label)).toContain('Get the extension');
     expect(msg?.key).toBe('refresh-outcome');
   });
   it('does not push the extension when it is already in use', () => {
@@ -34,6 +33,5 @@ describe('describeRefreshOutcome', () => {
     });
     expect(msg?.description).toContain('1 item ');
     expect(msg?.description).not.toContain('reads pages in your browser');
-    expect(msg?.actions).toBeUndefined();
   });
 });

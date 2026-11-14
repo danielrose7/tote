@@ -1,4 +1,3 @@
-import { APP_STORE_URL, CHROME_WEB_STORE_URL } from './constants';
 import { type ExtractedMetadata, refreshViaExtension } from './extension';
 import { needsEnhancedExtraction } from './extractionHint';
 
@@ -58,7 +57,6 @@ type ToastMessage = {
   description: string;
   variant: 'info' | 'error';
   key: string;
-  actions?: { label: string; href: string }[];
 };
 
 /** Turn a refresh outcome into a user-facing message, or null if all was well. */
@@ -83,17 +81,6 @@ export function describeRefreshOutcome(
         : `${noun(thin)} limit what our servers can read. The Tote extension reads pages in your browser and usually gets the image and price.`,
       variant: 'info',
       key: 'refresh-outcome',
-      // Only worth linking when they don't already have the extension.
-      ...(extensionAvailable
-        ? {}
-        : {
-            actions: [
-              { label: 'Get the extension', href: CHROME_WEB_STORE_URL },
-              ...(APP_STORE_URL
-                ? [{ label: 'iOS app', href: APP_STORE_URL }]
-                : []),
-            ],
-          }),
     };
   }
   return null;
