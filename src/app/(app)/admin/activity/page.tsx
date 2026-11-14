@@ -171,9 +171,14 @@ export default async function ActivityPage() {
                   return (
                     <tr key={String(c.id)}>
                       <td>
-                        <Link href={href} target="_blank">
-                          {String(c.name)}
-                        </Link>
+                        <div>{String(c.name)}</div>
+                        <a
+                          href={`https://tote.tools${href}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <code>tote.tools{href}</code>
+                        </a>
                       </td>
                       <td>
                         {emailById.get(String(c.owner_clerk_id)) ??
