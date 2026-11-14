@@ -8,6 +8,7 @@ import {
   listCaptureCollections,
   saveCapture,
 } from '@/lib/collections/captureRepository';
+import { inferAddedVia } from '@/lib/collections/inferAddedVia';
 import { db } from '@/lib/db';
 
 async function authorizedUser() {
@@ -48,7 +49,14 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const result = await saveCapture(authorized.userId, parsed.data, db);
+  const result = await saveCapture(
+    authorized.userId,
+    {
+      ...parsed.data,
+      addedVia: inferAddedVia(request, parsed.data.addedVia),
+    },
+    db,
+  );
   if (result.status === 'not_found') {
     return NextResponse.json(
       { error: 'Collection or section not found' },

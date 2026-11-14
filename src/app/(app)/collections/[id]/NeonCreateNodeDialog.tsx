@@ -233,6 +233,7 @@ export function NeonCreateNodeDialog({
           parentId: null,
           properties: {},
           positionKey: optimisticSection.positionKey,
+          addedVia: 'app',
         },
       });
       return nodeId;
@@ -291,6 +292,7 @@ export function NeonCreateNodeDialog({
         parentId: type === 'section' ? null : parentId || null,
         properties,
         positionKey: `${new Date().toISOString()}:${nodeId}`,
+        addedVia: 'app',
       },
     });
     handleOpenChange(false);

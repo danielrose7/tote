@@ -153,6 +153,7 @@ async function copyCollectionWithDatabase(
     properties: sourceNode.properties,
     positionKey: sourceNode.positionKey,
     createdByUserId: actorUserId,
+    addedVia: 'copy' as const,
   }));
   const topLevelNodes = copiedNodeValues.filter(
     (node) => node.parentId === null,
@@ -330,6 +331,7 @@ async function copyPublishedCollectionWithDatabase(
           : properties,
       positionKey: `p${String(publishedNode.sortOrder).padStart(8, '0')}`,
       createdByUserId: actorUserId,
+      addedVia: 'copy' as const,
     };
   });
   const topLevelNodes = copiedNodeValues.filter(

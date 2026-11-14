@@ -58,6 +58,7 @@ async function createCollectionFromPayloadWithDatabase(
         : {},
       positionKey: positionKeyFor(sectionIndex),
       createdByUserId: actorUserId,
+      addedVia: options.originType ?? 'import',
     });
 
     section.items.forEach((item, itemIndex) => {
@@ -79,6 +80,7 @@ async function createCollectionFromPayloadWithDatabase(
         },
         positionKey: positionKeyFor(itemIndex),
         createdByUserId: actorUserId,
+        addedVia: options.originType ?? 'import',
       });
     });
   });

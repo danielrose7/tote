@@ -98,6 +98,7 @@ export function buildCapturePayload({
     images: images?.length ? images : undefined,
     price: metadata.price?.trim() || undefined,
     description: metadata.description?.trim() || undefined,
+    addedVia: "extension" as const,
   };
 }
 

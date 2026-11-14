@@ -130,6 +130,7 @@ export async function saveCapture(
         ...(input.description ? { description: input.description } : {}),
       },
       positionKey: `z:${new Date().toISOString()}:${input.id}`,
+      addedVia: input.addedVia,
     },
     database,
   );

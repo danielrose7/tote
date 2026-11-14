@@ -141,6 +141,7 @@ describe("Neon capture client", () => {
 			images: ["https://example.com/a.jpg"],
 			price: undefined,
 			description: undefined,
+			addedVia: "extension",
 		});
 	});
 

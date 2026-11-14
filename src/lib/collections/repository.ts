@@ -10,6 +10,7 @@ import {
   collectionMutationReceipts,
   collectionNodes,
   collections,
+  type NodeAddedVia,
 } from '@/db/schema';
 import { db as productionDb } from '../db';
 import { fingerprintMutationRequest } from './idempotency';
@@ -901,6 +902,7 @@ export type CreateCollectionNodeInput = {
   title?: string | null;
   properties?: Record<string, unknown>;
   positionKey: string;
+  addedVia?: NodeAddedVia;
 };
 
 export async function createCollectionNode(
@@ -986,7 +988,8 @@ export async function createCollectionNode(
 						title,
 						properties,
 						position_key,
-						created_by_user_id
+						created_by_user_id,
+						added_via
 					) VALUES (
 						${nodeId},
 						${collectionId},
@@ -995,7 +998,8 @@ export async function createCollectionNode(
 						${input.title ?? null},
 						${JSON.stringify(input.properties ?? {})}::jsonb,
 						${input.positionKey},
-						${actorUserId}
+						${actorUserId},
+						${input.addedVia ?? 'unknown'}
 					)
 					RETURNING id, version
 				),
@@ -1104,6 +1108,7 @@ export async function createCollectionNode(
       properties: input.properties,
       positionKey: input.positionKey,
       createdByUserId: actorUserId,
+      addedVia: input.addedVia ?? 'unknown',
     })
     .returning({ id: collectionNodes.id, version: collectionNodes.version });
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { NODE_ADDED_VIA } from '../../db/schema/addedVia';
 
 export const collectionIdSchema = z.uuid();
 export const mutationIdSchema = z.uuid();
@@ -59,6 +60,9 @@ export const deleteCollectionInputSchema = z.object({
   mutationId: mutationIdSchema.optional(),
 });
 
+// Provenance is advisory: a missing or unrecognised value must never block a save.
+export const addedViaSchema = z.enum(NODE_ADDED_VIA).catch('unknown').optional();
+
 export const copyCollectionInputSchema = z.object({
   mutationId: mutationIdSchema,
   name: z.string().trim().min(1).max(200).optional(),
@@ -73,6 +77,7 @@ export const createCollectionNodeInputSchema = z
     title: z.string().trim().max(500).nullable().optional(),
     properties: collectionNodePropertiesSchema.optional(),
     positionKey: z.string().trim().min(1).max(200),
+    addedVia: addedViaSchema,
   })
   .refine((input) => input.type !== 'section' || input.parentId == null, {
     message: 'Sections must be top-level',
@@ -198,4 +203,5 @@ export const saveCaptureInputSchema = z.object({
   images: z.array(z.url().max(4_000)).max(50).optional(),
   price: z.string().trim().max(200).optional(),
   description: z.string().trim().max(10_000).optional(),
+  addedVia: addedViaSchema,
 });

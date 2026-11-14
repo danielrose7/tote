@@ -5,6 +5,7 @@ import {
   createCollectionNodeInputSchema,
   parseJsonRequest,
 } from '@/lib/collections/api';
+import { inferAddedVia } from '@/lib/collections/inferAddedVia';
 import { createCollectionNode } from '@/lib/collections/repository';
 
 export async function POST(
@@ -31,7 +32,10 @@ export async function POST(
     );
   }
 
-  const result = await createCollectionNode(userId, parsedId.data, parsed.data);
+  const result = await createCollectionNode(userId, parsedId.data, {
+    ...parsed.data,
+    addedVia: inferAddedVia(request, parsed.data.addedVia),
+  });
   if (result.status === 'not_found') {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }

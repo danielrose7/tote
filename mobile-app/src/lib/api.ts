@@ -165,7 +165,11 @@ export async function createCollection(
 ): Promise<{ id: string; replayed: boolean }> {
   return request('/api/v2/collections', token, {
     method: 'POST',
-    body: JSON.stringify({ id: Crypto.randomUUID(), ...input }),
+    body: JSON.stringify({
+      id: Crypto.randomUUID(),
+      addedVia: 'mobile',
+      ...input,
+    }),
   });
 }
 
@@ -281,6 +285,7 @@ export async function captureUrl(
     body: JSON.stringify({
       id: Crypto.randomUUID(),
       mutationId: Crypto.randomUUID(),
+      addedVia: 'mobile',
       ...input,
     }),
   });

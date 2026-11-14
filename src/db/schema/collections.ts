@@ -73,6 +73,9 @@ export const collectionMembershipAction = pgEnum(
 
 export type CollectionNodeProperties = Record<string, unknown>;
 
+import type { NodeAddedVia } from './addedVia';
+export { NODE_ADDED_VIA, type NodeAddedVia } from './addedVia';
+
 export const collections = pgTable(
   'collections',
   {
@@ -240,6 +243,10 @@ export const collectionNodes = pgTable(
     positionKey: text('position_key').notNull(),
     version: bigint('version', { mode: 'number' }).notNull().default(1),
     createdByUserId: text('created_by_user_id').notNull(),
+    addedVia: text('added_via')
+      .$type<NodeAddedVia>()
+      .notNull()
+      .default('unknown'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
