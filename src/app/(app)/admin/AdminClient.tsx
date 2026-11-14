@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Main } from '@/components/Main/Main';
@@ -192,6 +193,10 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
             </p>
           )}
         </section>
+
+        <p>
+          <Link href="/admin/activity">User activity overview →</Link>
+        </p>
 
         <MergeAccounts />
 
