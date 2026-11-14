@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Main } from '@/components/Main/Main';
+import { MergeAccounts } from './MergeAccounts';
 import { grantCreditsAction, seedUsersAction } from './actions';
 import styles from './admin.module.css';
 
@@ -191,6 +192,8 @@ export function AdminClient({ balances, recentGrants }: AdminClientProps) {
             </p>
           )}
         </section>
+
+        <MergeAccounts />
 
         <section className={styles.section}>
           <h2 className={styles.sectionHeading}>User balances</h2>
