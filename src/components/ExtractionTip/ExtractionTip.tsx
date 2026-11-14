@@ -19,7 +19,7 @@ export function ExtractionTip() {
   if (dismissed) return null;
 
   return (
-    <div className={styles.tip} role="status">
+    <output className={styles.tip}>
       <p className={styles.message}>
         We couldn&apos;t read everything from this site. You can still add it as
         is. The Tote extension and iOS app read pages in your own browser, so
@@ -45,6 +45,6 @@ export function ExtractionTip() {
       >
         Dismiss
       </button>
-    </div>
+    </output>
   );
 }

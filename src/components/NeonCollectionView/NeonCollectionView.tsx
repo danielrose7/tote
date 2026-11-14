@@ -38,7 +38,13 @@ import {
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
-import { checkExtensionAvailable, refreshViaExtension } from '@/lib/extension';
+import { checkExtensionAvailable } from '@/lib/extension';
+import {
+  describeRefreshOutcome,
+  extractItemMetadata,
+  type RefreshOutcome,
+} from '@/lib/extractItem';
+import { isExtractionHintSnoozed } from '@/lib/extractionHint';
 import {
   type ViewMode,
   ViewModeToggle,
@@ -526,32 +532,26 @@ export function NeonCollectionView({
     },
   });
 
-  const handleRefreshRootItem = async (node: CollectionNode) => {
+  const notifyRefreshOutcome = (outcome: RefreshOutcome) => {
+    const message = describeRefreshOutcome(outcome);
+    if (!message) return;
+    // The "get the extension" nudge respects the dismissal snooze; errors never do.
+    if (message.variant === 'info' && isExtractionHintSnoozed()) return;
+    showToast(message);
+  };
+
+  const handleRefreshRootItem = async (
+    node: CollectionNode,
+    { notify = true }: { notify?: boolean } = {},
+  ) => {
     const url = propertiesFor(node).url;
     if (!url) return;
     dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
     const extensionAvailable = await checkExtensionAvailable();
-    let metadata: {
-      title?: string;
-      imageUrl?: string;
-      description?: string;
-      price?: string;
-    } | null = null;
-    try {
-      if (extensionAvailable) {
-        metadata = await refreshViaExtension(url, { capture: true });
-      }
-      if (!metadata) {
-        const res = await fetch('/api/extract', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url }),
-        });
-        if (res.ok) metadata = await res.json();
-      }
-    } catch {
-      /* ignore */
-    }
+    const { metadata, thin, failed } = await extractItemMetadata(
+      url,
+      extensionAvailable,
+    );
     if (metadata) {
       const existingProps = propertiesFor(node);
       updateRootNode.mutate({
@@ -573,11 +573,21 @@ export function NeonCollectionView({
       });
     }
     dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
+    if (notify) {
+      notifyRefreshOutcome({
+        total: 1,
+        thin: thin ? 1 : 0,
+        failed: failed ? 1 : 0,
+        extensionAvailable,
+      });
+    }
   };
 
   const handleRefreshAllRoots = async (refreshableNodes: CollectionNode[]) => {
     if (refreshableNodes.length === 0) return;
     const extensionAvailable = await checkExtensionAvailable();
+    let thinCount = 0;
+    let failedCount = 0;
     dispatchRefresh({
       type: 'REFRESH_BATCH_START',
       ids: refreshableNodes.map((n) => n.id),
@@ -585,27 +595,10 @@ export function NeonCollectionView({
     for (const node of refreshableNodes) {
       dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
       const url = propertiesFor(node).url!;
-      let metadata: {
-        title?: string;
-        imageUrl?: string;
-        description?: string;
-        price?: string;
-      } | null = null;
-      try {
-        if (extensionAvailable) {
-          metadata = await refreshViaExtension(url, { capture: true });
-        }
-        if (!metadata) {
-          const res = await fetch('/api/extract', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url }),
-          });
-          if (res.ok) metadata = await res.json();
-        }
-      } catch {
-        /* ignore */
-      }
+      const result = await extractItemMetadata(url, extensionAvailable);
+      if (result.thin) thinCount += 1;
+      if (result.failed) failedCount += 1;
+      const { metadata } = result;
       if (metadata) {
         const existingProps = propertiesFor(node);
         updateRootNode.mutate({
@@ -629,6 +622,12 @@ export function NeonCollectionView({
       dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
     }
     dispatchRefresh({ type: 'REFRESH_BATCH_DONE' });
+    notifyRefreshOutcome({
+      total: refreshableNodes.length,
+      thin: thinCount,
+      failed: failedCount,
+      extensionAvailable,
+    });
   };
 
   const sections = nodes.filter((n) => n.type === 'section');
@@ -649,7 +648,7 @@ export function NeonCollectionView({
     });
     for (const node of urlOnlyNodes) {
       autoEnrichedIds.current.add(node.id);
-      void handleRefreshRootItem(node);
+      void handleRefreshRootItem(node, { notify: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes]);

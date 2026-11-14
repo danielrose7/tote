@@ -32,7 +32,13 @@ import {
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
-import { checkExtensionAvailable, refreshViaExtension } from '@/lib/extension';
+import { checkExtensionAvailable } from '@/lib/extension';
+import {
+  describeRefreshOutcome,
+  extractItemMetadata,
+  type RefreshOutcome,
+} from '@/lib/extractItem';
+import { isExtractionHintSnoozed } from '@/lib/extractionHint';
 import { formatPrice } from '@/lib/formatPrice';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
 import styles from '../SlotSection/SlotSection.module.css';
@@ -119,32 +125,6 @@ function parsePriceToCents(
     .replace(',', '.');
   const value = parseFloat(cleaned);
   return isNaN(value) ? undefined : Math.round(value * 100);
-}
-
-async function refreshNodeMetadata(
-  url: string,
-  useExtension: boolean,
-): Promise<{
-  title?: string;
-  imageUrl?: string;
-  description?: string;
-  price?: string;
-} | null> {
-  try {
-    if (useExtension) {
-      const ext = await refreshViaExtension(url, { capture: true });
-      if (ext) return ext;
-    }
-    const response = await fetch('/api/extract', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-    });
-    if (!response.ok) return null;
-    return await response.json();
-  } catch {
-    return null;
-  }
 }
 
 function NeonProductItem({
@@ -637,12 +617,23 @@ export function NeonSlotSection({
     },
   });
 
+  const notifyRefreshOutcome = (outcome: RefreshOutcome) => {
+    const message = describeRefreshOutcome(outcome);
+    if (!message) return;
+    // The "get the extension" nudge respects the dismissal snooze; errors never do.
+    if (message.variant === 'info' && isExtractionHintSnoozed()) return;
+    showToast(message);
+  };
+
   const handleRefreshItem = async (node: CollectionNode) => {
     const url = propertiesFor(node).url;
     if (!url) return;
     dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
     const extensionAvailable = await checkExtensionAvailable();
-    const metadata = await refreshNodeMetadata(url, extensionAvailable);
+    const { metadata, thin, failed } = await extractItemMetadata(
+      url,
+      extensionAvailable,
+    );
     if (metadata) {
       const existingProps = propertiesFor(node);
       updateItem.mutate({
@@ -664,6 +655,12 @@ export function NeonSlotSection({
       });
     }
     dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
+    notifyRefreshOutcome({
+      total: 1,
+      thin: thin ? 1 : 0,
+      failed: failed ? 1 : 0,
+      extensionAvailable,
+    });
   };
 
   const handleRefreshAll = async () => {
@@ -673,16 +670,21 @@ export function NeonSlotSection({
     );
     if (refreshable.length === 0) return;
     const extensionAvailable = await checkExtensionAvailable();
+    let thinCount = 0;
+    let failedCount = 0;
     dispatchRefresh({
       type: 'REFRESH_BATCH_START',
       ids: refreshable.map((n) => n.id),
     });
     for (const node of refreshable) {
       dispatchRefresh({ type: 'REFRESH_ITEM_START', id: node.id });
-      const metadata = await refreshNodeMetadata(
+      const result = await extractItemMetadata(
         propertiesFor(node).url!,
         extensionAvailable,
       );
+      if (result.thin) thinCount += 1;
+      if (result.failed) failedCount += 1;
+      const { metadata } = result;
       if (metadata) {
         const existingProps = propertiesFor(node);
         updateItem.mutate({
@@ -706,6 +708,12 @@ export function NeonSlotSection({
       dispatchRefresh({ type: 'REFRESH_ITEM_DONE' });
     }
     dispatchRefresh({ type: 'REFRESH_BATCH_DONE' });
+    notifyRefreshOutcome({
+      total: refreshable.length,
+      thin: thinCount,
+      failed: failedCount,
+      extensionAvailable,
+    });
   };
 
   const handleSaveEdit = () => {
