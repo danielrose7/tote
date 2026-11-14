@@ -43,8 +43,8 @@ export default async function ActivityPage() {
   if (!admin) redirect('/sign-in');
   if (admin.publicMetadata?.admin !== true) redirect('/');
 
-  const [{ users, total }, [totals], perAccount, [curator]] = await Promise.all(
-    [
+  const [{ users, total }, [totals], perAccount, [curator], published] =
+    await Promise.all([
       listClerkUsers(),
       sql`
         SELECT
@@ -69,8 +69,15 @@ export default async function ActivityPage() {
         FROM curator_sessions
         WHERE created_at > now() - interval '30 days'
       `,
-    ],
-  );
+      // Published collections are public by the owner's choice, so name and
+      // link are fair game here; private collections never appear.
+      sql`
+        SELECT id, owner_clerk_id, username, slug, name, published_at
+        FROM published_collections
+        ORDER BY published_at DESC
+        LIMIT 100
+      `,
+    ]);
 
   const now = Date.now();
   const joinedSince = (days: number) =>
@@ -105,6 +112,12 @@ export default async function ActivityPage() {
   ];
 
   const recent = users.slice(0, 50);
+  const emailById = new Map(
+    users.map((u) => [
+      u.id,
+      u.primaryEmailAddress?.emailAddress ?? u.emailAddresses[0]?.emailAddress,
+    ]),
+  );
 
   return (
     <Main className={styles.main}>
@@ -114,7 +127,8 @@ export default async function ActivityPage() {
           <Link href="/admin">← Admin</Link>
         </p>
         <p className={styles.empty}>
-          Counts only: no collection names, items, or links are shown.
+          Counts only for private data. Only collections the owner chose to
+          publish are listed by name.
           {users.length < total &&
             ` Clerk figures cover the newest ${users.length} accounts.`}
         </p>
@@ -131,6 +145,46 @@ export default async function ActivityPage() {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionHeading}>
+            Published collections ({Number(totals.published)})
+          </h2>
+          <div className={styles.tableScroll}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Collection</th>
+                  <th>Owner</th>
+                  <th>Published</th>
+                </tr>
+              </thead>
+              <tbody>
+                {published.map((c) => {
+                  const href = c.username
+                    ? `/s/${c.username}/${c.slug}`
+                    : `/view/${c.id}`;
+                  return (
+                    <tr key={String(c.id)}>
+                      <td>
+                        <Link href={href} target="_blank">
+                          {String(c.name)}
+                        </Link>
+                      </td>
+                      <td>
+                        {emailById.get(String(c.owner_clerk_id)) ??
+                          String(c.owner_clerk_id)}
+                      </td>
+                      <td>
+                        {new Date(String(c.published_at)).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
