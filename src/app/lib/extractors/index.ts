@@ -21,7 +21,12 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&amp;/g, '&'); // Must be last to avoid double-decoding
 }
 
+// Outcome of fetching the page itself. Lets clients tell "the site blocked us"
+// apart from "the page had no data" so they can suggest a better route.
+export type FetchStatus = 'ok' | 'blocked' | 'unreachable';
+
 interface MergedResult extends ExtractedMetadata {
+  fetchStatus?: FetchStatus;
   sources: string[];
   confidence: number;
   extractedFields: string[];
@@ -100,6 +105,7 @@ function mergeResults(results: (ExtractionResult | null)[]): MergedResult {
 export async function extractMetadata(url: string): Promise<MergedResult> {
   // Fetch HTML
   let html: string;
+  let failure: FetchStatus = 'unreachable';
   try {
     const response = await fetch(url, {
       headers: {
@@ -113,6 +119,8 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
     });
 
     if (!response.ok) {
+      // Bot protection typically answers 401/403/429 (or 503 from a challenge page).
+      if ([401, 403, 429, 503].includes(response.status)) failure = 'blocked';
       throw new Error(`HTTP ${response.status}`);
     }
 
@@ -120,6 +128,7 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
   } catch {
     return {
       url,
+      fetchStatus: failure,
       sources: [],
       confidence: 0,
       extractedFields: [],
@@ -181,6 +190,7 @@ export async function extractMetadata(url: string): Promise<MergedResult> {
   // Merge all results
   const merged = mergeResults(results);
   merged.url = url;
+  merged.fetchStatus = 'ok';
 
   // Detect platform if not already set
   if (!merged.platform) {

@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import dialogStyles from '@/components/CreateCollectionDialog/CreateCollectionDialog.module.css';
+import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import { NeonSectionSelector } from '@/components/NeonSectionSelector/NeonSectionSelector';
 import { useToast } from '@/components/ToastNotification';
 import type { CollectionNode } from '@/db/schema';
@@ -16,6 +17,15 @@ import {
   collectionMutationKeys,
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
+import {
+  isExtractionHintSnoozed,
+  needsEnhancedExtraction,
+} from '@/lib/extractionHint';
+import {
+  checkExtensionAvailable,
+  type ExtractedMetadata,
+  refreshViaExtension,
+} from '@/lib/extension';
 import type {
   CollectionDetail,
   CollectionSummary,
@@ -59,6 +69,7 @@ export function NeonCreateNodeDialog({
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const [showExtractionTip, setShowExtractionTip] = useState(false);
 
   const handleFetchUrl = async () => {
     const trimmed = url.trim();
@@ -71,25 +82,51 @@ export function NeonCreateNodeDialog({
     }
     setIsFetchingUrl(true);
     setError(null);
+    setShowExtractionTip(false);
     try {
-      const response = await fetch('/api/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: trimmed }),
-      });
-      if (response.ok) {
-        const metadata = await response.json();
-        if (metadata.title && !title) setTitle(metadata.title);
-        if (metadata.imageUrl && !imageUrl) setImageUrl(metadata.imageUrl);
-        if (metadata.description && !description)
-          setDescription(metadata.description);
+      // The extension reads the page in the user's browser, which sites that
+      // block our servers can't stop, so prefer it when it's installed.
+      let metadata: ExtractedMetadata | null = null;
+      let usedServer = false;
+      if (await checkExtensionAvailable()) {
+        metadata = await refreshViaExtension(trimmed, { capture: true });
       }
-    } catch {
-      // silently ignore fetch errors
+      if (!metadata) {
+        usedServer = true;
+        const response = await fetch('/api/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: trimmed }),
+        });
+        if (!response.ok) {
+          throw new Error(`Could not read that page (${response.status})`);
+        }
+        metadata = (await response.json()) as ExtractedMetadata;
+      }
+      if (metadata.title && !title) setTitle(metadata.title);
+      if (metadata.imageUrl && !imageUrl) setImageUrl(metadata.imageUrl);
+      if (metadata.description && !description)
+        setDescription(metadata.description);
+      // Saving stays as before; we only suggest a better route when the
+      // server-side read came back thin.
+      if (
+        usedServer &&
+        needsEnhancedExtraction(metadata) &&
+        !isExtractionHintSnoozed()
+      ) {
+        setShowExtractionTip(true);
+      }
+    } catch (fetchError) {
+      setError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : 'Could not read that page',
+      );
     } finally {
       setIsFetchingUrl(false);
     }
   };
+
   // Merge prop sections with any sections created inline during this session
   const [extraSections, setExtraSections] = useState<CollectionNode[]>([]);
   const baseSections = detail.nodes.filter((node) => node.type === 'section');
@@ -246,6 +283,7 @@ export function NeonCreateNodeDialog({
     setTitle('');
     setParentId('');
     setUrl('');
+    setShowExtractionTip(false);
     setImageUrl('');
     setDescription('');
     setBody('');
@@ -385,6 +423,7 @@ export function NeonCreateNodeDialog({
                     {isFetchingUrl ? 'Fetching…' : 'Fetch'}
                   </button>
                 </div>
+                {showExtractionTip && <ExtractionTip />}
               </div>
             )}
 
