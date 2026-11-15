@@ -91,6 +91,15 @@ reading the deployment list, which is easy to misread: git-triggered deploys
 show the linked GitHub account as the "username", exactly like CLI deploys, so
 that column does **not** tell you how a deploy was triggered.
 
+**The local env is production.** `.env.local` (from `vercel env pull`) holds the
+production values: the Neon `NEON_DB_*` URLs are the live database and the Clerk
+keys are the live instance (`clerk.tote.tools`, `pk_live_` / `sk_live_`). There is
+no separate dev database or dev Clerk instance. So `pnpm dev`, `psql`, scripts, and
+the Clerk API all read and write **real user data** — treat every write (inserts,
+Clerk mutations, `seedUsersAction`, merges) as a production change, and prefer
+read-only queries when debugging support tickets. Never paste the secrets into chat
+or commit the file.
+
 Other things worth knowing before you touch a deploy:
 
 - **`pnpm build` runs migrations first** — it is `node src/db/runner.ts && next build`.

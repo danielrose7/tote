@@ -2,21 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { APP_STORE_URL, CHROME_WEB_STORE_URL } from '@/lib/constants';
+import { isIOS } from '@/lib/isIOS';
 import { InstallLabel } from './InstallLabel';
-
-/**
- * Chrome extensions don't run on iOS regardless of which browser the visitor
- * picks there — every iOS browser is a WebKit shell. iPadOS 13+ also drops
- * "iPad" from the UA and reports as a touch-capable Mac, so that combination
- * counts too.
- */
-function isIOS(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return (
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  );
-}
 
 /**
  * "Add to Chrome" CTA that becomes an App Store link on iOS, where a browser

@@ -296,6 +296,11 @@
     "maintenance": {
       "message": "We’re doing database maintenance through the end of June in preparation for the launch of our iOS app. Thanks for your patience."
     },
+    "iosAppBanner": {
+      "label": "Get the Tote iOS app",
+      "message": "Tote has an iPhone and iPad app. Save from Safari or any app with the Share button, and keep your collections with you.",
+      "cta": "Get the app"
+    },
     "extractionTip": {
       "message": "We couldn't read everything from this site. You can still add it as is. The Tote extension and iOS app read pages in your own browser, so you usually get the image and price too.",
       "getExtension": "Get the extension",

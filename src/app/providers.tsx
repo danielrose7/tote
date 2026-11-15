@@ -9,6 +9,7 @@ import {
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useEffect, useRef, useState } from 'react';
 import { CollectionSyncCoordinator } from '../components/CollectionSyncCoordinator';
+import { IosAppBanner } from '../components/IosAppBanner/IosAppBanner';
 import { MaintenanceBanner } from '../components/MaintenanceBanner/MaintenanceBanner';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { ToastProvider } from '../components/ToastNotification';
@@ -223,6 +224,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ToastProvider>
           <MaintenanceBanner />
           <OfflineBanner />
+          <IosAppBanner />
           {children}
         </ToastProvider>
       </CollectionQueryProvider>
