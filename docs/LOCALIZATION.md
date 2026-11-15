@@ -22,7 +22,8 @@ Prior art, worth reading before touching this:
 | Cookie ↔ profile sync (`LocaleSync`), Settings language picker | Done; picker is hidden until a second locale exists |
 | ~530 strings in the authenticated app through `t()` | Done. `pnpm i18n:check`: 534 keys, 0 missing, 0 unused |
 | Plurals, enum labels, dates/numbers/prices via `useFormat()` | Done. dayjs removed from the web app |
-| API error messages | **Not done** — see below |
+| API error messages | Done — stable `code` + status-based `t()` messages (`src/i18n/apiError.ts`) |
+| **Spanish (es)** — catalog, Clerk UI, LLM output language | Done (machine-authored, **no native review yet**) |
 
 **Measured costs** (the PRODUCT.md bundle-size principle): i18next + react-i18next is
 about 18 kB gzip on the client. The English catalog is embedded in each full page load of
@@ -35,9 +36,26 @@ catalog per route area so a page only ships the areas it uses.
 session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits …" (was
 "1 item limit …"); negative currency renders "-$0.50" (was "$-0.50").
 
+### Phase 1 (Spanish) — done, local commits
+
+- `src/i18n/locales/es/*.json`: neutral Latin American, informal *tú*; "agregar" for Add,
+  "colección", "sección", "artículo" (item), "selección", "presupuesto", "publicar",
+  "equipo", "invitación". Loaded as a dynamic chunk only for es users.
+- Clerk's own UI: `@clerk/localizations` (new dependency) `esMX`, lazy-loaded when the
+  locale is es. Public pages' ClerkProvider is not localized yet (needs Phase 2).
+- LLM output: `outputLanguageDirective()` (`src/lib/llmLanguage.ts`) appended to chat and
+  curator system prompts; `curation/start` carries `locale`. Gift-relationship word list is
+  still English-only — review.
+- `src/i18n/es.test.ts` guards placeholder/tag parity and full key coverage.
+- Checked in a browser with the cookie `tote-locale=es`: `/import` (server) and
+  `/invite/abc` (client) render Spanish, no hydration errors. The Settings picker and
+  authenticated pages still need a real Clerk dev instance to see.
+- The curator's prompts beyond the system strings (e.g. few-shot examples, the English
+  gift word list) were not translated or audited.
+
 ### Open items from Phase 0
 
-1. **API errors (first Phase 1 task).** ~126 `NextResponse.json({ error: '…' })` strings are
+1. **API errors — done, see above; original plan:** ~126 `NextResponse.json({ error: '…' })` strings are
    English and about six client sites show them directly (`CollectionRequestError` in
    `src/lib/collections/client.ts`, clone, invite, curate import, delete account, create
    collection). Plan: add a stable `code` next to `error`, map codes to `t()` keys on the
