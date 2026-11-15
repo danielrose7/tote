@@ -1,4 +1,5 @@
 {
+	"installCommand": "node scripts/vercel-install.mjs",
 	"build": {
 		"env": {
 			"APP_NAME": "jazz-react-tailwind-starter"
