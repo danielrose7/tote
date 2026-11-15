@@ -1,0 +1,76 @@
+{
+  "iosApp": {
+    "meta": {
+      "title": "iOS App for iPhone and iPad",
+      "description": "Tap Share, then Tote, to save a product from Safari or any app. Browse and organize your collections on iPhone and iPad.",
+      "ogTitle": "Tote for iPhone and iPad",
+      "ogDescription": "Tap Share, then Tote, to save from Safari or any app. Browse collections, track budgets, and pick up where you left off — on iPhone and iPad."
+    },
+    "navLabel": "iOS app page",
+    "eyebrow": "Tote for iPhone and iPad",
+    "title": "Tap Share. Tap Tote. Done.",
+    "lead": "Found something you might buy? Hit the Share button, pick Tote, and it lands straight in the collection where you're making the decision — no copying links, no extra tab.",
+    "getApp": "Get it on the App Store",
+    "createAccount": "Create a Tote account",
+    "noteLive": "Sign in with the same account you already use on tote.tools or in the browser extension — everything you've saved is waiting for you.",
+    "noteSoon": "Tote for iPhone and iPad is coming soon. Sign up today with the same account that already works on the web and in the browser extension, and everything will be waiting the moment the app goes live.",
+    "trust": "Private by design — no ads, no tracking, no selling your shopping data, on the web app, the browser extension, and the iOS app alike. Read the <link>privacy policy</link>.",
+    "platformsLabel": "Tote platform availability",
+    "platforms": {
+      "web": "Web app",
+      "browsers": "Chrome, Edge, Brave, Arc",
+      "ios": "iPhone and iPad",
+      "iosSoon": "iPhone and iPad — coming soon"
+    },
+    "mock": {
+      "product": "Cool thing",
+      "site": "ifound.com",
+      "copy": "Copy",
+      "bookmarks": "Add to Bookmarks",
+      "readingList": "Add to Reading List",
+      "airdrop": "AirDrop",
+      "messages": "Messages",
+      "mail": "Mail",
+      "tote": "Tote"
+    },
+    "capture": {
+      "label": "What it captures",
+      "title": "Enough detail to compare later.",
+      "body": "Tote reads the page you're sharing and fills in the useful parts automatically. You can still edit the saved product in Tote when a store page is unusually sparse.",
+      "details": [
+        "Product name, image, price, and source URL",
+        "Saved with the Share button, from Safari or any app",
+        "Collection and slot selection before saving",
+        "Sync across iPhone, iPad, web, and the browser extension"
+      ]
+    },
+    "workflows": {
+      "label": "How people use it",
+      "title": "Built for the moment you find something worth saving.",
+      "items": [
+        {
+          "title": "Save from wherever you find it",
+          "description": "If an app has a Share button, it can save to Tote — a store page, a link a friend sent you, a post you scrolled past."
+        },
+        {
+          "title": "Pick up right where you left off",
+          "description": "Your collections, slots, and selections are the same ones you left on the web — no separate mobile account to manage."
+        },
+        {
+          "title": "Compare on the bigger screen",
+          "description": "One app for both devices. On iPad, collections spread out into a wider grid, so comparing a shortlist side by side is easy."
+        }
+      ]
+    },
+    "docs": {
+      "label": "Need the details?",
+      "title": "Set up, save, and troubleshoot.",
+      "body": "The iOS guide covers signing in, adding Tote to your Share options, what gets captured, and what to do when a saved item doesn't show up.",
+      "open": "Open iOS app docs"
+    },
+    "final": {
+      "label": "Start saving",
+      "title": "Everything you've saved is already in the app."
+    }
+  }
+}

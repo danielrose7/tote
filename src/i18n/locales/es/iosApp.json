@@ -1,0 +1,76 @@
+{
+  "iosApp": {
+    "meta": {
+      "title": "App de iOS para iPhone y iPad",
+      "description": "Toca Compartir y luego Tote para guardar un producto desde Safari o cualquier app. Explora y organiza tus colecciones en iPhone y iPad.",
+      "ogTitle": "Tote para iPhone y iPad",
+      "ogDescription": "Toca Compartir y luego Tote para guardar desde Safari o cualquier app. Explora colecciones, controla presupuestos y retoma donde lo dejaste, en iPhone y iPad."
+    },
+    "navLabel": "Página de la app de iOS",
+    "eyebrow": "Tote para iPhone y iPad",
+    "title": "Toca Compartir. Toca Tote. Listo.",
+    "lead": "¿Encontraste algo que podrías comprar? Toca el botón Compartir, elige Tote y llegará directo a la colección donde estás tomando la decisión, sin copiar enlaces ni abrir otra pestaña.",
+    "getApp": "Descárgala en el App Store",
+    "createAccount": "Crear una cuenta de Tote",
+    "noteLive": "Inicia sesión con la misma cuenta que ya usas en tote.tools o en la extensión del navegador: todo lo que guardaste te está esperando.",
+    "noteSoon": "Tote para iPhone y iPad llegará pronto. Regístrate hoy con la misma cuenta que ya funciona en la web y en la extensión del navegador, y todo estará esperándote en cuanto la app esté disponible.",
+    "trust": "Privado por diseño: sin anuncios, sin rastreo y sin vender tus datos de compra, tanto en la app web como en la extensión del navegador y en la app de iOS. Lee la <link>política de privacidad</link>.",
+    "platformsLabel": "Disponibilidad de Tote por plataforma",
+    "platforms": {
+      "web": "App web",
+      "browsers": "Chrome, Edge, Brave, Arc",
+      "ios": "iPhone y iPad",
+      "iosSoon": "iPhone y iPad — próximamente"
+    },
+    "mock": {
+      "product": "Algo genial",
+      "site": "ifound.com",
+      "copy": "Copiar",
+      "bookmarks": "Agregar a marcadores",
+      "readingList": "Agregar a Lista de lectura",
+      "airdrop": "AirDrop",
+      "messages": "Mensajes",
+      "mail": "Mail",
+      "tote": "Tote"
+    },
+    "capture": {
+      "label": "Qué captura",
+      "title": "El detalle suficiente para comparar después.",
+      "body": "Tote lee la página que compartes y completa automáticamente las partes útiles. Aun así, puedes editar el producto guardado en Tote cuando la página de una tienda trae muy poca información.",
+      "details": [
+        "Nombre del producto, imagen, precio y URL de origen",
+        "Se guarda con el botón Compartir, desde Safari o cualquier app",
+        "Selección de colección y sección antes de guardar",
+        "Sincronización entre iPhone, iPad, la web y la extensión del navegador"
+      ]
+    },
+    "workflows": {
+      "label": "Cómo la usa la gente",
+      "title": "Hecha para el momento en que encuentras algo que vale la pena guardar.",
+      "items": [
+        {
+          "title": "Guarda desde donde lo encuentres",
+          "description": "Si una app tiene un botón Compartir, puede guardar en Tote: la página de una tienda, un enlace que te mandó un amigo, una publicación que viste de pasada."
+        },
+        {
+          "title": "Retoma justo donde lo dejaste",
+          "description": "Tus colecciones, secciones y selecciones son las mismas que dejaste en la web, sin una cuenta móvil aparte que administrar."
+        },
+        {
+          "title": "Compara en la pantalla grande",
+          "description": "Una sola app para los dos dispositivos. En el iPad, las colecciones se extienden en una cuadrícula más ancha, así que comparar una lista corta lado a lado es fácil."
+        }
+      ]
+    },
+    "docs": {
+      "label": "¿Necesitas los detalles?",
+      "title": "Configura, guarda y resuelve problemas.",
+      "body": "La guía de iOS explica cómo iniciar sesión, cómo agregar Tote a tus opciones de Compartir, qué se captura y qué hacer cuando un artículo guardado no aparece.",
+      "open": "Abrir la documentación de la app de iOS"
+    },
+    "final": {
+      "label": "Empieza a guardar",
+      "title": "Todo lo que guardaste ya está en la app."
+    }
+  }
+}

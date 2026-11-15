@@ -10,6 +10,7 @@ export const TRANSLATED_PUBLIC_PATHS = [
   '/',
   '/templates',
   '/chrome-extension',
+  '/ios-app',
 ] as const;
 
 export function isTranslatedPath(path: string): boolean {
