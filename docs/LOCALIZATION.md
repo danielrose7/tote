@@ -53,6 +53,38 @@ session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits �
 - The curator's prompts beyond the system strings (e.g. few-shot examples, the English
   gift word list) were not translated or audited.
 
+### Phase 2 (public pages) — landing, templates, ios-app, chrome-extension done
+
+- **URLs:** English unprefixed, Spanish at `/es/...` (`(localized)/[locale]`, static via
+  `generateStaticParams`, `dynamicParams = false`). `/en/...` 308-redirects to the unprefixed
+  URL in `src/proxy.ts`. Only the pages in `TRANSLATED_PUBLIC_PATHS`
+  (`src/i18n/publicPages.ts`) exist in Spanish; `localizedPath()` leaves links to anything
+  else on its English URL instead of a 404. Add a path there together with its `[locale]`
+  page and its catalog area.
+- **`<html lang>`:** there is no top-level `app/layout.tsx` any more. Each route group has a
+  root layout built on `app/RootShell.tsx` — `(app)` from the cookie locale, `(public)` English,
+  `(localized)/[locale]` from the URL — so the static HTML carries the right language.
+- **Catalogs:** marketing strings are separate areas (`site`, `landing`, `templates`,
+  `chromeExtension`, `iosApp`), loaded per page by `loadPublicResources` and *not* part of the
+  authenticated-app catalog. Server components use `getPublicT(locale, areas)`; the layouts
+  give client components (nav, footer, install/auth buttons) the `site` area. Server
+  components can't use `<Trans>`; use `withLink()` (`src/i18n/richText.tsx`).
+- **SEO:** each translated page has a self-referencing canonical, `hreflang` for every version
+  and `x-default` → English (`alternatesFor`, `src/i18n/seo.ts`), and the sitemap lists each
+  version with alternates. Footer language switcher lists only pages that exist.
+- **Clerk on public pages:** `PublicClerkProvider` lazy-loads the Spanish localization from
+  the URL locale.
+- **Still English:** docs, use-cases, `/privacy` (needs legal review), `/s/*` and `/view/*`
+  (user content; only the chrome around it could translate). Template collections themselves
+  are user content.
+- **Fixed on the way:** the English templates title was doubled ("… — Tote — Tote").
+- **Adding a page:** copy the pattern of `chrome-extension` — `XPage({ locale })` component,
+  `xMetadata(locale)`, thin `page.tsx` for English and a `[locale]/x/page.tsx` for the rest,
+  a catalog area in `catalogs.ts`, and the path in `TRANSLATED_PUBLIC_PATHS`.
+- Verified in a browser (dummy credentials, throwaway worktree): `lang`, canonical, hreflang,
+  sitemap, nav/footer/switcher, no hydration errors. Not verified: `/es/templates` card data
+  (needs a database).
+
 ### Open items from Phase 0
 
 1. **API errors — done, see above; original plan:** ~126 `NextResponse.json({ error: '…' })` strings are
