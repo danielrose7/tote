@@ -6,7 +6,11 @@ import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from './config';
  * to an untranslated one point there rather than at a 404. Add a path here
  * only together with its `[locale]` page — hreflang and the sitemap read it.
  */
-export const TRANSLATED_PUBLIC_PATHS = ['/', '/templates'] as const;
+export const TRANSLATED_PUBLIC_PATHS = [
+  '/',
+  '/templates',
+  '/chrome-extension',
+] as const;
 
 export function isTranslatedPath(path: string): boolean {
   return (TRANSLATED_PUBLIC_PATHS as readonly string[]).includes(path);

@@ -1,0 +1,57 @@
+{
+  "chromeExtension": {
+    "meta": {
+      "title": "Extensión de Chrome",
+      "description": "Instala la extensión de Tote para Chrome y guarda productos de cualquier tienda en línea en colecciones organizadas con un solo clic.",
+      "ogTitle": "Extensión de Tote para Chrome",
+      "ogDescription": "Guarda productos de cualquier tienda en línea en tus colecciones de Tote sin copiar enlaces entre pestañas."
+    },
+    "navLabel": "Página de la extensión del navegador",
+    "eyebrow": "Tote para Chrome",
+    "title": "Guarda de cualquier tienda sin perder el ritmo.",
+    "lead": "La extensión de Tote captura los detalles del producto mientras compras y envía cada hallazgo a la colección donde estás tomando la decisión.",
+    "setupGuide": "Leer la guía de instalación",
+    "supportedBrowsers": "Navegadores compatibles",
+    "heroAlt": "La extensión de Tote guardando un producto de una tienda en línea",
+    "capture": {
+      "label": "Qué captura",
+      "title": "El detalle suficiente para comparar después.",
+      "body": "Tote lee la página del producto que estás viendo y completa automáticamente las partes útiles. Aun así, puedes editar el producto guardado en Tote cuando la página de una tienda trae muy poca información.",
+      "details": [
+        "Nombre del producto, imagen, precio, tienda y URL de origen",
+        "Selección de colección y sección antes de guardar",
+        "Guardado con clic derecho para capturas repetidas más rápidas",
+        "Sincronización con tu cuenta de Tote entre la app web y la extensión"
+      ]
+    },
+    "workflows": {
+      "label": "Cómo la usa la gente",
+      "title": "Hecha para el momento en que encuentras algo que vale la pena guardar.",
+      "items": [
+        {
+          "title": "Investiga sin acumular pestañas",
+          "description": "Guarda opciones mientras navegas y cierra la pestaña sabiendo que el enlace, la imagen y el precio te esperan en Tote."
+        },
+        {
+          "title": "Organiza mientras el contexto está fresco",
+          "description": "Elige la colección y la sección correctas desde la ventana emergente para que cada hallazgo llegue a donde se está tomando la decisión."
+        },
+        {
+          "title": "Vuelve listo para comparar",
+          "description": "Usa Tote más tarde para actualizar precios, preseleccionar tus favoritos, compartir un tablero y pasar del tal vez al decidido."
+        }
+      ]
+    },
+    "docs": {
+      "label": "¿Necesitas los detalles?",
+      "title": "Instala, inicia sesión, guarda y resuelve problemas.",
+      "body": "La guía de la extensión cubre los permisos, cómo fijar el ícono en la barra de herramientas, el guardado con un clic y con clic derecho, las secciones de la colección y qué hacer cuando la página de una tienda no expone los datos completos del producto.",
+      "open": "Abrir la documentación de la extensión"
+    },
+    "final": {
+      "label": "Empieza a guardar",
+      "title": "Dale a tu próxima comparación un hogar de verdad.",
+      "createAccount": "Crear una cuenta de Tote"
+    }
+  }
+}

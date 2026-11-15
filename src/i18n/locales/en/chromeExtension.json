@@ -1,0 +1,57 @@
+{
+  "chromeExtension": {
+    "meta": {
+      "title": "Chrome Extension",
+      "description": "Install the Tote Chrome extension to save products from any online store into organized collections with one click.",
+      "ogTitle": "Tote Chrome Extension",
+      "ogDescription": "Save products from any online store into Tote collections without copying links between tabs."
+    },
+    "navLabel": "Browser extension page",
+    "eyebrow": "Tote for Chrome",
+    "title": "Save from any store without breaking your flow.",
+    "lead": "The Tote browser extension captures product details while you shop, then sends each find to the collection where you are making the decision.",
+    "setupGuide": "Read setup guide",
+    "supportedBrowsers": "Supported browsers",
+    "heroAlt": "Tote browser extension saving a product from an online store",
+    "capture": {
+      "label": "What it captures",
+      "title": "Enough detail to compare later.",
+      "body": "Tote reads the product page you are viewing and fills in the useful parts automatically. You can still edit the saved product in Tote when a store page is unusually sparse.",
+      "details": [
+        "Product name, image, price, store, and source URL",
+        "Collection and slot selection before saving",
+        "Right-click saving for fast repeat captures",
+        "Sync with your Tote account across the web app and extension"
+      ]
+    },
+    "workflows": {
+      "label": "How people use it",
+      "title": "Built for the moment you find something worth saving.",
+      "items": [
+        {
+          "title": "Research without tab pileup",
+          "description": "Save options as you browse, then close the tab knowing the link, image, and price are waiting in Tote."
+        },
+        {
+          "title": "Organize while the context is fresh",
+          "description": "Choose the right collection and slot from the popup so every find lands where the decision is happening."
+        },
+        {
+          "title": "Come back ready to compare",
+          "description": "Use Tote later to refresh prices, shortlist favorites, share a board, and move from maybe to decided."
+        }
+      ]
+    },
+    "docs": {
+      "label": "Need the details?",
+      "title": "Install, sign in, save, and troubleshoot.",
+      "body": "The extension guide covers permissions, pinning the toolbar icon, one-click saves, right-click saves, collection slots, and what to do when a store page does not expose complete product data.",
+      "open": "Open extension docs"
+    },
+    "final": {
+      "label": "Start saving",
+      "title": "Give your next comparison a real home.",
+      "createAccount": "Create a Tote account"
+    }
+  }
+}
