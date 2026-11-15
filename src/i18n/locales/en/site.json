@@ -47,6 +47,19 @@
         "gettingStarted": "Getting started",
         "privacy": "Privacy"
       }
+    },
+    "cta": {
+      "preFooter": {
+        "headline": "Keep your own list like this.",
+        "sub": "Save from any store and come back when you're ready to decide.",
+        "saveFirst": "Save your first item",
+        "saveCopy": "Save a copy of this list"
+      },
+      "sticky": {
+        "text": "Save from any store and come back when you're ready to decide.",
+        "saveFirst": "Save your first item",
+        "dismiss": "Dismiss"
+      }
     }
   }
 }

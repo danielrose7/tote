@@ -47,6 +47,19 @@
         "gettingStarted": "Primeros pasos",
         "privacy": "Privacidad"
       }
+    },
+    "cta": {
+      "preFooter": {
+        "headline": "Ten tu propia lista como esta.",
+        "sub": "Guarda de cualquier tienda y vuelve cuando estés listo para decidir.",
+        "saveFirst": "Guarda tu primer artículo",
+        "saveCopy": "Guardar una copia de esta lista"
+      },
+      "sticky": {
+        "text": "Guarda de cualquier tienda y vuelve cuando estés listo para decidir.",
+        "saveFirst": "Guarda tu primer artículo",
+        "dismiss": "Descartar"
+      }
     }
   }
 }

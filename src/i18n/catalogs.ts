@@ -78,7 +78,7 @@ export async function loadResources(locale: RenderLocale): Promise<Resources> {
  * app doesn't download marketing copy and vice versa — and each page loads only
  * the areas it uses.
  */
-export type PublicArea = 'site' | 'landing';
+export type PublicArea = 'site' | 'landing' | 'templates';
 
 const publicLoaders: Record<
   PublicArea,
@@ -87,6 +87,10 @@ const publicLoaders: Record<
   site: {
     en: () => import('./locales/en/site.json'),
     es: () => import('./locales/es/site.json'),
+  },
+  templates: {
+    en: () => import('./locales/en/templates.json'),
+    es: () => import('./locales/es/templates.json'),
   },
   landing: {
     en: () => import('./locales/en/landing.json'),

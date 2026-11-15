@@ -1,0 +1,20 @@
+{
+  "templates": {
+    "meta": {
+      "title": "Template Collections",
+      "description": "Curated collections ready to clone and make your own. Browse gift guides, home setups, baby gear, and more."
+    },
+    "navLabel": "Templates page",
+    "heading": "Templates",
+    "subheading": "Curated collections ready to clone and make your own.",
+    "all": "All",
+    "categories": {
+      "babyNursery": "Baby & Nursery",
+      "gifts": "Gifts",
+      "garden": "Garden",
+      "styleWardrobe": "Style & Wardrobe"
+    },
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items"
+  }
+}

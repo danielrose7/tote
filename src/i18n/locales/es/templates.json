@@ -1,0 +1,20 @@
+{
+  "templates": {
+    "meta": {
+      "title": "Colecciones de plantillas",
+      "description": "Colecciones curadas listas para clonar y hacer tuyas. Explora guías de regalos, ideas para el hogar, artículos para bebé y más."
+    },
+    "navLabel": "Página de plantillas",
+    "heading": "Plantillas",
+    "subheading": "Colecciones curadas listas para clonar y hacer tuyas.",
+    "all": "Todas",
+    "categories": {
+      "babyNursery": "Bebé y cuarto del bebé",
+      "gifts": "Regalos",
+      "garden": "Jardín",
+      "styleWardrobe": "Estilo y guardarropa"
+    },
+    "itemCount_one": "{{count}} artículo",
+    "itemCount_other": "{{count}} artículos"
+  }
+}

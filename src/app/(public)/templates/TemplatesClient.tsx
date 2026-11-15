@@ -1,7 +1,10 @@
 'use client';
 
+import type { TFunction } from 'i18next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslation } from '@/i18n/client';
+import { localizedPath } from '@/i18n/publicPages';
 import type { PublishedCollectionSummary } from '@/lib/publishedCollectionsDb';
 import styles from './templates.module.css';
 
@@ -13,7 +16,16 @@ export type TemplateEntry = PublishedCollectionSummary & {
 
 const ALL = 'All';
 
+// Stable English names (what ?category= carries) → catalog keys.
+const CATEGORY_LABELS: Record<string, string> = {
+  'Baby & Nursery': 'templates.categories.babyNursery',
+  Gifts: 'templates.categories.gifts',
+  Garden: 'templates.categories.garden',
+  'Style & Wardrobe': 'templates.categories.styleWardrobe',
+};
+
 export function TemplatesClient({ templates }: { templates: TemplateEntry[] }) {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get('category') ?? ALL;
@@ -26,24 +38,30 @@ export function TemplatesClient({ templates }: { templates: TemplateEntry[] }) {
       params.set('category', cat);
     }
     const qs = params.toString();
-    router.replace(`/templates${qs ? `?${qs}` : ''}`, { scroll: false });
+    router.replace(
+      localizedPath(i18n.language, `/templates${qs ? `?${qs}` : ''}`),
+      { scroll: false },
+    );
   }
 
   const categories = [
     ALL,
-    ...Array.from(new Set(templates.map((t) => t.category))),
+    ...Array.from(new Set(templates.map((tpl) => tpl.category))),
   ];
 
   const categoryCounts = Object.fromEntries(
     categories
       .slice(1)
-      .map((cat) => [cat, templates.filter((t) => t.category === cat).length]),
+      .map((cat) => [
+        cat,
+        templates.filter((tpl) => tpl.category === cat).length,
+      ]),
   );
 
   const visible =
     activeCategory === ALL
       ? templates
-      : templates.filter((t) => t.category === activeCategory);
+      : templates.filter((tpl) => tpl.category === activeCategory);
 
   return (
     <div className={styles.layout}>
@@ -56,7 +74,7 @@ export function TemplatesClient({ templates }: { templates: TemplateEntry[] }) {
               data-active={activeCategory === ALL}
               onClick={() => setActiveCategory(ALL)}
             >
-              All
+              {t('templates.all')}
               <span className={styles.categoryCount}>{templates.length}</span>
             </button>
           </li>
@@ -68,7 +86,7 @@ export function TemplatesClient({ templates }: { templates: TemplateEntry[] }) {
                 data-active={activeCategory === cat}
                 onClick={() => setActiveCategory(cat)}
               >
-                {cat}
+                {categoryLabel(t, cat)}
                 <span className={styles.categoryCount}>
                   {categoryCounts[cat]}
                 </span>
@@ -80,8 +98,8 @@ export function TemplatesClient({ templates }: { templates: TemplateEntry[] }) {
 
       <main className={styles.main}>
         <div className={styles.grid}>
-          {visible.map((t) => (
-            <TemplateCard key={t.id} template={t} />
+          {visible.map((tpl) => (
+            <TemplateCard key={tpl.id} template={tpl} />
           ))}
         </div>
       </main>
@@ -89,25 +107,33 @@ export function TemplatesClient({ templates }: { templates: TemplateEntry[] }) {
   );
 }
 
-function TemplateCard({ template: t }: { template: TemplateEntry }) {
+function TemplateCard({ template: tpl }: { template: TemplateEntry }) {
+  const { t } = useTranslation();
   return (
-    <Link href={`/s/${t.username}/${t.slug}`} className={styles.card}>
+    <Link href={`/s/${tpl.username}/${tpl.slug}`} className={styles.card}>
       <CollectionCover
-        images={t.coverImages.map((ci) => ci.url)}
-        color={t.color ?? '#6366f1'}
+        images={tpl.coverImages.map((ci) => ci.url)}
+        color={tpl.color ?? '#6366f1'}
       />
       <div className={styles.cardBody}>
-        <span className={styles.cardCategory}>{t.category}</span>
-        <h2 className={styles.cardTitle}>{t.name}</h2>
-        {t.description && (
-          <p className={styles.cardDescription}>{t.description}</p>
+        <span className={styles.cardCategory}>
+          {categoryLabel(t, tpl.category)}
+        </span>
+        <h2 className={styles.cardTitle}>{tpl.name}</h2>
+        {tpl.description && (
+          <p className={styles.cardDescription}>{tpl.description}</p>
         )}
         <p className={styles.cardMeta}>
-          {t.itemCount} {t.itemCount === 1 ? 'item' : 'items'}
+          {t('templates.itemCount', { count: tpl.itemCount })}
         </p>
       </div>
     </Link>
   );
+}
+
+function categoryLabel(t: TFunction, category: string) {
+  const key = CATEGORY_LABELS[category];
+  return key ? t(key) : category;
 }
 
 function CollectionCover({

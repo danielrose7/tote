@@ -2,9 +2,11 @@
 
 import { Show, SignUpButton } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/i18n/client';
 import styles from './StickyCtaBar.module.css';
 
 export function StickyCtaBar({ cloneHref }: { cloneHref?: string }) {
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -27,22 +29,20 @@ export function StickyCtaBar({ cloneHref }: { cloneHref?: string }) {
         aria-hidden={!visible}
       >
         <div className={styles.inner}>
-          <p className={styles.text}>
-            Save from any store and come back when you&apos;re ready to decide.
-          </p>
+          <p className={styles.text}>{t('site.cta.sticky.text')}</p>
           <SignUpButton
             mode="modal"
             fallbackRedirectUrl={cloneHref ?? '/collections'}
           >
             <button type="button" className={styles.btn}>
-              Save your first item
+              {t('site.cta.sticky.saveFirst')}
             </button>
           </SignUpButton>
           <button
             type="button"
             className={styles.dismiss}
             onClick={() => setDismissed(true)}
-            aria-label="Dismiss"
+            aria-label={t('site.cta.sticky.dismiss')}
           >
             ✕
           </button>
