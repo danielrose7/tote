@@ -10,6 +10,54 @@ Prior art, worth reading before touching this:
 - `../story-points/CLAUDE.md` ("Every user-facing string goes through t()") — English
   source strings as keys, fallback to English, `tn()` for plurals, `xx` pseudo-locale.
 
+## Status · 14 November 2026
+
+**Phase 0 — web app: done (English only), local commits, not pushed.**
+
+| Piece | State |
+|---|---|
+| i18next + react-i18next, per-request instances, English fallback | Done |
+| Locale resolution (cookie → Accept-Language → en), `xx` pseudo-locale | Done, verified in a browser (server and client components) |
+| `users.locale` (migration 0007) + `GET/PATCH /api/v2/user/preferences` | Done. Migration verified on a throwaway local Postgres, with legacy 017 after it. **Not applied to Neon** — `pnpm build` applies it on deploy. |
+| Cookie ↔ profile sync (`LocaleSync`), Settings language picker | Done; picker is hidden until a second locale exists |
+| ~530 strings in the authenticated app through `t()` | Done. `pnpm i18n:check`: 534 keys, 0 missing, 0 unused |
+| Plurals, enum labels, dates/numbers/prices via `useFormat()` | Done. dayjs removed from the web app |
+| API error messages | **Not done** — see below |
+
+**Measured costs** (the PRODUCT.md bundle-size principle): i18next + react-i18next is
+about 18 kB gzip on the client. The English catalog is embedded in each full page load of
+the authenticated app, about 22 kB raw / 7 kB gzip, because the layout passes the loaded
+catalog to the provider (that is what avoids a flash of English and hydration mismatches).
+Client navigations don't re-send it. When a second locale lands, consider splitting the
+catalog per route area so a page only ships the areas it uses.
+
+**English wording changes made along the way:** "1 section / 1 item / 1 search / 1 browser
+session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits …" (was
+"1 item limit …"); negative currency renders "-$0.50" (was "$-0.50").
+
+### Open items from Phase 0
+
+1. **API errors (first Phase 1 task).** ~126 `NextResponse.json({ error: '…' })` strings are
+   English and about six client sites show them directly (`CollectionRequestError` in
+   `src/lib/collections/client.ts`, clone, invite, curate import, delete account, create
+   collection). Plan: add a stable `code` next to `error`, map codes to `t()` keys on the
+   client, and fall back to a status-based generic message. Do it route by route, starting
+   with the ones the UI actually shows.
+2. **Pre-existing bug found, not fixed:** `ImportPageClient.tsx:~192` still reads
+   `!me.$isLoaded || !me.root` (Jazz leftover from `c9032ce`); `me` is never declared, so
+   the import button throws when rendered.
+3. **Vitest `@/` alias** was missing, so `itemCount.test.ts` failed on `main`; fixed in
+   `vitest.config.ts`.
+4. `describeRefreshOutcome` now takes `t`; any new caller must pass it.
+5. Remaining ~127 `tsc` errors across the repo are pre-existing and unchanged by this work.
+
+**How we verified without touching production:** the repo's `.env.local` (created by the
+Vercel CLI) holds live credentials and Development shares the production Neon database, so
+the dev server was run from a throwaway `git worktree` with no `.env.local`, dummy Clerk
+keys, and a scratch Postgres. Unprotected `(app)` routes (`/import`, `/invite/…`,
+`/clone/…`) render signed-out there; authenticated pages (`/collections`, `/settings`)
+still need a real Clerk dev instance to check by eye.
+
 ## Decisions
 
 | Question | Decision |
