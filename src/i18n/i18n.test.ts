@@ -83,3 +83,37 @@ describe('createI18n', () => {
     expect(i18n.t('common.retry')).toMatch(/^\[·+.+·+\]$/);
   });
 });
+
+import { formatPrice } from '@/lib/formatPrice';
+import { formatCurrency, formatNumber, formatRelativeTime } from './format';
+
+describe('formatters', () => {
+  const now = Date.UTC(2026, 10, 14, 12, 0, 0);
+
+  it('formats relative time in English, with "now" under a minute', () => {
+    expect(formatRelativeTime(now - 5_000, 'en', now)).toBe('now');
+    expect(formatRelativeTime(now - 5 * 60_000, 'en', now)).toBe(
+      '5 minutes ago',
+    );
+    expect(formatRelativeTime(now - 26 * 3600_000, 'en', now)).toBe(
+      'yesterday',
+    );
+    expect(formatRelativeTime(now + 2 * 3600_000, 'en', now)).toBe(
+      'in 2 hours',
+    );
+  });
+
+  it('formats numbers and currency with the locale conventions', () => {
+    expect(formatNumber(1234567, 'en')).toBe('1,234,567');
+    expect(formatNumber(1234567, 'de')).toBe('1.234.567');
+    expect(formatCurrency(12.5, 'USD', 'en')).toBe('$12.50');
+    expect(formatCurrency(12.5, 'USD', 'xx')).toBe('$12.50'); // pseudo = English
+  });
+
+  it('formatPrice keeps its en-US default and honours a locale', () => {
+    expect(formatPrice('$29.99')).toBe('$29.99');
+    expect(formatPrice('29,99', 'EUR')).toBe('€29.99');
+    expect(formatPrice('€29,99', null, 'de')).toBe('29,99 €');
+    expect(formatPrice('not a price')).toBe('not a price');
+  });
+});

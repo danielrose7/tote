@@ -1,3 +1,5 @@
+import { intlLocale } from '@/i18n/format';
+
 const SYMBOL_TO_CURRENCY: [string, string][] = [
   ['A$', 'AUD'],
   ['C$', 'CAD'],
@@ -13,7 +15,17 @@ const SYMBOL_TO_CURRENCY: [string, string][] = [
   ['₣', 'CHF'],
 ];
 
-export function formatPrice(raw: string, currencyCode?: string | null): string {
+/**
+ * Formats a scraped price string for display. Parsing is locale-independent
+ * (the input comes from a store, not from the UI language); `locale` only
+ * controls how the result is written. Defaults to en-US so callers that don't
+ * pass one keep today's output.
+ */
+export function formatPrice(
+  raw: string,
+  currencyCode?: string | null,
+  locale = 'en-US',
+): string {
   const trimmed = raw.trim();
 
   let currency = currencyCode?.toUpperCase() ?? 'USD';
@@ -41,7 +53,7 @@ export function formatPrice(raw: string, currencyCode?: string | null): string {
   if (Number.isNaN(value)) return raw;
 
   try {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(intlLocale(locale), {
       style: 'currency',
       currency,
       minimumFractionDigits: value % 1 === 0 ? 0 : 2,

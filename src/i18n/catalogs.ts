@@ -1,5 +1,32 @@
 import { PSEUDO_LOCALE, type RenderLocale } from './config';
-import en from './locales/en/common.json';
+import collections from './locales/en/collections.json';
+import common from './locales/en/common.json';
+import dialogs from './locales/en/dialogs.json';
+import pages from './locales/en/pages.json';
+import slots from './locales/en/slots.json';
+
+/** Deep-merge catalog fragments; later fragments win on key collisions. */
+function merge(...parts: Catalog[]): Catalog {
+  const out: Catalog = {};
+  for (const part of parts) {
+    for (const [key, value] of Object.entries(part)) {
+      const existing = out[key];
+      out[key] =
+        typeof value === 'string' || typeof existing !== 'object'
+          ? value
+          : merge(existing, value);
+    }
+  }
+  return out;
+}
+
+/**
+ * English is split into one file per area so several people (or agents) can
+ * add strings without editing the same file. Top-level keys are the areas:
+ * `t('dialogs.team.title')`. Other locales mirror this as a single file.
+ */
+const en = merge(common, slots, collections, dialogs, pages);
+
 import type { Catalog } from './pseudo';
 import { pseudoizeCatalog } from './pseudo';
 
@@ -12,7 +39,7 @@ const loaders: Record<string, () => Promise<{ default: Catalog }>> = {
   // es: () => import('./locales/es/common.json'),
 };
 
-export const sourceCatalog = en as Catalog;
+export const sourceCatalog = en;
 
 export type Resources = Record<string, { translation: Catalog }>;
 

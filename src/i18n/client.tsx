@@ -1,12 +1,49 @@
 'use client';
 
-import { type ReactNode, useEffect, useState } from 'react';
-import { I18nextProvider } from 'react-i18next';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { I18nextProvider, useTranslation } from 'react-i18next';
+import { formatPrice } from '@/lib/formatPrice';
 import type { Resources } from './catalogs';
 import type { RenderLocale } from './config';
+
+import {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  formatNumber,
+  formatRelativeTime,
+} from './format';
 import { createI18n } from './instance';
 
-export { useTranslation } from 'react-i18next';
+export { useTranslation };
+
+/** Formatters bound to the current locale. Use these, never hand-format. */
+export function useFormat() {
+  const { i18n } = useTranslation();
+  const locale = i18n.language;
+  return useMemo(
+    () => ({
+      locale,
+      number: (value: number) => formatNumber(value, locale),
+      currency: (
+        amount: number,
+        currency: string,
+        options?: Intl.NumberFormatOptions,
+      ) => formatCurrency(amount, currency, locale, options),
+      price: (raw: string, currencyCode?: string | null) =>
+        formatPrice(raw, currencyCode, locale),
+      date: (
+        value: Date | string | number,
+        options?: Intl.DateTimeFormatOptions,
+      ) => formatDate(value, locale, options),
+      dateTime: (value: Date | string | number) =>
+        formatDateTime(value, locale),
+      relativeTime: (value: Date | string | number) =>
+        formatRelativeTime(value, locale),
+    }),
+    [locale],
+  );
+}
 
 /**
  * Receives the already-loaded catalog from the server layout, so the first
