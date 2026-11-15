@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     );
   }
   if (result.status === 'version_conflict') {
-    return NextResponse.json({ error: 'Version conflict' }, { status: 409 });
+    return NextResponse.json({ error: 'Version conflict', code: 'version_conflict' }, { status: 409 });
   }
   return NextResponse.json(
     { ...result.value, replayed: result.replayed ?? false },

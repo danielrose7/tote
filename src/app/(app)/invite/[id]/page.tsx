@@ -4,6 +4,7 @@ import { SignInButton, useUser } from '@clerk/nextjs';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/ToastNotification';
+import { apiErrorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
 import styles from './page.module.css';
 
@@ -36,8 +37,9 @@ export default function InvitePage() {
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as {
             error?: string;
+            code?: string;
           } | null;
-          throw new Error(body?.error || t('invite.acceptFailed'));
+          throw new Error(apiErrorMessage(t, response.status, body));
         }
         return response.json() as Promise<{ collectionId: string }>;
       })

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
 import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
+import { errorMessage } from '@/i18n/apiError';
 import { Trans, useTranslation } from '@/i18n/client';
 import type {
   DeleteCollectionMutation,
@@ -144,10 +145,10 @@ export function NeonEditCollectionDialog({
         collectionQueryKeys.all,
         context?.previousSummaries,
       );
-      setError(mutationError.message);
+      setError(errorMessage(t, mutationError));
       showToast({
         title: t('dialogs.editCollection.updateFailed'),
-        description: mutationError.message,
+        description: errorMessage(t, mutationError),
         variant: 'error',
       });
     },
@@ -179,7 +180,7 @@ export function NeonEditCollectionDialog({
       );
       showToast({
         title: t('dialogs.editCollection.deleteFailed'),
-        description: mutationError.message,
+        description: errorMessage(t, mutationError),
         variant: 'error',
       });
     },

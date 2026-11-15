@@ -43,7 +43,7 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
   if (result.status === 'version_conflict') {
-    return NextResponse.json({ error: 'Version conflict' }, { status: 409 });
+    return NextResponse.json({ error: 'Version conflict', code: 'version_conflict' }, { status: 409 });
   }
   if (result.status === 'idempotency_conflict') {
     return NextResponse.json(

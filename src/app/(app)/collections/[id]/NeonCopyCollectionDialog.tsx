@@ -7,6 +7,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
 import {
   type CopyCollectionMutation,
@@ -55,7 +56,7 @@ export function NeonCopyCollectionDialog({
       onOpenChange(false);
       router.push(`/collections/${id}`);
     },
-    onError: (mutationError) => setError(mutationError.message),
+    onError: (mutationError) => setError(errorMessage(t, mutationError)),
   });
 
   useEffect(() => {

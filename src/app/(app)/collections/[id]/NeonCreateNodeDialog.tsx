@@ -9,6 +9,7 @@ import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import { NeonSectionSelector } from '@/components/NeonSectionSelector/NeonSectionSelector';
 import { useToast } from '@/components/ToastNotification';
 import type { CollectionNode } from '@/db/schema';
+import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
 import {
   type CreateCollectionNodeMutation,
@@ -240,10 +241,10 @@ export function NeonCreateNodeDialog({
         collectionQueryKeys.all,
         context?.previousSummaries,
       );
-      setError(mutationError.message);
+      setError(errorMessage(t, mutationError));
       showToast({
         title: t('dialogs.createNode.addFailed'),
-        description: mutationError.message,
+        description: errorMessage(t, mutationError),
         variant: 'error',
       });
     },

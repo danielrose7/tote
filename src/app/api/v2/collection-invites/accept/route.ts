@@ -28,7 +28,10 @@ export async function POST(request: Request) {
   const result = await acceptCollectionInvite(userId, parsed.data.token);
   if (result.status === 'not_found') {
     return NextResponse.json(
-      { error: 'Invite is invalid or no longer available' },
+      {
+        error: 'Invite is invalid or no longer available',
+        code: 'invite_unavailable',
+      },
       { status: 404 },
     );
   }

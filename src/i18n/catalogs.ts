@@ -2,6 +2,7 @@ import { PSEUDO_LOCALE, type RenderLocale } from './config';
 import collections from './locales/en/collections.json';
 import common from './locales/en/common.json';
 import dialogs from './locales/en/dialogs.json';
+import errors from './locales/en/errors.json';
 import pages from './locales/en/pages.json';
 import slots from './locales/en/slots.json';
 
@@ -25,7 +26,7 @@ function merge(...parts: Catalog[]): Catalog {
  * add strings without editing the same file. Top-level keys are the areas:
  * `t('dialogs.team.title')`. Other locales mirror this as a single file.
  */
-const en = merge(common, slots, collections, dialogs, pages);
+const en = merge(common, slots, collections, dialogs, pages, errors);
 
 import type { Catalog } from './pseudo';
 import { pseudoizeCatalog } from './pseudo';

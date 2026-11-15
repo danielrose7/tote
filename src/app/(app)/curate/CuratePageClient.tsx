@@ -6,6 +6,7 @@ import { Main } from '@/components/Main/Main';
 import { useToast } from '@/components/ToastNotification';
 import type { SectionToExtract } from '@/hooks/useCuratorSession';
 import { useCuratorSession } from '@/hooks/useCuratorSession';
+import { apiErrorMessage } from '@/i18n/apiError';
 import { Trans, useFormat, useTranslation } from '@/i18n/client';
 import { curationChannel } from '@/inngest/channels';
 import { useCuratorStore } from '@/store/curatorStore';
@@ -507,9 +508,13 @@ export function CuratePageClient({
       const body = (await response.json().catch(() => null)) as {
         id?: string;
         error?: string;
+        code?: string;
       } | null;
-      if (!response.ok || !body?.id) {
-        throw new Error(body?.error ?? t('curate.errors.importFailed'));
+      if (!response.ok) {
+        throw new Error(apiErrorMessage(t, response.status, body));
+      }
+      if (!body?.id) {
+        throw new Error(t('curate.errors.importFailed'));
       }
       const collectionId = body.id;
 

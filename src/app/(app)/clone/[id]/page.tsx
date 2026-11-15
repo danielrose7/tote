@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import styles from '@/app/(public)/view/[id]/page.module.css';
+import { apiErrorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
 
 export default function CloneCollectionPage() {
@@ -33,8 +34,9 @@ export default function CloneCollectionPage() {
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as {
             error?: string;
+            code?: string;
           } | null;
-          throw new Error(body?.error || t('clone.copyFailed'));
+          throw new Error(apiErrorMessage(t, response.status, body));
         }
         return response.json() as Promise<{ id: string }>;
       })

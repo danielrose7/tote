@@ -214,7 +214,6 @@
       "label": "Type <strong>{{phrase}}</strong> to confirm",
       "button": "Delete account",
       "deleting": "Deleting…",
-      "failed": "Failed to delete account.",
       "error": "Something went wrong. Please try again."
     },
     "profile": {

@@ -6,6 +6,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useToast } from '@/components/ToastNotification';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { errorMessage } from '@/i18n/apiError';
 import { useFormat, useTranslation } from '@/i18n/client';
 import {
   fetchCollectionPublication,
@@ -75,7 +76,7 @@ export function NeonPublicationDialog({
         variant: 'success',
       });
     },
-    onError: (mutationError) => setError(mutationError.message),
+    onError: (mutationError) => setError(errorMessage(t, mutationError)),
   });
   const unpublish = useMutation<
     { unpublished: true },
@@ -91,7 +92,7 @@ export function NeonPublicationDialog({
       });
       onOpenChange(false);
     },
-    onError: (mutationError) => setError(mutationError.message),
+    onError: (mutationError) => setError(errorMessage(t, mutationError)),
   });
 
   const publicUrl =

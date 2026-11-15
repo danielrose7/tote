@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   if (!(await hasPositiveCreditBalance(userId!))) {
     return NextResponse.json(
-      { error: 'Insufficient credits' },
+      { error: 'Insufficient credits', code: 'insufficient_credits' },
       { status: 402 },
     );
   }

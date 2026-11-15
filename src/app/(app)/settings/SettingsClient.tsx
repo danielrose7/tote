@@ -7,6 +7,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { AiCreditsPanel } from '@/components/Billing/AiCreditsPanel';
 import { Header } from '@/components/Header/Header';
 import { Main } from '@/components/Main/Main';
+import { apiErrorMessage } from '@/i18n/apiError';
 import { Trans, useTranslation } from '@/i18n/client';
 import type { RenderLocale } from '@/i18n/config';
 import { LanguagePicker } from '@/i18n/LanguagePicker';
@@ -34,8 +35,8 @@ export function SettingsClient({
     try {
       const res = await fetch('/api/user/delete', { method: 'DELETE' });
       if (!res.ok) {
-        const data = await res.json();
-        setDeleteError(data.error ?? t('settings.delete.failed'));
+        const data = await res.json().catch(() => null);
+        setDeleteError(apiErrorMessage(t, res.status, data));
         return;
       }
       await signOut({ redirectUrl: '/' });

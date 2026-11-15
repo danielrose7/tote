@@ -5,6 +5,7 @@ import { type FormEvent, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Main } from '@/components/Main/Main';
 import { useToast } from '@/components/ToastNotification';
+import { apiErrorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
 import { type ImportPayload, validatePayload } from '@/lib/importPayload';
 import styles from './import.module.css';
@@ -47,9 +48,13 @@ export function ImportPageClient() {
       const body = (await response.json().catch(() => null)) as {
         id?: string;
         error?: string;
+        code?: string;
       } | null;
-      if (!response.ok || !body?.id) {
-        throw new Error(body?.error ?? t('import.failed'));
+      if (!response.ok) {
+        throw new Error(apiErrorMessage(t, response.status, body));
+      }
+      if (!body?.id) {
+        throw new Error(t('import.failed'));
       }
 
       const totalItems = preview.sections.reduce(

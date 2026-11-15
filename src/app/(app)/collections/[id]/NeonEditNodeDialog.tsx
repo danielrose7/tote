@@ -7,6 +7,7 @@ import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.m
 import { NeonSectionSelector } from '@/components/NeonSectionSelector/NeonSectionSelector';
 import { useToast } from '@/components/ToastNotification';
 import type { CollectionNode } from '@/db/schema';
+import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
 import {
   createCollectionNodeMutation,
@@ -187,10 +188,10 @@ export function NeonEditNodeDialog({
         collectionQueryKeys.all,
         context?.previousSummaries,
       );
-      setError(mutationError.message);
+      setError(errorMessage(t, mutationError));
       showToast({
         title: t('dialogs.editNode.updateFailed'),
-        description: mutationError.message,
+        description: errorMessage(t, mutationError),
         variant: 'error',
       });
     },
@@ -275,7 +276,7 @@ export function NeonEditNodeDialog({
       );
       showToast({
         title: t('dialogs.editNode.deleteFailed'),
-        description: mutationError.message,
+        description: errorMessage(t, mutationError),
         variant: 'error',
       });
     },

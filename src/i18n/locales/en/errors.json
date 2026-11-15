@@ -1,0 +1,18 @@
+{
+  "errors": {
+    "api": {
+      "generic": "Something went wrong. Please try again.",
+      "network": "Couldn't reach the server. Check your connection and try again.",
+      "server": "The server ran into a problem. Please try again.",
+      "invalid": "That request wasn't valid.",
+      "unauthorized": "Please sign in and try again.",
+      "forbidden": "You don't have permission to do that.",
+      "notFound": "That couldn't be found. It may have been removed.",
+      "conflict": "This changed somewhere else. Refresh and try again.",
+      "versionConflict": "This changed somewhere else. Refresh and try again.",
+      "rateLimited": "Too many requests. Please wait a moment.",
+      "inviteUnavailable": "This invite is invalid or no longer available.",
+      "insufficientCredits": "You don't have enough AI credits for this."
+    }
+  }
+}

@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useToast } from '@/components/ToastNotification';
+import { errorMessage } from '@/i18n/apiError';
 import { useFormat, useTranslation } from '@/i18n/client';
 import {
   type CreateCollectionInviteMutation,
@@ -112,10 +113,10 @@ export function NeonTeamDialog({
     value ? fmt.dateTime(value) : t('dialogs.team.noExpiration');
 
   const mutationError = (title: string) => (mutation: Error) => {
-    setError(mutation.message);
+    setError(errorMessage(t, mutation));
     showToast({
       title,
-      description: mutation.message,
+      description: errorMessage(t, mutation),
       variant: 'error',
     });
   };

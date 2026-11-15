@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 import dialogStyles from '@/components/CreateCollectionDialog/CreateCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
+import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
 import type { CreateCollectionMutation } from '@/lib/collections/client';
 import {
@@ -74,10 +75,10 @@ export function NeonCreateCollectionDialog({
     },
     onError: (mutationError, _input, context) => {
       queryClient.setQueryData(collectionQueryKeys.all, context?.previous);
-      setError(mutationError.message);
+      setError(errorMessage(t, mutationError));
       showToast({
         title: t('collections.create.failedTitle'),
-        description: mutationError.message,
+        description: errorMessage(t, mutationError),
         variant: 'error',
       });
     },

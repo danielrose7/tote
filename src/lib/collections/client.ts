@@ -19,6 +19,7 @@ export class CollectionRequestError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly code?: string,
   ) {
     super(message);
     this.name = 'CollectionRequestError';
@@ -36,10 +37,12 @@ async function fetchJson<T>(
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
       error?: string;
+      code?: string;
     } | null;
     throw new CollectionRequestError(
       body?.error || `Collection request failed with status ${response.status}`,
       response.status,
+      body?.code,
     );
   }
   return response.json() as Promise<T>;
