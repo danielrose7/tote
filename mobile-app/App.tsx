@@ -883,6 +883,7 @@ function CollectionListContent({
   const { user } = useUser();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [showAddCollection, setShowAddCollection] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -906,12 +907,19 @@ function CollectionListContent({
     try {
       const token = await getToken();
       if (!token) {
+        // Signed-in per the cached Clerk client, but no valid session token
+        // (revoked/expired session, or the account was changed server-side).
+        // Don't show a silent empty list — tell the user how to recover.
+        setLoadError(
+          'Your session has expired. Log out in Settings and sign in again.',
+        );
         setLoaded(true);
         return;
       }
       const result = await fetchCollections(token);
       await upsertCollections(user.id, result);
       setCollections(result);
+      setLoadError(null);
       setLoaded(true);
       // Populate cache and provision API key for share extension
       try {
@@ -941,9 +949,20 @@ function CollectionListContent({
             NativeModules.AppGroupModule?.setApiKey?.(secret);
           }
         }
-      } catch {}
+      } catch (e) {
+        // Share-extension sync (collections cache / API key) failed. Collections
+        // themselves loaded, so don't block the list — but log it and let the
+        // next load retry key provisioning instead of silently giving up.
+        apiKeyProvisioned.current = false;
+        console.warn('share extension sync error:', e);
+      }
     } catch (e) {
       console.warn('loadCollections error:', e);
+      setLoadError(
+        e instanceof Error && e.message
+          ? `Couldn't load your collections: ${e.message}`
+          : "Couldn't load your collections.",
+      );
       setLoaded(true); // show whatever we have from cache
     }
   }
@@ -1079,6 +1098,17 @@ function CollectionListContent({
                 <Text style={styles.emptySubtitle}>
                   Try a different search term
                 </Text>
+              </View>
+            ) : loadError ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>Couldn't load collections</Text>
+                <Text style={styles.emptySubtitle}>{loadError}</Text>
+                <TouchableOpacity
+                  style={styles.emptyButton}
+                  onPress={() => loadCollections(true)}
+                >
+                  <Text style={styles.emptyButtonText}>Try again</Text>
+                </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.emptyState}>

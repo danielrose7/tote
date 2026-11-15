@@ -8,8 +8,12 @@ export async function POST() {
   }
 
   const clerk = await clerkClient();
+  // Each device provisions its own key (see DELETE below), and Clerk answers a
+  // second key with the same name for the same user with a 409 Conflict — which
+  // surfaced as a 500 and left reinstalled/second devices without a key. Give
+  // every key a unique name so a user can hold one per device.
   const apiKey = await clerk.apiKeys.create({
-    name: 'iOS Share Extension',
+    name: `iOS Share Extension ${crypto.randomUUID().slice(0, 8)}`,
     subject: userId,
   });
   const secret =
