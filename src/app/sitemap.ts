@@ -6,15 +6,19 @@ import { getAllPublishedCollectionSlugs } from '../lib/publishedCollectionsDb';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://tote.tools';
 
+  // The home page is the bare origin everywhere else (canonical, hreflang).
+  const absolute = (l: (typeof LOCALES)[number], path: string) =>
+    (baseUrl + localizedPath(l, path)).replace(/\/$/, '');
+
   // One entry per language version of each translated page, each listing all
   // versions (itself included) plus x-default → English, as Google requires.
   const translatedRoutes: MetadataRoute.Sitemap =
     TRANSLATED_PUBLIC_PATHS.flatMap((path) => {
       const languages: Record<string, string> = {};
-      for (const l of LOCALES) languages[l] = baseUrl + localizedPath(l, path);
+      for (const l of LOCALES) languages[l] = absolute(l, path);
       languages['x-default'] = languages.en;
       return LOCALES.map((l) => ({
-        url: baseUrl + localizedPath(l, path),
+        url: absolute(l, path),
         lastModified: new Date(),
         changeFrequency: 'monthly' as const,
         priority: path === '/' ? (l === 'en' ? 1 : 0.9) : 0.8,
