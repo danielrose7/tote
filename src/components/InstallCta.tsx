@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/i18n/client';
 import { APP_STORE_URL, CHROME_WEB_STORE_URL } from '@/lib/constants';
 import { isIOS } from '@/lib/isIOS';
 import { InstallLabel } from './InstallLabel';
@@ -12,6 +13,7 @@ import { InstallLabel } from './InstallLabel';
  * makes for browser-name detection.
  */
 export function InstallCta({ className }: { className?: string }) {
+  const { t } = useTranslation();
   const [ios, setIos] = useState(false);
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export function InstallCta({ className }: { className?: string }) {
         rel="noopener noreferrer"
         className={className}
       >
-        Get it on the App Store
+        {t('site.install.appStore')}
       </a>
     );
   }

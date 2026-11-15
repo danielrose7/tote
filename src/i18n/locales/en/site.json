@@ -1,0 +1,52 @@
+{
+  "site": {
+    "nav": {
+      "label": "Site",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu",
+      "links": {
+        "useCases": "Use cases",
+        "templates": "Templates",
+        "extension": "Extension",
+        "ios": "iOS App",
+        "docs": "Docs"
+      }
+    },
+    "install": {
+      "addTo": "Add to {{browser}}",
+      "appStore": "Get it on the App Store"
+    },
+    "auth": {
+      "logIn": "Log in",
+      "signUp": "Sign up",
+      "openTote": "Open Tote"
+    },
+    "footer": {
+      "tagline": "Save from any store. Organize in one place. Built for people who save now and decide later.",
+      "madeIn": "Made in Silverton, CO",
+      "language": "Language",
+      "groups": {
+        "useCases": "Use cases",
+        "whyTote": "Why Tote",
+        "product": "Product"
+      },
+      "links": {
+        "giftShopping": "Gift lists & wishlists",
+        "homeRenovation": "Home renovation",
+        "personalStyle": "Wardrobe & style",
+        "familyShopping": "Family shopping",
+        "professionalProjects": "Client sourcing",
+        "vsBookmarks": "Tote vs bookmarks",
+        "vsWishlists": "Tote vs store wishlists",
+        "vsSpreadsheets": "Tote vs spreadsheets",
+        "private": "Private by design",
+        "templates": "Templates",
+        "extension": "Browser extension",
+        "ios": "iOS app",
+        "docs": "Help docs",
+        "gettingStarted": "Getting started",
+        "privacy": "Privacy"
+      }
+    }
+  }
+}

@@ -100,8 +100,14 @@ for (const file of walk(join(root, 'src'))) {
   }
 }
 
-const missing = [...used].filter(([k]) => !defined.has(k));
-const unused = [...defined].filter((k) => !used.has(k));
+// A key that names a group (t('landing.faq', { returnObjects: true })) uses
+// every key beneath it.
+const isGroup = (k) => [...defined].some((d) => d.startsWith(`${k}.`));
+const covered = (k) =>
+  used.has(k) ||
+  [...used.keys()].some((u) => k.startsWith(`${u}.`) && isGroup(u));
+const missing = [...used].filter(([k]) => !defined.has(k) && !isGroup(k));
+const unused = [...defined].filter((k) => !covered(k));
 
 const strayLocale = [];
 for (const dir of readdirSync(localesDir).filter((d) => d !== 'en')) {

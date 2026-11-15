@@ -3,6 +3,7 @@
 import { Show, SignInButton, SignUpButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { useTranslation } from '@/i18n/client';
 import styles from '../AuthButton.module.css';
 
 interface LandingAuthButtonsProps {
@@ -13,17 +14,18 @@ interface LandingAuthButtonsProps {
 }
 
 function AuthButtonsFallback() {
+  const { t } = useTranslation();
   return (
     <div className={styles.buttons}>
       <button type="button" className={styles.button} disabled>
-        Log in
+        {t('site.auth.logIn')}
       </button>
       <button
         type="button"
         className={`${styles.button} ${styles.buttonPrimary}`}
         disabled
       >
-        Sign up
+        {t('site.auth.signUp')}
       </button>
     </div>
   );
@@ -31,10 +33,11 @@ function AuthButtonsFallback() {
 
 function LandingAuthButtonsInner({
   showSignIn = true,
-  signInLabel = 'Log in',
-  signUpLabel = 'Sign up',
-  signedInLabel = 'Open Tote',
+  signInLabel,
+  signUpLabel,
+  signedInLabel,
 }: LandingAuthButtonsProps) {
+  const { t } = useTranslation();
   return (
     <>
       <Show when="signed-out">
@@ -42,7 +45,7 @@ function LandingAuthButtonsInner({
           {showSignIn ? (
             <SignInButton mode="modal" fallbackRedirectUrl="/collections">
               <button type="button" className={styles.button}>
-                {signInLabel}
+                {signInLabel ?? t('site.auth.logIn')}
               </button>
             </SignInButton>
           ) : null}
@@ -51,7 +54,7 @@ function LandingAuthButtonsInner({
               type="button"
               className={`${styles.button} ${styles.buttonPrimary}`}
             >
-              {signUpLabel}
+              {signUpLabel ?? t('site.auth.signUp')}
             </button>
           </SignUpButton>
         </div>
@@ -61,7 +64,7 @@ function LandingAuthButtonsInner({
           href="/collections"
           className={`${styles.button} ${styles.buttonPrimary}`}
         >
-          {signedInLabel}
+          {signedInLabel ?? t('site.auth.openTote')}
         </Link>
       </Show>
     </>

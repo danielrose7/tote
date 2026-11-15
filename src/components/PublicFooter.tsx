@@ -1,54 +1,108 @@
+'use client';
+
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useTranslation } from '@/i18n/client';
+import { LOCALE_LABELS, LOCALES } from '@/i18n/config';
+import {
+  isTranslatedPath,
+  localizedPath,
+  splitLocalePath,
+} from '@/i18n/publicPages';
 import { CHROME_WEB_STORE_URL } from '../lib/constants';
 import { InstallLabel } from './InstallLabel';
 import styles from './PublicFooter.module.css';
 
 const footerGroups = [
   {
-    title: 'Use cases',
+    titleKey: 'site.footer.groups.useCases',
     links: [
-      { href: '/use-cases/gift-shopping', label: 'Gift lists & wishlists' },
-      { href: '/use-cases/home-renovation', label: 'Home renovation' },
-      { href: '/use-cases/personal-style', label: 'Wardrobe & style' },
-      { href: '/use-cases/family-shopping', label: 'Family shopping' },
-      { href: '/use-cases/professional-projects', label: 'Client sourcing' },
+      {
+        href: '/use-cases/gift-shopping',
+        labelKey: 'site.footer.links.giftShopping',
+      },
+      {
+        href: '/use-cases/home-renovation',
+        labelKey: 'site.footer.links.homeRenovation',
+      },
+      {
+        href: '/use-cases/personal-style',
+        labelKey: 'site.footer.links.personalStyle',
+      },
+      {
+        href: '/use-cases/family-shopping',
+        labelKey: 'site.footer.links.familyShopping',
+      },
+      {
+        href: '/use-cases/professional-projects',
+        labelKey: 'site.footer.links.professionalProjects',
+      },
     ],
   },
   {
-    title: 'Why Tote',
+    titleKey: 'site.footer.groups.whyTote',
     links: [
-      { href: '/#comparison', label: 'Tote vs bookmarks' },
-      { href: '/#comparison', label: 'Tote vs store wishlists' },
-      { href: '/#comparison', label: 'Tote vs spreadsheets' },
-      { href: '/#privacy', label: 'Private by design' },
+      { href: '/#comparison', labelKey: 'site.footer.links.vsBookmarks' },
+      { href: '/#comparison', labelKey: 'site.footer.links.vsWishlists' },
+      { href: '/#comparison', labelKey: 'site.footer.links.vsSpreadsheets' },
+      { href: '/#privacy', labelKey: 'site.footer.links.private' },
     ],
   },
   {
-    title: 'Product',
+    titleKey: 'site.footer.groups.product',
     links: [
-      { href: '/templates', label: 'Templates' },
-      { href: '/chrome-extension', label: 'Browser extension' },
-      { href: '/ios-app', label: 'iOS app' },
-      { href: '/docs', label: 'Help docs' },
-      { href: '/docs/getting-started', label: 'Getting started' },
-      { href: '/privacy', label: 'Privacy' },
+      { href: '/templates', labelKey: 'site.footer.links.templates' },
+      { href: '/chrome-extension', labelKey: 'site.footer.links.extension' },
+      { href: '/ios-app', labelKey: 'site.footer.links.ios' },
+      { href: '/docs', labelKey: 'site.footer.links.docs' },
+      {
+        href: '/docs/getting-started',
+        labelKey: 'site.footer.links.gettingStarted',
+      },
+      { href: '/privacy', labelKey: 'site.footer.links.privacy' },
     ],
   },
 ];
 
+/**
+ * Language links list only pages that exist: a page with no translation sends
+ * you to that language's home instead of a 404.
+ */
+function LanguageSwitcher() {
+  const { t, i18n } = useTranslation();
+  const { path } = splitLocalePath(usePathname() ?? '/');
+  if (LOCALES.length < 2) return null;
+  return (
+    <nav aria-label={t('site.footer.language')} className={styles.languages}>
+      {LOCALES.map((locale) => {
+        const target = isTranslatedPath(path) ? path : '/';
+        const href = locale === 'en' ? path : localizedPath(locale, target);
+        return locale === i18n.language ? (
+          <span key={locale} lang={locale} aria-current="true">
+            {LOCALE_LABELS[locale]}
+          </span>
+        ) : (
+          <Link key={locale} href={href} hrefLang={locale} lang={locale}>
+            {LOCALE_LABELS[locale]}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 export function PublicFooter() {
+  const { t, i18n } = useTranslation();
+  const href = (target: string) => localizedPath(i18n.language, target);
   return (
     <footer className={styles.footer}>
       <div className={styles.inner}>
         <div className={styles.footerTop}>
           <div className={styles.footerBrand}>
-            <Link href="/" className={styles.wordmark}>
+            <Link href={href('/')} className={styles.wordmark}>
               tote
             </Link>
-            <p>
-              Save from any store. Organize in one place. Built for people who
-              save now and decide later.
-            </p>
+            <p>{t('site.footer.tagline')}</p>
             <a
               href={CHROME_WEB_STORE_URL}
               target="_blank"
@@ -61,22 +115,12 @@ export function PublicFooter() {
 
           <div className={styles.footerGroups}>
             {footerGroups.map((group) => (
-              <div key={group.title} className={styles.footerGroup}>
-                <h3>{group.title}</h3>
+              <div key={group.titleKey} className={styles.footerGroup}>
+                <h3>{t(group.titleKey)}</h3>
                 <ul>
                   {group.links.map((link) => (
-                    <li key={link.label}>
-                      {'external' in link && link.external ? (
-                        <a
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {link.label}
-                        </a>
-                      ) : (
-                        <Link href={link.href}>{link.label}</Link>
-                      )}
+                    <li key={link.labelKey}>
+                      <Link href={href(link.href)}>{t(link.labelKey)}</Link>
                     </li>
                   ))}
                 </ul>
@@ -87,13 +131,16 @@ export function PublicFooter() {
 
         <div className={styles.footerBottom}>
           <span>&copy; {new Date().getFullYear()} Tote</span>
+          <LanguageSwitcher />
           <a
             href="https://gobloom.io"
             target="_blank"
             rel="noopener noreferrer"
             className={styles.mountainLink}
           >
-            <span className={styles.mountainLabel}>Made in Silverton, CO</span>
+            <span className={styles.mountainLabel}>
+              {t('site.footer.madeIn')}
+            </span>
           </a>
         </div>
       </div>

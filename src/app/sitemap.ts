@@ -1,16 +1,29 @@
 import type { MetadataRoute } from 'next';
+import { LOCALES } from '@/i18n/config';
+import { localizedPath, TRANSLATED_PUBLIC_PATHS } from '@/i18n/publicPages';
 import { getAllPublishedCollectionSlugs } from '../lib/publishedCollectionsDb';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://tote.tools';
 
+  // One entry per language version of each translated page, each listing all
+  // versions (itself included) plus x-default → English, as Google requires.
+  const translatedRoutes: MetadataRoute.Sitemap =
+    TRANSLATED_PUBLIC_PATHS.flatMap((path) => {
+      const languages: Record<string, string> = {};
+      for (const l of LOCALES) languages[l] = baseUrl + localizedPath(l, path);
+      languages['x-default'] = languages.en;
+      return LOCALES.map((l) => ({
+        url: baseUrl + localizedPath(l, path),
+        lastModified: new Date(),
+        changeFrequency: 'monthly' as const,
+        priority: path === '/' ? (l === 'en' ? 1 : 0.9) : 0.8,
+        alternates: { languages },
+      }));
+    });
+
   const staticRoutes: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 1,
-    },
+    ...translatedRoutes,
     {
       url: `${baseUrl}/privacy`,
       lastModified: new Date(),

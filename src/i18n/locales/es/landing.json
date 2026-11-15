@@ -1,0 +1,180 @@
+{
+  "landing": {
+    "meta": {
+      "title": "Guarda de cualquier tienda. Decide en un solo lugar.",
+      "description": "Guarda productos de cualquier tienda, compara opciones en un solo lugar, actualiza los precios después y mantén en marcha tu presupuesto y tu lista corta.",
+      "ogTitle": "Tote — Guarda de cualquier tienda. Decide en un solo lugar.",
+      "ogDescription": "Guarda de cualquier tienda, compara en un solo lugar y pasa de enlaces sueltos a una lista corta clara."
+    },
+    "announcement": "Tote para iPhone y iPad ya está en el App Store →",
+    "eyebrow": "Un carrito que no pertenece a ninguna tienda",
+    "heroTitle": "Guarda todo lo que podrías comprar, de cualquier tienda.",
+    "heroSubtitle": "Organízalo una vez. Vuelve a verlo cuando estés listo para decidir.",
+    "saveFirst": "Guarda tu primer artículo",
+    "saveNext": "Guarda tu próximo artículo",
+    "heroNote": "Guarda lo que encuentres ahora: es gratis. Vuelve con menos pestañas, un presupuesto más claro y una lista corta que de verdad puedas usar.",
+    "badgeTop": "Una colección para todas las tiendas",
+    "badgeBottom": "Actualiza precios, controla presupuestos y reduce la lista corta",
+    "heroAlt": "La extensión de Tote guardando un producto desde la página de una tienda",
+    "collectionAlt": "Una colección de Tote con productos guardados y sus precios",
+    "source": {
+      "label": "Guarda desde donde quieras",
+      "title": "Grandes minoristas, tiendas independientes y el resto de internet.",
+      "body": "Si puedes comprarlo en línea, puedes guardarlo en Tote.",
+      "categories": [
+        "Grandes minoristas",
+        "Tiendas independientes",
+        "Cualquier sitio en línea"
+      ]
+    },
+    "useCases": {
+      "label": "Casos de uso",
+      "title": "Un solo lugar para comparar, preseleccionar y decidir.",
+      "body": "Cuando un proyecto abarca cinco tiendas, guardar enlaces es lo fácil. Lo difícil es que sigan siendo útiles después. Tote te da un solo lugar para comparar, compartir y decidir.",
+      "explore": "Ver este caso de uso",
+      "items": [
+        {
+          "title": "Listas de regalos y deseos",
+          "description": "Reúne en una sola lista las ideas de regalo de todas las tiendas y comparte un tablero limpio en lugar de reenviar una pila de enlaces.",
+          "tags": ["Ocasiones", "Fiestas", "Mesas de regalos"]
+        },
+        {
+          "title": "Remodelación del hogar",
+          "description": "Guarda muebles, accesorios y materiales habitación por habitación. Compara opciones, controla presupuestos y mantén clara la lista corta.",
+          "tags": ["Habitaciones", "Presupuestos", "Aprobaciones"]
+        },
+        {
+          "title": "Guardarropa y estilo",
+          "description": "Arma un tablero de estilo con boutiques, sitios de reventa y tiendas de marca. Mantén todo junto por temporada o por look.",
+          "tags": ["Cápsulas", "Temporadas", "Rebajas"]
+        },
+        {
+          "title": "Compras en familia",
+          "description": "Saca los proyectos compartidos del chat grupal. Comparen opciones juntos, sigan los totales y tomen decisiones sin enlaces repetidos.",
+          "tags": ["Listas compartidas", "Presupuestos", "Decisiones"]
+        },
+        {
+          "title": "Compras para clientes",
+          "description": "Organiza tableros de selección para tus clientes, actualiza los precios antes de las revisiones y comparte tableros que la gente realmente pueda abrir.",
+          "tags": ["Diseñadores", "Estilistas", "Trabajo con clientes"]
+        }
+      ]
+    },
+    "checklist": {
+      "title": "Lo que Tote mantiene junto",
+      "items": [
+        "Productos de distintas tiendas",
+        "Precios que puedes actualizar después",
+        "Colecciones para cada proyecto",
+        "Presupuestos y selecciones que mantienen las decisiones en marcha"
+      ]
+    },
+    "principles": {
+      "label": "Por qué la gente cambia",
+      "title": "Hecho para ese tramo desordenado entre encontrar algo y comprarlo.",
+      "items": [
+        {
+          "title": "Todas tus opciones en un solo lugar",
+          "description": "Guardas desde tiendas, mercados en línea y sitios de marca. Tote mantiene las opciones juntas en lugar de dispersarlas entre pestañas y listas de deseos."
+        },
+        {
+          "title": "Organiza según la decisión que estás tomando",
+          "description": "Organizas por habitación, persona, temporada, cliente o evento, para que la colección siga teniendo sentido cuando vuelvas más tarde."
+        },
+        {
+          "title": "Actualiza los precios antes de decidir",
+          "description": "Puedes volver más tarde y actualizar lo que guardaste, para ver los precios actuales antes de comprar, compartir o elegir."
+        },
+        {
+          "title": "Presupuesto y lista corta, juntos",
+          "description": "Llevas el control de lo que entra en la lista corta, fijas límites y mantienes un total al día en el mismo lugar donde se toma la decisión."
+        },
+        {
+          "title": "Privado por diseño",
+          "description": "Sin anuncios. Sin rastreo. Sin vender tus hábitos de compra. Compartir es opcional y una colección sigue siendo privada hasta que la publicas."
+        }
+      ]
+    },
+    "comparison": {
+      "label": "Tote frente a las soluciones de siempre",
+      "title": "La mayoría de las herramientas te ayudan a guardar. Tote te ayuda a terminar de decidir.",
+      "body": "Los marcadores, las listas de deseos de las tiendas, las hojas de cálculo y los chats grupales ayudan cada uno con una parte del trabajo. Tote reúne en un solo lugar las opciones, la revisión de precios, el presupuesto, la lista corta y el compartir.",
+      "included": "incluido",
+      "notIncluded": "no incluido",
+      "columns": {
+        "spreadsheets": "Hojas de cálculo",
+        "wishlists": "Listas de deseos de tiendas",
+        "groupChats": "Chats grupales",
+        "bookmarks": "Marcadores",
+        "tote": "Tote"
+      },
+      "rows": [
+        "Guardar un enlace es rápido y fácil",
+        "Funciona con todas las tiendas",
+        "Actualizar precios más tarde",
+        "Presupuestos integrados",
+        "Selecciones y listas cortas",
+        "Fácil de compartir con otra persona",
+        "Privado por diseño"
+      ]
+    },
+    "audiences": {
+      "label": "Para quién es",
+      "title": "Hecho para la forma en que guardas antes de comprar.",
+      "items": [
+        {
+          "title": "Para quienes comparan",
+          "description": "Investigas, comparas y reúnes ideas con el tiempo. Tote les da un verdadero hogar a esos enlaces guardados."
+        },
+        {
+          "title": "Para parejas y familias",
+          "description": "Saquen los proyectos compartidos del chat grupal. Comparen opciones juntos, pónganse de acuerdo en sus elecciones y respeten el presupuesto."
+        },
+        {
+          "title": "Para estilistas y diseñadores",
+          "description": "Convierte una selección dispersa en tableros presentables, actualizados y fáciles de aprobar."
+        },
+        {
+          "title": "Para quienes están hartos de las hojas de cálculo",
+          "description": "Igual de flexible, pero visual. Igual de organizado, pero mucho menos manual. Tote mantiene la estructura, las listas cortas y los totales sin el trabajo tedioso."
+        }
+      ]
+    },
+    "questions": {
+      "label": "Preguntas",
+      "title": "Lo que la gente suele querer saber primero.",
+      "items": [
+        {
+          "question": "¿Por qué no usar simplemente marcadores o notas?",
+          "answer": "Los marcadores y las notas te ayudan a guardar un enlace. Tote te ayuda a volver más tarde con imágenes, precios, colecciones y una lista corta que sigue teniendo sentido."
+        },
+        {
+          "question": "¿Tote solo funciona con grandes minoristas?",
+          "answer": "No. Tote funciona con grandes minoristas, sitios de reventa, tiendas independientes y el resto de la web, dondequiera que compres en línea."
+        },
+        {
+          "question": "¿Puedo volver más tarde, cuando esté listo para decidir?",
+          "answer": "De eso se trata. Guarda ahora, vuelve después, actualiza los precios cuando importe y mantén la decisión en marcha en un solo lugar."
+        },
+        {
+          "question": "¿Tote es gratis?",
+          "answer": "Sí. Guardar, organizar y compartir son gratis, y la idea es que ese núcleo siga siéndolo. Cualquier cosa de pago en el futuro haría trabajo extra por ti, como vigilar los precios, en lugar de restringir lo que ya usas."
+        },
+        {
+          "question": "¿Tote es privado?",
+          "answer": "Sí. Sin anuncios, sin rastreo y sin vender tu comportamiento de compra. Compartir es opcional: una colección sigue siendo privada hasta que la publicas."
+        }
+      ]
+    },
+    "privacy": {
+      "label": "Privado por diseño",
+      "title": "Tote respeta que tu vida de compras es solo tuya.",
+      "body": "Sin rastreo, sin anuncios y sin vender tu comportamiento a nadie. Guarda en privado y comparte cuando tú decidas: una colección sigue siendo tuya hasta que decides publicarla."
+    },
+    "final": {
+      "label": "Empieza aquí",
+      "title": "De enlaces sueltos a una lista corta clara.",
+      "body": "Usa Tote la próxima vez que empieces una lista de regalos, planees una habitación, guardes ideas de outfits o busques opciones para otra persona. Guardar, organizar y compartir es gratis."
+    }
+  }
+}

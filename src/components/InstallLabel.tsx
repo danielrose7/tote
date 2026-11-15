@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/i18n/client';
 
 type BrowserName = 'Chrome' | 'Edge' | 'Brave' | 'Arc';
 
@@ -93,7 +94,8 @@ function resolveBrowser(): Promise<BrowserName> {
   return inFlight;
 }
 
-export function InstallLabel({ prefix = 'Add to ' }: { prefix?: string }) {
+export function InstallLabel() {
+  const { t } = useTranslation();
   // Later mounts start from the resolved value, so navigating between pages
   // never flashes. The first mount still starts at Chrome to match the
   // server-rendered HTML.
@@ -127,5 +129,5 @@ export function InstallLabel({ prefix = 'Add to ' }: { prefix?: string }) {
 
   // One string, not two nodes — otherwise React splits the label with a comment
   // marker and the CTA text stops being a single crawlable phrase.
-  return <>{`${prefix}${browser}`}</>;
+  return <>{t('site.install.addTo', { browser })}</>;
 }

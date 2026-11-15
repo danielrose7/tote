@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { APP_STORE_ID } from '@/lib/constants';
-import '../index.css';
 
-export const metadata: Metadata = {
+/** Site-wide defaults. Each root layout re-exports this as its `metadata`. */
+export const siteMetadata: Metadata = {
   title: {
     template: '%s — Tote',
     default: 'Tote — One place, every store',
@@ -27,15 +27,3 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
   },
 };
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
-}

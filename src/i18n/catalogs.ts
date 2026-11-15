@@ -1,4 +1,4 @@
-import { PSEUDO_LOCALE, type RenderLocale } from './config';
+import { type Locale, PSEUDO_LOCALE, type RenderLocale } from './config';
 import collections from './locales/en/collections.json';
 import common from './locales/en/common.json';
 import dialogs from './locales/en/dialogs.json';
@@ -69,4 +69,51 @@ export async function loadResources(locale: RenderLocale): Promise<Resources> {
     [locale]: { translation: catalog },
     en: { translation: sourceCatalog },
   };
+}
+
+/**
+ * Public (marketing) pages are statically generated and take their locale from
+ * the URL, so they never touch the cookie. Their strings live in separate area
+ * files that are NOT part of the authenticated-app catalog — a visitor to the
+ * app doesn't download marketing copy and vice versa — and each page loads only
+ * the areas it uses.
+ */
+export type PublicArea = 'site' | 'landing';
+
+const publicLoaders: Record<
+  PublicArea,
+  Record<string, () => Promise<{ default: unknown }>>
+> = {
+  site: {
+    en: () => import('./locales/en/site.json'),
+    es: () => import('./locales/es/site.json'),
+  },
+  landing: {
+    en: () => import('./locales/en/landing.json'),
+    es: () => import('./locales/es/landing.json'),
+  },
+};
+
+export async function loadPublicResources(
+  locale: Locale,
+  areas: PublicArea[],
+): Promise<Resources> {
+  const load = async (lng: string) =>
+    merge(
+      ...(await Promise.all(
+        areas.map(
+          async (area) =>
+            ((
+              await publicLoaders[area][lng]?.()
+            )?.default as Catalog | undefined) ?? {},
+        ),
+      )),
+    );
+  const en = await load('en');
+  return locale === 'en'
+    ? { en: { translation: en } }
+    : {
+        [locale]: { translation: await load(locale) },
+        en: { translation: en },
+      };
 }

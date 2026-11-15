@@ -1,0 +1,52 @@
+{
+  "site": {
+    "nav": {
+      "label": "Sitio",
+      "openMenu": "Abrir menú",
+      "closeMenu": "Cerrar menú",
+      "links": {
+        "useCases": "Casos de uso",
+        "templates": "Plantillas",
+        "extension": "Extensión",
+        "ios": "App de iOS",
+        "docs": "Documentación"
+      }
+    },
+    "install": {
+      "addTo": "Agregar a {{browser}}",
+      "appStore": "Descárgala en el App Store"
+    },
+    "auth": {
+      "logIn": "Iniciar sesión",
+      "signUp": "Registrarse",
+      "openTote": "Abrir Tote"
+    },
+    "footer": {
+      "tagline": "Guarda de cualquier tienda. Organiza todo en un solo lugar. Hecho para quienes guardan ahora y deciden después.",
+      "madeIn": "Hecho en Silverton, CO",
+      "language": "Idioma",
+      "groups": {
+        "useCases": "Casos de uso",
+        "whyTote": "Por qué Tote",
+        "product": "Producto"
+      },
+      "links": {
+        "giftShopping": "Listas de regalos y deseos",
+        "homeRenovation": "Remodelación del hogar",
+        "personalStyle": "Guardarropa y estilo",
+        "familyShopping": "Compras en familia",
+        "professionalProjects": "Compras para clientes",
+        "vsBookmarks": "Tote vs. marcadores",
+        "vsWishlists": "Tote vs. listas de deseos de tiendas",
+        "vsSpreadsheets": "Tote vs. hojas de cálculo",
+        "private": "Privado por diseño",
+        "templates": "Plantillas",
+        "extension": "Extensión del navegador",
+        "ios": "App de iOS",
+        "docs": "Documentación de ayuda",
+        "gettingStarted": "Primeros pasos",
+        "privacy": "Privacidad"
+      }
+    }
+  }
+}

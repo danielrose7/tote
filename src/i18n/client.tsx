@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { I18nextProvider, Trans, useTranslation } from 'react-i18next';
 import { formatPrice } from '@/lib/formatPrice';
 import type { Resources } from './catalogs';
@@ -48,8 +48,7 @@ export function useFormat() {
 /**
  * Receives the already-loaded catalog from the server layout, so the first
  * client render matches the server HTML (no flash of English, no hydration
- * mismatch). Also keeps <html lang> honest — the root layout is static and
- * can't know the locale.
+ * mismatch). <html lang> is set by each root layout (see app/RootShell).
  */
 export function I18nProvider({
   locale,
@@ -61,10 +60,6 @@ export function I18nProvider({
   children: ReactNode;
 }) {
   const [i18n] = useState(() => createI18n(locale, resources));
-
-  useEffect(() => {
-    document.documentElement.lang = locale === 'xx' ? 'en' : locale;
-  }, [locale]);
 
   return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
 }

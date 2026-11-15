@@ -1,9 +1,14 @@
 import { cookies, headers } from 'next/headers';
 import { cache } from 'react';
-import { loadResources } from './catalogs';
+import {
+  loadPublicResources,
+  loadResources,
+  type PublicArea,
+} from './catalogs';
 import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE,
+  type Locale,
   localeFromCookie,
   negotiateLocale,
   type RenderLocale,
@@ -30,5 +35,15 @@ export const getLocale = cache(async (): Promise<RenderLocale> => {
 export async function getT() {
   const locale = await getLocale();
   const i18n = createI18n(locale, await loadResources(locale));
+  return { t: i18n.t.bind(i18n), locale, i18n };
+}
+
+/**
+ * `t()` for a statically generated public page. The locale comes from the URL
+ * (the `[locale]` param, or English), never from cookies or headers, so the
+ * page stays static.
+ */
+export async function getPublicT(locale: Locale, areas: PublicArea[]) {
+  const i18n = createI18n(locale, await loadPublicResources(locale, areas));
   return { t: i18n.t.bind(i18n), locale, i18n };
 }

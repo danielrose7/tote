@@ -1,0 +1,176 @@
+{
+  "landing": {
+    "meta": {
+      "title": "Save from any store. Decide in one place.",
+      "description": "Save products from any store, compare options in one place, refresh prices later, and keep the budget and shortlist moving.",
+      "ogTitle": "Tote — Save from any store. Decide in one place.",
+      "ogDescription": "Save from any store, compare in one place, and move from scattered links to a clear shortlist."
+    },
+    "announcement": "Tote for iPhone and iPad is now on the App Store →",
+    "eyebrow": "A cart that doesn't belong to a store",
+    "heroTitle": "Save anything you might buy — from any store.",
+    "heroSubtitle": "Organize it once. Revisit it when you're ready to decide.",
+    "saveFirst": "Save your first item",
+    "saveNext": "Save your next item",
+    "heroNote": "Save what you find now — it's free. Come back with fewer tabs, a clearer budget, and a shortlist you can actually use.",
+    "badgeTop": "One collection across every store",
+    "badgeBottom": "Refresh prices, track budgets, and narrow the shortlist",
+    "heroAlt": "Tote browser extension saving a product from a store page",
+    "collectionAlt": "A Tote collection showing saved products with prices",
+    "source": {
+      "label": "Save from anywhere",
+      "title": "Big retailers, indie shops, and the rest of the internet.",
+      "body": "If you can shop it online, you can save it to Tote.",
+      "categories": ["Major retailers", "Indie shops", "Anywhere online"]
+    },
+    "useCases": {
+      "label": "Use cases",
+      "title": "One place to compare, shortlist, and decide.",
+      "body": "When a project spans five stores, saving links is the easy part. Keeping them useful later is harder. Tote gives you one place to compare, share, and decide.",
+      "explore": "Explore use case",
+      "items": [
+        {
+          "title": "Gift lists & wishlists",
+          "description": "Keep gift ideas from every store in one list, then share a clean board instead of forwarding a pile of links.",
+          "tags": ["Occasions", "Holidays", "Registries"]
+        },
+        {
+          "title": "Home renovation",
+          "description": "Save furniture, fixtures, and materials room by room. Compare options, track budgets, and keep the shortlist clear.",
+          "tags": ["Rooms", "Budgets", "Approvals"]
+        },
+        {
+          "title": "Wardrobe & style",
+          "description": "Build a style board across boutiques, resale sites, and brand stores. Keep everything together by season or look.",
+          "tags": ["Capsules", "Seasonal", "Sales"]
+        },
+        {
+          "title": "Family shopping",
+          "description": "Keep shared projects out of the group chat. Compare options together, track totals, and make decisions without duplicate links.",
+          "tags": ["Shared lists", "Budgets", "Decisions"]
+        },
+        {
+          "title": "Client sourcing",
+          "description": "Organize sourcing boards for clients, refresh pricing before reviews, and share boards people can actually open.",
+          "tags": ["Designers", "Stylists", "Client work"]
+        }
+      ]
+    },
+    "checklist": {
+      "title": "What Tote keeps together",
+      "items": [
+        "Products from different stores",
+        "Pricing you can refresh later",
+        "Collections for every project",
+        "Budgets and selections that keep decisions moving"
+      ]
+    },
+    "principles": {
+      "label": "Why people switch",
+      "title": "Built for the messy middle between finding something and buying it.",
+      "items": [
+        {
+          "title": "Keep every option in one place",
+          "description": "You save across stores, marketplaces, and brand sites. Tote keeps the options together instead of scattering them across tabs and wishlists."
+        },
+        {
+          "title": "Organize by the decision you're making",
+          "description": "You organize by room, person, season, client, or event, so the collection still makes sense when you come back later."
+        },
+        {
+          "title": "Refresh prices before you decide",
+          "description": "You can come back later and update what you saved, so you're looking at current pricing before you buy, share, or choose."
+        },
+        {
+          "title": "Keep the budget and shortlist together",
+          "description": "You track what makes the shortlist, set limits, and keep a running total in the same place the decision is happening."
+        },
+        {
+          "title": "Private by design",
+          "description": "No ads. No tracking. No selling your shopping habits. Sharing is opt-in, and a collection stays private until you publish it."
+        }
+      ]
+    },
+    "comparison": {
+      "label": "Us vs. the usual workaround",
+      "title": "Most tools help you save. Tote helps you finish the decision.",
+      "body": "Bookmarks, store wishlists, spreadsheets, and group chats each help with one piece of the job. Tote keeps the options, price checks, budget, shortlist, and sharing in the same place.",
+      "included": "included",
+      "notIncluded": "not included",
+      "columns": {
+        "spreadsheets": "Spreadsheets",
+        "wishlists": "Store wishlists",
+        "groupChats": "Group chats",
+        "bookmarks": "Bookmarks",
+        "tote": "Tote"
+      },
+      "rows": [
+        "Easy to save a link fast",
+        "Works across stores",
+        "Refresh pricing later",
+        "Budgets built in",
+        "Selections and shortlists",
+        "Easy to share with someone else",
+        "Private by design"
+      ]
+    },
+    "audiences": {
+      "label": "Who it's for",
+      "title": "Built for the way you save before you buy.",
+      "items": [
+        {
+          "title": "For people who compare",
+          "description": "You research, compare, and collect ideas over time. Tote gives those saved links a real home."
+        },
+        {
+          "title": "For couples and families",
+          "description": "Keep shared projects out of the group chat. Compare options together, agree on picks, and stay inside the budget."
+        },
+        {
+          "title": "For stylists and designers",
+          "description": "Turn scattered sourcing into boards that feel presentable, current, and easy to approve."
+        },
+        {
+          "title": "For anyone tired of spreadsheets",
+          "description": "Still flexible, but visual. Still organized, but far less manual. Tote keeps structure, shortlists, and totals without the busywork."
+        }
+      ]
+    },
+    "questions": {
+      "label": "Questions",
+      "title": "What people usually want to know first.",
+      "items": [
+        {
+          "question": "Why not just use bookmarks or notes?",
+          "answer": "Bookmarks and notes help you save a link. Tote helps you come back later with images, pricing, collections, and a shortlist that still makes sense."
+        },
+        {
+          "question": "Does Tote only work with big retailers?",
+          "answer": "No. Tote works across major retailers, resale sites, indie shops, and the rest of the web wherever you shop online."
+        },
+        {
+          "question": "Can I come back later when I'm ready to decide?",
+          "answer": "That's the point. Save now, revisit later, refresh prices when it matters, and keep the decision moving in one place."
+        },
+        {
+          "question": "Is Tote free?",
+          "answer": "Yes. Saving, organizing, and sharing are free, and that core is meant to stay free. Anything paid later would do extra work for you — watching prices, say — rather than fencing off what you already use."
+        },
+        {
+          "question": "Is Tote private?",
+          "answer": "Yes. No ads, no tracking, and no selling your shopping behavior. Sharing is opt-in — a collection stays private until you publish it."
+        }
+      ]
+    },
+    "privacy": {
+      "label": "Private by design",
+      "title": "Tote respects the fact that your shopping life is yours.",
+      "body": "No tracking, no ads, and no selling your behavior to someone else. Save privately and share when you choose — a collection stays yours until you decide to publish it."
+    },
+    "final": {
+      "label": "Start here",
+      "title": "From scattered links to a clear shortlist.",
+      "body": "Use Tote the next time you start a gift list, plan a room, save outfit ideas, or source options for someone else. Saving, organizing, and sharing are free."
+    }
+  }
+}

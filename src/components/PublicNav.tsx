@@ -3,19 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/i18n/client';
+import { localizedPath, splitLocalePath } from '@/i18n/publicPages';
 import { CHROME_WEB_STORE_URL } from '../lib/constants';
 import { InstallLabel } from './InstallLabel';
 import { LandingAuthButtons } from './LandingAuthButtons';
 import styles from './PublicNav.module.css';
 
-type NavLink = { href: string; label: string };
+type NavLink = { href: string; labelKey: string };
 
 const LINKS: NavLink[] = [
-  { href: '/use-cases', label: 'Use cases' },
-  { href: '/templates', label: 'Templates' },
-  { href: '/chrome-extension', label: 'Extension' },
-  { href: '/ios-app', label: 'iOS App' },
-  { href: '/docs', label: 'Docs' },
+  { href: '/use-cases', labelKey: 'site.nav.links.useCases' },
+  { href: '/templates', labelKey: 'site.nav.links.templates' },
+  { href: '/chrome-extension', labelKey: 'site.nav.links.extension' },
+  { href: '/ios-app', labelKey: 'site.nav.links.ios' },
+  { href: '/docs', labelKey: 'site.nav.links.docs' },
 ];
 
 /**
@@ -37,7 +39,7 @@ function isActive(pathname: string, href: string) {
  * Every page shows the same links — the current one is marked, not removed.
  */
 export function PublicNav({
-  label = 'Site',
+  label,
   solid = false,
 }: {
   label?: string;
@@ -45,7 +47,10 @@ export function PublicNav({
    * otherwise scroll through the gaps around the pill. */
   solid?: boolean;
 }) {
-  const pathname = usePathname() ?? '';
+  const { t, i18n } = useTranslation();
+  // /es/templates and /templates are the same page: match on the path alone.
+  const pathname = splitLocalePath(usePathname() ?? '').path;
+  const href = (target: string) => localizedPath(i18n.language, target);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // A tap on a menu link navigates without unmounting the nav, so the sheet
@@ -98,21 +103,21 @@ export function PublicNav({
         solid ? `${styles.header} ${styles.headerSolid}` : styles.header
       }
     >
-      <nav className={styles.nav} aria-label={label}>
+      <nav className={styles.nav} aria-label={label ?? t('site.nav.label')}>
         <div className={styles.navBar}>
           {/* Narrow screens can't fit five links, so they get this instead —
               it's display:none on desktop, where the links are right there. */}
           <button
             type="button"
             className={styles.menuButton}
-            aria-label="Open menu"
+            aria-label={t('site.nav.openMenu')}
             aria-expanded={menuOpen}
             aria-controls="public-nav-menu"
             onClick={() => setMenuOpen(true)}
           >
             <MenuIcon />
           </button>
-          <Link href="/" className={styles.wordmark}>
+          <Link href={href('/')} className={styles.wordmark}>
             tote
           </Link>
           <div className={styles.navLinks}>
@@ -122,11 +127,11 @@ export function PublicNav({
               return (
                 <Link
                   key={link.href}
-                  href={resolveHref(link.href)}
+                  href={href(resolveHref(link.href))}
                   className={active ? styles.navLinkActive : undefined}
                   aria-current={active ? 'page' : undefined}
                 >
-                  {link.label}
+                  {t(link.labelKey)}
                 </Link>
               );
             })}
@@ -155,7 +160,7 @@ export function PublicNav({
           <button
             type="button"
             className={styles.sheetScrim}
-            aria-label="Close menu"
+            aria-label={t('site.nav.closeMenu')}
             tabIndex={-1}
             onClick={() => setMenuOpen(false)}
           />
@@ -164,12 +169,12 @@ export function PublicNav({
               <button
                 type="button"
                 className={styles.sheetClose}
-                aria-label="Close menu"
+                aria-label={t('site.nav.closeMenu')}
                 onClick={() => setMenuOpen(false)}
               >
                 <CloseIcon />
               </button>
-              <Link href="/" className={styles.wordmark}>
+              <Link href={href('/')} className={styles.wordmark}>
                 tote
               </Link>
             </div>
@@ -181,11 +186,11 @@ export function PublicNav({
                 return (
                   <Link
                     key={link.href}
-                    href={resolveHref(link.href)}
+                    href={href(resolveHref(link.href))}
                     className={active ? styles.sheetLinkActive : undefined}
                     aria-current={active ? 'page' : undefined}
                   >
-                    {link.label}
+                    {t(link.labelKey)}
                   </Link>
                 );
               })}
