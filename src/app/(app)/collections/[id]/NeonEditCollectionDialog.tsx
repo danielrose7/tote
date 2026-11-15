@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
 import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
+import { Trans, useTranslation } from '@/i18n/client';
 import type {
   DeleteCollectionMutation,
   UpdateCollectionMutation,
@@ -45,6 +46,7 @@ export function NeonEditCollectionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -52,7 +54,7 @@ export function NeonEditCollectionDialog({
   const [name, setName] = useState(collection.name);
   const [description, setDescription] = useState(collection.description ?? '');
   const [color, setColor] = useState(collection.color ?? presetColors[0]);
-  const deletePhrase = 'delete this collection';
+  const deletePhrase = t('dialogs.editCollection.deletePhrase');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -144,7 +146,7 @@ export function NeonEditCollectionDialog({
       );
       setError(mutationError.message);
       showToast({
-        title: 'Collection update failed',
+        title: t('dialogs.editCollection.updateFailed'),
         description: mutationError.message,
         variant: 'error',
       });
@@ -176,7 +178,7 @@ export function NeonEditCollectionDialog({
         context?.previousSummaries,
       );
       showToast({
-        title: 'Collection deletion failed',
+        title: t('dialogs.editCollection.deleteFailed'),
         description: mutationError.message,
         variant: 'error',
       });
@@ -187,7 +189,7 @@ export function NeonEditCollectionDialog({
     event.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('Collection name is required');
+      setError(t('dialogs.editCollection.nameRequired'));
       return;
     }
     updateCollection.mutate({
@@ -201,10 +203,10 @@ export function NeonEditCollectionDialog({
       },
     });
     showToast({
-      title: 'Collection update queued',
+      title: t('dialogs.editCollection.updateQueued'),
       description: navigator.onLine
-        ? 'Your changes are syncing now.'
-        : 'Your changes will sync when you are back online.',
+        ? t('dialogs.editCollection.syncingNow')
+        : t('dialogs.editCollection.syncLater'),
       variant: 'success',
     });
     onOpenChange(false);
@@ -219,10 +221,10 @@ export function NeonEditCollectionDialog({
       },
     });
     showToast({
-      title: 'Collection deletion queued',
+      title: t('dialogs.editCollection.deleteQueued'),
       description: navigator.onLine
-        ? 'The collection is being deleted.'
-        : 'The collection will be deleted when you are back online.',
+        ? t('dialogs.editCollection.deletingNow')
+        : t('dialogs.editCollection.deleteLater'),
       variant: 'success',
     });
     onOpenChange(false);
@@ -235,16 +237,16 @@ export function NeonEditCollectionDialog({
         <Dialog.Overlay className={editStyles.overlay} />
         <Dialog.Content className={editStyles.content}>
           <Dialog.Title className={editStyles.title}>
-            Edit Collection
+            {t('dialogs.editCollection.title')}
           </Dialog.Title>
           <Dialog.Description className={editStyles.description}>
-            Update the shared collection details.
+            {t('dialogs.editCollection.description')}
           </Dialog.Description>
 
           <form onSubmit={handleSubmit} className={editStyles.form}>
             <div className={editStyles.inputGroup}>
               <label htmlFor="neon-edit-name" className={editStyles.label}>
-                Collection Name *
+                {t('dialogs.editCollection.nameLabel')}
               </label>
               <input
                 id="neon-edit-name"
@@ -260,7 +262,7 @@ export function NeonEditCollectionDialog({
                 htmlFor="neon-edit-description"
                 className={editStyles.label}
               >
-                Description
+                {t('dialogs.editCollection.descriptionLabel')}
               </label>
               <textarea
                 id="neon-edit-description"
@@ -273,7 +275,9 @@ export function NeonEditCollectionDialog({
             </div>
 
             <div className={editStyles.inputGroup}>
-              <span className={editStyles.label}>Color</span>
+              <span className={editStyles.label}>
+                {t('dialogs.editCollection.color')}
+              </span>
               <div className={editStyles.colorPicker}>
                 {presetColors.map((preset) => (
                   <button
@@ -284,7 +288,9 @@ export function NeonEditCollectionDialog({
                     }`}
                     style={{ backgroundColor: preset }}
                     onClick={() => setColor(preset)}
-                    aria-label={`Select color ${preset}`}
+                    aria-label={t('dialogs.editCollection.selectColor', {
+                      color: preset,
+                    })}
                   />
                 ))}
               </div>
@@ -297,15 +303,18 @@ export function NeonEditCollectionDialog({
                 {deleteOpen ? (
                   <div className={editStyles.deleteConfirm}>
                     <p className={editStyles.deleteConfirmText}>
-                      This permanently deletes the collection and all its
-                      contents. There&apos;s no undo.
+                      {t('dialogs.editCollection.deleteWarning')}
                     </p>
                     <div className={editStyles.inputGroup}>
                       <label
                         htmlFor="neon-delete-confirm"
                         className={editStyles.deleteConfirmLabel}
                       >
-                        Type <em>{deletePhrase}</em> to confirm
+                        <Trans
+                          i18nKey="dialogs.editCollection.typeToConfirm"
+                          values={{ phrase: deletePhrase }}
+                          components={{ em: <em /> }}
+                        />
                       </label>
                       <input
                         id="neon-delete-confirm"
@@ -325,7 +334,7 @@ export function NeonEditCollectionDialog({
                           setDeleteConfirmation('');
                         }}
                       >
-                        Cancel
+                        {t('dialogs.common.cancel')}
                       </button>
                       <button
                         type="button"
@@ -335,7 +344,7 @@ export function NeonEditCollectionDialog({
                           deleteConfirmation.toLowerCase() !== deletePhrase
                         }
                       >
-                        I&apos;m sure
+                        {t('dialogs.editCollection.sure')}
                       </button>
                     </div>
                   </div>
@@ -345,7 +354,7 @@ export function NeonEditCollectionDialog({
                     className={editStyles.deleteTrigger}
                     onClick={() => setDeleteOpen(true)}
                   >
-                    Delete collection
+                    {t('dialogs.editCollection.delete')}
                   </button>
                 )}
               </div>
@@ -354,7 +363,7 @@ export function NeonEditCollectionDialog({
             <div className={editStyles.actions}>
               <Dialog.Close asChild>
                 <button type="button" className="btn btn-secondary">
-                  Cancel
+                  {t('dialogs.common.cancel')}
                 </button>
               </Dialog.Close>
               <button
@@ -362,7 +371,7 @@ export function NeonEditCollectionDialog({
                 className="btn btn-primary"
                 disabled={!name.trim()}
               >
-                Save Changes
+                {t('dialogs.common.saveChanges')}
               </button>
             </div>
           </form>

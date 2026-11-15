@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@/i18n/client';
 import styles from './settings.module.css';
 
 export function CopyProfileUrl({ username }: { username: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const url =
@@ -25,7 +27,7 @@ export function CopyProfileUrl({ username }: { username: string }) {
           setTimeout(() => setCopied(false), 2000);
         }}
       >
-        {copied ? 'Copied!' : 'Copy'}
+        {copied ? t('settings.profile.copied') : t('settings.profile.copy')}
       </button>
       <a
         href={`/s/${username}`}
@@ -33,7 +35,7 @@ export function CopyProfileUrl({ username }: { username: string }) {
         rel="noopener noreferrer"
         className="btn btn-secondary btn-sm"
       >
-        View →
+        {t('settings.profile.view')}
       </a>
     </div>
   );

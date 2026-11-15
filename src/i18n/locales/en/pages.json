@@ -1,9 +1,305 @@
 {
-  "curate": {},
-  "import": {},
-  "clone": {},
-  "invite": {},
-  "settings": {},
-  "billing": {},
-  "shell": {}
+  "curate": {
+    "newCuration": "New curation",
+    "usageTitle": "{{input}} in / {{output}} out / {{searches}} searches",
+    "cost": {
+      "under": "<{{amount}}",
+      "approx": "~{{amount}}"
+    },
+    "gap": "Gap",
+    "history": {
+      "heading": "Curations",
+      "creditsAdded": "Credits added",
+      "balanceUpdated": "Your balance has been updated.",
+      "addCreditsToStart": "Add credits to start a new curation",
+      "empty": "No sessions yet. <link>Start your first curation</link>."
+    },
+    "phase": {
+      "started": "Starting",
+      "interviewRound1": "Interview",
+      "researching": "Researching",
+      "interviewRound2": "Follow-up",
+      "framing": "Framing",
+      "planning": "Planning",
+      "extracting": "Extracting",
+      "curating": "Curating",
+      "hospitality": "Hospitality",
+      "complete": "Complete",
+      "error": "Error"
+    },
+    "status": {
+      "started": "Waiting for workflow acknowledgment",
+      "interviewRound1": "Waiting for Round 1 answers",
+      "researching": "Researching the category — usually 30–90s...",
+      "interviewRound2": "Waiting for follow-up questions",
+      "framing": "Building curatorial brief — usually under a minute...",
+      "briefReview": "Review the brief and approve to continue",
+      "planning": "Planning collection structure...",
+      "extracting": "Extracting pages...",
+      "curating": "Curating the shortlist — usually 60–90s...",
+      "hospitality": "Refining collection...",
+      "refining": "Refining collection...",
+      "complete": "Collection complete",
+      "error": "Something went wrong"
+    },
+    "badge": {
+      "started": "started",
+      "interviewRound1": "interview-round-1",
+      "researching": "researching",
+      "interviewRound2": "interview-round-2",
+      "framing": "framing",
+      "briefReview": "brief-review",
+      "planning": "planning",
+      "extracting": "extracting",
+      "curating": "curating",
+      "hospitality": "hospitality",
+      "refining": "refining",
+      "complete": "complete",
+      "error": "error"
+    },
+    "extraction": {
+      "extracting": "Extracting",
+      "extracted": "Extracted",
+      "skipped": "Skipped"
+    },
+    "pipeline": {
+      "scope": "Scope",
+      "scout": "Scout",
+      "polish": "Polish",
+      "round1": "Round 1",
+      "research": "Research",
+      "round2": "Round 2",
+      "followUp": "Follow-up",
+      "framing": "Framing",
+      "plan": "Plan",
+      "links": "Links",
+      "extract": "Extract",
+      "curation": "Curation",
+      "refine": "Refine {{n}}",
+      "publish": "Publish"
+    },
+    "errors": {
+      "submitAnswers": "Failed to submit answers.",
+      "approveBrief": "Failed to approve brief.",
+      "importFailed": "Import failed",
+      "unknown": "Unknown error"
+    },
+    "new": {
+      "quickFillBabyLabel": "Baby gear (3mo)",
+      "quickFillBabyTopic": "Baby gear for a 3-month-old — natural materials, considered design, small condo in Salt Lake City",
+      "quickFillGardenLabel": "Gardening gear",
+      "quickFillGardenTopic": "Considered gardening gear — tools, workwear, and footwear that serious gardeners reach for",
+      "startFailed": "Failed to start curation. Check CURATOR_ENABLED.",
+      "allSessions": "All sessions",
+      "describe": "Describe what you want to curate. Be specific — include context, occasion, or a source like an email or product category.",
+      "scopeNote": "We'll research the category and build a focused shortlist — typically 15–25 well-chosen items across a handful of sections.",
+      "topicLabel": "Topic",
+      "topicPlaceholder": "e.g. Considered gardening gear — tools, workwear, and footwear that serious gardeners reach for",
+      "quickFill": "Quick fill:",
+      "starting": "Starting…",
+      "start": "Start curation"
+    },
+    "page": {
+      "heading": "Collection Curator",
+      "settingUp": "Setting things up...",
+      "connecting": "Connecting to workflow and waiting for the first curator events...",
+      "extractingPages": "Extracting pages ({{current}} / {{total}})",
+      "extractingGapPages": "Extracting gap pages ({{current}} / {{total}})",
+      "runCreated": "Run created",
+      "refinementPasses": "Usually 1–2 refinement passes.",
+      "streamDisconnected": "Stream disconnected — click to reconnect",
+      "reconnect": "↺ Reconnect",
+      "streamStatus": "Stream: {{status}}",
+      "session": "Session <code>{{sessionId}}</code>",
+      "approach": "Here's how we're approaching it:",
+      "approachNote": "A focused selection within each — not a comprehensive guide.",
+      "urlsPending_one": "{{count}} URL pending",
+      "urlsPending_other": "{{count}} URLs pending",
+      "newCollection": "New collection",
+      "copied": "Copied!",
+      "copyJson": "Copy JSON",
+      "importing": "Importing...",
+      "addToTote": "Add to Tote",
+      "somethingWrong": "Something went wrong.",
+      "tryAgain": "Try again",
+      "newTopic": "New topic"
+    },
+    "interview": {
+      "theCategory": "the category",
+      "round2": "Round 2 of 2. We've researched {{subject}} — these questions help us dial in the specifics before we build.",
+      "round1": "Round 1 of 2. After you answer, we'll research the category (~30–90s), then come back with a few sharper follow-up questions.",
+      "notesPlaceholder": "Additional notes (optional)",
+      "submitFollowUp": "Submit follow-up",
+      "submitAnswers": "Submit answers"
+    },
+    "brief": {
+      "intro": "Here's the brief we'll use to build your collection. Approve to continue, or add a correction below.",
+      "avoid": "Avoid: {{items}}",
+      "anythingOff": "Anything off? (optional)",
+      "correctionExample": "e.g. She's in her 70s, not a new mom — please remove baby products from the brief",
+      "approving": "Approving...",
+      "approve": "Looks good →",
+      "submitCorrection": "Submit correction"
+    },
+    "result": {
+      "sections_one": "{{count}} section",
+      "sections_other": "{{count}} sections",
+      "items_one": "{{count}} item",
+      "items_other": "{{count}} items",
+      "joiner": " · "
+    }
+  },
+  "import": {
+    "signIn": "Sign in to access imports.",
+    "restricted": "Access restricted.",
+    "parseFailed": "Failed to parse JSON",
+    "failed": "Import failed",
+    "unknown": "Unknown error",
+    "imported": "Collection imported",
+    "importedDescription": "\"{{title}}\" — {{sections}}, {{items}}",
+    "sections_one": "{{count}} section",
+    "sections_other": "{{count}} sections",
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "heading": "Import Collection",
+    "subheading": "Paste a Tote Draft Import Payload JSON to create a collection.",
+    "jsonLabel": "Import JSON",
+    "hint": "Paste your payload, then submit to preview before importing.",
+    "preview": "Preview Import",
+    "previewMeta": "{{sections}}, {{items}}",
+    "back": "Back",
+    "importing": "Importing...",
+    "importTitle": "Import \"{{title}}\""
+  },
+  "clone": {
+    "notAvailable": "This collection is not available for copying.",
+    "copyFailed": "Failed to copy this collection.",
+    "preparing": "Preparing your copy...",
+    "useThisList": "Use this list",
+    "signInPrompt": "Sign in or create an account to copy this collection into your own Tote.",
+    "signUp": "Sign up to copy",
+    "haveAccount": "Already have an account?",
+    "logIn": "Log in",
+    "unableToCopy": "Unable to copy",
+    "backToCollections": "Back to collections",
+    "backToHome": "Back to home",
+    "copying": "Copying this list into your account..."
+  },
+  "invite": {
+    "acceptFailed": "Could not accept this invite",
+    "accepted": "Invite accepted",
+    "addedToAccount": "The collection has been added to your account.",
+    "invited": "You have been invited",
+    "signInPrompt": "Sign in to add this shared collection to your account.",
+    "signIn": "Sign in to continue",
+    "accepting": "Accepting invite...",
+    "loading": "Loading...",
+    "unavailable": "Invite unavailable",
+    "goToCollections": "Go to Collections",
+    "opening": "Opening the collection..."
+  },
+  "settings": {
+    "signIn": "Please sign in to access settings.",
+    "backToHome": "Back to home",
+    "title": "Settings",
+    "logOut": "Log out",
+    "tabs": {
+      "account": "Account",
+      "billing": "Billing"
+    },
+    "delete": {
+      "title": "Danger zone",
+      "description": "Permanently delete your account and all associated data. This cannot be undone.",
+      "confirmPhrase": "delete my account",
+      "label": "Type <strong>{{phrase}}</strong> to confirm",
+      "button": "Delete account",
+      "deleting": "Deleting…",
+      "failed": "Failed to delete account.",
+      "error": "Something went wrong. Please try again."
+    },
+    "profile": {
+      "title": "Your public profile",
+      "addUsername": "Add a username in the profile below to get a public profile URL.",
+      "publishHint": "Publish a collection to activate your public profile at <code>{{path}}</code>. Collections are private by default.",
+      "published_one": "{{count}} collection published.",
+      "published_other": "{{count}} collections published.",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "view": "View →"
+    }
+  },
+  "billing": {
+    "title": "AI credits",
+    "subtitle": "Pass-through model and search costs.",
+    "loading": "Loading...",
+    "noCredits": "No credits",
+    "cancel": "Cancel",
+    "addCredits": "Add credits",
+    "packs": {
+      "starter": "Starter",
+      "standard": "Standard",
+      "pro": "Pro"
+    },
+    "packDescription": "Adds {{amount}} AI credits",
+    "redirecting": "Redirecting...",
+    "recentActivity": "Recent activity",
+    "refresh": "Refresh",
+    "loadingActivity": "Loading activity...",
+    "noActivity": "No credit activity yet.",
+    "tx": {
+      "purchase": "Credit purchase",
+      "grant": "Credit grant",
+      "chat": "Chat",
+      "curator": "Curator"
+    },
+    "group": {
+      "purchases": "Credit purchases",
+      "grants": "Credit grants",
+      "curation": "Curation {{id}}",
+      "chat": "Collection chat {{id}}",
+      "collection": "Collection {{id}}",
+      "session": "Session {{id}}"
+    },
+    "details": {
+      "tokens": "{{tokens}} tokens",
+      "searches_one": "{{count}} search",
+      "searches_other": "{{count}} searches",
+      "browserSessions_one": "{{count}} browser session",
+      "browserSessions_other": "{{count}} browser sessions",
+      "balance": "balance {{amount}}"
+    }
+  },
+  "shell": {
+    "dismiss": "Dismiss",
+    "refreshPage": "Refresh page",
+    "header": {
+      "breadcrumb": "Breadcrumb",
+      "myProfile": "My profile",
+      "curator": "Curator",
+      "addLink": "+ Add Link",
+      "addContent": "+ Add Content",
+      "addCollection": "+ Add Collection",
+      "saveTabs": "Save My Tabs"
+    },
+    "errorBoundary": {
+      "message": "Something went wrong.",
+      "tryAgain": "Try again"
+    },
+    "main": {
+      "fallbackMessage": "Something went wrong. Please refresh the page."
+    },
+    "offline": {
+      "pending_one": "You are offline. {{count}} change is saved on this device.",
+      "pending_other": "You are offline. {{count}} changes are saved on this device.",
+      "cached": "You are offline. Cached collections remain available."
+    },
+    "maintenance": {
+      "message": "We’re doing database maintenance through the end of June in preparation for the launch of our iOS app. Thanks for your patience."
+    },
+    "extractionTip": {
+      "message": "We couldn't read everything from this site. You can still add it as is. The Tote extension and iOS app read pages in your own browser, so you usually get the image and price too.",
+      "getExtension": "Get the extension",
+      "iosApp": "iOS app"
+    }
+  }
 }

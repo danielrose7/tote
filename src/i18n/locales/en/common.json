@@ -8,5 +8,16 @@
       "hint": "Used across Tote on the web, in the Chrome extension and in the iOS app.",
       "saveError": "Couldn't save your language."
     }
+  },
+  "refresh": {
+    "failedTitleAll": "Refresh failed",
+    "failedTitleSome": "Some items failed",
+    "failedDescription_one": "Couldn't read {{count}} item. Check your connection and try again.",
+    "failedDescription_other": "Couldn't read {{count}} items. Check your connection and try again.",
+    "thinTitle": "Some details are missing",
+    "thinWithExtension_one": "{{count}} item limits what can be read, even with the extension. You can add the details by hand.",
+    "thinWithExtension_other": "{{count}} items limit what can be read, even with the extension. You can add the details by hand.",
+    "thinWithoutExtension_one": "{{count}} item limits what our servers can read. The Tote extension reads pages in your browser and usually gets the image and price.",
+    "thinWithoutExtension_other": "{{count}} items limit what our servers can read. The Tote extension reads pages in your browser and usually gets the image and price."
   }
 }

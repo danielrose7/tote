@@ -7,6 +7,7 @@ import { type FormEvent, useEffect, useState } from 'react';
 import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useTranslation } from '@/i18n/client';
 import {
   type CopyCollectionMutation,
   copyCollectionMutation,
@@ -26,11 +27,14 @@ export function NeonCopyCollectionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const online = useOnlineStatus();
-  const [name, setName] = useState(`Copy of ${detail.collection.name}`);
+  const [name, setName] = useState(
+    t('dialogs.copy.defaultName', { name: detail.collection.name }),
+  );
   const [error, setError] = useState<string | null>(null);
   const copyCollection = useMutation<
     { id: string; replayed: boolean },
@@ -44,8 +48,8 @@ export function NeonCopyCollectionDialog({
         queryKey: collectionQueryKeys.all,
       });
       showToast({
-        title: 'Collection copied',
-        description: 'The new collection is independent from its source.',
+        title: t('dialogs.copy.copiedTitle'),
+        description: t('dialogs.copy.copiedDescription'),
         variant: 'success',
       });
       onOpenChange(false);
@@ -56,17 +60,22 @@ export function NeonCopyCollectionDialog({
 
   useEffect(() => {
     if (!open) return;
-    setName(`Copy of ${detail.collection.name}`.slice(0, 200));
+    setName(
+      t('dialogs.copy.defaultName', { name: detail.collection.name }).slice(
+        0,
+        200,
+      ),
+    );
     setError(null);
     copyCollection.reset();
-  }, [open, detail.collection.name, copyCollection.reset]);
+  }, [open, detail.collection.name, copyCollection.reset, t]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!online || copyCollection.isPending) return;
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('Collection name is required.');
+      setError(t('dialogs.copy.nameRequired'));
       return;
     }
     copyCollection.mutate({
@@ -82,17 +91,16 @@ export function NeonCopyCollectionDialog({
         <Dialog.Overlay className={editStyles.overlay} />
         <Dialog.Content className={editStyles.content}>
           <Dialog.Title className={editStyles.title}>
-            Make an independent copy
+            {t('dialogs.copy.title')}
           </Dialog.Title>
           <Dialog.Description className={editStyles.description}>
-            The copy gets new rows and IDs. Later edits will not sync with the
-            source collection.
+            {t('dialogs.copy.description')}
           </Dialog.Description>
 
           <form className={editStyles.form} onSubmit={submit}>
             <div className={editStyles.inputGroup}>
               <label htmlFor="neon-copy-name" className={editStyles.label}>
-                Collection name
+                {t('dialogs.copy.nameLabel')}
               </label>
               <input
                 id="neon-copy-name"
@@ -102,14 +110,13 @@ export function NeonCopyCollectionDialog({
                 maxLength={200}
               />
               <span className={editStyles.helperText}>
-                Members, invites, publication settings, and future changes are
-                not copied.
+                {t('dialogs.copy.helper')}
               </span>
             </div>
 
             {!online && (
               <div className={editStyles.error}>
-                Making a copy requires a connection.
+                {t('dialogs.copy.offline')}
               </div>
             )}
             {error && <div className={editStyles.error}>{error}</div>}
@@ -117,7 +124,7 @@ export function NeonCopyCollectionDialog({
             <div className={editStyles.actions}>
               <Dialog.Close asChild>
                 <button type="button" className="btn btn-secondary">
-                  Cancel
+                  {t('dialogs.common.cancel')}
                 </button>
               </Dialog.Close>
               <button
@@ -125,7 +132,9 @@ export function NeonCopyCollectionDialog({
                 className="btn btn-primary"
                 disabled={!online || !name.trim() || copyCollection.isPending}
               >
-                {copyCollection.isPending ? 'Copying...' : 'Make copy'}
+                {copyCollection.isPending
+                  ? t('dialogs.copy.copying')
+                  : t('dialogs.copy.submit')}
               </button>
             </div>
           </form>

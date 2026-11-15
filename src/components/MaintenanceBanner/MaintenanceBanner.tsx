@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@/i18n/client';
 import styles from './MaintenanceBanner.module.css';
 
 const EXPIRES = new Date('2026-07-01');
 const DISMISSED_KEY = 'maintenance-banner-jun-2026-dismissed';
 
 export function MaintenanceBanner() {
+  const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(DISMISSED_KEY) === '1';
@@ -18,10 +20,7 @@ export function MaintenanceBanner() {
   return (
     <div className={styles.banner}>
       <div className={styles.content}>
-        <span>
-          We&rsquo;re doing database maintenance through the end of June in
-          preparation for the launch of our iOS app. Thanks for your patience.
-        </span>
+        <span>{t('shell.maintenance.message')}</span>
         <button
           type="button"
           onClick={() => {
@@ -29,7 +28,7 @@ export function MaintenanceBanner() {
             setDismissed(true);
           }}
         >
-          Dismiss
+          {t('shell.dismiss')}
         </button>
       </div>
     </div>

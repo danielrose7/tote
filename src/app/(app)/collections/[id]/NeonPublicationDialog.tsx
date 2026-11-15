@@ -2,11 +2,11 @@
 
 import { useUser } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
-import dayjs from '@/lib/dayjs';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useToast } from '@/components/ToastNotification';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useFormat, useTranslation } from '@/i18n/client';
 import {
   fetchCollectionPublication,
   type PublishCollectionMutation,
@@ -29,6 +29,8 @@ export function NeonPublicationDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const { user } = useUser();
   const { showToast } = useToast();
   const online = useOnlineStatus();
@@ -67,10 +69,9 @@ export function NeonPublicationDialog({
       setError(null);
       showToast({
         title: publication
-          ? 'Public snapshot replaced'
-          : 'Collection published',
-        description:
-          'Your private collection remains separate from this public snapshot.',
+          ? t('dialogs.publication.replacedTitle')
+          : t('dialogs.publication.publishedTitle'),
+        description: t('dialogs.publication.publishedDescription'),
         variant: 'success',
       });
     },
@@ -84,8 +85,8 @@ export function NeonPublicationDialog({
     mutationKey: collectionMutationKeys.unpublish,
     onSuccess: () => {
       showToast({
-        title: 'Collection unpublished',
-        description: 'The private collection was not changed.',
+        title: t('dialogs.publication.unpublishedTitle'),
+        description: t('dialogs.publication.unpublishedDescription'),
         variant: 'success',
       });
       onOpenChange(false);
@@ -105,7 +106,7 @@ export function NeonPublicationDialog({
     if (!online) return;
     const normalizedSlug = slugify(slug);
     if (!normalizedSlug) {
-      setError('A public URL slug is required.');
+      setError(t('dialogs.publication.slugRequired'));
       return;
     }
     publish.mutate({
@@ -126,17 +127,19 @@ export function NeonPublicationDialog({
           <div className={styles.heading}>
             <div>
               <Dialog.Title className={styles.title}>
-                Public snapshot
+                {t('dialogs.publication.title')}
               </Dialog.Title>
               <Dialog.Description className={styles.description}>
-                The public copy changes only when you explicitly publish it.
+                {t('dialogs.publication.description')}
               </Dialog.Description>
             </div>
-            <Dialog.Close className={styles.closeButton}>Close</Dialog.Close>
+            <Dialog.Close className={styles.closeButton}>
+              {t('dialogs.common.close')}
+            </Dialog.Close>
           </div>
 
           {isLoading ? (
-            <p className={styles.muted}>Loading publication...</p>
+            <p className={styles.muted}>{t('dialogs.publication.loading')}</p>
           ) : (
             <form className={styles.form} onSubmit={submit}>
               {publication && (
@@ -149,17 +152,21 @@ export function NeonPublicationDialog({
                 >
                   <time
                     dateTime={publication.updatedAt.toISOString()}
-                    title={dayjs(publication.updatedAt).format('l LT')}
+                    title={fmt.dateTime(publication.updatedAt)}
                   >
                     {publication.hasUnpublishedChanges
-                      ? `Published ${dayjs(publication.updatedAt).fromNow()} — edited since`
-                      : `Published ${dayjs(publication.updatedAt).fromNow()}`}
+                      ? t('dialogs.publication.publishedEdited', {
+                          time: fmt.relativeTime(publication.updatedAt),
+                        })
+                      : t('dialogs.publication.published', {
+                          time: fmt.relativeTime(publication.updatedAt),
+                        })}
                   </time>
                 </div>
               )}
 
               <label>
-                Public URL slug
+                {t('dialogs.publication.slugLabel')}
                 <div className={styles.slugRow}>
                   <span>
                     {canUseFriendlyUrl
@@ -175,15 +182,19 @@ export function NeonPublicationDialog({
               </label>
 
               <label>
-                Layout
+                {t('dialogs.publication.layout')}
                 <select
                   value={layout}
                   onChange={(event) =>
                     setLayout(event.target.value as 'minimal' | 'feature')
                   }
                 >
-                  <option value="minimal">Minimal</option>
-                  <option value="feature">Feature</option>
+                  <option value="minimal">
+                    {t('dialogs.publication.layoutMinimal')}
+                  </option>
+                  <option value="feature">
+                    {t('dialogs.publication.layoutFeature')}
+                  </option>
                 </select>
               </label>
 
@@ -193,27 +204,31 @@ export function NeonPublicationDialog({
                   checked={allowCloning}
                   onChange={(event) => setAllowCloning(event.target.checked)}
                 />
-                Allow people to make independent copies
+                {t('dialogs.publication.allowCloning')}
               </label>
 
               {publicUrl && (
                 <div className={styles.linkRow}>
-                  <input readOnly value={publicUrl} aria-label="Public URL" />
+                  <input
+                    readOnly
+                    value={publicUrl}
+                    aria-label={t('dialogs.publication.urlAria')}
+                  />
                   <a href={publicUrl} target="_blank" rel="noreferrer">
-                    Open
+                    {t('dialogs.publication.open')}
                   </a>
                   <button
                     type="button"
                     onClick={() => navigator.clipboard.writeText(publicUrl)}
                   >
-                    Copy
+                    {t('dialogs.publication.copy')}
                   </button>
                 </div>
               )}
 
               {!online && (
                 <p className={styles.notice}>
-                  Publishing requires a connection.
+                  {t('dialogs.publication.offline')}
                 </p>
               )}
               {error && <p className={styles.error}>{error}</p>}
@@ -227,14 +242,14 @@ export function NeonPublicationDialog({
                     onClick={() => {
                       if (
                         window.confirm(
-                          'Remove the public snapshot? Your private collection will remain unchanged.',
+                          t('dialogs.publication.confirmUnpublish'),
                         )
                       ) {
                         unpublish.mutate({ collectionId: collection.id });
                       }
                     }}
                   >
-                    Unpublish
+                    {t('dialogs.publication.unpublish')}
                   </button>
                 )}
                 <button
@@ -243,10 +258,10 @@ export function NeonPublicationDialog({
                   disabled={!online || publish.isPending}
                 >
                   {publish.isPending
-                    ? 'Publishing...'
+                    ? t('dialogs.publication.publishing')
                     : publication
-                      ? 'Replace public snapshot'
-                      : 'Publish snapshot'}
+                      ? t('dialogs.publication.replace')
+                      : t('dialogs.publication.publish')}
                 </button>
               </div>
             </form>

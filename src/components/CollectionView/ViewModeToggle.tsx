@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n/client';
 import styles from './ViewModeToggle.module.css';
 
 export type ViewMode = 'grid' | 'table';
@@ -8,14 +9,19 @@ interface ViewModeToggleProps {
 }
 
 export function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
+  const { t } = useTranslation();
   return (
-    <div className={styles.toggle} role="group" aria-label="View mode">
+    <div
+      className={styles.toggle}
+      role="group"
+      aria-label={t('collections.viewMode.label')}
+    >
       <button
         type="button"
         className={`${styles.button} ${mode === 'grid' ? styles.active : ''}`}
         onClick={() => onChange('grid')}
         aria-pressed={mode === 'grid'}
-        title="Grid view"
+        title={t('collections.viewMode.grid')}
       >
         <svg
           width="18"
@@ -38,7 +44,7 @@ export function ViewModeToggle({ mode, onChange }: ViewModeToggleProps) {
         className={`${styles.button} ${mode === 'table' ? styles.active : ''}`}
         onClick={() => onChange('table')}
         aria-pressed={mode === 'table'}
-        title="Table view"
+        title={t('collections.viewMode.table')}
       >
         <svg
           width="18"

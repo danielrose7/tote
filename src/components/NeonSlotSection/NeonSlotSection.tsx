@@ -20,8 +20,10 @@ import { CSS } from '@dnd-kit/utilities';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type Dispatch, useEffect, useState } from 'react';
+import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import type { CollectionNode } from '@/db/schema';
 import type { RefreshAction, RefreshState } from '@/hooks/useRefreshQueue';
+import { useFormat, useTranslation } from '@/i18n/client';
 import {
   deleteCollectionNodeMutation,
   reorderCollectionNodesMutation,
@@ -32,7 +34,6 @@ import {
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
-import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import { checkExtensionAvailable } from '@/lib/extension';
 import {
   describeRefreshOutcome,
@@ -40,7 +41,6 @@ import {
   type RefreshOutcome,
 } from '@/lib/extractItem';
 import { isExtractionHintSnoozed } from '@/lib/extractionHint';
-import { formatPrice } from '@/lib/formatPrice';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
 import styles from '../SlotSection/SlotSection.module.css';
 import { useToast } from '../ToastNotification';
@@ -61,6 +61,19 @@ type SectionProperties = {
   selectedProductIds?: string[];
 };
 
+const TYPE_LABEL = {
+  section: 'slots.type.section',
+  product: 'slots.type.product',
+  link: 'slots.type.link',
+  photo: 'slots.type.photo',
+  note: 'slots.type.note',
+  text: 'slots.type.text',
+} as const;
+
+function typeLabelKey(type: string): string | undefined {
+  return (TYPE_LABEL as Record<string, string | undefined>)[type];
+}
+
 function propertiesFor(node: CollectionNode): NodeProperties {
   return node.properties as NodeProperties;
 }
@@ -76,6 +89,8 @@ function SwapItemContent({
   node: CollectionNode;
   removed?: boolean;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const properties = propertiesFor(node);
   return (
     <span className={styles.swapItem}>
@@ -98,23 +113,16 @@ function SwapItemContent({
             removed ? styles.swapItemNameRemoved : ''
           }`}
         >
-          {node.title || 'Untitled'}
+          {node.title || t('slots.item.untitled')}
         </span>
         {properties.price !== undefined && properties.price !== null && (
           <span className={styles.swapItemPrice}>
-            {formatPrice(String(properties.price))}
+            {fmt.price(String(properties.price))}
           </span>
         )}
       </span>
     </span>
   );
-}
-
-function formatBudget(cents: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(cents / 100);
 }
 
 function parsePriceToCents(
@@ -147,11 +155,15 @@ function NeonProductItem({
   isRefreshing?: boolean;
   isEnqueued?: boolean;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const [showActions, setShowActions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const properties = propertiesFor(node);
-  const title = node.title || (node.type === 'photo' ? 'Photo' : 'Untitled');
+  const title =
+    node.title ||
+    (node.type === 'photo' ? t('slots.item.photo') : t('slots.item.untitled'));
   const hasImage = !!(properties.imageUrl && !imageError);
   const isListMode = dragHandle !== undefined;
 
@@ -175,7 +187,7 @@ function NeonProductItem({
         <span className={styles.productItemName}>{title}</span>
         {properties.price !== undefined && properties.price !== null && (
           <span className={styles.productItemPrice}>
-            {formatPrice(String(properties.price))}
+            {fmt.price(String(properties.price))}
           </span>
         )}
       </div>
@@ -202,7 +214,7 @@ function NeonProductItem({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {formatPrice(String(properties.price))}
+                {fmt.price(String(properties.price))}
               </span>
             </div>
           )}
@@ -225,7 +237,7 @@ function NeonProductItem({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {formatPrice(String(properties.price))}
+                {fmt.price(String(properties.price))}
               </span>
             </div>
           )}
@@ -254,8 +266,12 @@ function NeonProductItem({
               type="button"
               onClick={onToggleSelection}
               className={`${productCardStyles.actionButton} ${isSelected ? productCardStyles.actionButtonSelected : ''}`}
-              aria-label={isSelected ? 'Deselect' : 'Select'}
-              data-tooltip={isSelected ? 'Deselect' : 'Select'}
+              aria-label={
+                isSelected ? t('slots.item.deselect') : t('slots.item.select')
+              }
+              data-tooltip={
+                isSelected ? t('slots.item.deselect') : t('slots.item.select')
+              }
             >
               <svg
                 width="16"
@@ -282,8 +298,12 @@ function NeonProductItem({
               onClick={onRefresh}
               disabled={isRefreshing}
               className={productCardStyles.actionButton}
-              aria-label="Refresh metadata"
-              data-tooltip={isRefreshing ? 'Refreshing…' : 'Refresh'}
+              aria-label={t('slots.item.refreshMetadata')}
+              data-tooltip={
+                isRefreshing
+                  ? t('slots.item.refreshing')
+                  : t('slots.item.refresh')
+              }
             >
               <svg
                 width="16"
@@ -311,8 +331,8 @@ function NeonProductItem({
               type="button"
               onClick={() => onEdit(node)}
               className={productCardStyles.actionButton}
-              aria-label="Edit"
-              data-tooltip="Edit"
+              aria-label={t('slots.common.edit')}
+              data-tooltip={t('slots.common.edit')}
             >
               <svg
                 width="16"
@@ -351,7 +371,7 @@ function NeonProductItem({
               className={productCardStyles.link}
               onClick={(e) => e.stopPropagation()}
             >
-              Visit →
+              {t('slots.item.visit')}
             </a>
           ) : (
             <span
@@ -361,7 +381,9 @@ function NeonProductItem({
                 textTransform: 'capitalize',
               }}
             >
-              {node.type}
+              {typeLabelKey(node.type)
+                ? t(typeLabelKey(node.type) as string)
+                : node.type}
             </span>
           )}
         </div>
@@ -379,6 +401,7 @@ function NeonSortableItem({
   node: CollectionNode;
   onEdit?: (node: CollectionNode) => void;
 }) {
+  const { t } = useTranslation();
   const {
     attributes,
     listeners,
@@ -401,7 +424,13 @@ function NeonSortableItem({
           <button
             type="button"
             className={styles.dragHandle}
-            aria-label={`Reorder ${node.title || node.type}`}
+            aria-label={t('slots.item.reorder', {
+              name:
+                node.title ||
+                (typeLabelKey(node.type)
+                  ? t(typeLabelKey(node.type) as string)
+                  : node.type),
+            })}
             {...attributes}
             {...listeners}
           >
@@ -447,6 +476,9 @@ export function NeonSlotSection({
   isDragging,
   forceCollapsed,
 }: NeonSlotSectionProps) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
+  const formatBudget = (cents: number) => fmt.currency(cents / 100, 'USD');
   const sectionProps = sectionPropsFor(section);
   const selectedItemIds =
     sectionProps.selectedItemIds ?? sectionProps.selectedProductIds ?? [];
@@ -524,7 +556,7 @@ export function NeonSlotSection({
     },
     onError: (error) => {
       showToast({
-        title: 'Failed to update section',
+        title: t('slots.toast.updateFailed'),
         description: error.message,
         variant: 'error',
       });
@@ -553,7 +585,7 @@ export function NeonSlotSection({
     },
     onError: (error) => {
       showToast({
-        title: 'Failed to delete section',
+        title: t('slots.toast.deleteFailed'),
         description: error.message,
         variant: 'error',
       });
@@ -569,7 +601,7 @@ export function NeonSlotSection({
     scope: { id: `collection:${collectionId}:section:${section.id}` },
     onError: (error) => {
       showToast({
-        title: 'Reordering failed',
+        title: t('slots.toast.reorderFailed'),
         description: error.message,
         variant: 'error',
       });
@@ -608,7 +640,7 @@ export function NeonSlotSection({
     },
     onError: (error) => {
       showToast({
-        title: 'Refresh failed',
+        title: t('slots.toast.refreshFailed'),
         description: error.message,
         variant: 'error',
       });
@@ -626,7 +658,7 @@ export function NeonSlotSection({
     showLinks: boolean;
   } | null>(null);
   const notifyRefreshOutcome = (outcome: RefreshOutcome) => {
-    const message = describeRefreshOutcome(outcome);
+    const message = describeRefreshOutcome(outcome, t);
     if (!message) return;
     if (message.variant === 'info') {
       if (isExtractionHintSnoozed()) return;
@@ -898,8 +930,9 @@ export function NeonSlotSection({
       });
     } catch (err) {
       showToast({
-        title: 'Failed to delete section',
-        description: err instanceof Error ? err.message : 'Unknown error',
+        title: t('slots.toast.deleteFailed'),
+        description:
+          err instanceof Error ? err.message : t('slots.toast.unknownError'),
         variant: 'error',
       });
       void queryClient.invalidateQueries({
@@ -1018,22 +1051,26 @@ export function NeonSlotSection({
                   if (e.key === 'Escape') handleCancelEdit();
                 }}
                 className={styles.editInput}
-                placeholder="Section name"
+                placeholder={t('slots.edit.namePlaceholder')}
                 autoFocus
               />
               <div className={styles.editField}>
-                <label className={styles.editLabel}>Pick</label>
+                <label className={styles.editLabel}>
+                  {t('slots.edit.pick')}
+                </label>
                 <input
                   type="number"
                   value={editMaxSelections}
                   onChange={(e) => setEditMaxSelections(e.target.value)}
                   className={styles.editInput}
-                  placeholder="Any"
+                  placeholder={t('slots.edit.any')}
                   min="1"
                 />
               </div>
               <div className={styles.editField}>
-                <label className={styles.editLabel}>Budget</label>
+                <label className={styles.editLabel}>
+                  {t('slots.edit.budget')}
+                </label>
                 <div className={styles.budgetInputWrapper}>
                   <span className={styles.currencyPrefix}>$</span>
                   <input
@@ -1053,14 +1090,14 @@ export function NeonSlotSection({
                   onClick={handleSaveEdit}
                   className="btn btn-danger"
                 >
-                  Save
+                  {t('slots.common.save')}
                 </button>
                 <button
                   type="button"
                   onClick={handleCancelEdit}
                   className="btn btn-secondary"
                 >
-                  Cancel
+                  {t('slots.common.cancel')}
                 </button>
               </div>
             </div>
@@ -1068,18 +1105,20 @@ export function NeonSlotSection({
             <>
               <div className={styles.headerInfo}>
                 <h3 className={styles.title}>
-                  {section.title || 'Untitled section'}
+                  {section.title || t('slots.section.untitled')}
                 </h3>
                 {!forceCollapsed && (
                   <>
                     {maxSelections !== undefined ? (
                       <span className={styles.selectionCount}>
-                        {selectedCount}/
-                        {maxSelections === 0 ? '∞' : maxSelections} selected
+                        {t('slots.section.selected', {
+                          count: selectedCount,
+                          max: maxSelections === 0 ? '∞' : maxSelections,
+                        })}
                       </span>
                     ) : (
                       <span className={styles.selectionCount}>
-                        {items.length} {items.length === 1 ? 'item' : 'items'}
+                        {t('slots.section.itemCount', { count: items.length })}
                       </span>
                     )}
                     {budget !== undefined ? (
@@ -1116,7 +1155,9 @@ export function NeonSlotSection({
                           : styles.reorderButton
                       }
                     >
-                      {isProductReorderMode ? 'Done' : 'Reorder'}
+                      {isProductReorderMode
+                        ? t('slots.section.done')
+                        : t('slots.section.reorder')}
                     </button>
                   )}
                   {!isProductReorderMode && (
@@ -1131,11 +1172,11 @@ export function NeonSlotSection({
                           onClick={() => void handleRefreshAll()}
                           disabled={refresh.progress !== null}
                           className={styles.actionButton}
-                          aria-label="Refresh all"
+                          aria-label={t('slots.section.refreshAll')}
                           data-tooltip={
                             refresh.progress
                               ? `${refresh.progress.done}/${refresh.progress.total}`
-                              : 'Refresh all'
+                              : t('slots.section.refreshAll')
                           }
                         >
                           <svg
@@ -1163,8 +1204,8 @@ export function NeonSlotSection({
                         type="button"
                         onClick={() => setIsEditing(true)}
                         className={styles.actionButton}
-                        aria-label="Edit section"
-                        data-tooltip="Edit"
+                        aria-label={t('slots.section.editSection')}
+                        data-tooltip={t('slots.common.edit')}
                       >
                         <svg
                           width="14"
@@ -1182,8 +1223,8 @@ export function NeonSlotSection({
                         type="button"
                         onClick={handleDelete}
                         className={`${styles.actionButton} ${styles.deleteButton}`}
-                        aria-label="Delete section"
-                        data-tooltip="Delete"
+                        aria-label={t('slots.section.deleteSection')}
+                        data-tooltip={t('slots.common.delete')}
                       >
                         <svg
                           width="14"
@@ -1208,7 +1249,7 @@ export function NeonSlotSection({
         {!effectiveCollapsed && (
           <div className={styles.content}>
             {items.length === 0 ? (
-              <div className={styles.empty}>No items in this section yet</div>
+              <div className={styles.empty}>{t('slots.section.empty')}</div>
             ) : isProductReorderMode ? (
               <DndContext
                 sensors={sensors}
@@ -1268,20 +1309,24 @@ export function NeonSlotSection({
           <Dialog.Overlay className={styles.dialogOverlay} />
           <Dialog.Content className={styles.dialogContent}>
             <Dialog.Title className={styles.dialogTitle}>
-              Selection limit reached
+              {t('slots.swap.title')}
             </Dialog.Title>
             <p className={styles.dialogDescription}>
-              &ldquo;{section.title || 'This section'}&rdquo; allows{' '}
-              {maxSelections} selection{maxSelections === 1 ? '' : 's'}.{' '}
-              {selectedItems.length === 1
-                ? 'Swap your current pick for this one?'
-                : 'Choose one to unselect.'}
+              {t(
+                selectedItems.length === 1
+                  ? 'slots.swap.descriptionSwap'
+                  : 'slots.swap.descriptionUnselect',
+                {
+                  title: section.title || t('slots.swap.fallbackTitle'),
+                  count: maxSelections ?? 0,
+                },
+              )}
             </p>
 
             {swapRequest && (
               <div>
                 <p className={`${styles.swapLabel} ${styles.swapLabelIn}`}>
-                  Selecting
+                  {t('slots.swap.selecting')}
                 </p>
                 <div className={`${styles.swapRow} ${styles.swapRowIn}`}>
                   <SwapItemContent node={swapRequest} />
@@ -1294,7 +1339,9 @@ export function NeonSlotSection({
 
             <div>
               <p className={`${styles.swapLabel} ${styles.swapLabelOut}`}>
-                {selectedItems.length === 1 ? 'Replacing' : 'Unselect'}
+                {selectedItems.length === 1
+                  ? t('slots.swap.replacing')
+                  : t('slots.swap.unselect')}
               </p>
               <div className={styles.swapList}>
                 {selectedItems.map((node) => {
@@ -1336,7 +1383,7 @@ export function NeonSlotSection({
             <div className={styles.dialogActions}>
               <Dialog.Close asChild>
                 <button type="button" className={styles.dialogCancelButton}>
-                  Cancel
+                  {t('slots.common.cancel')}
                 </button>
               </Dialog.Close>
               <button
@@ -1345,7 +1392,7 @@ export function NeonSlotSection({
                 onClick={handleConfirmSwap}
                 disabled={!pendingRemovalId}
               >
-                Swap
+                {t('slots.swap.confirm')}
               </button>
             </div>
           </Dialog.Content>
@@ -1387,7 +1434,9 @@ export function NeonSlotSection({
                 margin: 0,
               }}
             >
-              Delete &ldquo;{section.title || 'section'}&rdquo;?
+              {t('slots.delete.title', {
+                title: section.title || t('slots.delete.fallbackTitle'),
+              })}
             </Dialog.Title>
 
             {items.length === 0 ? (
@@ -1398,7 +1447,7 @@ export function NeonSlotSection({
                   margin: 0,
                 }}
               >
-                This section is empty and will be permanently removed.
+                {t('slots.delete.emptyBody')}
               </p>
             ) : (
               <div
@@ -1411,9 +1460,7 @@ export function NeonSlotSection({
                     margin: 0,
                   }}
                 >
-                  This section has {items.length}{' '}
-                  {items.length === 1 ? 'item' : 'items'}. What should happen to
-                  them?
+                  {t('slots.delete.hasItems', { count: items.length })}
                 </p>
                 <label
                   style={{
@@ -1431,8 +1478,7 @@ export function NeonSlotSection({
                     checked={deleteAction === 'delete'}
                     onChange={() => setDeleteAction('delete')}
                   />
-                  Remove all {items.length}{' '}
-                  {items.length === 1 ? 'item' : 'items'} from the collection
+                  {t('slots.delete.removeAll', { count: items.length })}
                 </label>
                 <label
                   style={{
@@ -1450,7 +1496,7 @@ export function NeonSlotSection({
                     checked={deleteAction === 'ungrouped'}
                     onChange={() => setDeleteAction('ungrouped')}
                   />
-                  Move items to ungrouped
+                  {t('slots.delete.moveUngrouped')}
                 </label>
                 {otherSections.length > 0 && (
                   <label
@@ -1473,7 +1519,7 @@ export function NeonSlotSection({
                           setMoveToSectionId(otherSections[0].id);
                       }}
                     />
-                    Move items to another section
+                    {t('slots.delete.moveSection')}
                     {deleteAction === 'section' && (
                       <select
                         value={moveToSectionId}
@@ -1485,7 +1531,7 @@ export function NeonSlotSection({
                       >
                         {otherSections.map((s) => (
                           <option key={s.id} value={s.id}>
-                            {s.title || 'Untitled section'}
+                            {s.title || t('slots.section.untitled')}
                           </option>
                         ))}
                       </select>
@@ -1514,7 +1560,7 @@ export function NeonSlotSection({
                     fontSize: 'var(--font-size-sm)',
                   }}
                 >
-                  Cancel
+                  {t('slots.common.cancel')}
                 </button>
               </Dialog.Close>
               <button
@@ -1532,8 +1578,8 @@ export function NeonSlotSection({
                 }}
               >
                 {deleteAction === 'delete' || items.length === 0
-                  ? 'Delete'
-                  : 'Move & delete section'}
+                  ? t('slots.common.delete')
+                  : t('slots.delete.moveAndDelete')}
               </button>
             </div>
           </Dialog.Content>

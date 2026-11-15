@@ -5,10 +5,12 @@ import { type FormEvent, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Main } from '@/components/Main/Main';
 import { useToast } from '@/components/ToastNotification';
+import { useTranslation } from '@/i18n/client';
 import { type ImportPayload, validatePayload } from '@/lib/importPayload';
 import styles from './import.module.css';
 
 export function ImportPageClient() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { showToast } = useToast();
   const [json, setJson] = useState('');
@@ -27,7 +29,7 @@ export function ImportPageClient() {
       setPreview(validated);
     } catch (err) {
       setParseError(
-        err instanceof Error ? err.message : 'Failed to parse JSON',
+        err instanceof Error ? err.message : t('import.parseFailed'),
       );
     }
   };
@@ -47,7 +49,7 @@ export function ImportPageClient() {
         error?: string;
       } | null;
       if (!response.ok || !body?.id) {
-        throw new Error(body?.error ?? 'Import failed');
+        throw new Error(body?.error ?? t('import.failed'));
       }
 
       const totalItems = preview.sections.reduce(
@@ -55,8 +57,12 @@ export function ImportPageClient() {
         0,
       );
       showToast({
-        title: 'Collection imported',
-        description: `"${preview.title}" — ${preview.sections.length} sections, ${totalItems} items`,
+        title: t('import.imported'),
+        description: t('import.importedDescription', {
+          title: preview.title,
+          sections: t('import.sections', { count: preview.sections.length }),
+          items: t('import.items', { count: totalItems }),
+        }),
         variant: 'success',
       });
 
@@ -64,8 +70,8 @@ export function ImportPageClient() {
     } catch (err) {
       console.error('Import failed', err);
       showToast({
-        title: 'Import failed',
-        description: err instanceof Error ? err.message : 'Unknown error',
+        title: t('import.failed'),
+        description: err instanceof Error ? err.message : t('import.unknown'),
         variant: 'error',
       });
     } finally {
@@ -82,15 +88,13 @@ export function ImportPageClient() {
       <Header />
       <Main className={styles.main}>
         <div className={styles.container}>
-          <h1 className={styles.heading}>Import Collection</h1>
-          <p className={styles.subheading}>
-            Paste a Tote Draft Import Payload JSON to create a collection.
-          </p>
+          <h1 className={styles.heading}>{t('import.heading')}</h1>
+          <p className={styles.subheading}>{t('import.subheading')}</p>
 
           <form className={styles.form} onSubmit={handleParse}>
             <div className={styles.inputGroup}>
               <label className={styles.label} htmlFor="json-input">
-                Import JSON
+                {t('import.jsonLabel')}
               </label>
               <textarea
                 id="json-input"
@@ -110,15 +114,13 @@ export function ImportPageClient() {
             {parseError && <p className={styles.error}>{parseError}</p>}
 
             <div className={styles.parseActions}>
-              <p className={styles.parseHint}>
-                Paste your payload, then submit to preview before importing.
-              </p>
+              <p className={styles.parseHint}>{t('import.hint')}</p>
               <button
                 className="btn btn-primary"
                 type="submit"
                 disabled={!json.trim()}
               >
-                Preview Import
+                {t('import.preview')}
               </button>
             </div>
           </form>
@@ -130,9 +132,12 @@ export function ImportPageClient() {
                 <p className={styles.previewIntro}>{preview.intro}</p>
               )}
               <p className={styles.previewMeta}>
-                {preview.sections.length} section
-                {preview.sections.length !== 1 ? 's' : ''}, {totalItems} item
-                {totalItems !== 1 ? 's' : ''}
+                {t('import.previewMeta', {
+                  sections: t('import.sections', {
+                    count: preview.sections.length,
+                  }),
+                  items: t('import.items', { count: totalItems }),
+                })}
               </p>
 
               {preview.warnings && preview.warnings.length > 0 && (
@@ -184,7 +189,7 @@ export function ImportPageClient() {
                   }}
                   type="button"
                 >
-                  Back
+                  {t('import.back')}
                 </button>
                 <button
                   className="btn btn-primary"
@@ -192,7 +197,9 @@ export function ImportPageClient() {
                   disabled={importing || !me.$isLoaded || !me.root}
                   type="button"
                 >
-                  {importing ? 'Importing...' : `Import "${preview.title}"`}
+                  {importing
+                    ? t('import.importing')
+                    : t('import.importTitle', { title: preview.title })}
                 </button>
               </div>
             </div>

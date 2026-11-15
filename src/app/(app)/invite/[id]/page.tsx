@@ -4,11 +4,13 @@ import { SignInButton, useUser } from '@clerk/nextjs';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/ToastNotification';
+import { useTranslation } from '@/i18n/client';
 import styles from './page.module.css';
 
 type InviteStatus = 'loading' | 'accepting' | 'success' | 'error';
 
 export default function InvitePage() {
+  const { t } = useTranslation();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const { showToast } = useToast();
@@ -35,15 +37,15 @@ export default function InvitePage() {
           const body = (await response.json().catch(() => null)) as {
             error?: string;
           } | null;
-          throw new Error(body?.error || 'Could not accept this invite');
+          throw new Error(body?.error || t('invite.acceptFailed'));
         }
         return response.json() as Promise<{ collectionId: string }>;
       })
       .then(({ collectionId }) => {
         setStatus('success');
         showToast({
-          title: 'Invite accepted',
-          description: 'The collection has been added to your account.',
+          title: t('invite.accepted'),
+          description: t('invite.addedToAccount'),
           variant: 'success',
         });
         window.setTimeout(
@@ -54,12 +56,10 @@ export default function InvitePage() {
       .catch((error: unknown) => {
         setStatus('error');
         setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : 'Could not accept this invite',
+          error instanceof Error ? error.message : t('invite.acceptFailed'),
         );
       });
-  }, [isLoaded, isSignedIn, router, showToast, token]);
+  }, [isLoaded, isSignedIn, router, showToast, token, t]);
 
   if (isLoaded && !isSignedIn) {
     return (
@@ -68,13 +68,11 @@ export default function InvitePage() {
           <div className={styles.icon} aria-hidden="true">
             +
           </div>
-          <h1 className={styles.title}>You have been invited</h1>
-          <p className={styles.description}>
-            Sign in to add this shared collection to your account.
-          </p>
+          <h1 className={styles.title}>{t('invite.invited')}</h1>
+          <p className={styles.description}>{t('invite.signInPrompt')}</p>
           <SignInButton mode="modal">
             <button type="button" className={styles.signInButton}>
-              Sign in to continue
+              {t('invite.signIn')}
             </button>
           </SignInButton>
         </div>
@@ -88,7 +86,9 @@ export default function InvitePage() {
         <div className={styles.card}>
           <div className={styles.spinner} />
           <p className={styles.loadingText}>
-            {status === 'accepting' ? 'Accepting invite...' : 'Loading...'}
+            {status === 'accepting'
+              ? t('invite.accepting')
+              : t('invite.loading')}
           </p>
         </div>
       </div>
@@ -100,14 +100,14 @@ export default function InvitePage() {
       <div className={styles.container}>
         <div className={styles.card}>
           <div className={styles.errorIcon}>!</div>
-          <h1 className={styles.title}>Invite unavailable</h1>
+          <h1 className={styles.title}>{t('invite.unavailable')}</h1>
           <p className={styles.description}>{errorMessage}</p>
           <button
             type="button"
             className={styles.button}
             onClick={() => router.replace('/collections')}
           >
-            Go to Collections
+            {t('invite.goToCollections')}
           </button>
         </div>
       </div>
@@ -120,8 +120,8 @@ export default function InvitePage() {
         <div className={styles.successIcon} aria-hidden="true">
           ✓
         </div>
-        <h1 className={styles.title}>Invite accepted</h1>
-        <p className={styles.description}>Opening the collection...</p>
+        <h1 className={styles.title}>{t('invite.accepted')}</h1>
+        <p className={styles.description}>{t('invite.opening')}</p>
       </div>
     </div>
   );

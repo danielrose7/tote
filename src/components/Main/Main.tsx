@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
+import { useTranslation } from '@/i18n/client';
 
 interface MainProps {
   children: ReactNode;
@@ -23,6 +24,7 @@ const refreshStyle: React.CSSProperties = {
 };
 
 export function Main({ children, className, fallbackMessage }: MainProps) {
+  const { t } = useTranslation();
   const fallback = (
     <main className={className}>
       <div
@@ -35,14 +37,14 @@ export function Main({ children, className, fallbackMessage }: MainProps) {
         }}
       >
         <p style={{ opacity: 0.6, margin: 0 }}>
-          {fallbackMessage ?? 'Something went wrong. Please refresh the page.'}
+          {fallbackMessage ?? t('shell.main.fallbackMessage')}
         </p>
         <button
           type="button"
           style={refreshStyle}
           onClick={() => window.location.reload()}
         >
-          Refresh page
+          {t('shell.refreshPage')}
         </button>
       </div>
     </main>

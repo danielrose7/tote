@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { describeRefreshOutcome } from './extractItem';
+import { loadResources } from '@/i18n/catalogs';
+import { createI18n } from '@/i18n/instance';
+import { describeRefreshOutcome as describe_ } from './extractItem';
+
+const i18n = createI18n('en', await loadResources('en'));
+const describeRefreshOutcome = (outcome: Parameters<typeof describe_>[0]) =>
+  describe_(outcome, i18n.t);
 
 const base = { total: 3, thin: 0, failed: 0, extensionAvailable: false };
 
@@ -31,7 +37,7 @@ describe('describeRefreshOutcome', () => {
       thin: 1,
       extensionAvailable: true,
     });
-    expect(msg?.description).toContain('1 item ');
+    expect(msg?.description).toContain('1 item limits');
     expect(msg?.description).not.toContain('reads pages in your browser');
   });
 });

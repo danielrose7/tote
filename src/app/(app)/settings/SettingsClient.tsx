@@ -7,7 +7,7 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { AiCreditsPanel } from '@/components/Billing/AiCreditsPanel';
 import { Header } from '@/components/Header/Header';
 import { Main } from '@/components/Main/Main';
-import { useTranslation } from '@/i18n/client';
+import { Trans, useTranslation } from '@/i18n/client';
 import type { RenderLocale } from '@/i18n/config';
 import { LanguagePicker } from '@/i18n/LanguagePicker';
 import styles from './settings.module.css';
@@ -25,7 +25,8 @@ export function SettingsClient({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { signOut } = useClerk();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const confirmPhrase = t('settings.delete.confirmPhrase');
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -34,12 +35,12 @@ export function SettingsClient({
       const res = await fetch('/api/user/delete', { method: 'DELETE' });
       if (!res.ok) {
         const data = await res.json();
-        setDeleteError(data.error ?? 'Failed to delete account.');
+        setDeleteError(data.error ?? t('settings.delete.failed'));
         return;
       }
       await signOut({ redirectUrl: '/' });
     } catch {
-      setDeleteError('Something went wrong. Please try again.');
+      setDeleteError(t('settings.delete.error'));
     } finally {
       setDeleting(false);
     }
@@ -60,8 +61,8 @@ export function SettingsClient({
     <div className={styles.container}>
       <Show when="signed-out">
         <div className={styles.center}>
-          <p>Please sign in to access settings.</p>
-          <Link href="/">Back to home</Link>
+          <p>{t('settings.signIn')}</p>
+          <Link href="/">{t('settings.backToHome')}</Link>
         </div>
       </Show>
 
@@ -70,7 +71,11 @@ export function SettingsClient({
 
         <Main className={styles.main}>
           <div className={styles.settingsRow}>
-            <div className={styles.tabs} role="tablist" aria-label="Settings">
+            <div
+              className={styles.tabs}
+              role="tablist"
+              aria-label={t('settings.title')}
+            >
               <button
                 type="button"
                 role="tab"
@@ -81,7 +86,7 @@ export function SettingsClient({
                   window.history.replaceState({}, '', '/settings');
                 }}
               >
-                Account
+                {t('settings.tabs.account')}
               </button>
               <button
                 type="button"
@@ -93,12 +98,12 @@ export function SettingsClient({
                   window.history.replaceState({}, '', '/settings?tab=billing');
                 }}
               >
-                Billing
+                {t('settings.tabs.billing')}
               </button>
             </div>
             <SignOutButton>
               <button type="button" className="btn btn-secondary">
-                Log out
+                {t('settings.logOut')}
               </button>
             </SignOutButton>
           </div>
@@ -122,13 +127,18 @@ export function SettingsClient({
               </div>
 
               <div className={styles.dangerZone}>
-                <h2 className={styles.dangerTitle}>Danger zone</h2>
+                <h2 className={styles.dangerTitle}>
+                  {t('settings.delete.title')}
+                </h2>
                 <p className={styles.dangerDescription}>
-                  Permanently delete your account and all associated data. This
-                  cannot be undone.
+                  {t('settings.delete.description')}
                 </p>
                 <label className={styles.dangerLabel} htmlFor="delete-confirm">
-                  Type <strong>delete my account</strong> to confirm
+                  <Trans
+                    i18nKey="settings.delete.label"
+                    values={{ phrase: confirmPhrase }}
+                    components={{ strong: <strong /> }}
+                  />
                 </label>
                 <div className={styles.dangerRow}>
                   <input
@@ -137,17 +147,19 @@ export function SettingsClient({
                     className={styles.dangerInput}
                     value={deleteConfirm}
                     onChange={(e) => setDeleteConfirm(e.target.value)}
-                    placeholder="delete my account"
+                    placeholder={confirmPhrase}
                     autoComplete="off"
                     spellCheck={false}
                   />
                   <button
                     type="button"
                     className="btn btn-danger"
-                    disabled={deleteConfirm !== 'delete my account' || deleting}
+                    disabled={deleteConfirm !== confirmPhrase || deleting}
                     onClick={handleDeleteAccount}
                   >
-                    {deleting ? 'Deleting…' : 'Delete account'}
+                    {deleting
+                      ? t('settings.delete.deleting')
+                      : t('settings.delete.button')}
                   </button>
                 </div>
                 {deleteError && (

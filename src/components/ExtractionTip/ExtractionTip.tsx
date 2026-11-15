@@ -1,11 +1,9 @@
 'use client';
 
+import { useTranslation } from '@/i18n/client';
 import { APP_STORE_URL, CHROME_WEB_STORE_URL } from '@/lib/constants';
 import { snoozeExtractionHint } from '@/lib/extractionHint';
 import styles from './ExtractionTip.module.css';
-
-const DEFAULT_MESSAGE =
-  "We couldn't read everything from this site. You can still add it as is. The Tote extension and iOS app read pages in your own browser, so you usually get the image and price too.";
 
 /**
  * Inline hint for pages we could only partly read. Saving is never blocked;
@@ -14,7 +12,7 @@ const DEFAULT_MESSAGE =
  * Dismissing also snoozes the hint for a few days (see extractionHint.ts).
  */
 export function ExtractionTip({
-  message = DEFAULT_MESSAGE,
+  message,
   showLinks = true,
   onDismiss,
 }: {
@@ -22,18 +20,19 @@ export function ExtractionTip({
   showLinks?: boolean;
   onDismiss: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <output className={styles.tip}>
       <p className={styles.message}>
-        {message}
+        {message ?? t('shell.extractionTip.message')}
         {showLinks && (
           <span className={styles.links}>
             <a href={CHROME_WEB_STORE_URL} target="_blank" rel="noreferrer">
-              Get the extension
+              {t('shell.extractionTip.getExtension')}
             </a>
             {APP_STORE_URL && (
               <a href={APP_STORE_URL} target="_blank" rel="noreferrer">
-                iOS app
+                {t('shell.extractionTip.iosApp')}
               </a>
             )}
           </span>
@@ -47,7 +46,7 @@ export function ExtractionTip({
           onDismiss();
         }}
       >
-        Dismiss
+        {t('shell.dismiss')}
       </button>
     </output>
   );

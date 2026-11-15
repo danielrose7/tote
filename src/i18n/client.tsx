@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import { I18nextProvider, useTranslation } from 'react-i18next';
+import { I18nextProvider, Trans, useTranslation } from 'react-i18next';
 import { formatPrice } from '@/lib/formatPrice';
 import type { Resources } from './catalogs';
 import type { RenderLocale } from './config';
@@ -15,7 +15,7 @@ import {
 } from './format';
 import { createI18n } from './instance';
 
-export { useTranslation };
+export { Trans, useTranslation };
 
 /** Formatters bound to the current locale. Use these, never hand-format. */
 export function useFormat() {

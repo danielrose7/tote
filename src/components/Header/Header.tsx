@@ -3,6 +3,7 @@
 import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { AuthButton } from '@/AuthButton';
+import { useTranslation } from '@/i18n/client';
 import styles from './Header.module.css';
 
 interface Breadcrumb {
@@ -35,6 +36,7 @@ export function Header({
   showImport = false,
   breadcrumbs,
 }: HeaderProps) {
+  const { t } = useTranslation();
   const { user } = useUser();
   const isCurator = user?.publicMetadata?.curator === true;
 
@@ -46,7 +48,10 @@ export function Header({
             <h1 className={styles.title}>tote</h1>
           </Link>
           {breadcrumbs && breadcrumbs.length > 0 && (
-            <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
+            <nav
+              className={styles.breadcrumbs}
+              aria-label={t('shell.header.breadcrumb')}
+            >
               {breadcrumbs.map((crumb, index) => (
                 <span key={crumb.label} className={styles.breadcrumbItem}>
                   <span className={styles.breadcrumbSeparator}>/</span>
@@ -73,12 +78,12 @@ export function Header({
               rel="noopener noreferrer"
               className={styles.curatorLink}
             >
-              My profile
+              {t('shell.header.myProfile')}
             </a>
           )}
           {isCurator && (
             <Link href="/curate" className={styles.curatorLink}>
-              Curator
+              {t('shell.header.curator')}
             </Link>
           )}
           {showAddLink && onAddLinkClick && (
@@ -87,7 +92,7 @@ export function Header({
               onClick={onAddLinkClick}
               className={styles.addButton}
             >
-              + Add Link
+              {t('shell.header.addLink')}
             </button>
           )}
           {showAddContent && onAddContentClick && (
@@ -96,7 +101,7 @@ export function Header({
               onClick={onAddContentClick}
               className={styles.addButton}
             >
-              + Add Content
+              {t('shell.header.addContent')}
             </button>
           )}
           {showAddCollection && onAddCollectionClick && (
@@ -105,7 +110,7 @@ export function Header({
               onClick={onAddCollectionClick}
               className={styles.addButton}
             >
-              + Add Collection
+              {t('shell.header.addCollection')}
             </button>
           )}
           {showSaveTabs && onSaveTabsClick && (
@@ -114,7 +119,7 @@ export function Header({
               onClick={onSaveTabsClick}
               className={styles.addButton}
             >
-              Save My Tabs
+              {t('shell.header.saveTabs')}
             </button>
           )}
           <AuthButton />

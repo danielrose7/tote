@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 import dialogStyles from '@/components/CreateCollectionDialog/CreateCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
+import { useTranslation } from '@/i18n/client';
 import type { CreateCollectionMutation } from '@/lib/collections/client';
 import {
   collectionMutationKeys,
@@ -33,6 +34,7 @@ export function NeonCreateCollectionDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const { user } = useUser();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -74,7 +76,7 @@ export function NeonCreateCollectionDialog({
       queryClient.setQueryData(collectionQueryKeys.all, context?.previous);
       setError(mutationError.message);
       showToast({
-        title: 'Collection could not be created',
+        title: t('collections.create.failedTitle'),
         description: mutationError.message,
         variant: 'error',
       });
@@ -99,7 +101,7 @@ export function NeonCreateCollectionDialog({
     event.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('Collection name is required');
+      setError(t('collections.create.nameRequired'));
       return;
     }
 
@@ -113,10 +115,10 @@ export function NeonCreateCollectionDialog({
       positionKey: `${new Date().toISOString()}:${collectionId}`,
     });
     showToast({
-      title: 'Collection queued',
+      title: t('collections.create.queuedTitle'),
       description: navigator.onLine
-        ? `"${trimmedName}" is syncing now.`
-        : `"${trimmedName}" will sync when you are back online.`,
+        ? t('collections.create.syncingNow', { name: trimmedName })
+        : t('collections.create.syncWhenOnline', { name: trimmedName }),
       variant: 'success',
     });
     handleOpenChange(false);
@@ -128,10 +130,10 @@ export function NeonCreateCollectionDialog({
         <Dialog.Overlay className={dialogStyles.overlay} />
         <Dialog.Content className={dialogStyles.content}>
           <Dialog.Title className={dialogStyles.title}>
-            Create Collection
+            {t('collections.create.title')}
           </Dialog.Title>
           <Dialog.Description className={dialogStyles.description}>
-            Organize links, products, photos, and notes.
+            {t('collections.create.description')}
           </Dialog.Description>
 
           <form onSubmit={handleSubmit} className={dialogStyles.form}>
@@ -140,7 +142,7 @@ export function NeonCreateCollectionDialog({
                 htmlFor="neon-collection-name"
                 className={dialogStyles.label}
               >
-                Collection Name *
+                {t('collections.create.nameLabel')}
               </label>
               <input
                 id="neon-collection-name"
@@ -156,7 +158,7 @@ export function NeonCreateCollectionDialog({
                 htmlFor="neon-collection-description"
                 className={dialogStyles.label}
               >
-                Description (optional)
+                {t('collections.create.descriptionLabel')}
               </label>
               <textarea
                 id="neon-collection-description"
@@ -169,7 +171,9 @@ export function NeonCreateCollectionDialog({
             </div>
 
             <div className={dialogStyles.inputGroup}>
-              <span className={dialogStyles.label}>Color</span>
+              <span className={dialogStyles.label}>
+                {t('collections.create.color')}
+              </span>
               <div className={dialogStyles.colorPicker}>
                 {presetColors.map((preset) => (
                   <button
@@ -180,7 +184,9 @@ export function NeonCreateCollectionDialog({
                     }`}
                     style={{ backgroundColor: preset }}
                     onClick={() => setColor(preset)}
-                    aria-label={`Select color ${preset}`}
+                    aria-label={t('collections.create.selectColor', {
+                      color: preset,
+                    })}
                   />
                 ))}
               </div>
@@ -191,7 +197,7 @@ export function NeonCreateCollectionDialog({
             <div className={dialogStyles.actions}>
               <Dialog.Close asChild>
                 <button type="button" className="btn btn-secondary">
-                  Cancel
+                  {t('collections.common.cancel')}
                 </button>
               </Dialog.Close>
               <button
@@ -199,7 +205,7 @@ export function NeonCreateCollectionDialog({
                 className="btn btn-primary"
                 disabled={!name.trim()}
               >
-                Create Collection
+                {t('collections.create.title')}
               </button>
             </div>
           </form>

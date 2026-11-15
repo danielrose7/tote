@@ -9,6 +9,7 @@ import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import { NeonSectionSelector } from '@/components/NeonSectionSelector/NeonSectionSelector';
 import { useToast } from '@/components/ToastNotification';
 import type { CollectionNode } from '@/db/schema';
+import { useTranslation } from '@/i18n/client';
 import {
   type CreateCollectionNodeMutation,
   createCollectionNodeMutation,
@@ -41,6 +42,15 @@ const nodeTypes = [
 ] as const;
 type NodeType = (typeof nodeTypes)[number];
 
+const NODE_TYPE_LABEL = {
+  product: 'dialogs.createNode.types.product',
+  link: 'dialogs.createNode.types.link',
+  photo: 'dialogs.createNode.types.photo',
+  note: 'dialogs.createNode.types.note',
+  text: 'dialogs.createNode.types.text',
+  section: 'dialogs.createNode.types.section',
+} as const satisfies Record<NodeType, string>;
+
 const itemNodeTypes = new Set<NodeType>(['product', 'link', 'photo']);
 
 type CreateNodeContext = {
@@ -57,6 +67,7 @@ export function NeonCreateNodeDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const { user } = useUser();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -77,7 +88,7 @@ export function NeonCreateNodeDialog({
     try {
       new URL(trimmed);
     } catch {
-      setError('Enter a valid URL first');
+      setError(t('dialogs.createNode.invalidUrl'));
       return;
     }
     setIsFetchingUrl(true);
@@ -99,7 +110,11 @@ export function NeonCreateNodeDialog({
           body: JSON.stringify({ url: trimmed }),
         });
         if (!response.ok) {
-          throw new Error(`Could not read that page (${response.status})`);
+          throw new Error(
+            t('dialogs.createNode.readFailedStatus', {
+              status: response.status,
+            }),
+          );
         }
         metadata = (await response.json()) as ExtractedMetadata;
       }
@@ -120,7 +135,7 @@ export function NeonCreateNodeDialog({
       setError(
         fetchError instanceof Error
           ? fetchError.message
-          : 'Could not read that page',
+          : t('dialogs.createNode.readFailed'),
       );
     } finally {
       setIsFetchingUrl(false);
@@ -227,7 +242,7 @@ export function NeonCreateNodeDialog({
       );
       setError(mutationError.message);
       showToast({
-        title: 'Content could not be added',
+        title: t('dialogs.createNode.addFailed'),
         description: mutationError.message,
         variant: 'error',
       });
@@ -301,15 +316,15 @@ export function NeonCreateNodeDialog({
     event.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError('A title is required');
+      setError(t('dialogs.createNode.titleRequired'));
       return;
     }
     if ((type === 'product' || type === 'link') && !url.trim()) {
-      setError('A URL is required for products and links');
+      setError(t('dialogs.createNode.urlRequired'));
       return;
     }
     if (type === 'photo' && !imageUrl.trim()) {
-      setError('An image URL is required for photos');
+      setError(t('dialogs.createNode.imageRequired'));
       return;
     }
 
@@ -342,16 +357,16 @@ export function NeonCreateNodeDialog({
         <Dialog.Overlay className={dialogStyles.overlay} />
         <Dialog.Content className={dialogStyles.content}>
           <Dialog.Title className={dialogStyles.title}>
-            Add Content
+            {t('dialogs.createNode.title')}
           </Dialog.Title>
           <Dialog.Description className={dialogStyles.description}>
-            Add a flexible block to this collection.
+            {t('dialogs.createNode.description')}
           </Dialog.Description>
 
           <form onSubmit={handleSubmit} className={dialogStyles.form}>
             <div className={dialogStyles.inputGroup}>
               <label htmlFor="neon-node-type" className={dialogStyles.label}>
-                Type
+                {t('dialogs.createNode.type')}
               </label>
               <select
                 id="neon-node-type"
@@ -361,7 +376,7 @@ export function NeonCreateNodeDialog({
               >
                 {nodeTypes.map((nodeType) => (
                   <option key={nodeType} value={nodeType}>
-                    {nodeType[0].toUpperCase() + nodeType.slice(1)}
+                    {t(NODE_TYPE_LABEL[nodeType])}
                   </option>
                 ))}
               </select>
@@ -369,7 +384,7 @@ export function NeonCreateNodeDialog({
 
             <div className={dialogStyles.inputGroup}>
               <label htmlFor="neon-node-title" className={dialogStyles.label}>
-                Title *
+                {t('dialogs.createNode.titleLabel')}
               </label>
               <input
                 id="neon-node-title"
@@ -382,7 +397,9 @@ export function NeonCreateNodeDialog({
 
             {type !== 'section' && (
               <div className={dialogStyles.inputGroup}>
-                <label className={dialogStyles.label}>Section</label>
+                <label className={dialogStyles.label}>
+                  {t('dialogs.createNode.section')}
+                </label>
                 <NeonSectionSelector
                   value={parentId || null}
                   onChange={(id) => setParentId(id ?? '')}
@@ -395,7 +412,7 @@ export function NeonCreateNodeDialog({
             {(type === 'product' || type === 'link') && (
               <div className={dialogStyles.inputGroup}>
                 <label htmlFor="neon-node-url" className={dialogStyles.label}>
-                  URL *
+                  {t('dialogs.createNode.url')}
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
@@ -411,7 +428,7 @@ export function NeonCreateNodeDialog({
                     }}
                     className={dialogStyles.input}
                     style={{ flex: 1 }}
-                    placeholder="https://…"
+                    placeholder={t('dialogs.createNode.urlPlaceholder')}
                   />
                   <button
                     type="button"
@@ -420,7 +437,9 @@ export function NeonCreateNodeDialog({
                     className="btn btn-secondary btn-sm"
                     style={{ flexShrink: 0 }}
                   >
-                    {isFetchingUrl ? 'Fetching…' : 'Fetch'}
+                    {isFetchingUrl
+                      ? t('dialogs.createNode.fetching')
+                      : t('dialogs.createNode.fetch')}
                   </button>
                 </div>
                 {showExtractionTip && (
@@ -434,7 +453,9 @@ export function NeonCreateNodeDialog({
             {(type === 'product' || type === 'photo') && (
               <div className={dialogStyles.inputGroup}>
                 <label htmlFor="neon-node-image" className={dialogStyles.label}>
-                  Image URL {type === 'photo' ? '*' : ''}
+                  {type === 'photo'
+                    ? t('dialogs.createNode.imageUrlRequired')
+                    : t('dialogs.createNode.imageUrl')}
                 </label>
                 <input
                   id="neon-node-image"
@@ -452,7 +473,7 @@ export function NeonCreateNodeDialog({
                   htmlFor="neon-node-description"
                   className={dialogStyles.label}
                 >
-                  Description
+                  {t('dialogs.createNode.descriptionLabel')}
                 </label>
                 <textarea
                   id="neon-node-description"
@@ -467,7 +488,7 @@ export function NeonCreateNodeDialog({
             {(type === 'note' || type === 'text') && (
               <div className={dialogStyles.inputGroup}>
                 <label htmlFor="neon-node-body" className={dialogStyles.label}>
-                  Body
+                  {t('dialogs.createNode.body')}
                 </label>
                 <textarea
                   id="neon-node-body"
@@ -484,7 +505,7 @@ export function NeonCreateNodeDialog({
             <div className={dialogStyles.actions}>
               <Dialog.Close asChild>
                 <button type="button" className="btn btn-secondary">
-                  Cancel
+                  {t('dialogs.common.cancel')}
                 </button>
               </Dialog.Close>
               <button
@@ -492,7 +513,7 @@ export function NeonCreateNodeDialog({
                 className="btn btn-primary"
                 disabled={!title.trim()}
               >
-                Add Content
+                {t('dialogs.createNode.title')}
               </button>
             </div>
           </form>

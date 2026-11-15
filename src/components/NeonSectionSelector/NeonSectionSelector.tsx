@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CollectionNode } from '@/db/schema';
+import { useTranslation } from '@/i18n/client';
 import styles from '../SlotSelector/SlotSelector.module.css';
 
 interface NeonSectionSelectorProps {
@@ -19,6 +20,7 @@ export function NeonSectionSelector({
   onCreateSection,
   disabled = false,
 }: NeonSectionSelectorProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -122,14 +124,14 @@ export function NeonSectionSelector({
         {selectedSection && !isOpen ? (
           <div className={styles.selectedValue}>
             <span className={styles.selectedText}>
-              {selectedSection.title || 'Untitled section'}
+              {selectedSection.title || t('slots.sectionSelector.untitled')}
             </span>
             {!disabled && (
               <button
                 type="button"
                 className={styles.clearButton}
                 onClick={handleClear}
-                aria-label="Clear selection"
+                aria-label={t('slots.sectionSelector.clearSelection')}
               >
                 <svg
                   width="14"
@@ -157,7 +159,7 @@ export function NeonSectionSelector({
             onFocus={() => setIsOpen(true)}
             onBlur={() => setTimeout(() => setIsOpen(false), 150)}
             onKeyDown={handleKeyDown}
-            placeholder="Add to section (optional)"
+            placeholder={t('slots.sectionSelector.placeholder')}
             className={styles.input}
             disabled={disabled}
             aria-expanded={isOpen}
@@ -177,7 +179,7 @@ export function NeonSectionSelector({
               role="option"
               aria-selected={value === section.id}
             >
-              {section.title || 'Untitled section'}
+              {section.title || t('slots.sectionSelector.untitled')}
             </li>
           ))}
           {showCreateOption && (
@@ -187,7 +189,7 @@ export function NeonSectionSelector({
               role="option"
             >
               {isCreating ? (
-                'Creating...'
+                t('slots.sectionSelector.creating')
               ) : (
                 <>
                   <svg
@@ -201,7 +203,9 @@ export function NeonSectionSelector({
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Create &ldquo;{inputValue.trim()}&rdquo;
+                  {t('slots.sectionSelector.create', {
+                    name: inputValue.trim(),
+                  })}
                 </>
               )}
             </li>
@@ -209,8 +213,8 @@ export function NeonSectionSelector({
           {filteredSections.length === 0 && !showCreateOption && (
             <li className={styles.empty}>
               {sections.length === 0
-                ? 'No sections yet. Type to create one.'
-                : 'No matching sections'}
+                ? t('slots.sectionSelector.empty')
+                : t('slots.sectionSelector.noMatch')}
             </li>
           )}
         </ul>

@@ -3,10 +3,12 @@
 import { useMutationState } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useTranslation } from '@/i18n/client';
 import { collectionQueryKeys } from '@/lib/collections/queryKeys';
 import styles from './OfflineBanner.module.css';
 
 export function OfflineBanner() {
+  const { t } = useTranslation();
   const isOnline = useOnlineStatus();
   const pausedStates = useMutationState({
     filters: {
@@ -29,12 +31,9 @@ export function OfflineBanner() {
       <div className={`${styles.banner} ${styles.offline}`}>
         <div className={styles.content}>
           <span>
-            You are offline.
             {pendingCount > 0
-              ? ` ${pendingCount} ${
-                  pendingCount === 1 ? 'change is' : 'changes are'
-                } saved on this device.`
-              : ' Cached collections remain available.'}
+              ? t('shell.offline.pending', { count: pendingCount })
+              : t('shell.offline.cached')}
           </span>
         </div>
       </div>

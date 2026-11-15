@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import styles from '@/app/(public)/view/[id]/page.module.css';
+import { useTranslation } from '@/i18n/client';
 
 export default function CloneCollectionPage() {
+  const { t } = useTranslation();
   const params = useParams();
   const router = useRouter();
   const { isSignedIn, isLoaded: isUserLoaded } = useUser();
@@ -26,13 +28,13 @@ export default function CloneCollectionPage() {
     })
       .then(async (response) => {
         if (response.status === 404) {
-          throw new Error('This collection is not available for copying.');
+          throw new Error(t('clone.notAvailable'));
         }
         if (!response.ok) {
           const body = (await response.json().catch(() => null)) as {
             error?: string;
           } | null;
-          throw new Error(body?.error || 'Failed to copy this collection.');
+          throw new Error(body?.error || t('clone.copyFailed'));
         }
         return response.json() as Promise<{ id: string }>;
       })
@@ -41,19 +43,17 @@ export default function CloneCollectionPage() {
       })
       .catch((error) => {
         setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : 'Failed to copy this collection.',
+          error instanceof Error ? error.message : t('clone.copyFailed'),
         );
       });
-  }, [isUserLoaded, isSignedIn, collectionId, router]);
+  }, [isUserLoaded, isSignedIn, collectionId, router, t]);
 
   if (!isUserLoaded) {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
           <div className={styles.spinner} />
-          <p className={styles.loadingText}>Preparing your copy...</p>
+          <p className={styles.loadingText}>{t('clone.preparing')}</p>
         </div>
       </div>
     );
@@ -63,11 +63,8 @@ export default function CloneCollectionPage() {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
-          <h1 className={styles.title}>Use this list</h1>
-          <p className={styles.description}>
-            Sign in or create an account to copy this collection into your own
-            Tote.
-          </p>
+          <h1 className={styles.title}>{t('clone.useThisList')}</h1>
+          <p className={styles.description}>{t('clone.signInPrompt')}</p>
           <div
             className={styles.templateActions}
             style={{ marginTop: '1rem', width: '100%' }}
@@ -77,18 +74,18 @@ export default function CloneCollectionPage() {
               fallbackRedirectUrl={`/clone/${collectionId}`}
             >
               <button type="button" className={styles.useListButton}>
-                Sign up to copy
+                {t('clone.signUp')}
               </button>
             </SignUpButton>
           </div>
           <p className={styles.templateHint} style={{ marginTop: '0.75rem' }}>
-            Already have an account?{' '}
+            {t('clone.haveAccount')}{' '}
             <SignInButton
               mode="modal"
               fallbackRedirectUrl={`/clone/${collectionId}`}
             >
               <button type="button" className={styles.inlineAuthButton}>
-                Log in
+                {t('clone.logIn')}
               </button>
             </SignInButton>
           </p>
@@ -102,17 +99,17 @@ export default function CloneCollectionPage() {
       <div className={styles.container}>
         <div className={styles.card}>
           <div className={styles.errorIcon}>!</div>
-          <h1 className={styles.title}>Unable to copy</h1>
+          <h1 className={styles.title}>{t('clone.unableToCopy')}</h1>
           <p className={styles.description}>{errorMessage}</p>
           <div style={{ marginTop: '1rem' }}>
             <Show when="signed-in">
               <Link href="/collections" className={styles.footerLink}>
-                Back to collections
+                {t('clone.backToCollections')}
               </Link>
             </Show>
             <Show when="signed-out">
               <Link href="/" className={styles.footerLink}>
-                Back to home
+                {t('clone.backToHome')}
               </Link>
             </Show>
           </div>
@@ -125,9 +122,7 @@ export default function CloneCollectionPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.spinner} />
-        <p className={styles.loadingText}>
-          Copying this list into your account...
-        </p>
+        <p className={styles.loadingText}>{t('clone.copying')}</p>
       </div>
     </div>
   );

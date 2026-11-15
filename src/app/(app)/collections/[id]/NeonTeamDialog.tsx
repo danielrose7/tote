@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useToast } from '@/components/ToastNotification';
+import { useFormat, useTranslation } from '@/i18n/client';
 import {
   type CreateCollectionInviteMutation,
   fetchCollectionTeam,
@@ -38,18 +39,21 @@ function useOnline() {
   return online;
 }
 
-function formatDate(value: Date | null) {
-  return value
-    ? new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      }).format(value)
-    : 'No expiration';
-}
+const ROLE_LABEL = {
+  owner: 'dialogs.team.role.owner',
+  admin: 'dialogs.team.role.admin',
+  editor: 'dialogs.team.role.editor',
+  viewer: 'dialogs.team.role.viewer',
+} as const satisfies Record<CollectionRole, string>;
 
-function eventLabel(event: CollectionTeam['events'][number]) {
-  return event.action.replaceAll('_', ' ');
-}
+const EVENT_LABEL = {
+  invite_created: 'dialogs.team.event.invite_created',
+  invite_revoked: 'dialogs.team.event.invite_revoked',
+  invite_accepted: 'dialogs.team.event.invite_accepted',
+  role_changed: 'dialogs.team.event.role_changed',
+  member_removed: 'dialogs.team.event.member_removed',
+  ownership_transferred: 'dialogs.team.event.ownership_transferred',
+} as const satisfies Record<CollectionTeam['events'][number]['action'], string>;
 
 function UserAvatar({
   user,
@@ -89,6 +93,8 @@ export function NeonTeamDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const { userId } = useAuth();
   const { showToast } = useToast();
   const online = useOnline();
@@ -101,6 +107,9 @@ export function NeonTeamDialog({
     queryFn: () => fetchCollectionTeam(collectionId),
     enabled: open,
   });
+
+  const formatDate = (value: Date | null) =>
+    value ? fmt.dateTime(value) : t('dialogs.team.noExpiration');
 
   const mutationError = (title: string) => (mutation: Error) => {
     setError(mutation.message);
@@ -128,7 +137,7 @@ export function NeonTeamDialog({
       setRecipientHint('');
       setError(null);
     },
-    onError: mutationError('Invite creation failed'),
+    onError: mutationError(t('dialogs.team.error.invite')),
   });
   const revokeInvite = useMutation<
     { revokedAt: string },
@@ -136,7 +145,7 @@ export function NeonTeamDialog({
     RevokeCollectionInviteMutation
   >({
     mutationKey: collectionMutationKeys.revokeInvite,
-    onError: mutationError('Invite revocation failed'),
+    onError: mutationError(t('dialogs.team.error.revoke')),
   });
   const updateMember = useMutation<
     { role: string },
@@ -144,7 +153,7 @@ export function NeonTeamDialog({
     UpdateCollectionMemberMutation
   >({
     mutationKey: collectionMutationKeys.updateMember,
-    onError: mutationError('Role update failed'),
+    onError: mutationError(t('dialogs.team.error.role')),
   });
   const removeMember = useMutation<
     { revokedAt: string },
@@ -152,7 +161,7 @@ export function NeonTeamDialog({
     RemoveCollectionMemberMutation
   >({
     mutationKey: collectionMutationKeys.removeMember,
-    onError: mutationError('Member removal failed'),
+    onError: mutationError(t('dialogs.team.error.remove')),
   });
   const transferOwnership = useMutation<
     { version: number },
@@ -161,7 +170,7 @@ export function NeonTeamDialog({
   >({
     mutationKey: collectionMutationKeys.transferOwnership,
     onSuccess: () => onOpenChange(false),
-    onError: mutationError('Ownership transfer failed'),
+    onError: mutationError(t('dialogs.team.error.transfer')),
   });
   const busy =
     createInvite.isPending ||
@@ -187,8 +196,8 @@ export function NeonTeamDialog({
     if (!latestInviteUrl) return;
     await navigator.clipboard.writeText(latestInviteUrl);
     showToast({
-      title: 'Invite link copied',
-      description: 'The one-use invite link is ready to share.',
+      title: t('dialogs.team.copiedTitle'),
+      description: t('dialogs.team.copiedDescription'),
       variant: 'success',
     });
   };
@@ -206,30 +215,30 @@ export function NeonTeamDialog({
           <div className={styles.heading}>
             <div>
               <Dialog.Title className={styles.title}>
-                Collection team
+                {t('dialogs.team.title')}
               </Dialog.Title>
               <Dialog.Description className={styles.description}>
-                Manage collaborators, invitations, and roles.
+                {t('dialogs.team.description')}
               </Dialog.Description>
             </div>
-            <Dialog.Close className={styles.closeButton}>Close</Dialog.Close>
+            <Dialog.Close className={styles.closeButton}>
+              {t('dialogs.common.close')}
+            </Dialog.Close>
           </div>
 
           {!online && (
-            <p className={styles.notice}>
-              Team changes require a connection and are disabled offline.
-            </p>
+            <p className={styles.notice}>{t('dialogs.team.offline')}</p>
           )}
           {error && <p className={styles.error}>{error}</p>}
 
           <section className={styles.section}>
-            <h3>Share with someone</h3>
+            <h3>{t('dialogs.team.shareHeading')}</h3>
             <form className={styles.inviteForm} onSubmit={submitInvite}>
               <input
                 value={recipientHint}
                 onChange={(event) => setRecipientHint(event.target.value)}
-                placeholder="Label (optional, for your reference)"
-                aria-label="Invite label"
+                placeholder={t('dialogs.team.labelPlaceholder')}
+                aria-label={t('dialogs.team.labelAria')}
                 maxLength={320}
               />
               <select
@@ -237,50 +246,49 @@ export function NeonTeamDialog({
                 onChange={(event) =>
                   setInviteRole(event.target.value as 'editor' | 'viewer')
                 }
-                aria-label="Invite role"
+                aria-label={t('dialogs.team.roleAria')}
               >
-                <option value="viewer">Viewer</option>
-                <option value="editor">Editor</option>
+                <option value="viewer">{t(ROLE_LABEL.viewer)}</option>
+                <option value="editor">{t(ROLE_LABEL.editor)}</option>
               </select>
               <button type="submit" disabled={!online || busy}>
-                Create link
+                {t('dialogs.team.createLink')}
               </button>
             </form>
             {latestInviteUrl && (
               <div className={styles.inviteLinkReady}>
                 <p className={styles.inviteLinkReadyLabel}>
-                  Copy this link and send it to whoever you want to share with.
-                  No email is sent.
+                  {t('dialogs.team.linkReady')}
                 </p>
                 <div className={styles.inviteLink}>
                   <input
                     readOnly
                     value={latestInviteUrl}
-                    aria-label="Invite link"
+                    aria-label={t('dialogs.team.linkAria')}
                     onClick={(e) => (e.target as HTMLInputElement).select()}
                   />
                   <button type="button" onClick={copyInvite}>
-                    Copy link
+                    {t('dialogs.team.copyLink')}
                   </button>
                 </div>
               </div>
             )}
-            <p className={styles.helper}>
-              Links are single-use and only shown once when created.
-            </p>
+            <p className={styles.helper}>{t('dialogs.team.linkHelper')}</p>
           </section>
 
-          {isLoading && <p className={styles.muted}>Loading team...</p>}
+          {isLoading && (
+            <p className={styles.muted}>{t('dialogs.team.loading')}</p>
+          )}
           {team && (
             <>
               <section className={styles.section}>
-                <h3>Members</h3>
+                <h3>{t('dialogs.team.members')}</h3>
                 <div className={styles.list}>
                   {team.members.map((member) => {
                     const manageable = canManageMember(member);
                     const displayName =
                       member.userId === userId
-                        ? 'You'
+                        ? t('dialogs.team.you')
                         : (member.user?.displayName ?? member.userId);
                     return (
                       <div className={styles.row} key={member.userId}>
@@ -291,7 +299,11 @@ export function NeonTeamDialog({
                           />
                           <div className={styles.identity}>
                             <strong>{displayName}</strong>
-                            <span>Joined {formatDate(member.joinedAt)}</span>
+                            <span>
+                              {t('dialogs.team.joined', {
+                                date: formatDate(member.joinedAt),
+                              })}
+                            </span>
                           </div>
                         </div>
                         <div className={styles.rowActions}>
@@ -308,17 +320,27 @@ export function NeonTeamDialog({
                                   | 'viewer',
                               })
                             }
-                            aria-label={`Role for ${displayName}`}
+                            aria-label={t('dialogs.team.memberRoleAria', {
+                              name: displayName,
+                            })}
                           >
                             {member.role === 'owner' && (
-                              <option value="owner">Owner</option>
+                              <option value="owner">
+                                {t(ROLE_LABEL.owner)}
+                              </option>
                             )}
                             {(actorRole === 'owner' ||
                               member.role === 'admin') && (
-                              <option value="admin">Admin</option>
+                              <option value="admin">
+                                {t(ROLE_LABEL.admin)}
+                              </option>
                             )}
-                            <option value="editor">Editor</option>
-                            <option value="viewer">Viewer</option>
+                            <option value="editor">
+                              {t(ROLE_LABEL.editor)}
+                            </option>
+                            <option value="viewer">
+                              {t(ROLE_LABEL.viewer)}
+                            </option>
                           </select>
                           {manageable && (
                             <>
@@ -332,7 +354,7 @@ export function NeonTeamDialog({
                                   })
                                 }
                               >
-                                Remove
+                                {t('dialogs.team.remove')}
                               </button>
                               {actorRole === 'owner' && (
                                 <button
@@ -341,7 +363,9 @@ export function NeonTeamDialog({
                                   onClick={() => {
                                     if (
                                       window.confirm(
-                                        `Transfer ownership to ${displayName}?`,
+                                        t('dialogs.team.confirmTransfer', {
+                                          name: displayName,
+                                        }),
                                       )
                                     ) {
                                       transferOwnership.mutate({
@@ -351,7 +375,7 @@ export function NeonTeamDialog({
                                     }
                                   }}
                                 >
-                                  Make owner
+                                  {t('dialogs.team.makeOwner')}
                                 </button>
                               )}
                             </>
@@ -364,22 +388,31 @@ export function NeonTeamDialog({
               </section>
 
               <section className={styles.section}>
-                <h3>Invites</h3>
+                <h3>{t('dialogs.team.invites')}</h3>
                 <div className={styles.list}>
                   {team.invites.length === 0 && (
-                    <p className={styles.muted}>No invites yet.</p>
+                    <p className={styles.muted}>
+                      {t('dialogs.team.noInvites')}
+                    </p>
                   )}
                   {team.invites.map((invite) => (
                     <div className={styles.row} key={invite.id}>
                       <div className={styles.identity}>
-                        <strong>{invite.recipientHint || 'Share link'}</strong>
+                        <strong>
+                          {invite.recipientHint || t('dialogs.team.shareLink')}
+                        </strong>
                         <span>
-                          {invite.role} · {invite.useCount} used ·{' '}
-                          {formatDate(invite.expiresAt)}
+                          {t('dialogs.team.inviteMeta', {
+                            role: t(ROLE_LABEL[invite.role]),
+                            count: invite.useCount,
+                            expires: formatDate(invite.expiresAt),
+                          })}
                         </span>
                       </div>
                       {invite.revokedAt ? (
-                        <span className={styles.muted}>Revoked</span>
+                        <span className={styles.muted}>
+                          {t('dialogs.team.revoked')}
+                        </span>
                       ) : (
                         <button
                           type="button"
@@ -391,7 +424,7 @@ export function NeonTeamDialog({
                             })
                           }
                         >
-                          Revoke
+                          {t('dialogs.team.revoke')}
                         </button>
                       )}
                     </div>
@@ -400,7 +433,9 @@ export function NeonTeamDialog({
               </section>
 
               <details className={styles.audit}>
-                <summary>Activity ({team.events.length})</summary>
+                <summary>
+                  {t('dialogs.team.activity', { count: team.events.length })}
+                </summary>
                 <div className={styles.list}>
                   {team.events
                     .slice()
@@ -408,9 +443,12 @@ export function NeonTeamDialog({
                     .map((event) => (
                       <div className={styles.auditRow} key={event.id}>
                         <span>
-                          {team.userIndex[event.actorUserId]?.displayName ??
-                            event.actorUserId}{' '}
-                          · {eventLabel(event)}
+                          {t('dialogs.team.auditEntry', {
+                            actor:
+                              team.userIndex[event.actorUserId]?.displayName ??
+                              event.actorUserId,
+                            action: t(EVENT_LABEL[event.action]),
+                          })}
                         </span>
                         <time>{formatDate(event.createdAt)}</time>
                       </div>

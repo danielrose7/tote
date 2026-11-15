@@ -2,8 +2,8 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { useIsMutating } from '@tanstack/react-query';
-import dayjs from '@/lib/dayjs';
 import { useEffect, useRef, useState } from 'react';
+import { useFormat, useTranslation } from '@/i18n/client';
 import {
   type CollectionSyncIssue,
   dismissCollectionSyncIssue,
@@ -48,6 +48,8 @@ export function SyncStatus({
   collectionId: string;
   initialSavedAt?: string | Date | null;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const { userId } = useAuth();
   const issues = useCollectionSyncIssues(userId);
   const isMutating = useIsMutating({
@@ -105,12 +107,12 @@ export function SyncStatus({
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
         </svg>
-        Sync failed · {latestIssue.operation}
+        {t('collections.sync.failed', { operation: latestIssue.operation })}
         {issues.length > 1 && ` (${issues.length})`}
         <button
           type="button"
           className={styles.dismissButton}
-          aria-label="Dismiss sync error"
+          aria-label={t('collections.sync.dismiss')}
           onClick={() => {
             void dismissCollectionSyncIssue(userId, latestIssue.id).then(() =>
               notifyCollectionSyncIssues(userId),
@@ -138,7 +140,7 @@ export function SyncStatus({
         >
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
         </svg>
-        Saving...
+        {t('collections.sync.saving')}
       </span>
     );
   }
@@ -157,7 +159,7 @@ export function SyncStatus({
         >
           <polyline points="20 6 9 17 4 12" />
         </svg>
-        Saved {dayjs(lastSavedAt).fromNow()}
+        {t('collections.sync.saved', { time: fmt.relativeTime(lastSavedAt) })}
       </span>
     );
   }
@@ -165,7 +167,9 @@ export function SyncStatus({
   if (status === 'stable' && lastSavedAt) {
     return (
       <span className={`${styles.status} ${styles.stable}`}>
-        Last saved {dayjs(lastSavedAt).fromNow()}
+        {t('collections.sync.lastSaved', {
+          time: fmt.relativeTime(lastSavedAt),
+        })}
       </span>
     );
   }

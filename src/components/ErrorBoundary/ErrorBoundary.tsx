@@ -1,6 +1,7 @@
 'use client';
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { useTranslation } from '@/i18n/client';
 
 interface Props {
   children: ReactNode;
@@ -24,6 +25,40 @@ const actionStyle: React.CSSProperties = {
   textDecoration: 'none',
 };
 
+function DefaultFallback({ onReset }: { onReset: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '50vh',
+        gap: '12px',
+        fontFamily: 'inherit',
+        color: 'inherit',
+      }}
+    >
+      <p style={{ fontSize: '1rem', opacity: 0.7 }}>
+        {t('shell.errorBoundary.message')}
+      </p>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button type="button" onClick={onReset} style={actionStyle}>
+          {t('shell.errorBoundary.tryAgain')}
+        </button>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          style={actionStyle}
+        >
+          {t('shell.refreshPage')}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
 
@@ -40,36 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       if (this.props.fallback) return this.props.fallback;
-      return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '50vh',
-            gap: '12px',
-            fontFamily: 'inherit',
-            color: 'inherit',
-          }}
-        >
-          <p style={{ fontSize: '1rem', opacity: 0.7 }}>
-            Something went wrong.
-          </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button type="button" onClick={this.reset} style={actionStyle}>
-              Try again
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              style={actionStyle}
-            >
-              Refresh page
-            </button>
-          </div>
-        </div>
-      );
+      return <DefaultFallback onReset={this.reset} />;
     }
 
     return this.props.children;

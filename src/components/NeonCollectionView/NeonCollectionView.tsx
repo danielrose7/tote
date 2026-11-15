@@ -18,15 +18,17 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useRef, useState } from 'react';
-import {
-  useRefreshQueue,
-  type RefreshState,
-  type RefreshAction,
-} from '@/hooks/useRefreshQueue';
 import type { Dispatch } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import pageStyles from '@/app/(app)/collections/[id]/NeonCollectionDetailPage.module.css';
+import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import type { CollectionNode } from '@/db/schema';
+import {
+  type RefreshAction,
+  type RefreshState,
+  useRefreshQueue,
+} from '@/hooks/useRefreshQueue';
+import { useFormat, useTranslation } from '@/i18n/client';
 import {
   type ReorderCollectionNodesMutation,
   reorderCollectionNodesMutation,
@@ -38,7 +40,6 @@ import {
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
-import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import { checkExtensionAvailable } from '@/lib/extension';
 import {
   describeRefreshOutcome,
@@ -52,7 +53,6 @@ import {
 } from '../CollectionView/ViewModeToggle';
 import { NeonSlotSection } from '../NeonSlotSection/NeonSlotSection';
 import productCardStyles from '../ProductCard/ProductCard.module.css';
-import { formatPrice } from '@/lib/formatPrice';
 import { useToast } from '../ToastNotification';
 import { NeonTableView } from './NeonTableView';
 
@@ -69,6 +69,15 @@ type NodeProperties = {
 function propertiesFor(node: CollectionNode): NodeProperties {
   return node.properties as NodeProperties;
 }
+
+const TYPE_LABEL = {
+  section: 'collections.type.section',
+  product: 'collections.type.product',
+  link: 'collections.type.link',
+  photo: 'collections.type.photo',
+  note: 'collections.type.note',
+  text: 'collections.type.text',
+} as const;
 
 // ---- Sortable wrapper for root nodes ----
 
@@ -99,6 +108,7 @@ function SortableItemNode({
     transition,
     isDragging,
   } = useSortable({ id });
+  const { t } = useTranslation();
 
   return (
     <div
@@ -113,7 +123,13 @@ function SortableItemNode({
             <button
               type="button"
               className={pageStyles.dragHandle}
-              aria-label={`Reorder ${node.title || node.type}`}
+              aria-label={t('collections.view.reorderItem', {
+                name:
+                  node.title ||
+                  (TYPE_LABEL[node.type]
+                    ? t(TYPE_LABEL[node.type])
+                    : node.type),
+              })}
               {...attributes}
               {...listeners}
             >
@@ -175,6 +191,7 @@ function SortableSectionWrapper({
     transition,
     isDragging,
   } = useSortable({ id });
+  const { t } = useTranslation();
 
   return (
     <div
@@ -195,7 +212,9 @@ function SortableSectionWrapper({
             <button
               type="button"
               className={pageStyles.dragHandle}
-              aria-label={`Reorder ${section.title || 'section'}`}
+              aria-label={t('collections.view.reorderItem', {
+                name: section.title || t('collections.type.section'),
+              })}
               {...attributes}
               {...listeners}
             >
@@ -239,11 +258,17 @@ function ItemNode({
   isRefreshing?: boolean;
   isEnqueued?: boolean;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const [showActions, setShowActions] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const properties = propertiesFor(node);
-  const title = node.title || (node.type === 'photo' ? 'Photo' : 'Untitled');
+  const title =
+    node.title ||
+    (node.type === 'photo'
+      ? t('collections.type.photoTitle')
+      : t('collections.common.untitled'));
   const isListMode = dragHandle !== undefined;
   const hasImage = !!(properties.imageUrl && !imageError);
 
@@ -281,7 +306,7 @@ function ItemNode({
         <span className={pageStyles.nodeListItemTitle}>{title}</span>
         {properties.price !== undefined && properties.price !== null && (
           <span className={pageStyles.nodeListItemPrice}>
-            {formatPrice(String(properties.price))}
+            {fmt.price(String(properties.price))}
           </span>
         )}
       </div>
@@ -308,7 +333,7 @@ function ItemNode({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {formatPrice(String(properties.price))}
+                {fmt.price(String(properties.price))}
               </span>
             </div>
           )}
@@ -331,7 +356,7 @@ function ItemNode({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {formatPrice(String(properties.price))}
+                {fmt.price(String(properties.price))}
               </span>
             </div>
           )}
@@ -346,8 +371,12 @@ function ItemNode({
               onClick={onRefresh}
               disabled={isRefreshing}
               className={productCardStyles.actionButton}
-              aria-label="Refresh metadata"
-              data-tooltip={isRefreshing ? 'Refreshing…' : 'Refresh'}
+              aria-label={t('collections.view.refreshMetadata')}
+              data-tooltip={
+                isRefreshing
+                  ? t('collections.view.refreshing')
+                  : t('collections.view.refresh')
+              }
             >
               <svg
                 width="16"
@@ -375,8 +404,8 @@ function ItemNode({
               type="button"
               onClick={() => onEdit(node)}
               className={productCardStyles.actionButton}
-              aria-label="Edit"
-              data-tooltip="Edit"
+              aria-label={t('collections.common.edit')}
+              data-tooltip={t('collections.common.edit')}
             >
               <svg
                 width="16"
@@ -415,10 +444,12 @@ function ItemNode({
               className={productCardStyles.link}
               onClick={(e) => e.stopPropagation()}
             >
-              Visit →
+              {t('collections.view.visit')}
             </a>
           ) : (
-            <span className={pageStyles.itemTypeBadge}>{node.type}</span>
+            <span className={pageStyles.itemTypeBadge}>
+              {TYPE_LABEL[node.type] ? t(TYPE_LABEL[node.type]) : node.type}
+            </span>
           )}
         </div>
       </div>
@@ -451,6 +482,7 @@ export function NeonCollectionView({
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
@@ -484,7 +516,7 @@ export function NeonCollectionView({
     scope: { id: `collection:${collection.id}` },
     onError: (error) => {
       showToast({
-        title: 'Reordering failed',
+        title: t('collections.view.reorderFailed'),
         description: error.message,
         variant: 'error',
       });
@@ -523,7 +555,7 @@ export function NeonCollectionView({
     },
     onError: (error) => {
       showToast({
-        title: 'Refresh failed',
+        title: t('collections.view.refreshFailed'),
         description: error.message,
         variant: 'error',
       });
@@ -541,7 +573,7 @@ export function NeonCollectionView({
     showLinks: boolean;
   } | null>(null);
   const notifyRefreshOutcome = (outcome: RefreshOutcome) => {
-    const message = describeRefreshOutcome(outcome);
+    const message = describeRefreshOutcome(outcome, t);
     if (!message) return;
     if (message.variant === 'info') {
       if (isExtractionHintSnoozed()) return;
@@ -752,8 +784,8 @@ export function NeonCollectionView({
   if (nodes.length === 0) {
     return (
       <div className={pageStyles.emptyCollection}>
-        <h2>This collection is empty</h2>
-        <p>Items added to this collection will appear here.</p>
+        <h2>{t('collections.view.emptyTitle')}</h2>
+        <p>{t('collections.view.emptyDescription')}</p>
       </div>
     );
   }
@@ -805,7 +837,7 @@ export function NeonCollectionView({
                 </svg>
                 {refresh.progress
                   ? `${refresh.progress.done}/${refresh.progress.total}`
-                  : 'Refresh All'}
+                  : t('collections.view.refreshAll')}
               </button>
             )}
           {viewMode === 'grid' && sections.length > 1 && canEdit && (
@@ -824,7 +856,9 @@ export function NeonCollectionView({
                   : pageStyles.reorderButton
               }
             >
-              {isSectionReorderMode ? 'Done' : 'Reorder Sections'}
+              {isSectionReorderMode
+                ? t('collections.common.done')
+                : t('collections.view.reorderSections')}
             </button>
           )}
         </div>
@@ -891,10 +925,11 @@ export function NeonCollectionView({
                 <div className={pageStyles.sectionHeader}>
                   {sections.length > 0 && (
                     <div>
-                      <h2>Ungrouped</h2>
+                      <h2>{t('collections.view.ungrouped')}</h2>
                       <span>
-                        {rootNodes.length}{' '}
-                        {rootNodes.length === 1 ? 'item' : 'items'}
+                        {t('collections.common.itemCount', {
+                          count: rootNodes.length,
+                        })}
                       </span>
                     </div>
                   )}
@@ -921,7 +956,7 @@ export function NeonCollectionView({
                             aria-label={
                               refresh.progress
                                 ? `${refresh.progress.done}/${refresh.progress.total}`
-                                : 'Refresh all'
+                                : t('collections.view.refreshAllLower')
                             }
                           >
                             <svg
@@ -960,7 +995,9 @@ export function NeonCollectionView({
                           }
                         }}
                       >
-                        {isRootReorderMode ? 'Done' : 'Reorder'}
+                        {isRootReorderMode
+                          ? t('collections.common.done')
+                          : t('collections.view.reorder')}
                       </button>
                     </div>
                   )}

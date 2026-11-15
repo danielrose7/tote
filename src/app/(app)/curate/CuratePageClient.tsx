@@ -6,6 +6,7 @@ import { Main } from '@/components/Main/Main';
 import { useToast } from '@/components/ToastNotification';
 import type { SectionToExtract } from '@/hooks/useCuratorSession';
 import { useCuratorSession } from '@/hooks/useCuratorSession';
+import { Trans, useFormat, useTranslation } from '@/i18n/client';
 import { curationChannel } from '@/inngest/channels';
 import { useCuratorStore } from '@/store/curatorStore';
 import { fetchRealtimeToken } from './actions';
@@ -25,37 +26,62 @@ function buildAnswerString(selected: string[], notes: string): string {
 }
 
 // claude-sonnet-4-6 pricing: $3/1M input, $15/1M output, $0.01/search
-function formatCost(
+function computeCost(
   inputTokens: number,
   outputTokens: number,
   webSearchRequests = 0,
-): string {
-  const cost =
+): number {
+  return (
     (inputTokens / 1_000_000) * 3 +
     (outputTokens / 1_000_000) * 15 +
-    webSearchRequests * 0.01;
-  return cost < 0.01 ? `<$0.01` : `~$${cost.toFixed(2)}`;
+    webSearchRequests * 0.01
+  );
 }
 
 const phaseStatusLabel: Record<string, string> = {
-  started: 'Waiting for workflow acknowledgment',
-  'interview-round-1': 'Waiting for Round 1 answers',
-  researching: 'Researching the category — usually 30–90s...',
-  'interview-round-2': 'Waiting for follow-up questions',
-  framing: 'Building curatorial brief — usually under a minute...',
-  'brief-review': 'Review the brief and approve to continue',
-  planning: 'Planning collection structure...',
-  extracting: 'Extracting pages...',
-  curating: 'Curating the shortlist — usually 60–90s...',
-  hospitality: 'Refining collection...',
-  refining: 'Refining collection...',
-  complete: 'Collection complete',
-  error: 'Something went wrong',
+  started: 'curate.status.started',
+  'interview-round-1': 'curate.status.interviewRound1',
+  researching: 'curate.status.researching',
+  'interview-round-2': 'curate.status.interviewRound2',
+  framing: 'curate.status.framing',
+  'brief-review': 'curate.status.briefReview',
+  planning: 'curate.status.planning',
+  extracting: 'curate.status.extracting',
+  curating: 'curate.status.curating',
+  hospitality: 'curate.status.hospitality',
+  refining: 'curate.status.refining',
+  complete: 'curate.status.complete',
+  error: 'curate.status.error',
 };
+
+// Raw phase shown in the status badge, as a label
+const phaseBadgeLabel: Record<string, string> = {
+  started: 'curate.badge.started',
+  'interview-round-1': 'curate.badge.interviewRound1',
+  researching: 'curate.badge.researching',
+  'interview-round-2': 'curate.badge.interviewRound2',
+  framing: 'curate.badge.framing',
+  'brief-review': 'curate.badge.briefReview',
+  planning: 'curate.badge.planning',
+  extracting: 'curate.badge.extracting',
+  curating: 'curate.badge.curating',
+  hospitality: 'curate.badge.hospitality',
+  refining: 'curate.badge.refining',
+  complete: 'curate.badge.complete',
+  error: 'curate.badge.error',
+};
+
+const extractionStatusLabel = {
+  loading: 'curate.extraction.extracting',
+  done: 'curate.extraction.extracted',
+  skipped: 'curate.extraction.skipped',
+} as const;
 
 export function CuratePageClient({
   initialSessionId = null,
 }: CuratePageClientProps) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const {
     phase,
     topic,
@@ -184,7 +210,7 @@ export function CuratePageClient({
     ).length;
     const map = new Map<string, typeof entries>();
     for (const entry of entries) {
-      const key = entry.sectionTitle ?? 'Gap';
+      const key = entry.sectionTitle ?? t('curate.gap');
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(entry);
     }
@@ -194,15 +220,22 @@ export function CuratePageClient({
       gapTotal: entries.length,
       gapGroups: Array.from(map.entries()),
     };
-  }, [extractionProgress?.entries]);
+  }, [extractionProgress?.entries, t]);
   const hasActiveGapExtraction =
     phase === 'refining' && gapTotal > 0 && gapDone < gapTotal;
 
   type StepStatus = 'completed' | 'active' | 'pending';
-  type PipelineStage = {
-    label: string;
+  type PipelineStep = {
+    id: string;
+    labelKey: string;
+    n?: number;
     status: StepStatus;
-    steps: Array<{ label: string; status: StepStatus }>;
+  };
+  type PipelineStage = {
+    id: string;
+    labelKey: string;
+    status: StepStatus;
+    steps: PipelineStep[];
   };
 
   const wizardPipeline = useMemo((): PipelineStage[] => {
@@ -231,22 +264,30 @@ export function CuratePageClient({
       return doneKeys.has(key) ? 'completed' : 'pending';
     }
 
-    const shapeSteps: Array<{ label: string; status: StepStatus }> = [];
+    const shapeSteps: PipelineStep[] = [];
     for (let p = 1; p <= maxPass; p++) {
       shapeSteps.push({
-        label: `Refine ${p}`,
+        id: `refine-${p}`,
+        labelKey: 'curate.pipeline.refine',
+        n: p,
         status: stepStatus(`refine-complete-${p}`),
       });
     }
-    shapeSteps.push({ label: 'Publish', status: stepStatus('complete') });
+    shapeSteps.push({
+      id: 'publish',
+      labelKey: 'curate.pipeline.publish',
+      status: stepStatus('complete'),
+    });
 
     const stages: Array<{
-      label: string;
+      id: string;
+      labelKey: string;
       keys: string[];
-      steps: Array<{ label: string; status: StepStatus }>;
+      steps: PipelineStep[];
     }> = [
       {
-        label: 'Scope',
+        id: 'scope',
+        labelKey: 'curate.pipeline.scope',
         keys: [
           'interview-round-1-sent',
           'answers-round-1-received',
@@ -257,34 +298,63 @@ export function CuratePageClient({
           'planned',
         ],
         steps: [
-          { label: 'Round 1', status: stepStatus('interview-round-1-sent') },
           {
-            label: 'Research',
+            id: 'round-1',
+            labelKey: 'curate.pipeline.round1',
+            status: stepStatus('interview-round-1-sent'),
+          },
+          {
+            id: 'research',
+            labelKey: 'curate.pipeline.research',
             status: stepStatus('category-research-complete'),
           },
           {
-            label: 'Round 2',
+            id: 'round-2',
+            labelKey: 'curate.pipeline.round2',
             status: stepStatus('interview-round-2-sent'),
           },
           {
-            label: 'Follow-up',
+            id: 'follow-up',
+            labelKey: 'curate.pipeline.followUp',
             status: stepStatus('answers-round-2-received'),
           },
-          { label: 'Framing', status: stepStatus('framing-complete') },
-          { label: 'Plan', status: stepStatus('planned') },
+          {
+            id: 'framing',
+            labelKey: 'curate.pipeline.framing',
+            status: stepStatus('framing-complete'),
+          },
+          {
+            id: 'plan',
+            labelKey: 'curate.pipeline.plan',
+            status: stepStatus('planned'),
+          },
         ],
       },
       {
-        label: 'Scout',
+        id: 'scout',
+        labelKey: 'curate.pipeline.scout',
         keys: ['urls-found', 'extracting', 'curating'],
         steps: [
-          { label: 'Links', status: stepStatus('urls-found') },
-          { label: 'Extract', status: stepStatus('extracting') },
-          { label: 'Curation', status: stepStatus('curating') },
+          {
+            id: 'links',
+            labelKey: 'curate.pipeline.links',
+            status: stepStatus('urls-found'),
+          },
+          {
+            id: 'extract',
+            labelKey: 'curate.pipeline.extract',
+            status: stepStatus('extracting'),
+          },
+          {
+            id: 'curation',
+            labelKey: 'curate.pipeline.curation',
+            status: stepStatus('curating'),
+          },
         ],
       },
       {
-        label: 'Polish',
+        id: 'polish',
+        labelKey: 'curate.pipeline.polish',
         keys: [
           'complete',
           ...Array.from(
@@ -311,25 +381,25 @@ export function CuratePageClient({
       phase === 'brief-review' ||
       phase === 'planning'
     ) {
-      phaseFloor.Scope =
+      phaseFloor.scope =
         phase === 'planning' || phase === 'brief-review'
           ? 'completed'
           : 'active';
-      if (isSearching) phaseFloor.Scout = 'active';
+      if (isSearching) phaseFloor.scout = 'active';
     } else if (phase === 'extracting') {
-      phaseFloor.Scope = 'completed';
-      phaseFloor.Scout = 'active';
+      phaseFloor.scope = 'completed';
+      phaseFloor.scout = 'active';
     } else if (
       phase === 'curating' ||
       phase === 'hospitality' ||
       phase === 'refining' ||
       phase === 'complete'
     ) {
-      phaseFloor.Scope = 'completed';
-      phaseFloor.Scout = 'completed';
+      phaseFloor.scope = 'completed';
+      phaseFloor.scout = 'completed';
       if (phase === 'hospitality' || phase === 'refining')
-        phaseFloor.Polish = 'active';
-      if (phase === 'complete') phaseFloor.Polish = 'completed';
+        phaseFloor.polish = 'active';
+      if (phase === 'complete') phaseFloor.polish = 'completed';
     }
 
     const statusRank: Record<StepStatus, number> = {
@@ -346,7 +416,7 @@ export function CuratePageClient({
       const allDone = stage.keys.every((k) => doneKeys.has(k));
       const anyDone = stage.keys.some((k) => doneKeys.has(k));
       // Scout is active while URL discovery is running even before urls-found fires
-      const forceActive = stage.label === 'Scout' && isSearching;
+      const forceActive = stage.id === 'scout' && isSearching;
       const derivedStatus: StepStatus = allDone
         ? 'completed'
         : anyDone || forceActive
@@ -354,7 +424,7 @@ export function CuratePageClient({
           : 'pending';
       const status = maxStatus(
         derivedStatus,
-        phaseFloor[stage.label] ?? 'pending',
+        phaseFloor[stage.id] ?? 'pending',
       );
       // When the stage itself is completed, lift any pending sub-steps to completed
       // so individual steps don't show pending when the overall stage is done
@@ -366,7 +436,7 @@ export function CuratePageClient({
                 : s,
             )
           : stage.steps;
-      return { label: stage.label, status, steps };
+      return { id: stage.id, labelKey: stage.labelKey, status, steps };
     });
   }, [progress, phase]);
 
@@ -398,7 +468,7 @@ export function CuratePageClient({
     });
 
     if (!res.ok) {
-      setError('Failed to submit answers.');
+      setError(t('curate.errors.submitAnswers'));
       setPhase('error');
     }
   }
@@ -416,7 +486,7 @@ export function CuratePageClient({
       body: JSON.stringify({ sessionId, correction: correction ?? '' }),
     });
     if (!res.ok) {
-      setError('Failed to approve brief.');
+      setError(t('curate.errors.approveBrief'));
       setPhase('error');
     }
     setBriefSubmitting(false);
@@ -439,7 +509,7 @@ export function CuratePageClient({
         error?: string;
       } | null;
       if (!response.ok || !body?.id) {
-        throw new Error(body?.error ?? 'Import failed');
+        throw new Error(body?.error ?? t('curate.errors.importFailed'));
       }
       const collectionId = body.id;
 
@@ -461,8 +531,9 @@ export function CuratePageClient({
       window.location.href = `/collections/${collectionId}`;
     } catch (err) {
       showToast({
-        title: 'Import failed',
-        description: err instanceof Error ? err.message : 'Unknown error',
+        title: t('curate.errors.importFailed'),
+        description:
+          err instanceof Error ? err.message : t('curate.errors.unknown'),
         variant: 'error',
       });
       setImporting(false);
@@ -484,15 +555,15 @@ export function CuratePageClient({
                 ? topic.length > 72
                   ? `${topic.slice(0, 72).trimEnd()}…`
                   : topic
-                : 'Collection Curator')}
+                : t('curate.page.heading'))}
           </h1>
           <a href="/curate" className={styles.backLink}>
-            All sessions
+            {t('curate.new.allSessions')}
           </a>
         </div>
 
         {!sessionId && phase === 'started' && (
-          <p className={styles.subheading}>Setting things up...</p>
+          <p className={styles.subheading}>{t('curate.page.settingUp')}</p>
         )}
 
         {sessionId && (
@@ -504,7 +575,7 @@ export function CuratePageClient({
                   <ol className={styles.pipeline}>
                     {wizardPipeline.map((stage) => (
                       <li
-                        key={stage.label}
+                        key={stage.id}
                         className={styles.pipelineStage}
                         data-status={stage.status}
                       >
@@ -513,17 +584,17 @@ export function CuratePageClient({
                         </span>
                         <div className={styles.pipelineContent}>
                           <span className={styles.pipelineStageLabel}>
-                            {stage.label}
+                            {t(stage.labelKey)}
                           </span>
                           {stage.status !== 'pending' && (
                             <ol className={styles.pipelineSubSteps}>
                               {stage.steps.map((step) => (
                                 <li
-                                  key={step.label}
+                                  key={step.id}
                                   className={styles.pipelineSubStep}
                                   data-status={step.status}
                                 >
-                                  {step.label}
+                                  {t(step.labelKey, { n: step.n })}
                                 </li>
                               ))}
                             </ol>
@@ -540,8 +611,7 @@ export function CuratePageClient({
             <div className={styles.runMain}>
               {phase === 'started' && (
                 <p className={styles.subheading}>
-                  Connecting to workflow and waiting for the first curator
-                  events...
+                  {t('curate.page.connecting')}
                 </p>
               )}
 
@@ -563,8 +633,13 @@ export function CuratePageClient({
                   >
                     <p className={styles.subheading}>
                       {questionRound === 2
-                        ? `Round 2 of 2. We've researched ${sessionTitle || topic || 'the category'} — these questions help us dial in the specifics before we build.`
-                        : `Round 1 of 2. After you answer, we'll research the category (~30–90s), then come back with a few sharper follow-up questions.`}
+                        ? t('curate.interview.round2', {
+                            subject:
+                              sessionTitle ||
+                              topic ||
+                              t('curate.interview.theCategory'),
+                          })
+                        : t('curate.interview.round1')}
                     </p>
 
                     {questions.map((q) => (
@@ -600,7 +675,7 @@ export function CuratePageClient({
                               [q.id]: e.target.value,
                             }))
                           }
-                          placeholder="Additional notes (optional)"
+                          placeholder={t('curate.interview.notesPlaceholder')}
                         />
                       </div>
                     ))}
@@ -612,8 +687,8 @@ export function CuratePageClient({
                         disabled={!answersComplete || !questionRound}
                       >
                         {questionRound === 2
-                          ? 'Submit follow-up'
-                          : 'Submit answers'}
+                          ? t('curate.interview.submitFollowUp')
+                          : t('curate.interview.submitAnswers')}
                       </button>
                     </div>
                   </form>
@@ -622,10 +697,7 @@ export function CuratePageClient({
               {/* ── Brief review ── */}
               {phase === 'brief-review' && framingBrief && (
                 <div className={styles.form}>
-                  <p className={styles.subheading}>
-                    Here's the brief we'll use to build your collection. Approve
-                    to continue, or add a correction below.
-                  </p>
+                  <p className={styles.subheading}>{t('curate.brief.intro')}</p>
                   <div className={styles.framingBriefCard}>
                     <p className={styles.framingBriefGoal}>
                       {framingBrief.goal}
@@ -649,13 +721,15 @@ export function CuratePageClient({
                     )}
                     {framingBrief.avoid.length > 0 && (
                       <p className={styles.framingBriefMeta}>
-                        Avoid: {framingBrief.avoid.join(', ')}
+                        {t('curate.brief.avoid', {
+                          items: framingBrief.avoid.join(', '),
+                        })}
                       </p>
                     )}
                   </div>
                   <div className={styles.inputGroup}>
                     <span className={styles.label}>
-                      Anything off? (optional)
+                      {t('curate.brief.anythingOff')}
                     </span>
                     <textarea
                       className={styles.textarea}
@@ -664,7 +738,7 @@ export function CuratePageClient({
                       onChange={(e) => setBriefCorrection(e.target.value)}
                       placeholder={
                         framingBrief.correctionExample ??
-                        "e.g. She's in her 70s, not a new mom — please remove baby products from the brief"
+                        t('curate.brief.correctionExample')
                       }
                     />
                   </div>
@@ -675,7 +749,9 @@ export function CuratePageClient({
                       disabled={briefSubmitting}
                       onClick={() => handleBriefApproval()}
                     >
-                      {briefSubmitting ? 'Approving...' : 'Looks good →'}
+                      {briefSubmitting
+                        ? t('curate.brief.approving')
+                        : t('curate.brief.approve')}
                     </button>
                     {briefCorrection.trim() && (
                       <button
@@ -684,7 +760,7 @@ export function CuratePageClient({
                         disabled={briefSubmitting}
                         onClick={() => handleBriefApproval(briefCorrection)}
                       >
-                        Submit correction
+                        {t('curate.brief.submitCorrection')}
                       </button>
                     )}
                   </div>
@@ -717,12 +793,19 @@ export function CuratePageClient({
                   <div>
                     <h2 className={styles.statusTitle}>
                       {phase === 'extracting' && extractionProgress
-                        ? `Extracting pages (${extractionProgress.current} / ${extractionProgress.total})`
+                        ? t('curate.page.extractingPages', {
+                            current: extractionProgress.current,
+                            total: extractionProgress.total,
+                          })
                         : hasActiveGapExtraction
-                          ? `Extracting gap pages (${gapDone} / ${gapTotal})`
+                          ? t('curate.page.extractingGapPages', {
+                              current: gapDone,
+                              total: gapTotal,
+                            })
                           : (latestProgress?.message ??
-                            phaseStatusLabel[phase] ??
-                            'Run created')}
+                            (phaseStatusLabel[phase]
+                              ? t(phaseStatusLabel[phase])
+                              : t('curate.page.runCreated')))}
                     </h2>
                     {phase !== 'extracting' &&
                       !hasActiveGapExtraction &&
@@ -733,12 +816,16 @@ export function CuratePageClient({
                       )}
                     {phase === 'refining' && (
                       <p className={styles.statusDetail}>
-                        Usually 1–2 refinement passes.
+                        {t('curate.page.refinementPasses')}
                       </p>
                     )}
                   </div>
                   <div className={styles.statusActions}>
-                    <span className={styles.phaseBadge}>{phase}</span>
+                    <span className={styles.phaseBadge}>
+                      {phaseBadgeLabel[phase]
+                        ? t(phaseBadgeLabel[phase])
+                        : phase}
+                    </span>
                     {phase !== 'complete' && phase !== 'error' && (
                       <>
                         {connectionStatus === 'error' ||
@@ -747,15 +834,17 @@ export function CuratePageClient({
                             type="button"
                             className={styles.reconnectButton}
                             onClick={handleReconnect}
-                            title="Stream disconnected — click to reconnect"
+                            title={t('curate.page.streamDisconnected')}
                           >
-                            ↺ Reconnect
+                            {t('curate.page.reconnect')}
                           </button>
                         ) : (
                           <span
                             className={styles.connectionDot}
                             data-status={connectionStatus}
-                            title={`Stream: ${connectionStatus}`}
+                            title={t('curate.page.streamStatus', {
+                              status: connectionStatus,
+                            })}
                           />
                         )}
                       </>
@@ -763,7 +852,11 @@ export function CuratePageClient({
                   </div>
                 </div>
                 <p className={styles.sessionMeta}>
-                  Session <code>{sessionId}</code>
+                  <Trans
+                    i18nKey="curate.page.session"
+                    values={{ sessionId }}
+                    components={{ code: <code /> }}
+                  />
                 </p>
 
                 {(progress.length > 0 ||
@@ -788,7 +881,7 @@ export function CuratePageClient({
                           {entry.step === 'planned' && entry.detail && (
                             <div className={styles.planSections}>
                               <span className={styles.planSectionsLabel}>
-                                Here's how we're approaching it:
+                                {t('curate.page.approach')}
                               </span>
                               <ul className={styles.planSectionList}>
                                 {entry.detail.split(', ').map((title) => (
@@ -801,8 +894,7 @@ export function CuratePageClient({
                                 ))}
                               </ul>
                               <span className={styles.planSectionsNote}>
-                                A focused selection within each — not a
-                                comprehensive guide.
+                                {t('curate.page.approachNote')}
                               </span>
                             </div>
                           )}
@@ -824,11 +916,15 @@ export function CuratePageClient({
                           >
                             <span className={styles.eventDot} />
                             <span className={styles.eventMessage}>
-                              {entry.status === 'loading'
-                                ? 'Extracting'
-                                : entry.status === 'done'
-                                  ? 'Extracted'
-                                  : 'Skipped'}{' '}
+                              {t(
+                                extractionStatusLabel[
+                                  entry.status === 'loading'
+                                    ? 'loading'
+                                    : entry.status === 'done'
+                                      ? 'done'
+                                      : 'skipped'
+                                ],
+                              )}{' '}
                               <span className={styles.eventSub}>
                                 {entry.title || entry.domain}
                               </span>
@@ -859,8 +955,9 @@ export function CuratePageClient({
                             </div>
                             {active.length === 0 ? (
                               <div className={styles.gapGroupPending}>
-                                {entries.length} URL
-                                {entries.length !== 1 ? 's' : ''} pending
+                                {t('curate.page.urlsPending', {
+                                  count: entries.length,
+                                })}
                               </div>
                             ) : (
                               active.slice(-4).map((entry, i, arr) => (
@@ -871,11 +968,15 @@ export function CuratePageClient({
                                 >
                                   <span className={styles.eventDot} />
                                   <span className={styles.eventMessage}>
-                                    {entry.status === 'loading'
-                                      ? 'Extracting'
-                                      : entry.status === 'done'
-                                        ? 'Extracted'
-                                        : 'Skipped'}{' '}
+                                    {t(
+                                      extractionStatusLabel[
+                                        entry.status === 'loading'
+                                          ? 'loading'
+                                          : entry.status === 'done'
+                                            ? 'done'
+                                            : 'skipped'
+                                      ],
+                                    )}{' '}
                                     <span className={styles.eventSub}>
                                       {entry.title || entry.domain}
                                     </span>
@@ -900,18 +1001,35 @@ export function CuratePageClient({
                     <p className={styles.resultGoal}>{framingBrief.goal}</p>
                   )}
                   <p className={styles.resultMeta}>
-                    {result.sectionCount} sections · {result.itemCount} items
+                    {t('curate.result.sections', {
+                      count: result.sectionCount,
+                    })}
+                    {t('curate.result.joiner')}
+                    {t('curate.result.items', { count: result.itemCount })}
                     {tokenUsage && (
                       <>
-                        {' · '}
+                        {t('curate.result.joiner')}
                         <span
-                          title={`${tokenUsage.inputTokens.toLocaleString()} in / ${tokenUsage.outputTokens.toLocaleString()} out / ${tokenUsage.webSearchRequests ?? 0} searches`}
+                          title={t('curate.usageTitle', {
+                            input: fmt.number(tokenUsage.inputTokens),
+                            output: fmt.number(tokenUsage.outputTokens),
+                            searches: tokenUsage.webSearchRequests ?? 0,
+                          })}
                         >
-                          {formatCost(
-                            tokenUsage.inputTokens,
-                            tokenUsage.outputTokens,
-                            tokenUsage.webSearchRequests ?? 0,
-                          )}
+                          {(() => {
+                            const cost = computeCost(
+                              tokenUsage.inputTokens,
+                              tokenUsage.outputTokens,
+                              tokenUsage.webSearchRequests ?? 0,
+                            );
+                            return cost < 0.01
+                              ? t('curate.cost.under', {
+                                  amount: fmt.currency(0.01, 'USD'),
+                                })
+                              : t('curate.cost.approx', {
+                                  amount: fmt.currency(cost, 'USD'),
+                                });
+                          })()}
                         </span>
                       </>
                     )}
@@ -986,7 +1104,7 @@ export function CuratePageClient({
                       className={styles.secondaryButton}
                       onClick={handleReset}
                     >
-                      New collection
+                      {t('curate.page.newCollection')}
                     </button>
                     <button
                       type="button"
@@ -1000,7 +1118,9 @@ export function CuratePageClient({
                         setTimeout(() => setCopied(false), 2000);
                       }}
                     >
-                      {copied ? 'Copied!' : 'Copy JSON'}
+                      {copied
+                        ? t('curate.page.copied')
+                        : t('curate.page.copyJson')}
                     </button>
                     {importPayload && (
                       <button
@@ -1009,7 +1129,9 @@ export function CuratePageClient({
                         onClick={handleImport}
                         disabled={importing}
                       >
-                        {importing ? 'Importing...' : 'Add to Tote'}
+                        {importing
+                          ? t('curate.page.importing')
+                          : t('curate.page.addToTote')}
                       </button>
                     )}
                   </div>
@@ -1019,7 +1141,7 @@ export function CuratePageClient({
               {/* ── Error ── */}
               {phase === 'error' && (
                 <div className={styles.errorBox}>
-                  <p>{error ?? 'Something went wrong.'}</p>
+                  <p>{error ?? t('curate.page.somethingWrong')}</p>
                   <div className={styles.actions}>
                     {topic && (
                       <button
@@ -1037,11 +1159,11 @@ export function CuratePageClient({
                           }
                         }}
                       >
-                        Try again
+                        {t('curate.page.tryAgain')}
                       </button>
                     )}
                     <a href="/curate/new" className={styles.secondaryButton}>
-                      New topic
+                      {t('curate.page.newTopic')}
                     </a>
                   </div>
                 </div>

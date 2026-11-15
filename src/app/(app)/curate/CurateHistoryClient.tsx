@@ -2,40 +2,43 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { Main } from '@/components/Main/Main';
 import { useToast } from '@/components/ToastNotification';
+import { Trans, useFormat, useTranslation } from '@/i18n/client';
 import type { CuratorSessionRow } from '@/lib/curatorSessionsDb';
 import { CreditsPanel } from './CreditsPanel';
-import { Main } from '@/components/Main/Main';
 import styles from './curate.module.css';
 
 // claude-sonnet-4-6: $3/1M input, $15/1M output, $0.01/search
-function formatCost(
+function computeCost(
   inputTokens: number,
   outputTokens: number,
   webSearchRequests = 0,
-): string {
-  const cost =
+): number {
+  return (
     (inputTokens / 1_000_000) * 3 +
     (outputTokens / 1_000_000) * 15 +
-    webSearchRequests * 0.01;
-  return cost < 0.01 ? '<$0.01' : `~$${cost.toFixed(2)}`;
+    webSearchRequests * 0.01
+  );
 }
 
 const phaseLabel: Record<string, string> = {
-  started: 'Starting',
-  'interview-round-1': 'Interview',
-  researching: 'Researching',
-  'interview-round-2': 'Follow-up',
-  framing: 'Framing',
-  planning: 'Planning',
-  extracting: 'Extracting',
-  curating: 'Curating',
-  hospitality: 'Hospitality',
-  complete: 'Complete',
-  error: 'Error',
+  started: 'curate.phase.started',
+  'interview-round-1': 'curate.phase.interviewRound1',
+  researching: 'curate.phase.researching',
+  'interview-round-2': 'curate.phase.interviewRound2',
+  framing: 'curate.phase.framing',
+  planning: 'curate.phase.planning',
+  extracting: 'curate.phase.extracting',
+  curating: 'curate.phase.curating',
+  hospitality: 'curate.phase.hospitality',
+  complete: 'curate.phase.complete',
+  error: 'curate.phase.error',
 };
 
 export function CurateHistoryClient() {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const [sessions, setSessions] = useState<CuratorSessionRow[] | null>(null);
   const [balanceCents, setBalanceCents] = useState<number | null>(null);
   const searchParams = useSearchParams();
@@ -54,13 +57,13 @@ export function CurateHistoryClient() {
     if (searchParams.get('credits') === 'added' && !toastedRef.current) {
       toastedRef.current = true;
       showToast({
-        title: 'Credits added',
-        description: 'Your balance has been updated.',
+        title: t('curate.history.creditsAdded'),
+        description: t('curate.history.balanceUpdated'),
         variant: 'success',
       });
       window.history.replaceState({}, '', '/curate');
     }
-  }, [searchParams, showToast]);
+  }, [searchParams, showToast, t]);
 
   const canStartNew = balanceCents === null || balanceCents > 0;
 
@@ -68,17 +71,17 @@ export function CurateHistoryClient() {
     <Main className={styles.main}>
       <div className={styles.container}>
         <div className={styles.historyHeader}>
-          <h1 className={styles.heading}>Curations</h1>
+          <h1 className={styles.heading}>{t('curate.history.heading')}</h1>
           {canStartNew ? (
             <a href="/curate/new" className={styles.primaryButton}>
-              New curation
+              {t('curate.newCuration')}
             </a>
           ) : (
             <span
               className={styles.newCurationDisabled}
-              title="Add credits to start a new curation"
+              title={t('curate.history.addCreditsToStart')}
             >
-              New curation
+              {t('curate.newCuration')}
             </span>
           )}
         </div>
@@ -87,11 +90,13 @@ export function CurateHistoryClient() {
 
         {sessions === null ? null : sessions.length === 0 ? (
           <p className={styles.subheading}>
-            No sessions yet.{' '}
-            <a href="/curate/new" className={styles.inlineLink}>
-              Start your first curation
-            </a>
-            .
+            <Trans
+              i18nKey="curate.history.empty"
+              components={{
+                // biome-ignore lint/a11y/useAnchorContent: Trans fills in the link text
+                link: <a href="/curate/new" className={styles.inlineLink} />,
+              }}
+            />
           </p>
         ) : (
           <ul className={styles.sessionList}>
@@ -109,21 +114,34 @@ export function CurateHistoryClient() {
                   <span
                     className={`${styles.sessionPhase} ${styles[`phase_${s.phase}`]}`}
                   >
-                    {phaseLabel[s.phase] ?? s.phase}
+                    {phaseLabel[s.phase] ? t(phaseLabel[s.phase]) : s.phase}
                   </span>
                 </a>
                 <span className={styles.sessionDate}>
-                  {new Date(s.createdAt).toLocaleDateString()}
+                  {fmt.date(s.createdAt)}
                   {s.inputTokens != null && s.outputTokens != null && (
                     <span
                       className={styles.sessionCost}
-                      title={`${s.inputTokens.toLocaleString()} in / ${s.outputTokens.toLocaleString()} out / ${s.webSearchRequests ?? 0} searches`}
+                      title={t('curate.usageTitle', {
+                        input: fmt.number(s.inputTokens),
+                        output: fmt.number(s.outputTokens),
+                        searches: s.webSearchRequests ?? 0,
+                      })}
                     >
-                      {formatCost(
-                        s.inputTokens,
-                        s.outputTokens,
-                        s.webSearchRequests ?? 0,
-                      )}
+                      {(() => {
+                        const cost = computeCost(
+                          s.inputTokens,
+                          s.outputTokens,
+                          s.webSearchRequests ?? 0,
+                        );
+                        return cost < 0.01
+                          ? t('curate.cost.under', {
+                              amount: fmt.currency(0.01, 'USD'),
+                            })
+                          : t('curate.cost.approx', {
+                              amount: fmt.currency(cost, 'USD'),
+                            });
+                      })()}
                     </span>
                   )}
                 </span>

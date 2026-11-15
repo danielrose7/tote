@@ -8,6 +8,7 @@ import listStyles from '@/components/CollectionList/CollectionList.module.css';
 import { Header } from '@/components/Header';
 import { Main } from '@/components/Main/Main';
 import { useCollectionRealtime } from '@/hooks/useCollectionRealtime';
+import { Trans, useTranslation } from '@/i18n/client';
 import { fetchCollectionSummaries } from '@/lib/collections/client';
 import { collectionQueryKeys } from '@/lib/collections/queryKeys';
 import { NeonCreateCollectionDialog } from './NeonCreateCollectionDialog';
@@ -90,6 +91,7 @@ export function NeonCollectionsPage({
 }: {
   realtimeEnabled: boolean;
 }) {
+  const { t } = useTranslation();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { data: collections = [] } = useQuery({
@@ -122,51 +124,55 @@ export function NeonCollectionsPage({
         showAddCollection
         onAddCollectionClick={() => setIsCreateOpen(true)}
       />
-      <Main fallbackMessage="Could not load your collections. Please refresh the page.">
+      <Main fallbackMessage={t('collections.list.loadError')}>
         <div className={listStyles.container}>
           {showSearch && (
             <div className={listStyles.searchBar}>
               <input
                 type="search"
-                placeholder="Search collections…"
+                placeholder={t('collections.list.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={listStyles.searchInput}
-                aria-label="Search collections"
+                aria-label={t('collections.list.searchLabel')}
               />
             </div>
           )}
           {recentlyShared.length > 0 && (
             <div className={listStyles.recentShareNotice}>
-              <strong>New:</strong>{' '}
+              <strong>{t('collections.list.newLabel')}</strong>{' '}
               {recentlyShared.length === 1 ? (
-                <>
-                  You were added to{' '}
-                  <Link
-                    href={`/collections/${recentlyShared[0].id}`}
-                    className={listStyles.recentShareLink}
-                  >
-                    {recentlyShared[0].name}
-                  </Link>
-                </>
+                <Trans
+                  i18nKey="collections.list.addedToOne"
+                  values={{ name: recentlyShared[0].name }}
+                  components={{
+                    link: (
+                      <Link
+                        href={`/collections/${recentlyShared[0].id}`}
+                        className={listStyles.recentShareLink}
+                      />
+                    ),
+                  }}
+                />
               ) : (
-                <>
-                  You were recently added to {recentlyShared.length} shared
-                  collections
-                </>
+                t('collections.list.addedToMany', {
+                  count: recentlyShared.length,
+                })
               )}
             </div>
           )}
           {!hasCollections ? (
             <div className={listStyles.empty}>
-              <h2 className={listStyles.emptyTitle}>No collections yet</h2>
+              <h2 className={listStyles.emptyTitle}>
+                {t('collections.list.emptyTitle')}
+              </h2>
               <p className={listStyles.emptyDescription}>
-                Your collections will appear here.
+                {t('collections.list.emptyDescription')}
               </p>
             </div>
           ) : filteredCollections.length === 0 ? (
             <p className={listStyles.noResults}>
-              No collections match &ldquo;{searchQuery}&rdquo;
+              {t('collections.list.noResults', { query: searchQuery })}
             </p>
           ) : (
             <div className={listStyles.grid}>
@@ -187,9 +193,13 @@ export function NeonCollectionsPage({
                   <div className={cardStyles.cardBody}>
                     <h3 className={cardStyles.title}>{collection.name}</h3>
                     <span className={cardStyles.meta}>
-                      {collection.itemCount}{' '}
-                      {collection.itemCount === 1 ? 'item' : 'items'}
-                      {collection.role !== 'owner' && ' · Shared'}
+                      {collection.role !== 'owner'
+                        ? t('collections.list.itemCountShared', {
+                            count: collection.itemCount,
+                          })
+                        : t('collections.common.itemCount', {
+                            count: collection.itemCount,
+                          })}
                     </span>
                     {collection.description && (
                       <p className={cardStyles.description}>

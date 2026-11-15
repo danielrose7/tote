@@ -1,1 +1,109 @@
-{ "collections": {} }
+{
+  "collections": {
+    "common": {
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "delete": "Delete",
+      "done": "Done",
+      "untitled": "Untitled",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items"
+    },
+    "viewMode": {
+      "label": "View mode",
+      "grid": "Grid view",
+      "table": "Table view"
+    },
+    "type": {
+      "section": "section",
+      "product": "product",
+      "link": "link",
+      "photo": "photo",
+      "note": "note",
+      "text": "text",
+      "photoTitle": "Photo"
+    },
+    "role": {
+      "owner": "owner",
+      "admin": "admin",
+      "editor": "editor",
+      "viewer": "viewer"
+    },
+    "table": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo_one": "{{count}} day ago",
+      "daysAgo_other": "{{count}} days ago",
+      "weeksAgo_one": "{{count}} week ago",
+      "weeksAgo_other": "{{count}} weeks ago",
+      "monthsAgo_one": "{{count}} month ago",
+      "monthsAgo_other": "{{count}} months ago",
+      "yearsAgo_one": "{{count}} year ago",
+      "yearsAgo_other": "{{count}} years ago",
+      "untitledSection": "Untitled section",
+      "title": "Title",
+      "price": "Price",
+      "section": "Section",
+      "added": "Added"
+    },
+    "list": {
+      "loadError": "Could not load your collections. Please refresh the page.",
+      "searchPlaceholder": "Search collections…",
+      "searchLabel": "Search collections",
+      "newLabel": "New:",
+      "addedToOne": "You were added to <link>{{name}}</link>",
+      "addedToMany_one": "You were recently added to {{count}} shared collection",
+      "addedToMany_other": "You were recently added to {{count}} shared collections",
+      "emptyTitle": "No collections yet",
+      "emptyDescription": "Your collections will appear here.",
+      "noResults": "No collections match “{{query}}”",
+      "itemCountShared_one": "{{count}} item · Shared",
+      "itemCountShared_other": "{{count}} items · Shared"
+    },
+    "create": {
+      "failedTitle": "Collection could not be created",
+      "nameRequired": "Collection name is required",
+      "queuedTitle": "Collection queued",
+      "syncingNow": "\"{{name}}\" is syncing now.",
+      "syncWhenOnline": "\"{{name}}\" will sync when you are back online.",
+      "title": "Create Collection",
+      "description": "Organize links, products, photos, and notes.",
+      "nameLabel": "Collection Name *",
+      "descriptionLabel": "Description (optional)",
+      "color": "Color",
+      "selectColor": "Select color {{color}}"
+    },
+    "detail": {
+      "breadcrumb": "Collections",
+      "loadError": "Could not load this collection. Please refresh the page.",
+      "makeCopy": "Make a copy",
+      "publish": "Publish collection",
+      "manageTeam": "Manage team",
+      "edit": "Edit collection",
+      "copiedFrom": "Copied from {{name}}"
+    },
+    "sync": {
+      "failed": "Sync failed · {{operation}}",
+      "dismiss": "Dismiss sync error",
+      "saving": "Saving...",
+      "saved": "Saved {{time}}",
+      "lastSaved": "Last saved {{time}}"
+    },
+    "view": {
+      "reorderItem": "Reorder {{name}}",
+      "refreshMetadata": "Refresh metadata",
+      "refreshing": "Refreshing…",
+      "refresh": "Refresh",
+      "visit": "Visit →",
+      "reorderFailed": "Reordering failed",
+      "refreshFailed": "Refresh failed",
+      "emptyTitle": "This collection is empty",
+      "emptyDescription": "Items added to this collection will appear here.",
+      "refreshAll": "Refresh All",
+      "refreshAllLower": "Refresh all",
+      "reorderSections": "Reorder Sections",
+      "reorder": "Reorder",
+      "ungrouped": "Ungrouped"
+    }
+  }
+}

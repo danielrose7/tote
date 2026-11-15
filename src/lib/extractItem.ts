@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import { type ExtractedMetadata, refreshViaExtension } from './extension';
 import { needsEnhancedExtraction } from './extractionHint';
 
@@ -59,26 +60,34 @@ type ToastMessage = {
   key: string;
 };
 
-/** Turn a refresh outcome into a user-facing message, or null if all was well. */
+/**
+ * Turn a refresh outcome into a user-facing message, or null if all was well.
+ * Takes `t` so the text is in the user's language and pluralizes properly.
+ */
 export function describeRefreshOutcome(
   outcome: RefreshOutcome,
+  t: TFunction,
 ): ToastMessage | null {
   const { total, thin, failed, extensionAvailable } = outcome;
-  const noun = (n: number) => (n === 1 ? '1 item' : `${n} items`);
   if (failed > 0) {
     return {
-      title: failed === total ? 'Refresh failed' : 'Some items failed',
-      description: `Couldn't read ${noun(failed)}. Check your connection and try again.`,
+      title: t(
+        failed === total ? 'refresh.failedTitleAll' : 'refresh.failedTitleSome',
+      ),
+      description: t('refresh.failedDescription', { count: failed }),
       variant: 'error',
       key: 'refresh-outcome',
     };
   }
   if (thin > 0) {
     return {
-      title: 'Some details are missing',
-      description: extensionAvailable
-        ? `${noun(thin)} limit what can be read, even with the extension. You can add the details by hand.`
-        : `${noun(thin)} limit what our servers can read. The Tote extension reads pages in your browser and usually gets the image and price.`,
+      title: t('refresh.thinTitle'),
+      description: t(
+        extensionAvailable
+          ? 'refresh.thinWithExtension'
+          : 'refresh.thinWithoutExtension',
+        { count: thin },
+      ),
       variant: 'info',
       key: 'refresh-outcome',
     };

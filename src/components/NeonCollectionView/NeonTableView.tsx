@@ -8,9 +8,10 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
+import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
 import type { CollectionNode } from '@/db/schema';
-import { formatPrice as formatPriceLib } from '@/lib/formatPrice';
+import { useFormat, useTranslation } from '@/i18n/client';
 import tableStyles from '../CollectionView/TableView.module.css';
 
 type NodeProperties = {
@@ -23,20 +24,22 @@ function propertiesFor(node: CollectionNode): NodeProperties {
   return node.properties as NodeProperties;
 }
 
-function formatRelativeDate(date: Date): string {
+function formatRelativeDate(date: Date, t: TFunction): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-  return `${Math.floor(diffDays / 365)} years ago`;
-}
-
-function formatPrice(price: string | number): string {
-  return formatPriceLib(String(price));
+  if (diffDays === 0) return t('collections.table.today');
+  if (diffDays === 1) return t('collections.table.yesterday');
+  if (diffDays < 7) return t('collections.table.daysAgo', { count: diffDays });
+  if (diffDays < 30)
+    return t('collections.table.weeksAgo', { count: Math.floor(diffDays / 7) });
+  if (diffDays < 365)
+    return t('collections.table.monthsAgo', {
+      count: Math.floor(diffDays / 30),
+    });
+  return t('collections.table.yearsAgo', {
+    count: Math.floor(diffDays / 365),
+  });
 }
 
 const columnHelper = createColumnHelper<CollectionNode>();
@@ -54,15 +57,18 @@ export function NeonTableView({
   onEdit,
   onDelete,
 }: NeonTableViewProps) {
+  const { t } = useTranslation();
+  const fmt = useFormat();
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const sectionMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const n of allNodes) {
-      if (n.type === 'section') map.set(n.id, n.title || 'Untitled section');
+      if (n.type === 'section')
+        map.set(n.id, n.title || t('collections.table.untitledSection'));
     }
     return map;
-  }, [allNodes]);
+  }, [allNodes, t]);
 
   const columns = useMemo(
     () => [
@@ -103,11 +109,11 @@ export function NeonTableView({
       }),
 
       columnHelper.accessor('title', {
-        header: 'Title',
+        header: t('collections.table.title'),
         size: 300,
         cell: (info) => {
           const node = info.row.original;
-          const title = info.getValue() || 'Untitled';
+          const title = info.getValue() || t('collections.common.untitled');
           const url = propertiesFor(node).url;
           return url ? (
             <a
@@ -127,12 +133,14 @@ export function NeonTableView({
 
       columnHelper.display({
         id: 'price',
-        header: 'Price',
+        header: t('collections.table.price'),
         size: 100,
         cell: (info) => {
           const price = propertiesFor(info.row.original).price;
           return price !== undefined && price !== null ? (
-            <span className={tableStyles.price}>{formatPrice(price)}</span>
+            <span className={tableStyles.price}>
+              {fmt.price(String(price))}
+            </span>
           ) : (
             <span className={tableStyles.noValue}>-</span>
           );
@@ -141,7 +149,7 @@ export function NeonTableView({
 
       columnHelper.display({
         id: 'section',
-        header: 'Section',
+        header: t('collections.table.section'),
         size: 140,
         cell: (info) => {
           const node = info.row.original;
@@ -157,16 +165,16 @@ export function NeonTableView({
       }),
 
       columnHelper.accessor('createdAt', {
-        header: 'Added',
+        header: t('collections.table.added'),
         size: 120,
         cell: (info) => {
           const date = info.getValue();
           return (
             <span
               className={tableStyles.date}
-              title={date instanceof Date ? date.toLocaleDateString() : ''}
+              title={date instanceof Date ? fmt.date(date) : ''}
             >
-              {date instanceof Date ? formatRelativeDate(date) : ''}
+              {date instanceof Date ? formatRelativeDate(date, t) : ''}
             </span>
           );
         },
@@ -185,7 +193,7 @@ export function NeonTableView({
                   type="button"
                   className={tableStyles.actionButton}
                   onClick={() => onEdit(node)}
-                  title="Edit"
+                  title={t('collections.common.edit')}
                 >
                   <svg
                     width="14"
@@ -205,7 +213,7 @@ export function NeonTableView({
                   type="button"
                   className={`${tableStyles.actionButton} ${tableStyles.deleteButton}`}
                   onClick={() => onDelete(node)}
-                  title="Delete"
+                  title={t('collections.common.delete')}
                 >
                   <svg
                     width="14"
@@ -225,7 +233,7 @@ export function NeonTableView({
         },
       }),
     ],
-    [onEdit, onDelete, sectionMap],
+    [onEdit, onDelete, sectionMap, t, fmt],
   );
 
   const table = useReactTable({

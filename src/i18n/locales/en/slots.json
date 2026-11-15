@@ -1,1 +1,87 @@
-{ "slots": {} }
+{
+  "slots": {
+    "common": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "type": {
+      "section": "section",
+      "product": "product",
+      "link": "link",
+      "photo": "photo",
+      "note": "note",
+      "text": "text"
+    },
+    "item": {
+      "untitled": "Untitled",
+      "photo": "Photo",
+      "select": "Select",
+      "deselect": "Deselect",
+      "refreshMetadata": "Refresh metadata",
+      "refreshing": "Refreshing…",
+      "refresh": "Refresh",
+      "visit": "Visit →",
+      "reorder": "Reorder {{name}}"
+    },
+    "toast": {
+      "updateFailed": "Failed to update section",
+      "deleteFailed": "Failed to delete section",
+      "reorderFailed": "Reordering failed",
+      "refreshFailed": "Refresh failed",
+      "unknownError": "Unknown error"
+    },
+    "edit": {
+      "namePlaceholder": "Section name",
+      "pick": "Pick",
+      "any": "Any",
+      "budget": "Budget"
+    },
+    "section": {
+      "untitled": "Untitled section",
+      "selected": "{{count}}/{{max}} selected",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items",
+      "done": "Done",
+      "reorder": "Reorder",
+      "refreshAll": "Refresh all",
+      "editSection": "Edit section",
+      "deleteSection": "Delete section",
+      "empty": "No items in this section yet"
+    },
+    "swap": {
+      "title": "Selection limit reached",
+      "descriptionSwap_one": "“{{title}}” allows {{count}} selection. Swap your current pick for this one?",
+      "descriptionSwap_other": "“{{title}}” allows {{count}} selections. Swap your current pick for this one?",
+      "descriptionUnselect_one": "“{{title}}” allows {{count}} selection. Choose one to unselect.",
+      "descriptionUnselect_other": "“{{title}}” allows {{count}} selections. Choose one to unselect.",
+      "fallbackTitle": "This section",
+      "selecting": "Selecting",
+      "replacing": "Replacing",
+      "unselect": "Unselect",
+      "confirm": "Swap"
+    },
+    "delete": {
+      "title": "Delete “{{title}}”?",
+      "fallbackTitle": "section",
+      "emptyBody": "This section is empty and will be permanently removed.",
+      "hasItems_one": "This section has {{count}} item. What should happen to them?",
+      "hasItems_other": "This section has {{count}} items. What should happen to them?",
+      "removeAll_one": "Remove all {{count}} item from the collection",
+      "removeAll_other": "Remove all {{count}} items from the collection",
+      "moveUngrouped": "Move items to ungrouped",
+      "moveSection": "Move items to another section",
+      "moveAndDelete": "Move & delete section"
+    },
+    "sectionSelector": {
+      "untitled": "Untitled section",
+      "clearSelection": "Clear selection",
+      "placeholder": "Add to section (optional)",
+      "creating": "Creating...",
+      "create": "Create “{{name}}”",
+      "empty": "No sections yet. Type to create one.",
+      "noMatch": "No matching sections"
+    }
+  }
+}

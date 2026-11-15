@@ -8,6 +8,7 @@ import { Main } from '@/components/Main/Main';
 import { NeonCollectionView } from '@/components/NeonCollectionView/NeonCollectionView';
 import type { CollectionNode } from '@/db/schema';
 import { useCollectionRealtime } from '@/hooks/useCollectionRealtime';
+import { useTranslation } from '@/i18n/client';
 import { fetchCollectionDetail } from '@/lib/collections/client';
 import { roleCan } from '@/lib/collections/permissions';
 import { collectionQueryKeys } from '@/lib/collections/queryKeys';
@@ -20,6 +21,13 @@ import { NeonPublicationDialog } from './NeonPublicationDialog';
 import { NeonTeamDialog } from './NeonTeamDialog';
 import { SyncStatus } from './SyncStatus';
 
+const ROLE_LABEL = {
+  owner: 'collections.role.owner',
+  admin: 'collections.role.admin',
+  editor: 'collections.role.editor',
+  viewer: 'collections.role.viewer',
+} as const;
+
 export function NeonCollectionDetailPage({
   collectionId,
   realtimeEnabled,
@@ -27,6 +35,7 @@ export function NeonCollectionDetailPage({
   collectionId: string;
   realtimeEnabled: boolean;
 }) {
+  const { t } = useTranslation();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isCreateNodeOpen, setIsCreateNodeOpen] = useState(false);
   const [isTeamOpen, setIsTeamOpen] = useState(false);
@@ -59,13 +68,13 @@ export function NeonCollectionDetailPage({
         showAddContent={roleCan(role, 'edit')}
         onAddContentClick={() => setIsCreateNodeOpen(true)}
         breadcrumbs={[
-          { label: 'Collections', href: '/collections' },
+          { label: t('collections.detail.breadcrumb'), href: '/collections' },
           { label: collection.name },
         ]}
       />
       <Main
         className={styles.page}
-        fallbackMessage="Could not load this collection. Please refresh the page."
+        fallbackMessage={t('collections.detail.loadError')}
       >
         {/* Collection header */}
         <div className={styles.header}>
@@ -104,14 +113,14 @@ export function NeonCollectionDetailPage({
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
-                  <span>Make a copy</span>
+                  <span>{t('collections.detail.makeCopy')}</span>
                 </button>
               )}
               {roleCan(role, 'publish') && (
                 <button
                   type="button"
                   className={styles.settingsButton}
-                  aria-label="Publish collection"
+                  aria-label={t('collections.detail.publish')}
                   onClick={() => setIsPublicationOpen(true)}
                 >
                   <svg
@@ -134,7 +143,7 @@ export function NeonCollectionDetailPage({
                 <button
                   type="button"
                   className={styles.settingsButton}
-                  aria-label="Manage team"
+                  aria-label={t('collections.detail.manageTeam')}
                   onClick={() => setIsTeamOpen(true)}
                 >
                   <svg
@@ -158,7 +167,7 @@ export function NeonCollectionDetailPage({
                 <button
                   type="button"
                   className={styles.settingsButton}
-                  aria-label="Edit collection"
+                  aria-label={t('collections.detail.edit')}
                   onClick={() => setIsEditOpen(true)}
                 >
                   <svg
@@ -182,25 +191,34 @@ export function NeonCollectionDetailPage({
             )}
             <div className={styles.meta}>
               <span className={styles.count}>
-                {collection.itemCount}{' '}
-                {collection.itemCount === 1 ? 'item' : 'items'}
+                {t('collections.common.itemCount', {
+                  count: collection.itemCount,
+                })}
               </span>
               {role !== 'owner' && (
-                <span className={styles.roleBadge}>{role}</span>
+                <span className={styles.roleBadge}>{t(ROLE_LABEL[role])}</span>
               )}
               {primaryLineage &&
                 (primaryLineage.sourceCollectionId ? (
                   <Link
                     href={`/collections/${primaryLineage.sourceCollectionId}`}
                   >
-                    Copied from {primaryLineage.sourceName}
+                    {t('collections.detail.copiedFrom', {
+                      name: primaryLineage.sourceName,
+                    })}
                   </Link>
                 ) : primaryLineage.sourcePublicationId ? (
                   <Link href={`/view/${primaryLineage.sourcePublicationId}`}>
-                    Copied from {primaryLineage.sourceName}
+                    {t('collections.detail.copiedFrom', {
+                      name: primaryLineage.sourceName,
+                    })}
                   </Link>
                 ) : (
-                  <span>Copied from {primaryLineage.sourceName}</span>
+                  <span>
+                    {t('collections.detail.copiedFrom', {
+                      name: primaryLineage.sourceName,
+                    })}
+                  </span>
                 ))}
             </div>
           </div>

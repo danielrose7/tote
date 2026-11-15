@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import { Main } from '@/components/Main/Main';
+import { useTranslation } from '@/i18n/client';
 import styles from '../curate.module.css';
 
 const QUICK_FILLS = [
   {
-    label: 'Baby gear (3mo)',
-    topic:
-      'Baby gear for a 3-month-old — natural materials, considered design, small condo in Salt Lake City',
+    labelKey: 'curate.new.quickFillBabyLabel',
+    topicKey: 'curate.new.quickFillBabyTopic',
   },
   {
-    label: 'Gardening gear',
-    topic:
-      'Considered gardening gear — tools, workwear, and footwear that serious gardeners reach for',
+    labelKey: 'curate.new.quickFillGardenLabel',
+    topicKey: 'curate.new.quickFillGardenTopic',
   },
-];
+] as const;
 
 export function NewCurationClient() {
+  const { t } = useTranslation();
   const [topic, setTopic] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function NewCurationClient() {
     });
 
     if (!res.ok) {
-      setError('Failed to start curation. Check CURATOR_ENABLED.');
+      setError(t('curate.new.startFailed'));
       setLoading(false);
       return;
     }
@@ -48,24 +48,18 @@ export function NewCurationClient() {
     <Main className={styles.main}>
       <div className={styles.container}>
         <div className={styles.historyHeader}>
-          <h1 className={styles.heading}>New curation</h1>
+          <h1 className={styles.heading}>{t('curate.newCuration')}</h1>
           <a href="/curate" className={styles.backLink}>
-            All sessions
+            {t('curate.new.allSessions')}
           </a>
         </div>
 
         <form onSubmit={handleStart} className={styles.form}>
-          <p className={styles.subheading}>
-            Describe what you want to curate. Be specific — include context,
-            occasion, or a source like an email or product category.
-          </p>
-          <p className={styles.scopeNote}>
-            We'll research the category and build a focused shortlist —
-            typically 15–25 well-chosen items across a handful of sections.
-          </p>
+          <p className={styles.subheading}>{t('curate.new.describe')}</p>
+          <p className={styles.scopeNote}>{t('curate.new.scopeNote')}</p>
           <div className={styles.inputGroup}>
             <label htmlFor="topic" className={styles.label}>
-              Topic
+              {t('curate.new.topicLabel')}
             </label>
             <textarea
               id="topic"
@@ -73,19 +67,21 @@ export function NewCurationClient() {
               rows={4}
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. Considered gardening gear — tools, workwear, and footwear that serious gardeners reach for"
+              placeholder={t('curate.new.topicPlaceholder')}
               autoFocus
             />
             <div className={styles.quickFills}>
-              <span className={styles.quickFillLabel}>Quick fill:</span>
+              <span className={styles.quickFillLabel}>
+                {t('curate.new.quickFill')}
+              </span>
               {QUICK_FILLS.map((preset) => (
                 <button
-                  key={preset.label}
+                  key={preset.labelKey}
                   type="button"
                   className={styles.quickFillChip}
-                  onClick={() => setTopic(preset.topic)}
+                  onClick={() => setTopic(t(preset.topicKey))}
                 >
-                  {preset.label}
+                  {t(preset.labelKey)}
                 </button>
               ))}
             </div>
@@ -97,7 +93,7 @@ export function NewCurationClient() {
               className={styles.primaryButton}
               disabled={!topic.trim() || loading}
             >
-              {loading ? 'Starting…' : 'Start curation'}
+              {loading ? t('curate.new.starting') : t('curate.new.start')}
             </button>
           </div>
         </form>

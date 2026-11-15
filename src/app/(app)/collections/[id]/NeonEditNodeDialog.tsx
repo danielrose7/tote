@@ -7,6 +7,7 @@ import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.m
 import { NeonSectionSelector } from '@/components/NeonSectionSelector/NeonSectionSelector';
 import { useToast } from '@/components/ToastNotification';
 import type { CollectionNode } from '@/db/schema';
+import { useTranslation } from '@/i18n/client';
 import {
   createCollectionNodeMutation,
   type DeleteCollectionNodeMutation,
@@ -28,6 +29,24 @@ const itemNodeTypes = new Set<CollectionNode['type']>([
   'link',
   'photo',
 ]);
+
+const EDIT_TITLE = {
+  section: 'dialogs.editNode.title.section',
+  product: 'dialogs.editNode.title.product',
+  link: 'dialogs.editNode.title.link',
+  photo: 'dialogs.editNode.title.photo',
+  note: 'dialogs.editNode.title.note',
+  text: 'dialogs.editNode.title.text',
+} as const satisfies Record<CollectionNode['type'], string>;
+
+const DELETE_LABEL = {
+  section: 'dialogs.editNode.delete.section',
+  product: 'dialogs.editNode.delete.product',
+  link: 'dialogs.editNode.delete.link',
+  photo: 'dialogs.editNode.delete.photo',
+  note: 'dialogs.editNode.delete.note',
+  text: 'dialogs.editNode.delete.text',
+} as const satisfies Record<CollectionNode['type'], string>;
 
 type MutationContext = {
   previousDetail: CollectionDetail | undefined;
@@ -60,6 +79,7 @@ export function NeonEditNodeDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [title, setTitle] = useState('');
@@ -169,7 +189,7 @@ export function NeonEditNodeDialog({
       );
       setError(mutationError.message);
       showToast({
-        title: 'Content update failed',
+        title: t('dialogs.editNode.updateFailed'),
         description: mutationError.message,
         variant: 'error',
       });
@@ -254,7 +274,7 @@ export function NeonEditNodeDialog({
         context?.previousSummaries,
       );
       showToast({
-        title: 'Content deletion failed',
+        title: t('dialogs.editNode.deleteFailed'),
         description: mutationError.message,
         variant: 'error',
       });
@@ -310,15 +330,15 @@ export function NeonEditNodeDialog({
     event.preventDefault();
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError('A title is required');
+      setError(t('dialogs.editNode.titleRequired'));
       return;
     }
     if ((node.type === 'product' || node.type === 'link') && !url.trim()) {
-      setError('A URL is required for products and links');
+      setError(t('dialogs.editNode.urlRequired'));
       return;
     }
     if (node.type === 'photo' && !imageUrl.trim()) {
-      setError('An image URL is required for photos');
+      setError(t('dialogs.editNode.imageRequired'));
       return;
     }
 
@@ -363,10 +383,10 @@ export function NeonEditNodeDialog({
         <Dialog.Overlay className={editStyles.overlay} />
         <Dialog.Content className={editStyles.content}>
           <Dialog.Title className={editStyles.title}>
-            Edit {node.type}
+            {t(EDIT_TITLE[node.type])}
           </Dialog.Title>
           <Dialog.Description className={editStyles.description}>
-            Update or move this collection block.
+            {t('dialogs.editNode.description')}
           </Dialog.Description>
 
           <form onSubmit={handleSubmit} className={editStyles.form}>
@@ -375,7 +395,7 @@ export function NeonEditNodeDialog({
                 htmlFor="neon-edit-node-title"
                 className={editStyles.label}
               >
-                Title *
+                {t('dialogs.editNode.titleLabel')}
               </label>
               <input
                 id="neon-edit-node-title"
@@ -388,7 +408,9 @@ export function NeonEditNodeDialog({
 
             {node.type !== 'section' && (
               <div className={editStyles.inputGroup}>
-                <label className={editStyles.label}>Section</label>
+                <label className={editStyles.label}>
+                  {t('dialogs.editNode.section')}
+                </label>
                 <NeonSectionSelector
                   value={parentId || null}
                   onChange={(id) => setParentId(id ?? '')}
@@ -404,7 +426,7 @@ export function NeonEditNodeDialog({
                   htmlFor="neon-edit-node-url"
                   className={editStyles.label}
                 >
-                  URL *
+                  {t('dialogs.editNode.url')}
                 </label>
                 <input
                   id="neon-edit-node-url"
@@ -422,7 +444,9 @@ export function NeonEditNodeDialog({
                   htmlFor="neon-edit-node-image"
                   className={editStyles.label}
                 >
-                  Image URL {node.type === 'photo' ? '*' : ''}
+                  {node.type === 'photo'
+                    ? t('dialogs.editNode.imageUrlRequired')
+                    : t('dialogs.editNode.imageUrl')}
                 </label>
                 <input
                   id="neon-edit-node-image"
@@ -442,7 +466,7 @@ export function NeonEditNodeDialog({
                   htmlFor="neon-edit-node-description"
                   className={editStyles.label}
                 >
-                  Description
+                  {t('dialogs.editNode.descriptionLabel')}
                 </label>
                 <textarea
                   id="neon-edit-node-description"
@@ -460,7 +484,7 @@ export function NeonEditNodeDialog({
                   htmlFor="neon-edit-node-body"
                   className={editStyles.label}
                 >
-                  Body
+                  {t('dialogs.editNode.body')}
                 </label>
                 <textarea
                   id="neon-edit-node-body"
@@ -479,8 +503,8 @@ export function NeonEditNodeDialog({
                 <div className={editStyles.deleteConfirm}>
                   <p className={editStyles.deleteConfirmText}>
                     {node.type === 'section'
-                      ? 'Delete this section and every block inside it? There’s no undo.'
-                      : 'Remove this block from the collection? There’s no undo.'}
+                      ? t('dialogs.editNode.confirmSection')
+                      : t('dialogs.editNode.confirmBlock')}
                   </p>
                   <div className={editStyles.deleteConfirmActions}>
                     <button
@@ -488,7 +512,7 @@ export function NeonEditNodeDialog({
                       className={editStyles.deleteConfirmCancel}
                       onClick={() => setDeleteOpen(false)}
                     >
-                      Cancel
+                      {t('dialogs.common.cancel')}
                     </button>
                     <button
                       type="button"
@@ -496,7 +520,7 @@ export function NeonEditNodeDialog({
                       className="btn btn-danger"
                       autoFocus
                     >
-                      Delete {node.type}
+                      {t(DELETE_LABEL[node.type])}
                     </button>
                   </div>
                 </div>
@@ -506,7 +530,7 @@ export function NeonEditNodeDialog({
                   className={editStyles.deleteTrigger}
                   onClick={() => setDeleteOpen(true)}
                 >
-                  Delete {node.type}
+                  {t(DELETE_LABEL[node.type])}
                 </button>
               )}
             </div>
@@ -514,7 +538,7 @@ export function NeonEditNodeDialog({
             <div className={editStyles.actions}>
               <Dialog.Close asChild>
                 <button type="button" className="btn btn-secondary">
-                  Cancel
+                  {t('dialogs.common.cancel')}
                 </button>
               </Dialog.Close>
               <button
@@ -522,7 +546,7 @@ export function NeonEditNodeDialog({
                 className="btn btn-primary"
                 disabled={!title.trim()}
               >
-                Save Changes
+                {t('dialogs.common.saveChanges')}
               </button>
             </div>
           </form>
