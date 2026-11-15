@@ -7,6 +7,9 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { AiCreditsPanel } from '@/components/Billing/AiCreditsPanel';
 import { Header } from '@/components/Header/Header';
 import { Main } from '@/components/Main/Main';
+import { useTranslation } from '@/i18n/client';
+import type { RenderLocale } from '@/i18n/config';
+import { LanguagePicker } from '@/i18n/LanguagePicker';
 import styles from './settings.module.css';
 
 type SettingsTab = 'account' | 'billing';
@@ -22,6 +25,7 @@ export function SettingsClient({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { signOut } = useClerk();
+  const { i18n } = useTranslation();
 
   async function handleDeleteAccount() {
     setDeleting(true);
@@ -102,6 +106,8 @@ export function SettingsClient({
           {activeTab === 'account' && (
             <>
               {publicProfileCard}
+
+              <LanguagePicker current={i18n.language as RenderLocale} />
 
               <div className={styles.profileWrapper}>
                 <UserProfile

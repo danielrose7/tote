@@ -1,0 +1,12 @@
+{
+  "common": {
+    "retry": "Retry"
+  },
+  "settings": {
+    "language": {
+      "label": "Language",
+      "hint": "Used across Tote on the web, in the Chrome extension and in the iOS app.",
+      "saveError": "Couldn't save your language."
+    }
+  }
+}

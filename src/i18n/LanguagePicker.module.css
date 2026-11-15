@@ -1,0 +1,41 @@
+.card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0.25rem 0 0.75rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.select {
+  min-width: 12rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.error {
+  margin: 0.75rem 0 0;
+  color: #b91c1c;
+  font-size: 0.875rem;
+}
+
+.retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}

@@ -1,8 +1,8 @@
 import { clerkClient } from '@clerk/nextjs/server';
-import { inArray, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { db } from '../db';
 import { users } from '@/db/schema/users';
+import { db } from '../db';
 
 export type UserRecord = {
   id: string;
@@ -138,4 +138,34 @@ export async function resolveUsers(
   return new Map(
     [...fromDb.entries()].map(([id, row]) => [id, toUserSummary(row)]),
   );
+}
+
+/** The user's saved UI language, or null if they have never chosen one. */
+export async function getUserLocale(
+  clerkUserId: string,
+  database: typeof db = db,
+): Promise<string | null> {
+  const [row] = await database
+    .select({ locale: users.locale })
+    .from(users)
+    .where(eq(users.id, clerkUserId))
+    .limit(1);
+  return row?.locale ?? null;
+}
+
+/**
+ * Saves the user's UI language. The users row is created by the Clerk
+ * webhook, which can lag a first request, so make sure it exists first.
+ * Callers validate `locale` against LOCALES before calling.
+ */
+export async function setUserLocale(
+  clerkUserId: string,
+  locale: string,
+  database: typeof db = db,
+): Promise<void> {
+  await resolveUsers([clerkUserId]);
+  await database
+    .update(users)
+    .set({ locale, updatedAt: sql`now()` })
+    .where(eq(users.id, clerkUserId));
 }
