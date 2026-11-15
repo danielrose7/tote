@@ -1,0 +1,87 @@
+{
+  "slots": {
+    "common": {
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "type": {
+      "section": "sección",
+      "product": "producto",
+      "link": "enlace",
+      "photo": "foto",
+      "note": "nota",
+      "text": "texto"
+    },
+    "item": {
+      "untitled": "Sin título",
+      "photo": "Foto",
+      "select": "Elegir",
+      "deselect": "Quitar elección",
+      "refreshMetadata": "Actualizar metadatos",
+      "refreshing": "Actualizando…",
+      "refresh": "Actualizar",
+      "visit": "Visitar →",
+      "reorder": "Reordenar {{name}}"
+    },
+    "toast": {
+      "updateFailed": "No se pudo actualizar la sección",
+      "deleteFailed": "No se pudo eliminar la sección",
+      "reorderFailed": "No se pudo reordenar",
+      "refreshFailed": "Error al actualizar",
+      "unknownError": "Error desconocido"
+    },
+    "edit": {
+      "namePlaceholder": "Nombre de la sección",
+      "pick": "Elegir",
+      "any": "Cualquiera",
+      "budget": "Presupuesto"
+    },
+    "section": {
+      "untitled": "Sección sin título",
+      "selected": "{{count}}/{{max}} elegidos",
+      "itemCount_one": "{{count}} artículo",
+      "itemCount_other": "{{count}} artículos",
+      "done": "Listo",
+      "reorder": "Reordenar",
+      "refreshAll": "Actualizar todo",
+      "editSection": "Editar sección",
+      "deleteSection": "Eliminar sección",
+      "empty": "Aún no hay artículos en esta sección"
+    },
+    "swap": {
+      "title": "Límite de selección alcanzado",
+      "descriptionSwap_one": "«{{title}}» permite {{count}} selección. ¿Quieres reemplazar tu elección actual por esta?",
+      "descriptionSwap_other": "«{{title}}» permite {{count}} selecciones. ¿Quieres reemplazar tu elección actual por esta?",
+      "descriptionUnselect_one": "«{{title}}» permite {{count}} selección. Elige cuál quitar.",
+      "descriptionUnselect_other": "«{{title}}» permite {{count}} selecciones. Elige cuál quitar.",
+      "fallbackTitle": "Esta sección",
+      "selecting": "Eligiendo",
+      "replacing": "Reemplazando",
+      "unselect": "Quitar",
+      "confirm": "Reemplazar"
+    },
+    "delete": {
+      "title": "¿Eliminar «{{title}}»?",
+      "fallbackTitle": "sección",
+      "emptyBody": "Esta sección está vacía y se eliminará de forma permanente.",
+      "hasItems_one": "Esta sección tiene {{count}} artículo. ¿Qué debería pasar con él?",
+      "hasItems_other": "Esta sección tiene {{count}} artículos. ¿Qué debería pasar con ellos?",
+      "removeAll_one": "Quitar {{count}} artículo de la colección",
+      "removeAll_other": "Quitar los {{count}} artículos de la colección",
+      "moveUngrouped": "Mover los artículos a «Sin agrupar»",
+      "moveSection": "Mover los artículos a otra sección",
+      "moveAndDelete": "Mover y eliminar sección"
+    },
+    "sectionSelector": {
+      "untitled": "Sección sin título",
+      "clearSelection": "Borrar selección",
+      "placeholder": "Agregar a una sección (opcional)",
+      "creating": "Creando...",
+      "create": "Crear «{{name}}»",
+      "empty": "Aún no hay secciones. Escribe para crear una.",
+      "noMatch": "No hay secciones que coincidan"
+    }
+  }
+}

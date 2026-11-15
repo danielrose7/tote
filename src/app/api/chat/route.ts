@@ -11,6 +11,7 @@ import {
   type UIMessage,
 } from 'ai';
 import { z } from 'zod';
+import { getLocale } from '@/i18n/server';
 import { extractUrl } from '@/inngest/server-extraction';
 import { braveSearch } from '@/lib/braveSearch';
 import { canUseChat } from '@/lib/chatAuth';
@@ -20,6 +21,7 @@ import {
   hasPositiveCreditBalance,
   runCostCents,
 } from '@/lib/credits';
+import { outputLanguageDirective } from '@/lib/llmLanguage';
 import { MODELS } from '@/lib/models';
 
 export const maxDuration = 60;
@@ -195,7 +197,10 @@ export async function POST(req: Request) {
   }
 
   if (!(await hasPositiveCreditBalance(userId))) {
-    return Response.json({ error: 'Insufficient credits', code: 'insufficient_credits' }, { status: 402 });
+    return Response.json(
+      { error: 'Insufficient credits', code: 'insufficient_credits' },
+      { status: 402 },
+    );
   }
 
   const body = await req.json();
@@ -222,7 +227,9 @@ export async function POST(req: Request) {
   >();
   let braveSearchCount = 0;
 
-  const systemPrompt = buildSystemPrompt(collectionContext, seedContext);
+  const systemPrompt =
+    buildSystemPrompt(collectionContext, seedContext) +
+    outputLanguageDirective(await getLocale());
 
   const modelMessages = await convertToModelMessages(messages);
 

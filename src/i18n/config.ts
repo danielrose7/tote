@@ -8,7 +8,7 @@
  */
 
 /** Languages a user can pick. English is the source language. */
-export const LOCALES = ['en'] as const;
+export const LOCALES = ['en', 'es'] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = 'en';
@@ -27,6 +27,7 @@ export type RenderLocale = Locale | typeof PSEUDO_LOCALE;
 /** Each language names itself, so a user can find theirs in any UI language. */
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
+  es: 'Español',
 };
 
 export const LOCALE_COOKIE = 'tote-locale';

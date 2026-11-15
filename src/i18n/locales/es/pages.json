@@ -1,0 +1,309 @@
+{
+  "curate": {
+    "newCuration": "Nueva curaduría",
+    "usageTitle": "{{input}} de entrada / {{output}} de salida / {{searches}} búsquedas",
+    "cost": {
+      "under": "<{{amount}}",
+      "approx": "~{{amount}}"
+    },
+    "gap": "Vacío",
+    "history": {
+      "heading": "Curadurías",
+      "creditsAdded": "Créditos agregados",
+      "balanceUpdated": "Tu saldo se actualizó.",
+      "addCreditsToStart": "Agrega créditos para iniciar una nueva curaduría",
+      "empty": "Aún no hay sesiones. <link>Inicia tu primera curaduría</link>."
+    },
+    "phase": {
+      "started": "Iniciando",
+      "interviewRound1": "Entrevista",
+      "researching": "Investigando",
+      "interviewRound2": "Seguimiento",
+      "framing": "Planteamiento",
+      "planning": "Planificación",
+      "extracting": "Extrayendo",
+      "curating": "Curando",
+      "hospitality": "Detalles finales",
+      "complete": "Completo",
+      "error": "Error"
+    },
+    "status": {
+      "started": "Esperando la confirmación del flujo de trabajo",
+      "interviewRound1": "Esperando las respuestas de la ronda 1",
+      "researching": "Investigando la categoría — normalmente de 30 a 90 s...",
+      "interviewRound2": "Esperando las preguntas de seguimiento",
+      "framing": "Preparando el resumen curatorial — normalmente menos de un minuto...",
+      "briefReview": "Revisa el resumen y apruébalo para continuar",
+      "planning": "Planificando la estructura de la colección...",
+      "extracting": "Extrayendo páginas...",
+      "curating": "Curando la lista corta — normalmente de 60 a 90 s...",
+      "hospitality": "Refinando la colección...",
+      "refining": "Refinando la colección...",
+      "complete": "Colección completa",
+      "error": "Algo salió mal"
+    },
+    "badge": {
+      "started": "iniciada",
+      "interviewRound1": "entrevista-ronda-1",
+      "researching": "investigando",
+      "interviewRound2": "entrevista-ronda-2",
+      "framing": "planteamiento",
+      "briefReview": "revisión-del-resumen",
+      "planning": "planificación",
+      "extracting": "extrayendo",
+      "curating": "curando",
+      "hospitality": "detalles-finales",
+      "refining": "refinando",
+      "complete": "completa",
+      "error": "error"
+    },
+    "extraction": {
+      "extracting": "Extrayendo",
+      "extracted": "Extraído",
+      "skipped": "Omitido"
+    },
+    "pipeline": {
+      "scope": "Alcance",
+      "scout": "Exploración",
+      "polish": "Pulido",
+      "round1": "Ronda 1",
+      "research": "Investigación",
+      "round2": "Ronda 2",
+      "followUp": "Seguimiento",
+      "framing": "Planteamiento",
+      "plan": "Plan",
+      "links": "Enlaces",
+      "extract": "Extracción",
+      "curation": "Curaduría",
+      "refine": "Refinar {{n}}",
+      "publish": "Publicar"
+    },
+    "errors": {
+      "submitAnswers": "No se pudieron enviar las respuestas.",
+      "approveBrief": "No se pudo aprobar el resumen.",
+      "importFailed": "Error al importar",
+      "unknown": "Error desconocido"
+    },
+    "new": {
+      "quickFillBabyLabel": "Artículos para bebé (3 meses)",
+      "quickFillBabyTopic": "Artículos para un bebé de 3 meses: materiales naturales, diseño cuidado, departamento pequeño en Salt Lake City",
+      "quickFillGardenLabel": "Artículos de jardinería",
+      "quickFillGardenTopic": "Artículos de jardinería bien pensados: herramientas, ropa de trabajo y calzado que prefieren los jardineros más exigentes",
+      "startFailed": "No se pudo iniciar la curaduría. Revisa CURATOR_ENABLED.",
+      "allSessions": "Todas las sesiones",
+      "describe": "Describe qué quieres curar. Sé específico: incluye el contexto, la ocasión o una fuente, como un correo o una categoría de productos.",
+      "scopeNote": "Investigaremos la categoría y armaremos una lista corta y enfocada: normalmente de 15 a 25 artículos bien elegidos repartidos en unas pocas secciones.",
+      "topicLabel": "Tema",
+      "topicPlaceholder": "p. ej., Artículos de jardinería bien pensados: herramientas, ropa de trabajo y calzado que prefieren los jardineros más exigentes",
+      "quickFill": "Autocompletar:",
+      "starting": "Iniciando…",
+      "start": "Iniciar curaduría"
+    },
+    "page": {
+      "heading": "Curador de colecciones",
+      "settingUp": "Preparando todo...",
+      "connecting": "Conectando con el flujo de trabajo y esperando los primeros eventos del curador...",
+      "extractingPages": "Extrayendo páginas ({{current}} / {{total}})",
+      "extractingGapPages": "Extrayendo páginas de vacíos ({{current}} / {{total}})",
+      "runCreated": "Ejecución creada",
+      "refinementPasses": "Normalmente 1 o 2 pasadas de refinamiento.",
+      "streamDisconnected": "Transmisión desconectada: haz clic para reconectar",
+      "reconnect": "↺ Reconectar",
+      "streamStatus": "Transmisión: {{status}}",
+      "session": "Sesión <code>{{sessionId}}</code>",
+      "approach": "Así lo vamos a enfocar:",
+      "approachNote": "Una selección acotada dentro de cada una, no una guía exhaustiva.",
+      "urlsPending_one": "{{count}} URL pendiente",
+      "urlsPending_other": "{{count}} URL pendientes",
+      "newCollection": "Nueva colección",
+      "copied": "¡Copiado!",
+      "copyJson": "Copiar JSON",
+      "importing": "Importando...",
+      "addToTote": "Agregar a Tote",
+      "somethingWrong": "Algo salió mal.",
+      "tryAgain": "Intentar de nuevo",
+      "newTopic": "Nuevo tema"
+    },
+    "interview": {
+      "theCategory": "la categoría",
+      "round2": "Ronda 2 de 2. Investigamos {{subject}}; estas preguntas nos ayudan a afinar los detalles antes de armar la colección.",
+      "round1": "Ronda 1 de 2. Cuando respondas, investigaremos la categoría (~30–90 s) y volveremos con algunas preguntas de seguimiento más precisas.",
+      "notesPlaceholder": "Notas adicionales (opcional)",
+      "submitFollowUp": "Enviar seguimiento",
+      "submitAnswers": "Enviar respuestas"
+    },
+    "brief": {
+      "intro": "Este es el resumen que usaremos para armar tu colección. Apruébalo para continuar o agrega una corrección abajo.",
+      "avoid": "Evitar: {{items}}",
+      "anythingOff": "¿Hay algo que no encaje? (opcional)",
+      "correctionExample": "p. ej., Ella tiene más de 70 años, no es una mamá reciente: quita los productos para bebé del resumen",
+      "approving": "Aprobando...",
+      "approve": "Se ve bien →",
+      "submitCorrection": "Enviar corrección"
+    },
+    "result": {
+      "sections_one": "{{count}} sección",
+      "sections_other": "{{count}} secciones",
+      "items_one": "{{count}} artículo",
+      "items_other": "{{count}} artículos",
+      "joiner": " · "
+    }
+  },
+  "import": {
+    "signIn": "Inicia sesión para acceder a las importaciones.",
+    "restricted": "Acceso restringido.",
+    "parseFailed": "No se pudo analizar el JSON",
+    "failed": "Error al importar",
+    "unknown": "Error desconocido",
+    "imported": "Colección importada",
+    "importedDescription": "«{{title}}» — {{sections}}, {{items}}",
+    "sections_one": "{{count}} sección",
+    "sections_other": "{{count}} secciones",
+    "items_one": "{{count}} artículo",
+    "items_other": "{{count}} artículos",
+    "heading": "Importar colección",
+    "subheading": "Pega un JSON de importación de borrador de Tote para crear una colección.",
+    "jsonLabel": "JSON de importación",
+    "hint": "Pega tu contenido y envíalo para ver una vista previa antes de importar.",
+    "preview": "Vista previa de la importación",
+    "previewMeta": "{{sections}}, {{items}}",
+    "back": "Atrás",
+    "importing": "Importando...",
+    "importTitle": "Importar «{{title}}»"
+  },
+  "clone": {
+    "notAvailable": "Esta colección no está disponible para copiarse.",
+    "copyFailed": "No se pudo copiar esta colección.",
+    "preparing": "Preparando tu copia...",
+    "useThisList": "Usar esta lista",
+    "signInPrompt": "Inicia sesión o crea una cuenta para copiar esta colección en tu propio Tote.",
+    "signUp": "Regístrate para copiar",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "logIn": "Iniciar sesión",
+    "unableToCopy": "No se puede copiar",
+    "backToCollections": "Volver a las colecciones",
+    "backToHome": "Volver al inicio",
+    "copying": "Copiando esta lista en tu cuenta..."
+  },
+  "invite": {
+    "acceptFailed": "No se pudo aceptar esta invitación",
+    "accepted": "Invitación aceptada",
+    "addedToAccount": "La colección se agregó a tu cuenta.",
+    "invited": "Te invitaron",
+    "signInPrompt": "Inicia sesión para agregar esta colección compartida a tu cuenta.",
+    "signIn": "Inicia sesión para continuar",
+    "accepting": "Aceptando la invitación...",
+    "loading": "Cargando...",
+    "unavailable": "Invitación no disponible",
+    "goToCollections": "Ir a las colecciones",
+    "opening": "Abriendo la colección..."
+  },
+  "settings": {
+    "signIn": "Inicia sesión para acceder a la configuración.",
+    "backToHome": "Volver al inicio",
+    "title": "Configuración",
+    "logOut": "Cerrar sesión",
+    "tabs": {
+      "account": "Cuenta",
+      "billing": "Facturación"
+    },
+    "delete": {
+      "title": "Zona de peligro",
+      "description": "Elimina de forma permanente tu cuenta y todos los datos asociados. Esto no se puede deshacer.",
+      "confirmPhrase": "eliminar mi cuenta",
+      "label": "Escribe <strong>{{phrase}}</strong> para confirmar",
+      "button": "Eliminar cuenta",
+      "deleting": "Eliminando…",
+      "error": "Algo salió mal. Inténtalo de nuevo."
+    },
+    "profile": {
+      "title": "Tu perfil público",
+      "addUsername": "Agrega un nombre de usuario en el perfil de abajo para obtener la URL de tu perfil público.",
+      "publishHint": "Publica una colección para activar tu perfil público en <code>{{path}}</code>. Las colecciones son privadas de forma predeterminada.",
+      "published_one": "{{count}} colección publicada.",
+      "published_other": "{{count}} colecciones publicadas.",
+      "copy": "Copiar",
+      "copied": "¡Copiado!",
+      "view": "Ver →"
+    }
+  },
+  "billing": {
+    "title": "Créditos de IA",
+    "subtitle": "Costos de modelos y búsquedas, sin recargos.",
+    "loading": "Cargando...",
+    "noCredits": "Sin créditos",
+    "cancel": "Cancelar",
+    "addCredits": "Agregar créditos",
+    "packs": {
+      "starter": "Inicial",
+      "standard": "Estándar",
+      "pro": "Pro"
+    },
+    "packDescription": "Agrega {{amount}} en créditos de IA",
+    "redirecting": "Redirigiendo...",
+    "recentActivity": "Actividad reciente",
+    "refresh": "Actualizar",
+    "loadingActivity": "Cargando actividad...",
+    "noActivity": "Aún no hay actividad de créditos.",
+    "tx": {
+      "purchase": "Compra de créditos",
+      "grant": "Créditos otorgados",
+      "chat": "Chat",
+      "curator": "Curador"
+    },
+    "group": {
+      "purchases": "Compras de créditos",
+      "grants": "Créditos otorgados",
+      "curation": "Curaduría {{id}}",
+      "chat": "Chat de la colección {{id}}",
+      "collection": "Colección {{id}}",
+      "session": "Sesión {{id}}"
+    },
+    "details": {
+      "tokens": "{{tokens}} tokens",
+      "searches_one": "{{count}} búsqueda",
+      "searches_other": "{{count}} búsquedas",
+      "browserSessions_one": "{{count}} sesión del navegador",
+      "browserSessions_other": "{{count}} sesiones del navegador",
+      "balance": "saldo {{amount}}"
+    }
+  },
+  "shell": {
+    "dismiss": "Descartar",
+    "refreshPage": "Actualizar página",
+    "header": {
+      "breadcrumb": "Ruta de navegación",
+      "myProfile": "Mi perfil",
+      "curator": "Curador",
+      "addLink": "+ Agregar enlace",
+      "addContent": "+ Agregar contenido",
+      "addCollection": "+ Agregar colección",
+      "saveTabs": "Guardar mis pestañas"
+    },
+    "errorBoundary": {
+      "message": "Algo salió mal.",
+      "tryAgain": "Intentar de nuevo"
+    },
+    "main": {
+      "fallbackMessage": "Algo salió mal. Actualiza la página."
+    },
+    "offline": {
+      "pending_one": "Estás sin conexión. {{count}} cambio está guardado en este dispositivo.",
+      "pending_other": "Estás sin conexión. {{count}} cambios están guardados en este dispositivo.",
+      "cached": "Estás sin conexión. Las colecciones en caché siguen disponibles."
+    },
+    "maintenance": {
+      "message": "Estamos haciendo mantenimiento de la base de datos hasta finales de junio para preparar el lanzamiento de nuestra app de iOS. Gracias por tu paciencia."
+    },
+    "iosAppBanner": {
+      "label": "Descarga la app de Tote para iOS",
+      "message": "Tote tiene una app para iPhone y iPad. Guarda desde Safari o cualquier app con el botón Compartir y lleva tus colecciones contigo.",
+      "cta": "Descargar la app"
+    },
+    "extractionTip": {
+      "message": "No pudimos leer todo en este sitio. Aun así, puedes agregarlo tal cual. La extensión de Tote y la app de iOS leen las páginas en tu propio navegador, así que normalmente también obtienes la imagen y el precio.",
+      "getExtension": "Obtener la extensión",
+      "iosApp": "App de iOS"
+    }
+  }
+}

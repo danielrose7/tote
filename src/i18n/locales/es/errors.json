@@ -1,0 +1,18 @@
+{
+  "errors": {
+    "api": {
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "network": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+      "server": "El servidor tuvo un problema. Inténtalo de nuevo.",
+      "invalid": "Esa solicitud no era válida.",
+      "unauthorized": "Inicia sesión e inténtalo de nuevo.",
+      "forbidden": "No tienes permiso para hacer eso.",
+      "notFound": "No se encontró. Puede que se haya eliminado.",
+      "conflict": "Esto cambió en otro lugar. Actualiza e inténtalo de nuevo.",
+      "versionConflict": "Esto cambió en otro lugar. Actualiza e inténtalo de nuevo.",
+      "rateLimited": "Demasiadas solicitudes. Espera un momento.",
+      "inviteUnavailable": "Esta invitación no es válida o ya no está disponible.",
+      "insufficientCredits": "No tienes suficientes créditos de IA para esto."
+    }
+  }
+}

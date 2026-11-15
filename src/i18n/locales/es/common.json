@@ -1,0 +1,23 @@
+{
+  "common": {
+    "retry": "Reintentar"
+  },
+  "settings": {
+    "language": {
+      "label": "Idioma",
+      "hint": "Se usa en todo Tote: la web, la extensión de Chrome y la app de iOS.",
+      "saveError": "No se pudo guardar tu idioma."
+    }
+  },
+  "refresh": {
+    "failedTitleAll": "Error al actualizar",
+    "failedTitleSome": "Algunos artículos fallaron",
+    "failedDescription_one": "No se pudo leer {{count}} artículo. Revisa tu conexión e inténtalo de nuevo.",
+    "failedDescription_other": "No se pudieron leer {{count}} artículos. Revisa tu conexión e inténtalo de nuevo.",
+    "thinTitle": "Faltan algunos detalles",
+    "thinWithExtension_one": "{{count}} artículo limita lo que se puede leer, incluso con la extensión. Puedes agregar los detalles a mano.",
+    "thinWithExtension_other": "{{count}} artículos limitan lo que se puede leer, incluso con la extensión. Puedes agregar los detalles a mano.",
+    "thinWithoutExtension_one": "{{count}} artículo limita lo que pueden leer nuestros servidores. La extensión de Tote lee las páginas en tu navegador y normalmente obtiene la imagen y el precio.",
+    "thinWithoutExtension_other": "{{count}} artículos limitan lo que pueden leer nuestros servidores. La extensión de Tote lee las páginas en tu navegador y normalmente obtiene la imagen y el precio."
+  }
+}

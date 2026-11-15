@@ -1,0 +1,109 @@
+{
+  "collections": {
+    "common": {
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "done": "Listo",
+      "untitled": "Sin título",
+      "itemCount_one": "{{count}} artículo",
+      "itemCount_other": "{{count}} artículos"
+    },
+    "viewMode": {
+      "label": "Modo de vista",
+      "grid": "Vista de cuadrícula",
+      "table": "Vista de tabla"
+    },
+    "type": {
+      "section": "sección",
+      "product": "producto",
+      "link": "enlace",
+      "photo": "foto",
+      "note": "nota",
+      "text": "texto",
+      "photoTitle": "Foto"
+    },
+    "role": {
+      "owner": "propietario",
+      "admin": "administrador",
+      "editor": "editor",
+      "viewer": "lector"
+    },
+    "table": {
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "daysAgo_one": "hace {{count}} día",
+      "daysAgo_other": "hace {{count}} días",
+      "weeksAgo_one": "hace {{count}} semana",
+      "weeksAgo_other": "hace {{count}} semanas",
+      "monthsAgo_one": "hace {{count}} mes",
+      "monthsAgo_other": "hace {{count}} meses",
+      "yearsAgo_one": "hace {{count}} año",
+      "yearsAgo_other": "hace {{count}} años",
+      "untitledSection": "Sección sin título",
+      "title": "Título",
+      "price": "Precio",
+      "section": "Sección",
+      "added": "Agregado"
+    },
+    "list": {
+      "loadError": "No se pudieron cargar tus colecciones. Actualiza la página.",
+      "searchPlaceholder": "Buscar colecciones…",
+      "searchLabel": "Buscar colecciones",
+      "newLabel": "Nuevo:",
+      "addedToOne": "Te agregaron a <link>{{name}}</link>",
+      "addedToMany_one": "Te agregaron recientemente a {{count}} colección compartida",
+      "addedToMany_other": "Te agregaron recientemente a {{count}} colecciones compartidas",
+      "emptyTitle": "Aún no hay colecciones",
+      "emptyDescription": "Tus colecciones aparecerán aquí.",
+      "noResults": "Ninguna colección coincide con «{{query}}»",
+      "itemCountShared_one": "{{count}} artículo · Compartida",
+      "itemCountShared_other": "{{count}} artículos · Compartida"
+    },
+    "create": {
+      "failedTitle": "No se pudo crear la colección",
+      "nameRequired": "El nombre de la colección es obligatorio",
+      "queuedTitle": "Colección en cola",
+      "syncingNow": "«{{name}}» se está sincronizando.",
+      "syncWhenOnline": "«{{name}}» se sincronizará cuando vuelvas a tener conexión.",
+      "title": "Agregar colección",
+      "description": "Organiza enlaces, productos, fotos y notas.",
+      "nameLabel": "Nombre de la colección *",
+      "descriptionLabel": "Descripción (opcional)",
+      "color": "Color",
+      "selectColor": "Elegir el color {{color}}"
+    },
+    "detail": {
+      "breadcrumb": "Colecciones",
+      "loadError": "No se pudo cargar esta colección. Actualiza la página.",
+      "makeCopy": "Hacer una copia",
+      "publish": "Publicar colección",
+      "manageTeam": "Administrar equipo",
+      "edit": "Editar colección",
+      "copiedFrom": "Copiada de {{name}}"
+    },
+    "sync": {
+      "failed": "Error de sincronización · {{operation}}",
+      "dismiss": "Descartar el error de sincronización",
+      "saving": "Guardando...",
+      "saved": "Guardado {{time}}",
+      "lastSaved": "Último guardado {{time}}"
+    },
+    "view": {
+      "reorderItem": "Reordenar {{name}}",
+      "refreshMetadata": "Actualizar metadatos",
+      "refreshing": "Actualizando…",
+      "refresh": "Actualizar",
+      "visit": "Visitar →",
+      "reorderFailed": "No se pudo reordenar",
+      "refreshFailed": "Error al actualizar",
+      "emptyTitle": "Esta colección está vacía",
+      "emptyDescription": "Los artículos que agregues a esta colección aparecerán aquí.",
+      "refreshAll": "Actualizar todo",
+      "refreshAllLower": "Actualizar todo",
+      "reorderSections": "Reordenar secciones",
+      "reorder": "Reordenar",
+      "ungrouped": "Sin agrupar"
+    }
+  }
+}

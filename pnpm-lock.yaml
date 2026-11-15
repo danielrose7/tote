@@ -23,6 +23,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.82.0
         version: 0.82.0(zod@4.3.6)
+      '@clerk/localizations':
+        specifier: ^4.24.8
+        version: 4.24.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@clerk/nextjs':
         specifier: ^7.8.3
         version: 7.8.3(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1053,6 +1056,10 @@ packages:
     resolution: {integrity: sha512-GiQBbufOK0wYlfQVaJEOOEZ/3Sglf/YdRW7Q7gVERkyj/fwVEL8LQAoz5SVHiZTElCPReh5x7nOVSM0FzWLOIA==}
     engines: {node: '>=20.9.0'}
 
+  '@clerk/localizations@4.24.8':
+    resolution: {integrity: sha512-JKtLkGL/YJ2kqyID/0icY4Nv8Lh4j6AuNoRi2uvj96t8J8/SeWjYE23SBM+PqaFJaerf/letX/jFZjNd5LhYqQ==}
+    engines: {node: '>=20.9.0'}
+
   '@clerk/nextjs@7.8.3':
     resolution: {integrity: sha512-1ltta1RbpbM7/ahZ3rROBV7bFTbNE0C10Hw3CRPt+tGYuO7dMz6sq+0aMEwRS/3flpN8J3/pHxiUGfMfliLWaQ==}
     engines: {node: '>=20.9.0'}
@@ -1070,6 +1077,18 @@ packages:
 
   '@clerk/shared@4.30.2':
     resolution: {integrity: sha512-2U8jE2Gno2uRxg5b2fv5uY3zxzxAvmBzjiaOPAfoAVUgJ2Ys9kPu+6k2TaBNTkeF0ncQ/5erECIx6dPt0d8XyQ==}
+    engines: {node: '>=20.9.0'}
+    peerDependencies:
+      react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
+      react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
+  '@clerk/shared@4.45.1':
+    resolution: {integrity: sha512-rAGh+U8dSE6Ov1I3mXysIHaGhxx63ET+24kW4gnmApJvrfU8nq9JT9pQOoyzG3X4PQa93aaAsxkck46CynDeHA==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
@@ -3712,6 +3731,9 @@ packages:
   '@tanstack/query-core@5.101.0':
     resolution: {integrity: sha512-cQetA74EB+seWySv1TTKr828TnP0u39m6LykwDXIo84SNortpDkp30TMEjkqtYCNP9c40uT/iwl6MLiufEt0Ow==}
 
+  '@tanstack/query-core@5.107.1':
+    resolution: {integrity: sha512-PSyAik11oQBEVOiVy5hjZWHmoUqOXqK1WYy4v55mcxozEfKaQgpUMsgnXhWjuESzSht8JfzqMS1m6M/9CpNgvg==}
+
   '@tanstack/query-persist-client-core@5.101.0':
     resolution: {integrity: sha512-LH99WepGVLwlLfuOcQcPK7f3Xg/Gf+xlMMIj9xWu/8oQ3egnDzjr+a4HvEmi6PGob5SmGXvmDKZaH5+In9dzjw==}
 
@@ -5587,6 +5609,9 @@ packages:
   js-cookie@3.0.7:
     resolution: {integrity: sha512-z/wZZgDrkNV1eA0ULjM/F9/50Ya8fbzgKneSpoPsXSGd0KnpdtHfOZWK+GcwLk+EZbS4F9RBhU+K2RgzuDaItw==}
     engines: {node: '>=20'}
+
+  js-cookie@3.0.8:
+    resolution: {integrity: sha512-yeJd4aNAdYZQjaon2bpD/Gb0B/omw7HQOsynXXcOiWVCacbBcPlgn8S/d1X6blFSaHao7ozqtW7NZW19xpCtIw==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -8464,6 +8489,13 @@ snapshots:
       - react
       - react-dom
 
+  '@clerk/localizations@4.24.8(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@clerk/shared': 4.45.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
   '@clerk/nextjs@7.8.3(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@clerk/backend': 3.16.13(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -8508,6 +8540,16 @@ snapshots:
     optionalDependencies:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
+
+  '@clerk/shared@4.45.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@tanstack/query-core': 5.107.1
+      dequal: 2.0.3
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.8
+    optionalDependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   '@clerk/ui@1.31.0(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.6.2)(utf-8-validate@5.0.10))(@types/react@19.1.0)(bs58@6.0.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.1.0(react@19.1.0))(react-native@0.83.2(@babel/core@7.28.5(supports-color@10.2.2))(@react-native/metro-config@0.84.1(@babel/core@7.28.5(supports-color@10.2.2))(bufferutil@4.1.0)(supports-color@10.2.2)(utf-8-validate@5.0.10))(@types/react@19.1.0)(bufferutil@4.1.0)(react@19.1.0)(supports-color@10.2.2)(utf-8-validate@5.0.10))(react@19.1.0)(supports-color@10.2.2)(typescript@5.6.2)':
     dependencies:
@@ -11869,6 +11911,8 @@ snapshots:
 
   '@tanstack/query-core@5.101.0': {}
 
+  '@tanstack/query-core@5.107.1': {}
+
   '@tanstack/query-persist-client-core@5.101.0':
     dependencies:
       '@tanstack/query-core': 5.101.0
@@ -14072,6 +14116,8 @@ snapshots:
   js-base64@3.7.8: {}
 
   js-cookie@3.0.7: {}
+
+  js-cookie@3.0.8: {}
 
   js-tokens@4.0.0: {}
 

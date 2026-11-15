@@ -6,6 +6,7 @@ import {
   failCuratorSession,
 } from '@/lib/curatorSessionsDb';
 import { logProgressEvent, logStep } from '@/lib/curatorStepLog';
+import { outputLanguageDirective } from '@/lib/llmLanguage';
 import { MODELS } from '@/lib/models';
 import { curationChannel } from '../channels';
 import { inngest } from '../client';
@@ -131,7 +132,9 @@ export const curateCollection = inngest.createFunction(
     },
   },
   async ({ event, step, attempt }) => {
-    const { sessionId, topic, requestedBy } = event.data;
+    const { sessionId, topic, requestedBy, locale } = event.data;
+    const language = outputLanguageDirective(locale);
+    const curatorSystem = `${CURATOR_SYSTEM_PROMPT}${language}`;
     const ch = curationChannel({ sessionId });
     console.log('[curate-collection] run-start', {
       at: nowIso(),
@@ -176,8 +179,7 @@ export const curateCollection = inngest.createFunction(
       async () => {
         const maxTokens = 4096 + attempt * 2048;
         const response = await llm.generate({
-          system:
-            'You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.',
+          system: `You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.${language}`,
           prompt: buildRound1QuestionsPrompt(topic, queryType),
           maxTokens: Math.max(maxTokens, interviewTokenLimit()),
         });
@@ -235,8 +237,7 @@ export const curateCollection = inngest.createFunction(
     await step.run('generate-session-title', async () => {
       const response = await llm.generate({
         model: 'claude-haiku-4-5-20251001',
-        system:
-          'You generate concise titles for product curation sessions. Return only the title — no quotes, no punctuation, no explanation.',
+        system: `You generate concise titles for product curation sessions. Return only the title — no quotes, no punctuation, no explanation.${language}`,
         prompt: `Generate a 3-5 word title that captures the essence of this curation request.
 
 <examples>
@@ -345,7 +346,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       'category-research',
       async () => {
         const response = await llm.generateWithSearch({
-          system: CURATOR_SYSTEM_PROMPT,
+          system: curatorSystem,
           prompt: buildCategoryResearchPrompt(
             topic,
             round1Questions,
@@ -412,7 +413,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       'market-landscape',
       async () => {
         const response = await llm.generateWithSearch({
-          system: CURATOR_SYSTEM_PROMPT,
+          system: curatorSystem,
           prompt: buildMarketLandscapePrompt(
             topic,
             round1Questions,
@@ -525,8 +526,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         'generate-questions-r2',
         async () => {
           const response = await llm.generate({
-            system:
-              'You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.',
+            system: `You are a product curation assistant. Return only valid JSON arrays — no markdown, no explanation.${language}`,
             prompt: buildRound2QuestionsPrompt(
               topic,
               round1Questions,
@@ -663,7 +663,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
     // Step 4: Build framing brief
     const framingResult = await step.run('build-framing-brief', async () => {
       const response = await llm.generate({
-        system: CURATOR_SYSTEM_PROMPT,
+        system: curatorSystem,
         prompt: buildFramingPrompt(
           topic,
           round1Questions,
@@ -770,7 +770,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         'build-framing-brief-corrected',
         async () => {
           const response = await llm.generate({
-            system: CURATOR_SYSTEM_PROMPT,
+            system: curatorSystem,
             prompt: buildFramingPrompt(
               topic,
               round1Questions,
@@ -845,7 +845,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         sessionId,
       });
       const response = await llm.generate({
-        system: CURATOR_SYSTEM_PROMPT,
+        system: curatorSystem,
         prompt: buildPlanPrompt(topic, framingBrief, marketLandscape),
         maxTokens: planTokenLimit(),
       });
@@ -1289,7 +1289,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         sectionCount: extractedSections.length,
       });
       const response = await llm.generate({
-        system: CURATOR_SYSTEM_PROMPT,
+        system: curatorSystem,
         prompt: buildCuratePrompt(
           plan.title,
           plan.intro,
@@ -1403,7 +1403,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
 
     const hospitalityResult = await step.run('hospitality-pass', async () => {
       const response = await llm.generate({
-        system: CURATOR_SYSTEM_PROMPT,
+        system: curatorSystem,
         prompt: buildHospitalityPassPrompt(currentCollection, framingBrief),
         maxTokens: hospitalityTokenLimit(),
       });
@@ -1478,7 +1478,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
       // 7a. Parse gaps from warnings
       const gapsResult = await step.run(`parse-gaps-${pass}`, async () => {
         const response = await llm.generate({
-          system: CURATOR_SYSTEM_PROMPT,
+          system: curatorSystem,
           prompt: buildGapsPrompt(currentCollection),
           maxTokens: 2000,
         });
@@ -1765,7 +1765,7 @@ Input: "Baby gear for a 3-month-old — natural materials, considered design, sm
         `refine-collection-${pass}`,
         async () => {
           const response = await llm.generate({
-            system: CURATOR_SYSTEM_PROMPT,
+            system: curatorSystem,
             prompt: buildRefinementCuratePrompt(
               currentCollection,
               refinedSections,

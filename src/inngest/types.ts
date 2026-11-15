@@ -35,6 +35,8 @@ export interface CurationStartEvent {
     sessionId: string;
     topic: string;
     requestedBy: string;
+    /** UI language of the requester; the model writes its output in it. */
+    locale?: string;
   };
 }
 

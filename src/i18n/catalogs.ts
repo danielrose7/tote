@@ -37,7 +37,17 @@ import { pseudoizeCatalog } from './pseudo';
  * active one is ever sent to the browser.
  */
 const loaders: Record<string, () => Promise<{ default: Catalog }>> = {
-  // es: () => import('./locales/es/common.json'),
+  es: async () => {
+    const parts = await Promise.all([
+      import('./locales/es/common.json'),
+      import('./locales/es/slots.json'),
+      import('./locales/es/collections.json'),
+      import('./locales/es/dialogs.json'),
+      import('./locales/es/pages.json'),
+      import('./locales/es/errors.json'),
+    ]);
+    return { default: merge(...parts.map((p) => p.default as Catalog)) };
+  },
 };
 
 export const sourceCatalog = en;
