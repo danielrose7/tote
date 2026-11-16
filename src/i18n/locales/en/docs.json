@@ -525,33 +525,34 @@
           "Managing Members",
           "Open <strong>Manage team</strong> to see everyone who has joined. From there you can change a member's role or remove them entirely. You can also see all outstanding invites and revoke any you no longer want active.",
           "Leaving a Shared Collection",
-          "If you no longer want access to a collection someone shared with you, you can leave it from your collections page. This removes it from your list but doesn't affect other collaborators.",
+          "There isn't a \"leave\" button yet. If you no longer want access to a collection someone shared with you, ask an owner or admin to remove you in Manage team. Removing a member doesn't affect the other collaborators.",
           "Public Links",
           "In addition to sharing with collaborators, you can make a collection publicly viewable. Public links let anyone see your collection without signing in—perfect for wishlists, registries, or sharing recommendations.",
           "Public links are a great way to create a \"link in bio\" for social media. Curate your favorite products into a collection, make it public, and share the link in your Instagram, TikTok, or anywhere else. Update it anytime with your latest finds.",
           "Making a Collection Public",
           [
-            "Open the collection and click \"Share\"",
-            "In the General Access section, click \"Make Public\"",
+            "Open the collection and click \"Publish collection\" in the header",
+            "Optionally edit the public URL slug, choose a layout (Minimal or Feature), and decide whether people can make independent copies",
+            "Click \"Publish snapshot\"",
             "Copy the public link to share anywhere"
           ],
           "Your Own Short Link",
           "Every public collection gets your own unique, trustworthy link on tote.tools — with your username right in it so people know it's from you:",
           "<code>tote.tools/s/yourname/summer-wishlist</code>",
-          "Tote creates this automatically from your collection name when you publish. You can change it to whatever you like in the Share dialog — great for social media bios, texts, or anywhere you want a link that's easy to recognize and trust.",
+          "Tote creates this automatically from your collection name when you publish. You can change it to whatever you like in the publish dialog — great for social media bios, texts, or anywhere you want a link that's easy to recognize and trust.",
           "To get your own short link, make sure you've set a username in your account settings. Without a username, your public link will still work but will be longer.",
           "How Public Links Work",
           "When you make a collection public, Tote creates a <strong>snapshot</strong> of your collection. This public copy is separate from your working collection—changes you make won't automatically appear on the public version.",
-          "After adding or removing products, you need to click \"Update Public Version\" to push your changes to the public link. This gives you control over what others see.",
+          "After adding or removing products, you need to click \"Replace public snapshot\" in the publish dialog to push your changes to the public link. This gives you control over what others see.",
           "Updating the Public Version",
           "When you're ready to share your latest changes:",
           [
-            "Open the Share dialog",
-            "Click \"Update Public Version\"",
+            "Open the collection and click \"Publish collection\" in the header",
+            "Click \"Replace public snapshot\"",
             "Your changes are now visible to anyone with the public link"
           ],
           "Making a Collection Private Again",
-          "You can revoke public access at any time by clicking \"Make Private\" in the Share dialog. The public link will stop working immediately.",
+          "You can revoke public access at any time by clicking \"Unpublish\" in the publish dialog. The public link will stop working immediately.",
           "Privacy",
           "Only people with the invite link can access a shared collection. Your other collections remain completely private. Tote never shares your data with advertisers or third parties.",
           "Related Guides",
@@ -566,9 +567,9 @@
           "Is my shared collection visible to everyone?",
           "No. Shared collections are only accessible to people who have the invite link. If you want anyone to see your collection without signing in, you can make it public separately — see the <a href=\"#public-links\">Public Links</a> section above.",
           "How do I stop sharing a collection?",
-          "For public links, open the publish dialog and click \"Make Private\" to revoke access immediately. For invite-based sharing, open <strong>Manage team</strong> and remove individual members, or revoke any pending invites you no longer want active.",
+          "For public links, open the publish dialog and click \"Unpublish\" to revoke access immediately. For invite-based sharing, open <strong>Manage team</strong> and remove individual members, or revoke any pending invites you no longer want active.",
           "Can I customize my public collection link?",
-          "Yes! When you publish a collection, Tote creates a short link from the collection name. You can change it to whatever you like in the Share dialog — for example, <code>tote.tools/s/yourname/summer-wishlist</code>."
+          "Yes! When you publish a collection, Tote creates a short link from the collection name. You can change it to whatever you like in the publish dialog — for example, <code>tote.tools/s/yourname/summer-wishlist</code>."
         ]
       }
     }

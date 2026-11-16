@@ -525,33 +525,34 @@
           "Administrar miembros",
           "Abre <strong>Administrar equipo</strong> para ver a todos los que se han unido. Desde ahí puedes cambiar el rol de un miembro o quitarlo por completo. También puedes ver todas las invitaciones pendientes y revocar las que ya no quieras activas.",
           "Salir de una colección compartida",
-          "Si ya no quieres tener acceso a una colección que alguien compartió contigo, puedes salir de ella desde tu página de colecciones. Esto la quita de tu lista, pero no afecta a los demás colaboradores.",
+          "Todavía no hay un botón para «salir». Si ya no quieres tener acceso a una colección que alguien compartió contigo, pide a un propietario o administrador que te quite en Administrar equipo. Quitar a un miembro no afecta a los demás colaboradores.",
           "Enlaces públicos",
           "Además de compartir con colaboradores, puedes hacer que una colección sea visible públicamente. Los enlaces públicos permiten que cualquiera vea tu colección sin iniciar sesión: ideales para listas de deseos, mesas de regalos o recomendaciones.",
           "Los enlaces públicos son una excelente forma de crear un «enlace en la bio» para redes sociales. Reúne tus productos favoritos en una colección, hazla pública y comparte el enlace en tu Instagram, TikTok o donde quieras. Actualízala cuando quieras con tus hallazgos más recientes.",
           "Hacer pública una colección",
           [
-            "Abre la colección y haz clic en «Compartir»",
-            "En la sección de Acceso general, haz clic en «Hacer pública»",
+            "Abre la colección y haz clic en «Publicar colección» en el encabezado",
+            "Si quieres, edita el identificador de la URL pública, elige un diseño (Mínimo o Destacado) y decide si otras personas pueden hacer copias independientes",
+            "Haz clic en «Publicar copia»",
             "Copia el enlace público para compartirlo donde quieras"
           ],
           "Tu propio enlace corto",
           "Cada colección pública recibe tu propio enlace único y confiable en tote.tools, con tu nombre de usuario dentro para que la gente sepa que es tuyo:",
           "<code>tote.tools/s/yourname/summer-wishlist</code>",
-          "Tote lo crea automáticamente a partir del nombre de tu colección cuando la publicas. Puedes cambiarlo por lo que quieras en el cuadro de Compartir: ideal para biografías de redes sociales, mensajes o cualquier lugar donde quieras un enlace fácil de reconocer y en el que se pueda confiar.",
+          "Tote lo crea automáticamente a partir del nombre de tu colección cuando la publicas. Puedes cambiarlo por lo que quieras en el cuadro de publicación: ideal para biografías de redes sociales, mensajes o cualquier lugar donde quieras un enlace fácil de reconocer y en el que se pueda confiar.",
           "Para tener tu propio enlace corto, asegúrate de haber definido un nombre de usuario en la configuración de tu cuenta. Sin nombre de usuario, tu enlace público seguirá funcionando, pero será más largo.",
           "Cómo funcionan los enlaces públicos",
-          "Cuando haces pública una colección, Tote crea una <strong>copia instantánea</strong> de tu colección. Esta copia pública es independiente de tu colección de trabajo: los cambios que hagas no aparecerán automáticamente en la versión pública.",
-          "Después de agregar o quitar productos, debes hacer clic en «Actualizar versión pública» para enviar tus cambios al enlace público. Así tú controlas lo que ven los demás.",
+          "Cuando haces pública una colección, Tote crea una <strong>copia pública</strong> de tu colección. Esta copia pública es independiente de tu colección de trabajo: los cambios que hagas no aparecerán automáticamente en la versión pública.",
+          "Después de agregar o quitar productos, debes hacer clic en «Reemplazar copia pública» en el cuadro de publicación para enviar tus cambios al enlace público. Así tú controlas lo que ven los demás.",
           "Actualizar la versión pública",
           "Cuando estés listo para compartir tus últimos cambios:",
           [
-            "Abre el cuadro de Compartir",
-            "Haz clic en «Actualizar versión pública»",
+            "Abre la colección y haz clic en «Publicar colección» en el encabezado",
+            "Haz clic en «Reemplazar copia pública»",
             "Tus cambios ya son visibles para cualquiera que tenga el enlace público"
           ],
           "Volver a hacer privada una colección",
-          "Puedes revocar el acceso público en cualquier momento haciendo clic en «Hacer privada» en el cuadro de Compartir. El enlace público deja de funcionar de inmediato.",
+          "Puedes revocar el acceso público en cualquier momento haciendo clic en «Despublicar» en el cuadro de publicación. El enlace público deja de funcionar de inmediato.",
           "Privacidad",
           "Solo las personas con el enlace de invitación pueden acceder a una colección compartida. Tus demás colecciones permanecen completamente privadas. Tote nunca comparte tus datos con anunciantes ni con terceros.",
           "Guías relacionadas",
@@ -566,9 +567,9 @@
           "¿Mi colección compartida es visible para todos?",
           "No. Las colecciones compartidas solo son accesibles para quienes tienen el enlace de invitación. Si quieres que cualquiera vea tu colección sin iniciar sesión, puedes hacerla pública por separado: consulta la sección de <a href=\"#public-links\">Enlaces públicos</a> más arriba.",
           "¿Cómo dejo de compartir una colección?",
-          "Para los enlaces públicos, abre el cuadro de publicación y haz clic en «Hacer privada» para revocar el acceso de inmediato. Para compartir por invitación, abre <strong>Administrar equipo</strong> y quita a los miembros individuales, o revoca las invitaciones pendientes que ya no quieras activas.",
+          "Para los enlaces públicos, abre el cuadro de publicación y haz clic en «Despublicar» para revocar el acceso de inmediato. Para compartir por invitación, abre <strong>Administrar equipo</strong> y quita a los miembros individuales, o revoca las invitaciones pendientes que ya no quieras activas.",
           "¿Puedo personalizar el enlace de mi colección pública?",
-          "¡Sí! Cuando publicas una colección, Tote crea un enlace corto a partir del nombre de la colección. Puedes cambiarlo por lo que quieras en el cuadro de Compartir, por ejemplo, <code>tote.tools/s/yourname/summer-wishlist</code>."
+          "¡Sí! Cuando publicas una colección, Tote crea un enlace corto a partir del nombre de la colección. Puedes cambiarlo por lo que quieras en el cuadro de publicación, por ejemplo, <code>tote.tools/s/yourname/summer-wishlist</code>."
         ]
       }
     }
