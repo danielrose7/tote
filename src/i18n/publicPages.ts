@@ -11,6 +11,12 @@ export const TRANSLATED_PUBLIC_PATHS = [
   '/templates',
   '/chrome-extension',
   '/ios-app',
+  '/use-cases',
+  '/use-cases/gift-shopping',
+  '/use-cases/home-renovation',
+  '/use-cases/personal-style',
+  '/use-cases/family-shopping',
+  '/use-cases/professional-projects',
 ] as const;
 
 export function isTranslatedPath(path: string): boolean {

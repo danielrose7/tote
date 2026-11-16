@@ -14,6 +14,7 @@ const AREAS: PublicArea[] = [
   'templates',
   'chromeExtension',
   'iosApp',
+  'useCases',
 ];
 
 // Flatten including arrays, so list lengths and each item are compared.

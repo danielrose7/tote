@@ -1,0 +1,512 @@
+{
+  "useCases": {
+    "navLabel": "Casos de uso",
+    "sidebarLabel": "Casos de uso",
+    "nav": {
+      "overview": "Resumen",
+      "gift-shopping": "Listas de regalos y deseos",
+      "home-renovation": "Remodelación del hogar",
+      "personal-style": "Guardarropa y estilo",
+      "family-shopping": "Compras en familia",
+      "professional-projects": "Proyectos profesionales"
+    },
+    "names": {
+      "gift-shopping": "Listas de regalos y deseos",
+      "home-renovation": "Remodelación del hogar",
+      "personal-style": "Guardarropa y tablero de estilo",
+      "family-shopping": "Compras compartidas en familia",
+      "professional-projects": "Proyectos profesionales"
+    },
+    "site": {
+      "name": "Casos de uso de Tote",
+      "description": "Descubre cómo usa la gente Tote para organizar compras de regalos, remodelaciones del hogar, guardarropas, proyectos familiares y abastecimiento profesional."
+    },
+    "common": {
+      "ctaStart": "Empieza, es gratis →",
+      "ctaTry": "Prueba Tote, es gratis →",
+      "tip": "Consejo:",
+      "setupHeading": "Prueba esta configuración",
+      "howHeading": "Cómo funciona",
+      "faqHeading": "Preguntas frecuentes",
+      "relatedHeading": "Casos de uso relacionados"
+    },
+    "index": {
+      "meta": {
+        "title": "Organiza listas de deseos, proyectos de remodelación e inspiración de diseño",
+        "description": "Mira cómo usa la gente Tote para organizar sus compras: desde listas de regalos navideños y remodelaciones del hogar hasta la planificación del guardarropa y el abastecimiento de diseño profesional.",
+        "ogTitle": "Organiza listas de deseos, proyectos de remodelación e inspiración de diseño — Tote",
+        "ogDescription": "Mira cómo usa la gente Tote para organizar sus compras: desde listas de regalos navideños y remodelaciones del hogar hasta la planificación del guardarropa y el abastecimiento de diseño profesional."
+      },
+      "title": "Un solo lugar para todo lo que guardas",
+      "lead": "Desde listas de regalos hasta proyectos de remodelación, Tote mantiene organizado lo que encuentras en todas las tiendas.",
+      "cards": {
+        "gift-shopping": {
+          "title": "Listas de regalos y deseos",
+          "description": "Guarda ideas de regalo de cualquier tienda, organízalas por ocasión y compártelas con tu familia para que todos sepan qué comprar.",
+          "linkText": "Organiza una lista de regalos"
+        },
+        "home-renovation": {
+          "title": "Remodelación y amueblado del hogar",
+          "description": "Organiza muebles y materiales habitación por habitación. Compara precios entre tiendas y comparte tableros con tu pareja o tu contratista.",
+          "linkText": "Planea una remodelación"
+        },
+        "personal-style": {
+          "title": "Guardarropa y tablero de estilo",
+          "description": "Guarda ropa de cualquier tienda en un solo tablero de estilo. Organízala por temporada, arma un guardarropa cápsula y vigila las bajas de precio.",
+          "linkText": "Arma un tablero de estilo"
+        },
+        "family-shopping": {
+          "title": "Compras compartidas en familia",
+          "description": "Guarden y comparen opciones juntos. Mantengan el presupuesto en el regreso a clases, al amueblar una casa nueva o en cualquier proyecto en grupo.",
+          "linkText": "Compren juntos en familia"
+        },
+        "professional-projects": {
+          "title": "Diseño profesional y proyectos de clientes",
+          "description": "Mantén organizado el abastecimiento de todos tus clientes. Comparte tableros de inspiración bien presentados para su aprobación y controla el presupuesto de cada proyecto.",
+          "linkText": "Gestiona proyectos de diseño"
+        }
+      }
+    },
+    "pages": {
+      "gift-shopping": {
+        "meta": {
+          "title": "App de lista de deseos para cumpleaños, fiestas y mesas de regalos",
+          "description": "Crea una lista de deseos con regalos de cualquier tienda. Organiza listas de cumpleaños, de fiestas y de ideas para mesas de regalos en un solo lugar, y compártelas con tu familia.",
+          "ogTitle": "App de lista de deseos para cumpleaños, fiestas y mesas de regalos — Tote",
+          "ogDescription": "Crea y comparte listas de deseos para cumpleaños, fiestas y ocasiones especiales con productos de todas las tiendas."
+        },
+        "title": "La lista de deseos que de verdad te acompaña",
+        "lead": "Listas de Amazon, marcadores, mensajes a ti mismo, capturas de pantalla: las ideas de regalo se dispersan en cuanto las guardas. Tote lo mantiene todo en un solo lugar, organizado por ocasión y listo para compartir.",
+        "answer": {
+          "question": "¿Cómo mantener útil una lista de deseos con productos de distintas tiendas?",
+          "answer": "Guarda enlaces de distintas tiendas, vuelve después para compararlos, marca los regalos que más importan y comparte la lista corta cuando estés listo. Tote hace que la lista siga siendo útil después del momento en que la guardas.",
+          "steps": [
+            "Guarda ideas de regalo de cualquier tienda mientras navegas",
+            "Compara opciones y mantén una lista corta en movimiento en un solo lugar",
+            "Comparte la lista cuando tu familia pregunte qué regalarte"
+          ]
+        },
+        "collections": {
+          "title": "Listas de regalos que puedes explorar",
+          "intro": "Empieza con una colección pública real y copia su estructura para tu propia ocasión.",
+          "descriptions": [
+            "Una lista de regalos práctica centrada en la mamá o el papá, no solo en la lista del recién nacido.",
+            "Ideas de regalo para alguien que cocina lo suficiente como para notarlo, sin convertir la lista en un desfile de utensilios de especialidad.",
+            "Una lista de regalos familiar y enfocada, construida a partir de una relación real y un uso real."
+          ]
+        },
+        "intro": "En junio ves el regalo perfecto y lo guardas en algún lado: un marcador del navegador, un mensaje a ti mismo, una lista de Amazon. Para diciembre ya no lo encuentras. Mientras tanto, tu familia te pregunta qué quieres y se pasan enlaces por mensaje. Alguien compra lo mismo dos veces. Nadie tiene claro qué ya está cubierto.",
+        "solutionHeading": "De enlaces sueltos a una lista corta clara",
+        "cards": [
+          {
+            "title": "Guarda de cualquier tienda",
+            "description": "Amazon, Etsy, boutiques pequeñas, sitios de marcas: dondequiera que encuentres el regalo, llega a la misma lista en lugar de perderse entre pestañas o notas."
+          },
+          {
+            "title": "Mantén la lista corta en movimiento",
+            "description": "Compara opciones lado a lado, marca tus favoritos y usa las selecciones cuando quieras indicar «elige uno de estos» en lugar de dejar a la gente adivinando."
+          },
+          {
+            "title": "Comparte cuando importa",
+            "description": "Envía la lista a tu familia o hazla pública cuando estés listo. Todos ven la misma lista corta, así que los regalos repetidos y el ir y venir de mensajes disminuyen rápido."
+          }
+        ],
+        "setupIntro": "Una lista de regalos sencilla suele funcionar mejor:",
+        "setup": [
+          "Crea una colección para la ocasión: «Lista de deseos {{year}}», «Lista de cumpleaños» o «Ideas para la mesa de regalos»",
+          "Agrega secciones solo si ayudan a decidir: «Regalos grandes», «Menos de $50» o una sección por persona",
+          "Usa las selecciones para marcar los regalos en los que de verdad quieres que se enfoque tu familia"
+        ],
+        "steps": [
+          {
+            "lead": "Guarda ideas de regalo mientras navegas.",
+            "body": "Instala la extensión de Chrome y haz clic para guardar cualquier página de producto en una colección de regalos. Tote captura automáticamente el nombre, la imagen, el precio y el enlace."
+          },
+          {
+            "lead": "Vuelve después para comparar.",
+            "body": "Mantén la lista corta en un solo lugar, actualiza los precios si hace falta y marca los regalos que más importan."
+          },
+          {
+            "lead": "Comparte la decisión, no el caos.",
+            "body": "Envía un solo enlace a tu familia o amigos para que vean la misma lista sin necesitar una cuenta de Tote."
+          }
+        ],
+        "tip": "¿Armas una lista para las fiestas? Define un presupuesto antes de empezar a guardar. Cuando la lista corta crezca, seguirás sabiendo qué es realista comprar o pedir.",
+        "faq": [
+          {
+            "q": "¿Otras personas pueden ver mi lista de deseos?",
+            "a": "Solo si la compartes. Las colecciones son privadas por defecto. Puedes compartirla con un enlace de invitación (quien la reciba necesita una cuenta de Tote) o hacer pública la colección (cualquiera con el enlace puede verla)."
+          },
+          {
+            "q": "¿Puedo compartir con personas que no usan Tote?",
+            "a": "Sí. Cualquiera puede ver las colecciones públicas, sin necesidad de cuenta. Solo envíales el enlace."
+          },
+          {
+            "q": "¿Cómo evito regalos repetidos?",
+            "a": "Comparte una colección con tu familia. Todos pueden ver qué hay en la lista y coordinar quién compra qué. Usa las selecciones para marcar los artículos ya elegidos."
+          },
+          {
+            "q": "¿Puedo usar Tote como mesa de regalos?",
+            "a": "Tote funciona bien como una mesa de regalos sencilla. Crea una colección, agrega artículos de cualquier tienda y comparte el enlace. No es una mesa de regalos tradicional con seguimiento de compras, pero le da a todos una lista única y actualizada de referencia."
+          }
+        ],
+        "related": {
+          "family-shopping": "coordina las compras con tu pareja o tu familia",
+          "home-renovation": "organiza proyectos de amueblado con presupuestos y categorías por habitación",
+          "personal-style": "arma guardarropas por temporada y sigue los precios de oferta"
+        }
+      },
+      "home-renovation": {
+        "meta": {
+          "title": "Organizador de remodelaciones: muebles, materiales y presupuestos",
+          "description": "Organiza la remodelación de tu hogar habitación por habitación. Sigue los precios de muebles, accesorios y materiales entre tiendas, define presupuestos y comparte los planes con tu pareja o tu contratista.",
+          "ogTitle": "Organizador de remodelaciones: muebles, materiales y presupuestos — Tote",
+          "ogDescription": "Planea una remodelación habitación por habitación, sigue los precios entre tiendas y comparte tableros con tu pareja o tu contratista."
+        },
+        "title": "Cada habitación. Cada tienda. Un solo tablero.",
+        "lead": "Remodelar significa IKEA, Wayfair, una tienda local y cuarenta pestañas abiertas, sin una idea clara de qué va dónde. Tote lo organiza todo habitación por habitación, con precios y presupuestos en un solo lugar.",
+        "answer": {
+          "question": "¿Cómo mantener útiles las decisiones de una remodelación con productos de distintas tiendas?",
+          "answer": "Guarda muebles, accesorios y materiales de distintas tiendas, vuelve después para compararlos habitación por habitación, mantén el presupuesto a la vista y comparte la lista corta con las personas involucradas. Tote hace que el proyecto siga siendo útil después del momento en que guardas.",
+          "steps": [
+            "Guarda muebles, accesorios y materiales de cualquier tienda",
+            "Compara opciones y avanza con el proyecto habitación por habitación",
+            "Comparte el tablero con tu pareja o tu contratista"
+          ]
+        },
+        "collections": {
+          "title": "Colecciones públicas relacionadas",
+          "intro": "Todavía no son tableros de remodelación completos, pero muestran el mismo patrón: decisiones concretas, guardadas de varias tiendas y organizadas en una lista fácil de explorar.",
+          "descriptions": [
+            "Una lista de proyecto cercana al hogar, con equipo práctico agrupado en torno a un uso claro al aire libre.",
+            "Una colección de cuarto de bebé enfocada en una habitación, que funciona como un pequeño tablero de amueblado.",
+            "Un buen ejemplo de cómo comparar objetos del hogar cuando importan el espacio, el presupuesto y el uso diario."
+          ]
+        },
+        "intro": "Buscas un sofá en IKEA, una alfombra en Wayfair, lámparas en una tienda local y herrajes en Amazon. Cada tienda tiene su propia lista de deseos (o ninguna). Haces malabares con pestañas, capturas de pantalla y una hoja de cálculo que ya quedó desactualizada. Mientras tanto, el presupuesto es un blanco móvil y tu pareja no ha visto la mitad de las opciones.",
+        "solutionHeading": "De pestañas sueltas a decisiones habitación por habitación",
+        "cards": [
+          {
+            "title": "Guarda de todas las tiendas",
+            "description": "IKEA, Wayfair, Etsy, sitios de marcas, tiendas locales. Todo llega a un solo lugar en lugar de repartirse entre pestañas, capturas de pantalla y una hoja de cálculo."
+          },
+          {
+            "title": "Avanza con el proyecto habitación por habitación",
+            "description": "Agrupa las opciones por habitación, compara categorías lado a lado, actualiza los precios cuando importe y mantén a la vista la lista corta actual sin tener que armarla de nuevo."
+          },
+          {
+            "title": "Compartan el mismo plan",
+            "description": "Invita a tu pareja a colaborar o envía un enlace a tu contratista o diseñador. Todos ven las mismas opciones, precios y prioridades."
+          }
+        ],
+        "setupIntro": "Un tablero de remodelación sencillo suele funcionar mejor:",
+        "setup": [
+          "Crea una colección por habitación: «Sala», «Cocina», «Recámara principal»",
+          "Agrega secciones solo donde ayuden a decidir: «Asientos», «Iluminación», «Alfombras» o «Herrajes»",
+          "Define un presupuesto antes de empezar a comparar productos y luego usa las selecciones para marcar al favorito del momento"
+        ],
+        "steps": [
+          {
+            "lead": "Guarda mientras navegas.",
+            "body": "Instala la extensión del navegador. Cuando encuentres un mueble o material que te guste, haz clic para guardarlo en la colección de la habitación correcta. Tote captura la imagen, el precio y el enlace."
+          },
+          {
+            "lead": "Organiza con secciones y selecciones.",
+            "body": "Agrupa los artículos por categoría (asientos, iluminación, alfombras). Usa las selecciones para marcar tus mejores opciones y compararlas lado a lado."
+          },
+          {
+            "lead": "Define presupuestos y comparte.",
+            "body": "Agrega un presupuesto a cada colección o sección. Invita a tu pareja a colaborar o comparte un enlace con tu contratista para que lo revise."
+          }
+        ],
+        "tip": "Cuando una habitación se llena demasiado, reduce la lista a una lista corta de verdad. El objetivo no es guardarlo todo, sino mantener la decisión en movimiento.",
+        "faq": [
+          {
+            "q": "¿Puedo definir un presupuesto por habitación?",
+            "a": "Cada colección (habitación) puede tener su propio presupuesto. También puedes definir presupuestos en secciones individuales (categorías) dentro de una habitación para tener aún más detalle."
+          },
+          {
+            "q": "¿Cómo comparto con mi contratista?",
+            "a": "Haz pública la colección y envíale el enlace: podrá verlo todo sin crear una cuenta. Si quieres que también agregue artículos, envíale mejor un enlace de invitación."
+          },
+          {
+            "q": "¿Funciona con IKEA y Wayfair?",
+            "a": "Tote funciona con casi cualquier tienda en línea: IKEA, Wayfair, Amazon, Etsy, CB2, West Elm, tiendas locales y más. Si puedes ver la página de un producto, Tote puede guardarla."
+          },
+          {
+            "q": "¿Mi pareja y yo podemos agregar artículos los dos?",
+            "a": "Comparte la colección con un enlace de invitación y los dos podrán guardar productos, organizarlos y marcar selecciones. Los cambios se ven al instante para ambos."
+          }
+        ],
+        "related": {
+          "family-shopping": "colabora con tu pareja en cualquier proyecto de compras",
+          "professional-projects": "gestiona el abastecimiento de varios proyectos de clientes",
+          "gift-shopping": "organiza y comparte ideas de regalo para cualquier ocasión"
+        }
+      },
+      "personal-style": {
+        "meta": {
+          "title": "Planificador de guardarropa y tablero de estilo para outfits cápsula",
+          "description": "Planea outfits y arma un guardarropa cápsula con un tablero de estilo que funciona con todas las tiendas. Guarda la ropa en un solo lugar, organízala por categoría y sigue los precios de oferta.",
+          "ogTitle": "Planificador de guardarropa y tablero de estilo para outfits cápsula — Tote",
+          "ogDescription": "Arma un guardarropa cápsula, guarda ropa de cualquier tienda y sigue los precios de oferta en un solo tablero de estilo."
+        },
+        "title": "Tu tablero de estilo, con todas las tiendas donde compras",
+        "lead": "Guardaste una chamarra en Zara, unos jeans en H&M y unos zapatos de una boutique. Cuando estás listo para comprar, no encuentras nada. Tote mantiene cada prenda junta, organizada como piensas en tu guardarropa.",
+        "answer": {
+          "question": "¿Cómo mantener útiles las ideas de outfits con prendas de distintas tiendas?",
+          "answer": "Guarda prendas de distintas tiendas, vuelve después para compararlas, mantén una lista corta de lo que aún encaja con tu plan y actualiza los precios cuando estés listo para comprar. Tote hace que tu tablero de estilo siga siendo útil después del momento en que guardas.",
+          "steps": [
+            "Guarda ropa y accesorios de cualquier tienda",
+            "Compara prendas y mantén la lista corta enfocada",
+            "Actualiza los precios y compra cuando estés listo"
+          ]
+        },
+        "collections": {
+          "title": "Tableros de estilo que puedes explorar",
+          "intro": "Usa una colección pública como punto de partida para ver cómo se puede organizar un guardarropa con prendas de varias tiendas.",
+          "descriptions": [
+            "Un tablero de guardarropa enfocado en prendas de diario donde importan el origen, la calidad y el uso repetido."
+          ]
+        },
+        "intro": "Ves una chamarra en Zara, guardas unos jeans en H&M, pones en marcadores unos zapatos de una boutique y le tomas captura a una bolsa de Depop. Cada tienda tiene su propia lista de deseos, o ninguna. Cuando estás listo para comprar, no recuerdas qué guardaste, dónde lo guardaste ni si todavía hay existencias.",
+        "solutionHeading": "De prendas guardadas a una lista corta que sí te pondrías",
+        "cards": [
+          {
+            "title": "Guarda de todas las tiendas",
+            "description": "Zara, H&M, ASOS, Depop, boutiques. Todas las prendas llegan a un solo tablero en lugar de perderse entre marcadores y listas de deseos de cada tienda."
+          },
+          {
+            "title": "Mantén la lista corta enfocada",
+            "description": "Compara prendas por categoría, usa las selecciones cuando quieras tener menos opciones y mantén el tablero honesto sobre lo que todavía merece estar en tu guardarropa."
+          },
+          {
+            "title": "Compra cuando sea el momento",
+            "description": "Actualiza los precios para detectar ofertas o artículos agotados antes de comprar. No necesitas volver a visitar cada tienda solo para ver qué cambió."
+          }
+        ],
+        "setupIntro": "Un tablero de guardarropa sencillo suele funcionar mejor:",
+        "setup": [
+          "Crea una colección como «Guardarropa cápsula», «Outfits de primavera» o «Looks de vacaciones»",
+          "Agrega secciones solo donde ayuden a decidir: «Blusas y camisas», «Pantalones y faldas», «Zapatos», «Abrigos»",
+          "Usa los límites de selección para acotar cada categoría y mantener una lista corta que sí puedas usar, no una interminable"
+        ],
+        "steps": [
+          {
+            "lead": "Guarda prendas mientras navegas.",
+            "body": "Instala la extensión de Chrome. Cuando veas algo que te guste (Zara, H&M, ASOS, Depop, una boutique local), haz clic para guardarlo. Tote captura la imagen, el precio y el enlace."
+          },
+          {
+            "lead": "Organiza tu tablero de estilo.",
+            "body": "Ordena las prendas en colecciones por temporada o proyecto. Usa secciones para categorías como blusas, pantalones y zapatos. Marca tus favoritas con selecciones."
+          },
+          {
+            "lead": "Actualiza y compra.",
+            "body": "Cuando estés listo para comprar, actualiza los precios para ver qué está en oferta. Haz clic para comprar directamente en la tienda original."
+          }
+        ],
+        "tip": "¿Armas un guardarropa cápsula? Los límites de selección hacen más que organizar el tablero: te obligan a decidir.",
+        "faq": [
+          {
+            "q": "¿Puedo organizar por temporada?",
+            "a": "Por supuesto. Crea una colección para cada temporada («Básicos de verano», «Básicos de invierno») y guarda en cada una las prendas que correspondan. También puedes usar secciones dentro de una colección para subdividir por categoría."
+          },
+          {
+            "q": "¿Cómo sigo los precios de oferta?",
+            "a": "Usa la función de actualizar precios para poner al día los productos guardados con su precio actual. Así detectas descuentos sin visitar cada tienda por separado."
+          },
+          {
+            "q": "¿Funciona con Zara, H&M y otras tiendas de moda?",
+            "a": "Funciona con casi cualquier tienda en línea: Zara, H&M, ASOS, Depop, Nordstrom, Net-a-Porter, boutiques, la que sea. Si puedes ver la página del producto, Tote puede guardarla."
+          },
+          {
+            "q": "¿Puedo compartir mi tablero de estilo con una amiga o un amigo?",
+            "a": "Claro. Compártelo con un enlace de invitación si quieres colaborar, o hazlo público para que cualquiera con el enlace pueda ver tus elecciones."
+          }
+        ],
+        "related": {
+          "gift-shopping": "arma listas de deseos para compartir en cumpleaños y fiestas",
+          "home-renovation": "el mismo enfoque organizado, aplicado al amueblado de tu espacio",
+          "professional-projects": "gestiona el abastecimiento de estilo para tus clientes"
+        }
+      },
+      "family-shopping": {
+        "meta": {
+          "title": "App de lista de compras compartida para parejas y familias",
+          "description": "Crea una lista de compras compartida para parejas y familias. Guarden productos de cualquier tienda, comparen opciones juntos, eviten duplicados y mantengan el presupuesto.",
+          "ogTitle": "App de lista de compras compartida para parejas y familias — Tote",
+          "ogDescription": "Compren juntos con un tablero de compras compartido para muebles, útiles escolares, regalos o cualquier proyecto del hogar."
+        },
+        "title": "Compren juntos, sin el chat grupal",
+        "lead": "Tú mandas un enlace. La otra persona manda una captura de otro. Alguien compra lo mismo dos veces. Tote le da a tu hogar un tablero de compras compartido, para que todos vean las mismas opciones y decisiones en un solo lugar.",
+        "answer": {
+          "question": "¿Cómo mantener útil un proyecto de compras compartido con otra persona?",
+          "answer": "Guarden enlaces de distintas tiendas en un mismo tablero compartido, vuelvan después para compararlos juntos, mantengan la lista corta en movimiento y trabajen todos desde el mismo plan. Tote reemplaza el caos de los hilos de mensajes con un solo lugar para decidir.",
+          "steps": [
+            "Crea una colección compartida para tu proyecto",
+            "Todos guardan productos de cualquier tienda",
+            "Comparen opciones y elijan favoritos juntos",
+            "Compren desde la misma lista corta en lugar de adivinar"
+          ]
+        },
+        "collections": {
+          "title": "Listas familiares que puedes explorar",
+          "intro": "Estas colecciones públicas muestran cómo un tablero compartido puede mantenerse enfocado en una decisión del hogar.",
+          "descriptions": [
+            "Una estructura de lista para bebé pensada para familias que quieren menos compras desechables y más equipo útil.",
+            "Una lista compacta de equipo familiar donde cada artículo tiene que justificar el espacio que ocupa.",
+            "Una lista de juguetes para compartir con familiares que quieren comprar algo útil sin pedir otro enlace."
+          ]
+        },
+        "intro": "Tu pareja te manda el enlace de un sofá. Tú le mandas la captura de otro. Las compras del regreso a clases se vuelven un lío de pestañas, mensajes y «¿ya compraste eso?». No hay una vista compartida, ni coordinación, ni control del presupuesto.",
+        "solutionHeading": "Del caos del chat grupal a una sola decisión compartida",
+        "cards": [
+          {
+            "title": "Guarden en un solo tablero",
+            "description": "En lugar de mandarse enlaces de un lado a otro, las dos personas guardan en la misma colección. Las opciones quedan a la vista de todos."
+          },
+          {
+            "title": "Mantengan la lista corta en movimiento, juntos",
+            "description": "Comparen opciones lado a lado, marquen favoritos y mantengan una sola versión actual de la decisión en lugar de debatir entre capturas de pantalla."
+          },
+          {
+            "title": "Compren desde el mismo plan",
+            "description": "Presupuestos, elecciones y prioridades están en un solo lugar, así que ambos saben qué sigue en consideración y qué ya está decidido."
+          }
+        ],
+        "setupIntro": "Un tablero de proyecto compartido suele funcionar mejor cuando se mantiene acotado:",
+        "setup": [
+          "Crea una colección para un proyecto real, como «Departamento nuevo» o «Regreso a clases»",
+          "Agrega secciones solo donde ayuden: secciones por habitación o etapas sencillas como «Comparando» y «Elegido»",
+          "Invita a la otra persona de inmediato para que las dos guarden en la misma lista corta desde el principio"
+        ],
+        "steps": [
+          {
+            "lead": "Crea una colección compartida.",
+            "body": "Una persona crea la colección y envía un enlace de invitación. La otra se une con un clic."
+          },
+          {
+            "lead": "Las dos guardan productos.",
+            "body": "Cada quien explora tiendas y guarda productos en la colección compartida con la extensión del navegador. Todo aparece en un solo tablero."
+          },
+          {
+            "lead": "Decidan juntos.",
+            "body": "Revisen las opciones, marquen favoritos, definan un presupuesto y compren cuando estén listos. Se acabó adivinar qué encontró la otra persona."
+          }
+        ],
+        "tip": "Si un tablero compartido empieza a sentirse ruidoso, divídelo por proyecto. Un tablero para «Departamento nuevo» suele funcionar mejor que uno gigante para todo.",
+        "faq": [
+          {
+            "q": "¿Mi pareja también puede agregar artículos?",
+            "a": "Cuando compartes una colección con un enlace de invitación, cualquiera que se una puede agregar productos, reordenar artículos y marcar selecciones, igual que tú."
+          },
+          {
+            "q": "¿Necesitamos los dos una cuenta para tener una lista de compras compartida?",
+            "a": "Para agregar artículos y colaborar, sí: las dos personas necesitan una cuenta gratuita de Tote. Pero si solo quieres que alguien vea tus elecciones, haz pública la colección y podrá verla sin cuenta."
+          },
+          {
+            "q": "¿Podemos tener colecciones separadas?",
+            "a": "Por supuesto. Cada persona tiene sus propias colecciones privadas por defecto, y tú eliges cuáles compartir. Comparte una colección «Casa nueva» con tu pareja y mantén privada tu «Lista de cumpleaños»."
+          },
+          {
+            "q": "¿Cómo evitamos comprar lo mismo?",
+            "a": "Todo está en un tablero compartido, así que ambos pueden ver qué se guardó y qué se eligió. Usa las selecciones para marcar qué artículos ya están «apartados» o decididos."
+          }
+        ],
+        "related": {
+          "gift-shopping": "coordinen los regalos y eviten duplicados",
+          "home-renovation": "organiza una remodelación con tu pareja",
+          "personal-style": "arma tu guardarropa personal con inspiración compartida"
+        }
+      },
+      "professional-projects": {
+        "meta": {
+          "title": "Tablero de abastecimiento de diseño de interiores para proyectos de clientes",
+          "description": "Organiza el abastecimiento de diseño de interiores por cliente y proyecto. Guarda productos de cualquier proveedor, comparte tableros de inspiración para su aprobación y controla los presupuestos en un solo lugar.",
+          "ogTitle": "Tablero de abastecimiento de diseño de interiores para proyectos de clientes — Tote",
+          "ogDescription": "Crea tableros de abastecimiento para proyectos de clientes, comparte tableros de inspiración para su aprobación y controla los presupuestos entre proveedores."
+        },
+        "title": "Crea tableros de abastecimiento que tus clientes sí puedan revisar",
+        "lead": "Estás abasteciendo a tres clientes, cada uno con sus propias tiendas, presupuesto y gustos. Hoy tu sistema es una hoja de cálculo, un tablero de inspiración en PDF y una cadena de correos. Tote mantiene cada proyecto separado y fácil de compartir, sin PDF.",
+        "answer": {
+          "question": "¿Cómo mantener útiles las decisiones de abastecimiento entre proyectos de clientes?",
+          "answer": "Guarda productos de distintos proveedores en un tablero pensado para el cliente, vuelve después para compararlos, mantén en movimiento la lista corta y el presupuesto, y comparte el mismo enlace para su revisión. Tote hace que el abastecimiento siga siendo útil después de la primera ronda de guardados.",
+          "steps": [
+            "Guarda productos de proveedores, tiendas y sitios del gremio",
+            "Compara opciones y mantén la lista corta en movimiento",
+            "Comparte un solo tablero con tu cliente para su revisión"
+          ]
+        },
+        "collections": {
+          "title": "Tableros de abastecimiento que puedes explorar",
+          "intro": "Estas colecciones públicas muestran cómo es un tablero listo para el cliente: un brief acotado, opciones curadas y un solo enlace para revisar.",
+          "descriptions": [
+            "Un tablero de abastecimiento para una habitación específica, con público, restricciones y punto de vista de producto claros.",
+            "Un kit curado que muestra cómo Tote puede presentar una lista corta bien cuidada para un proyecto específico.",
+            "Un ejemplo compacto de abastecimiento de productos donde el tablero final es lo bastante útil como para compartirlo directamente."
+          ]
+        },
+        "intro": "Estás abasteciendo materiales para tres clientes a la vez. Cada proyecto tiene sus propias tiendas, presupuestos y preferencias. Guardas enlaces en hojas de cálculo, mandas por correo tableros de inspiración en PDF y pierdes la pista de qué opción le gustó al cliente. Cuando cambian los precios, tu hoja de cálculo ya quedó vieja.",
+        "solutionHeading": "De enlaces de abastecimiento a una lista corta lista para el cliente",
+        "cards": [
+          {
+            "title": "Guarda de todos los proveedores",
+            "description": "Sitios del gremio, tiendas minoristas, proveedores mayoristas, sitios de marcas. Todo llega a un solo tablero en lugar de repartirse entre hojas de cálculo y PDF."
+          },
+          {
+            "title": "Mantén la lista corta en movimiento",
+            "description": "Compara opciones por habitación o categoría, mantén el presupuesto a la vista y reduce el tablero a lo que el cliente realmente necesita revisar."
+          },
+          {
+            "title": "Comparte un solo tablero listo para el cliente",
+            "description": "Envía un enlace en lugar de un PDF, una hoja de cálculo y una cadena de correos. El cliente ve la misma lista corta con la que tú trabajas."
+          }
+        ],
+        "setupIntro": "Un flujo de abastecimiento limpio suele mantenerse sencillo:",
+        "setup": [
+          "Crea una colección por cliente o por fase del proyecto",
+          "Agrega secciones solo donde ayuden a la revisión: «Sala», «Iluminación», «Azulejo» o «Herrajes»",
+          "Define un presupuesto antes de compartir y usa las selecciones para destacar la lista corta que quieres que el cliente revise"
+        ],
+        "steps": [
+          {
+            "lead": "Abastécete desde cualquier lugar.",
+            "body": "Explora sitios de proveedores, tiendas minoristas y sitios del gremio. Guarda los productos en la colección del cliente correcto con la extensión del navegador."
+          },
+          {
+            "lead": "Organiza tus elecciones.",
+            "body": "Usa secciones para agrupar opciones por habitación o categoría. Marca tus selecciones recomendadas. Define presupuestos para mantenerte dentro del rango del cliente."
+          },
+          {
+            "lead": "Comparte y recibe comentarios.",
+            "body": "Envía un enlace público al cliente. Verá un tablero de inspiración bien presentado con todo a la vista. Actualiza y vuelve a compartir las veces que necesites."
+          }
+        ],
+        "tip": "Los clientes no necesitan todas las opciones que encontraste. Necesitan la lista corta que estás listo para respaldar.",
+        "faq": [
+          {
+            "q": "¿Puedo gestionar varios proyectos de clientes?",
+            "a": "Por supuesto. Crea una colección distinta para cada cliente o proyecto. Son totalmente independientes: artículos, presupuestos y ajustes de uso compartido distintos."
+          },
+          {
+            "q": "¿Los clientes pueden ver sin editar?",
+            "a": "Haz pública la colección y comparte el enlace. Los clientes pueden explorar el tablero, ver imágenes y precios, y entrar a los productos, pero no pueden modificar nada."
+          },
+          {
+            "q": "¿Cómo comparto un tablero de inspiración para su aprobación?",
+            "a": "Haz pública la colección y envía el enlace a tu cliente. Verá un tablero visual con todas tus opciones curadas. Puedes actualizar la colección cuando quieras y el enlace sigue siendo el mismo."
+          },
+          {
+            "q": "¿Funciona con sitios del gremio y de mayoristas?",
+            "a": "Tote funciona con cualquier sitio web que tenga páginas de producto: sitios del gremio, tiendas minoristas, proveedores mayoristas, todo. Si puedes verlo en un navegador, puedes guardarlo."
+          }
+        ],
+        "related": {
+          "home-renovation": "el mismo enfoque habitación por habitación para proyectos personales",
+          "personal-style": "arma tableros de estilo para guardarropas personales o de clientes",
+          "family-shopping": "compras colaborativas para proyectos en grupo"
+        }
+      }
+    }
+  }
+}

@@ -53,7 +53,7 @@ session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits �
 - The curator's prompts beyond the system strings (e.g. few-shot examples, the English
   gift word list) were not translated or audited.
 
-### Phase 2 (public pages) — landing, templates, ios-app, chrome-extension done
+### Phase 2 (public pages) — landing, templates, ios-app, chrome-extension, use-cases done
 
 - **URLs:** English unprefixed, Spanish at `/es/...` (`(localized)/[locale]`, static via
   `generateStaticParams`, `dynamicParams = false`). `/en/...` 308-redirects to the unprefixed
@@ -74,7 +74,10 @@ session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits �
   version with alternates. Footer language switcher lists only pages that exist.
 - **Clerk on public pages:** `PublicClerkProvider` lazy-loads the Spanish localization from
   the URL locale.
-- **Still English:** docs, use-cases, `/privacy` (needs legal review), `/s/*` and `/view/*`
+- **Use cases:** `/use-cases` and its five pages share `UseCaseArticle` (data-driven from the
+  `useCases` catalog area + `use-cases/useCasesConfig.ts`); English and `/es` use one
+  `[slug]` route each. Public collection titles stay English (user content).
+- **Still English:** docs, `/privacy` (needs legal review), `/s/*` and `/view/*`
   (user content; only the chrome around it could translate). Template collections themselves
   are user content.
 - **Fixed on the way:** the English templates title was doubled ("… — Tote — Tote").

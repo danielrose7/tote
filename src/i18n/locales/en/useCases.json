@@ -1,0 +1,512 @@
+{
+  "useCases": {
+    "navLabel": "Use cases",
+    "sidebarLabel": "Use cases",
+    "nav": {
+      "overview": "Overview",
+      "gift-shopping": "Gift Lists & Wishlists",
+      "home-renovation": "Home Renovation",
+      "personal-style": "Wardrobe & Style",
+      "family-shopping": "Family Shopping",
+      "professional-projects": "Professional Projects"
+    },
+    "names": {
+      "gift-shopping": "Gift Lists & Wishlists",
+      "home-renovation": "Home Renovation",
+      "personal-style": "Wardrobe & Style Board",
+      "family-shopping": "Shared Family Shopping",
+      "professional-projects": "Professional Projects"
+    },
+    "site": {
+      "name": "Tote Use Cases",
+      "description": "Discover how people use Tote to organize shopping for gifts, home renovations, wardrobes, family projects, and professional sourcing."
+    },
+    "common": {
+      "ctaStart": "Get started — it's free →",
+      "ctaTry": "Try Tote — it's free →",
+      "tip": "Tip:",
+      "setupHeading": "Try this setup",
+      "howHeading": "How it works",
+      "faqHeading": "Frequently Asked Questions",
+      "relatedHeading": "Related use cases"
+    },
+    "index": {
+      "meta": {
+        "title": "Organize Wishlists, Renovation Projects, and Design Inspiration",
+        "description": "See how people use Tote to organize shopping — from holiday gift lists and home renovations to wardrobe planning and professional design sourcing.",
+        "ogTitle": "Organize Wishlists, Renovation Projects, and Design Inspiration — Tote",
+        "ogDescription": "See how people use Tote to organize shopping — from holiday gift lists and home renovations to wardrobe planning and professional design sourcing."
+      },
+      "title": "One place for everything you're saving",
+      "lead": "From gift lists to renovation projects, Tote keeps your finds organized across every store you shop.",
+      "cards": {
+        "gift-shopping": {
+          "title": "Gift Lists & Wishlists",
+          "description": "Save gift ideas from any store, organize by occasion, and share with family so everyone knows what to get.",
+          "linkText": "Organize a gift list"
+        },
+        "home-renovation": {
+          "title": "Home Renovation & Furnishing",
+          "description": "Organize furniture and materials room by room. Compare prices across stores and share boards with your partner or contractor.",
+          "linkText": "Plan a home renovation"
+        },
+        "personal-style": {
+          "title": "Wardrobe & Style Board",
+          "description": "Save clothes from any store into one style board. Organize by season, build capsule wardrobes, and watch for price drops.",
+          "linkText": "Build a style board"
+        },
+        "family-shopping": {
+          "title": "Shared Family Shopping",
+          "description": "Save and compare options together. Stay on budget for back-to-school, new home furnishing, or any group project.",
+          "linkText": "Shop together as a family"
+        },
+        "professional-projects": {
+          "title": "Professional Design & Client Projects",
+          "description": "Keep sourcing organized across clients. Share polished mood boards for approval and track budgets per project.",
+          "linkText": "Manage design projects"
+        }
+      }
+    },
+    "pages": {
+      "gift-shopping": {
+        "meta": {
+          "title": "Gift Wishlist App for Birthdays, Holidays, and Registries",
+          "description": "Create a gift wishlist from any store. Organize birthday lists, holiday wishlists, and registry ideas in one place, then share them with family.",
+          "ogTitle": "Gift Wishlist App for Birthdays, Holidays, and Registries — Tote",
+          "ogDescription": "Create and share gift wishlists for birthdays, holidays, and special occasions across every store you shop."
+        },
+        "title": "The wishlist that actually travels with you",
+        "lead": "Amazon lists, bookmarks, texts to yourself, screenshots — gift ideas scatter the moment you save them. Tote keeps everything in one place, organized by occasion, ready to share.",
+        "answer": {
+          "question": "How do you keep a gift wishlist usable across different stores?",
+          "answer": "Save links from different stores, come back later to compare them, mark the gifts that matter most, and share the shortlist when you're ready. Tote keeps the list usable after the moment you save it.",
+          "steps": [
+            "Save gift ideas from any store as you browse",
+            "Compare options and keep a shortlist moving in one place",
+            "Share the list when family asks what to get"
+          ]
+        },
+        "collections": {
+          "title": "Gift lists you can browse",
+          "intro": "Start with a real public collection, then copy the structure for your own occasion.",
+          "descriptions": [
+            "A practical gift list focused on the parent, not just the newborn registry.",
+            "Gift ideas for someone who cooks often enough to care, without turning the list into specialty gear theater.",
+            "A focused family gift list built around a real relationship and a real use case."
+          ]
+        },
+        "intro": "You spot a perfect gift in June and save it somewhere — a browser bookmark, a text to yourself, an Amazon list. By December, you can't find it. Meanwhile, your family is asking what you want, and you're texting links back and forth. Someone buys the same thing twice. Nobody has a clear picture of what's been covered.",
+        "solutionHeading": "From scattered links to a clear shortlist",
+        "cards": [
+          {
+            "title": "Save from any store",
+            "description": "Amazon, Etsy, small boutiques, brand sites — wherever you find the gift, it lands in the same list instead of disappearing into tabs or notes."
+          },
+          {
+            "title": "Keep the shortlist moving",
+            "description": "Compare options side by side, mark favorites, and use selections when you want to signal “pick one of these” instead of leaving people guessing."
+          },
+          {
+            "title": "Share when it matters",
+            "description": "Send the list to family or make it public when you're ready. Everyone sees the same shortlist, so duplicate gifts and back-and-forth messages drop off fast."
+          }
+        ],
+        "setupIntro": "A simple gift list usually works best:",
+        "setup": [
+          "Create one collection for the occasion: “Holiday Wishlist {{year}}”, “Birthday Wishlist”, or “Registry Ideas”",
+          "Add slots only if they help the decision: “Big gifts”, “Under $50”, or one slot per recipient",
+          "Use selections to mark the gifts you actually want family to focus on"
+        ],
+        "steps": [
+          {
+            "lead": "Save gift ideas as you browse.",
+            "body": "Install the Chrome extension, then click to save any product page to a gift collection. Tote captures the name, image, price, and link automatically."
+          },
+          {
+            "lead": "Come back later to compare.",
+            "body": "Keep the shortlist in one place, refresh prices if needed, and mark the gifts that matter most."
+          },
+          {
+            "lead": "Share the decision, not the chaos.",
+            "body": "Send one link to family or friends so they can browse the same list without needing a Tote account."
+          }
+        ],
+        "tip": "Building a holiday list? Set a budget before you start saving. When the shortlist gets longer, you'll still know what is realistic to buy or ask for.",
+        "faq": [
+          {
+            "q": "Can others see my wishlist?",
+            "a": "Only if you share it. Collections are private by default. You can share via invite link (recipients need a Tote account) or make the collection public (anyone with the link can view)."
+          },
+          {
+            "q": "Can I share with people who don't have Tote?",
+            "a": "Yes. Public collections can be viewed by anyone — no account required. Just send them the link."
+          },
+          {
+            "q": "How do I avoid duplicate gifts?",
+            "a": "Share one collection with your family. Everyone can see what's on the list and coordinate who's buying what. Use selections to mark claimed items."
+          },
+          {
+            "q": "Can I use Tote as a gift registry?",
+            "a": "Tote works well as a lightweight registry. Create a collection, add items from any store, and share the link. It's not a traditional registry with purchase tracking, but it gives everyone a single, up-to-date list to reference."
+          }
+        ],
+        "related": {
+          "family-shopping": "coordinate purchases with your partner or family",
+          "home-renovation": "organize furnishing projects with budgets and room categories",
+          "personal-style": "curate seasonal wardrobes and track sale prices"
+        }
+      },
+      "home-renovation": {
+        "meta": {
+          "title": "Home Renovation Organizer for Furniture, Materials, and Budgets",
+          "description": "Organize a home renovation room by room. Track furniture, fixtures, and material prices across stores, set budgets, and share plans with your partner or contractor.",
+          "ogTitle": "Home Renovation Organizer for Furniture, Materials, and Budgets — Tote",
+          "ogDescription": "Plan a renovation room by room, track prices across stores, and share boards with your partner or contractor."
+        },
+        "title": "Every room. Every store. One board.",
+        "lead": "Renovating means IKEA, Wayfair, a local shop, and forty browser tabs — with no clear picture of what goes where. Tote organizes everything room by room, with prices and budgets in one place.",
+        "answer": {
+          "question": "How do you keep renovation decisions usable across different stores?",
+          "answer": "Save furniture, fixtures, and materials from different stores, come back later to compare them room by room, keep the budget visible, and share the shortlist with the people involved. Tote keeps the project usable after the moment you save it.",
+          "steps": [
+            "Save furniture, fixtures, and materials from any store",
+            "Compare options and keep the project moving room by room",
+            "Share the board with your partner or contractor"
+          ]
+        },
+        "collections": {
+          "title": "Related public collections",
+          "intro": "These are not full renovation boards yet, but they show the same pattern: specific decisions, saved across stores, organized into one browsable list.",
+          "descriptions": [
+            "A home-adjacent project list with practical gear grouped around one clear outdoor use case.",
+            "A room-focused nursery collection that works like a small furnishing board.",
+            "A useful example of comparing home objects when space, budget, and daily use all matter."
+          ]
+        },
+        "intro": "You're browsing IKEA for a sofa, Wayfair for a rug, a local shop for lighting, and Amazon for hardware. Each store has its own wishlist (or none at all). You're juggling browser tabs, screenshots, and a spreadsheet that's already out of date. Meanwhile, your budget is a moving target and your partner hasn't seen half the options.",
+        "solutionHeading": "From scattered tabs to room-by-room decisions",
+        "cards": [
+          {
+            "title": "Save from every store",
+            "description": "IKEA, Wayfair, Etsy, brand sites, local shops. Everything lands in one place instead of getting split across tabs, screenshots, and a spreadsheet."
+          },
+          {
+            "title": "Keep the project moving room by room",
+            "description": "Group options by room, compare categories side by side, refresh prices when it matters, and keep the current shortlist visible without rebuilding it every time."
+          },
+          {
+            "title": "Share the same plan",
+            "description": "Invite your partner to collaborate or send a link to your contractor or designer. Everyone sees the same options, prices, and priorities."
+          }
+        ],
+        "setupIntro": "A simple renovation board usually works best:",
+        "setup": [
+          "Create one collection per room: “Living Room”, “Kitchen”, “Primary Bedroom”",
+          "Add slots only where they help the decision: “Seating”, “Lighting”, “Rugs”, or “Hardware”",
+          "Set a budget before you start comparing products, then use selections to mark the current front-runner"
+        ],
+        "steps": [
+          {
+            "lead": "Save as you browse.",
+            "body": "Install the browser extension. When you find a piece of furniture or material you like, click to save it to the right room's collection. Tote captures the image, price, and link."
+          },
+          {
+            "lead": "Organize with slots and selections.",
+            "body": "Group items by category (seating, lighting, rugs). Use selections to mark your top picks and compare options side by side."
+          },
+          {
+            "lead": "Set budgets and share.",
+            "body": "Add a budget to each collection or slot. Invite your partner to collaborate or share a link with your contractor for review."
+          }
+        ],
+        "tip": "When a room gets crowded, trim the list back to a real shortlist. The goal is not to save everything. It is to keep the decision moving.",
+        "faq": [
+          {
+            "q": "Can I set a budget per room?",
+            "a": "Each collection (room) can have its own budget. You can also set budgets on individual slots (categories) within a room for even more detail."
+          },
+          {
+            "q": "How do I share with my contractor?",
+            "a": "Make the collection public and send them the link — they can view everything without creating an account. If you want them to add items too, send an invite link instead."
+          },
+          {
+            "q": "Does it work with IKEA and Wayfair?",
+            "a": "Tote works with just about any online store — IKEA, Wayfair, Amazon, Etsy, CB2, West Elm, local shops, and more. If you can see a product page, Tote can save it."
+          },
+          {
+            "q": "Can my partner and I both add items?",
+            "a": "Share the collection via invite link and you can both save products, organize them, and mark selections. Changes show up instantly for both of you."
+          }
+        ],
+        "related": {
+          "family-shopping": "collaborate on any shopping project with your partner",
+          "professional-projects": "manage sourcing across multiple client projects",
+          "gift-shopping": "organize and share gift ideas for any occasion"
+        }
+      },
+      "personal-style": {
+        "meta": {
+          "title": "Wardrobe Planner and Style Board for Capsule Outfits",
+          "description": "Plan outfits and build a capsule wardrobe with a style board that works across every store. Save clothing in one place, organize by category, and track sale prices.",
+          "ogTitle": "Wardrobe Planner and Style Board for Capsule Outfits — Tote",
+          "ogDescription": "Build a capsule wardrobe, save clothing from any store, and track sale prices in one style board."
+        },
+        "title": "Your style board, across every store you shop",
+        "lead": "You saved a jacket on Zara, jeans on H&M, shoes from a boutique. By the time you're ready to buy, you can't find any of it. Tote keeps every piece together — organized the way you think about your wardrobe.",
+        "answer": {
+          "question": "How do you keep outfit ideas usable across different stores?",
+          "answer": "Save pieces from different stores, come back later to compare them, keep a shortlist of what still fits the plan, and refresh prices when you're ready to buy. Tote keeps your style board usable after the moment you save it.",
+          "steps": [
+            "Save clothes and accessories from any store",
+            "Compare pieces and keep the shortlist focused",
+            "Refresh prices and buy when you're ready"
+          ]
+        },
+        "collections": {
+          "title": "Style boards you can browse",
+          "intro": "Use a public collection as a starting point for how a cross-store wardrobe board can be organized.",
+          "descriptions": [
+            "A focused wardrobe board for everyday pieces where origin, quality, and repeat wear matter."
+          ]
+        },
+        "intro": "You spot a jacket on Zara, save a pair of jeans on H&M, bookmark shoes from a boutique, and screenshot a bag from Depop. Each store has its own wishlist — or no wishlist at all. By the time you're ready to buy, you can't remember what you saved, where you saved it, or whether it's still in stock.",
+        "solutionHeading": "From saved pieces to a wearable shortlist",
+        "cards": [
+          {
+            "title": "Save from every store",
+            "description": "Zara, H&M, ASOS, Depop, boutiques. The pieces all land in one board instead of getting lost across bookmarks and store wishlists."
+          },
+          {
+            "title": "Keep the shortlist focused",
+            "description": "Compare pieces by category, use selections when you want fewer options, and keep the board honest about what still belongs in the wardrobe."
+          },
+          {
+            "title": "Buy when the timing is right",
+            "description": "Refresh prices to catch sales or sold-out items before you buy. You do not need to revisit every store just to see what changed."
+          }
+        ],
+        "setupIntro": "A simple wardrobe board usually works best:",
+        "setup": [
+          "Create one collection such as “Capsule Wardrobe”, “Spring Outfits”, or “Vacation Looks”",
+          "Add slots only where they help the decision: “Tops”, “Bottoms”, “Shoes”, “Outerwear”",
+          "Use selection limits to cap each category and keep the shortlist wearable, not endless"
+        ],
+        "steps": [
+          {
+            "lead": "Save pieces as you browse.",
+            "body": "Install the Chrome extension. When you see something you like — Zara, H&M, ASOS, Depop, a local boutique — click to save it. Tote captures the image, price, and link."
+          },
+          {
+            "lead": "Organize into your style board.",
+            "body": "Sort pieces into collections by season or project. Use slots for categories like tops, bottoms, and shoes. Mark your favorites with selections."
+          },
+          {
+            "lead": "Refresh and buy.",
+            "body": "When you're ready to shop, refresh prices to see what's on sale. Click through to buy directly from the original store."
+          }
+        ],
+        "tip": "Building a capsule wardrobe? Selection limits do more than organize the board. They force the decision.",
+        "faq": [
+          {
+            "q": "Can I organize by season?",
+            "a": "Absolutely. Create a collection for each season — “Summer Essentials”, “Winter Basics” — and save relevant pieces into each. You can also use slots within a collection to subdivide by category."
+          },
+          {
+            "q": "How do I track sale prices?",
+            "a": "Use the price refresh feature to update saved products with their current prices. This lets you spot discounts without visiting each store individually."
+          },
+          {
+            "q": "Does it work with Zara, H&M, and other fashion retailers?",
+            "a": "It works with just about any online store — Zara, H&M, ASOS, Depop, Nordstrom, Net-a-Porter, boutiques, you name it. If you can see the product page, Tote can save it."
+          },
+          {
+            "q": "Can I share my style board with a friend?",
+            "a": "Of course. Share via invite link if you want to collaborate, or make it public so anyone with the link can browse your picks."
+          }
+        ],
+        "related": {
+          "gift-shopping": "build shareable wishlists for birthdays and holidays",
+          "home-renovation": "the same organized approach, applied to furnishing your space",
+          "professional-projects": "manage style sourcing for clients"
+        }
+      },
+      "family-shopping": {
+        "meta": {
+          "title": "Shared Shopping List App for Couples and Families",
+          "description": "Create a shared shopping list for couples and families. Save products from any store, compare options together, avoid duplicates, and stay on budget.",
+          "ogTitle": "Shared Shopping List App for Couples and Families — Tote",
+          "ogDescription": "Shop together with one shared shopping board for furniture, school supplies, gifts, or any household project."
+        },
+        "title": "Shop together — without the group chat",
+        "lead": "You text a link. They screenshot a different one. Someone buys the same thing twice. Tote gives your household one shared shopping board, so everyone sees the same options and decisions in one place.",
+        "answer": {
+          "question": "How do you keep a shared shopping project usable with another person?",
+          "answer": "Save links from different stores into one shared board, come back later to compare them together, keep the shortlist moving, and let everyone work from the same plan. Tote replaces text-thread chaos with one place to decide.",
+          "steps": [
+            "Create a shared collection for your project",
+            "Everyone saves products from any store",
+            "Compare options and pick favorites together",
+            "Buy from the same shortlist instead of guessing"
+          ]
+        },
+        "collections": {
+          "title": "Family lists you can browse",
+          "intro": "These public collections show how a shared board can stay focused around one household decision.",
+          "descriptions": [
+            "A baby registry structure for families who want fewer throwaway purchases and more useful gear.",
+            "A compact family gear list where every item has to justify the space it takes up.",
+            "A shareable toy list for family members who want to buy something useful without asking for another link."
+          ]
+        },
+        "intro": "Your partner texts you a link to a couch. You screenshot a different one. Back-to-school shopping turns into a mess of tabs, texts, and “did you already buy that?” messages. There's no shared view, no coordination, and no budget tracking.",
+        "solutionHeading": "From group chat chaos to one shared decision",
+        "cards": [
+          {
+            "title": "Save into one board",
+            "description": "Instead of sending links back and forth, both people save into the same collection. The options stay visible to everyone."
+          },
+          {
+            "title": "Keep the shortlist moving together",
+            "description": "Compare picks side by side, mark favorites, and keep one current version of the decision instead of debating across screenshots."
+          },
+          {
+            "title": "Buy from the same plan",
+            "description": "Budgets, picks, and priorities stay in one place, so both people know what is still under consideration and what is already decided."
+          }
+        ],
+        "setupIntro": "A shared project board usually works best when it stays narrow:",
+        "setup": [
+          "Create one collection for a real project such as “New Apartment” or “Back to School”",
+          "Add slots only where they help: room-based slots or simple stages like “Comparing” and “Picked”",
+          "Invite the other person right away so both people save into the same shortlist from the start"
+        ],
+        "steps": [
+          {
+            "lead": "Create a shared collection.",
+            "body": "One person creates the collection and sends an invite link. The other joins with one click."
+          },
+          {
+            "lead": "Both save products.",
+            "body": "Each person browses stores and saves products to the shared collection using the browser extension. Everything appears in one board."
+          },
+          {
+            "lead": "Decide together.",
+            "body": "Review the options, mark favorites, set a budget, and buy when you're ready. No more guessing what the other person found."
+          }
+        ],
+        "tip": "If a shared board starts feeling noisy, split it by project. One board for “New Apartment” usually works better than one giant board for everything.",
+        "faq": [
+          {
+            "q": "Can my partner add items too?",
+            "a": "When you share a collection via invite link, anyone who joins can add products, rearrange items, and mark selections — just like you."
+          },
+          {
+            "q": "Do we both need accounts for a shared shopping list?",
+            "a": "To add items and collaborate, yes — both people need a free Tote account. But if you just want someone to view your picks, make the collection public and they can browse without an account."
+          },
+          {
+            "q": "Can we have separate collections?",
+            "a": "Absolutely. Each person has their own private collections by default. You choose which ones to share. Share a “New Home” collection with your partner while keeping your personal “Birthday Wishlist” private."
+          },
+          {
+            "q": "How do we avoid buying the same thing?",
+            "a": "Everything is in one shared board, so both people can see what's been saved and selected. Use selections to mark which items are “claimed” or decided on."
+          }
+        ],
+        "related": {
+          "gift-shopping": "coordinate gift-giving and avoid duplicates",
+          "home-renovation": "organize a renovation project with your partner",
+          "personal-style": "curate your personal wardrobe with shared inspiration"
+        }
+      },
+      "professional-projects": {
+        "meta": {
+          "title": "Interior Design Sourcing Board for Client Projects",
+          "description": "Organize interior design sourcing by client and project. Save products from any supplier, share mood boards for approval, and track budgets in one place.",
+          "ogTitle": "Interior Design Sourcing Board for Client Projects — Tote",
+          "ogDescription": "Create sourcing boards for client projects, share mood boards for approval, and track budgets across suppliers."
+        },
+        "title": "Create sourcing boards clients can actually review",
+        "lead": "You're sourcing for three clients, each with their own stores, budget, and taste. The current setup is a spreadsheet, a PDF mood board, and an email chain. Tote keeps every project separate and shareable — no PDF required.",
+        "answer": {
+          "question": "How do you keep sourcing decisions usable across client projects?",
+          "answer": "Save products from different suppliers into one client-facing board, come back later to compare them, keep the shortlist and budget moving, and share the same link for review. Tote keeps sourcing usable after the first round of saves.",
+          "steps": [
+            "Save products from suppliers, retailers, and trade sites",
+            "Compare options and keep the shortlist moving",
+            "Share one board with your client for review"
+          ]
+        },
+        "collections": {
+          "title": "Sourcing boards you can browse",
+          "intro": "These public collections show the shape of a client-ready board: narrow brief, curated options, and one link to review.",
+          "descriptions": [
+            "A room-specific sourcing board with a clear audience, constraints, and product point of view.",
+            "A curated kit that shows how Tote can present a polished shortlist around a specific project.",
+            "A compact example of product sourcing where the final board is useful enough to share directly."
+          ]
+        },
+        "intro": "You're sourcing materials for three clients at once. Each project has its own set of stores, budgets, and preferences. You're saving links in spreadsheets, emailing mood board PDFs, and losing track of which option the client liked. When prices change, your spreadsheet is already stale.",
+        "solutionHeading": "From sourcing links to a client-ready shortlist",
+        "cards": [
+          {
+            "title": "Save from every supplier",
+            "description": "Trade sites, retail stores, wholesale suppliers, brand sites. Everything lands in one board instead of getting split across spreadsheets and PDFs."
+          },
+          {
+            "title": "Keep the shortlist moving",
+            "description": "Compare options by room or category, keep the budget visible, and narrow the board to what the client actually needs to review."
+          },
+          {
+            "title": "Share one client-ready board",
+            "description": "Send one link instead of a PDF, a spreadsheet, and an email thread. The client sees the same shortlist you are working from."
+          }
+        ],
+        "setupIntro": "A clean sourcing workflow usually stays simple:",
+        "setup": [
+          "Create one collection per client or per project phase",
+          "Add slots only where they help the review: “Living Room”, “Lighting”, “Tile”, or “Hardware”",
+          "Set a budget before you share and use selections to highlight the shortlist you want the client to review"
+        ],
+        "steps": [
+          {
+            "lead": "Source from anywhere.",
+            "body": "Browse supplier websites, retail stores, and trade sites. Save products to the right client collection using the browser extension."
+          },
+          {
+            "lead": "Organize your picks.",
+            "body": "Use slots to group options by room or category. Mark your recommended selections. Set budgets to stay within the client's range."
+          },
+          {
+            "lead": "Share and get feedback.",
+            "body": "Send a public link to the client. They see a polished mood board with everything laid out. Update and reshare as many times as you need."
+          }
+        ],
+        "tip": "Clients do not need every option you found. They need the shortlist you are ready to stand behind.",
+        "faq": [
+          {
+            "q": "Can I manage multiple client projects?",
+            "a": "Absolutely. Create a separate collection for each client or project. They're completely independent — different items, different budgets, different sharing settings."
+          },
+          {
+            "q": "Can clients view without editing?",
+            "a": "Make the collection public and share the link. Clients can browse the board, see images and prices, and click through to products — but they can't modify anything."
+          },
+          {
+            "q": "How do I share a mood board for approval?",
+            "a": "Make the collection public, then send the link to your client. They see a visual board with all your curated options. You can update the collection anytime and the link stays the same."
+          },
+          {
+            "q": "Does it work with trade and wholesale sites?",
+            "a": "Tote works with any website that has product pages — trade sites, retail stores, wholesale suppliers, all of it. If you can view it in a browser, you can save it."
+          }
+        ],
+        "related": {
+          "home-renovation": "the same room-by-room approach for personal projects",
+          "personal-style": "curate style boards for personal or client wardrobes",
+          "family-shopping": "collaborative shopping for group projects"
+        }
+      }
+    }
+  }
+}

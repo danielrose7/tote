@@ -83,7 +83,8 @@ export type PublicArea =
   | 'landing'
   | 'templates'
   | 'chromeExtension'
-  | 'iosApp';
+  | 'iosApp'
+  | 'useCases';
 
 const publicLoaders: Record<
   PublicArea,
@@ -104,6 +105,10 @@ const publicLoaders: Record<
   templates: {
     en: () => import('./locales/en/templates.json'),
     es: () => import('./locales/es/templates.json'),
+  },
+  useCases: {
+    en: () => import('./locales/en/useCases.json'),
+    es: () => import('./locales/es/useCases.json'),
   },
   landing: {
     en: () => import('./locales/en/landing.json'),
