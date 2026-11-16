@@ -9,7 +9,7 @@ import {
   localizedPath,
   splitLocalePath,
 } from '@/i18n/publicPages';
-import { CHROME_WEB_STORE_URL } from '../lib/constants';
+import { APP_STORE_URL, CHROME_WEB_STORE_URL } from '../lib/constants';
 import { InstallLabel } from './InstallLabel';
 import styles from './PublicFooter.module.css';
 
@@ -103,14 +103,26 @@ export function PublicFooter() {
               tote
             </Link>
             <p>{t('site.footer.tagline')}</p>
-            <a
-              href={CHROME_WEB_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.storeButton}
-            >
-              <InstallLabel />
-            </a>
+            <div className={styles.storeButtons}>
+              <a
+                href={CHROME_WEB_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.storeButton}
+              >
+                <InstallLabel />
+              </a>
+              {APP_STORE_URL && (
+                <a
+                  href={APP_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.storeButton}
+                >
+                  {t('site.install.appStore')}
+                </a>
+              )}
+            </div>
           </div>
 
           <div className={styles.footerGroups}>
