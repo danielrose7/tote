@@ -1,0 +1,576 @@
+{
+  "docs": {
+    "navLabel": "Help center",
+    "sidebarLabel": "Help",
+    "nav": {
+      "overview": "Overview",
+      "getting-started": "Getting Started",
+      "collections": "Collections",
+      "slots": "Slots",
+      "adding-links": "Adding Links",
+      "extension": "Browser Extension",
+      "ios-app": "iOS App",
+      "selections-and-budgets": "Selections & Budgets",
+      "sharing": "Sharing"
+    },
+    "site": {
+      "name": "Tote Help Center",
+      "description": "Learn how to use Tote to save, organize, and track products from anywhere on the web."
+    },
+    "common": {
+      "labels": {
+        "tip": "Tip:",
+        "example": "Example:",
+        "important": "Important:"
+      }
+    },
+    "index": {
+      "meta": {
+        "title": "Help Center",
+        "description": "Learn how to use Tote to save, organize, and track products from anywhere on the web. Guides for collections, slots, sharing, and the browser extension.",
+        "ogTitle": "Help Center — Tote",
+        "ogDescription": "Learn how to use Tote to save, organize, and track products from anywhere on the web."
+      },
+      "title": "Help Center",
+      "lead": "Tote is a free tool that saves products from any online store in one place. Learn how to organize, track, and share your finds.",
+      "guidesHeading": "Guides",
+      "guidesIntro": "Tote is a universal shopping cart that works across any online store. Save products with one click, organize them into collections, and track prices over time.",
+      "cards": {
+        "getting-started": {
+          "description": "New to Tote? Sign up, install the extension, and save your first product in minutes.",
+          "linkText": "Get started"
+        },
+        "collections": {
+          "description": "Top-level folders for organizing your saved products by project, season, or any theme you choose.",
+          "linkText": "Learn about collections"
+        },
+        "slots": {
+          "description": "Optional groupings within a collection for more granular organization, like budget tiers or room categories.",
+          "linkText": "Learn about slots"
+        },
+        "adding-links": {
+          "description": "Save products using the browser extension or add links manually from any device.",
+          "linkText": "Learn about adding links"
+        },
+        "extension": {
+          "description": "Install and use the extension on Chrome, Edge, Brave, or Arc for one-click saving, right-click context menu, and more.",
+          "linkText": "Learn about the extension"
+        },
+        "ios-app": {
+          "description": "Tap Share, then Tote, to save from Safari or any app, and browse your collections on the go.",
+          "linkText": "Learn about the iOS app"
+        },
+        "selections-and-budgets": {
+          "description": "Mark favorite products, set selection limits, and track spending with collection and slot budgets.",
+          "linkText": "Learn about selections"
+        },
+        "sharing": {
+          "description": "Share collections with friends or family for collaborative wishlists and gift planning.",
+          "linkText": "Learn about sharing"
+        }
+      },
+      "useCasesHeading": "Use Cases",
+      "useCasesIntro": "See how people use Tote for specific shopping scenarios — from holiday gift lists to professional interior design sourcing.",
+      "useCasesTitle": "Explore Use Cases",
+      "useCasesDescription": "Gift lists, home renovations, wardrobe planning, family shopping, and professional projects.",
+      "useCasesLink": "Browse use cases"
+    },
+    "pages": {
+      "getting-started": {
+        "meta": {
+          "title": "Getting Started",
+          "description": "Get started with Tote in minutes. Sign up, install the browser extension, save your first product, and organize your shopping across every store.",
+          "ogTitle": "Getting Started — Tote",
+          "ogDescription": "Get started with Tote in minutes. Sign up, install the browser extension, and save your first product."
+        },
+        "title": "Getting Started",
+        "lead": "Tote is a free tool that saves products from any online store in one place. Set it up in a few minutes and start organizing your shopping.",
+        "body": [
+          "1. Create Your Account",
+          "Head to <a href=\"https://tote.tools\">tote.tools</a> and sign up with your email or Google account. Your account keeps your saved products synced across all your devices.",
+          "2. Install the Browser Extension",
+          "The browser extension is the fastest way to save products. <store>Install it from the Chrome Web Store</store> — it works on Chrome, Edge, Brave, and Arc. Then sign in with the same account you just created.",
+          "See the <a href=\"/docs/extension\">Browser Extension guide</a> for detailed setup instructions.",
+          "3. Save Your First Product",
+          "Navigate to any product page — a pair of shoes, a piece of furniture, a kitchen gadget — and click the Tote extension icon in your toolbar. Choose a collection (or use the default one) and the product is saved instantly.",
+          "Tote automatically captures the product name, image, price, and link back to the original page.",
+          "4. Organize with Collections",
+          "Collections are folders for your saved products. You might create one for \"Living Room Furniture\", another for \"Gift Ideas\", and another for \"Wardrobe\". Create as many as you need.",
+          "Learn more in the <a href=\"/docs/collections\">Collections guide</a>.",
+          "5. Keep Shopping",
+          "As you browse different stores, keep saving products to Tote. Everything stays in one place regardless of which store it came from. Come back anytime to review, compare, or buy.",
+          "You can also right-click any product page and select \"Save to Tote\" from the context menu — no need to open the extension popup.",
+          "Next Steps",
+          [
+            "<a href=\"/docs/collections\">Collections</a> — organize products into groups",
+            "<a href=\"/docs/slots\">Slots</a> — subdivide collections for more detail",
+            "<a href=\"/docs/selections-and-budgets\">Selections & Budgets</a> — pick favorites and track spending",
+            "<a href=\"/docs/sharing\">Sharing</a> — collaborate on wishlists with others"
+          ],
+          "Frequently Asked Questions",
+          "Is Tote free?",
+          "Yes. Tote is free to use — create an account, install the extension, and start saving products at no cost.",
+          "What stores does Tote work with?",
+          "Tote works with virtually any online store. It reads standard product metadata (images, titles, prices) from the page, so it works on Amazon, IKEA, Etsy, Zara, small boutiques, and everything in between.",
+          "Do I need the browser extension?",
+          "No. The extension makes saving products faster (one click) and works on Chrome, Edge, Brave, and Arc, but you can also add products manually by pasting a URL in the web app. See <a href=\"/docs/adding-links\">Adding Links</a> for details.",
+          "Does Tote work on my phone?",
+          "The Tote web app works on any device with a browser. The browser extension is desktop-only, but you can add links manually from your phone by pasting product URLs."
+        ]
+      },
+      "collections": {
+        "meta": {
+          "title": "Collections",
+          "description": "Learn how to create and organize collections in Tote. Group saved products by project, season, or theme with colors, view modes, and budget tracking.",
+          "ogTitle": "Collections — Tote",
+          "ogDescription": "Learn how to create and organize collections in Tote. Group saved products by project, season, or theme."
+        },
+        "title": "Collections",
+        "lead": "Tote saves products from any online store in one place. Collections are the top-level way to organize those products — think of them as folders or boards for different projects, seasons, or themes.",
+        "body": [
+          "What is a Collection?",
+          "A collection is a container that holds all the products related to a specific purpose. You might have collections for:",
+          [
+            "<strong>Home renovation</strong> — furniture, decor, and supplies for a room makeover",
+            "<strong>Gift ideas</strong> — presents you're considering for friends and family",
+            "<strong>Wardrobe refresh</strong> — clothing and accessories for the upcoming season",
+            "<strong>Wish list</strong> — things you want to buy someday"
+          ],
+          "Creating a Collection",
+          "To create a new collection, go to your collections page and click the \"Add Collection\" button. Give it a name and optionally choose a color to help you identify it at a glance.",
+          "Collection Features",
+          "Colors",
+          "Each collection can have its own color, making it easy to visually distinguish between different projects when viewing your collections list.",
+          "View Modes",
+          "Collections can be displayed in grid view (visual cards with images) or table view (compact list with details). Choose the view that works best for how you like to browse.",
+          "Budget Tracking",
+          "Set an optional budget for your collection to track spending. Tote will show you the total value of products in the collection compared to your budget.",
+          "Start simple with just one or two collections. You can always reorganize later as your needs evolve.",
+          "Default Collection",
+          "When you save a product without choosing a specific collection, it goes to your default collection. This is your general-purpose \"inbox\" for saved products. You can move items out of it into other collections at any time.",
+          "Item Count Badges",
+          "Each collection shows a badge with the number of products it contains. This gives you a quick sense of how full each collection is without opening it.",
+          "Deleting a Collection",
+          "To delete a collection, open it and use the collection menu. Deleting a collection removes it and all the products inside it, so make sure you've moved anything you want to keep.",
+          "Reordering Collections",
+          "Drag and drop collections to reorder them on your collections page. Put your most active projects at the top for easy access.",
+          "Collections vs. Slots",
+          "Collections are your main organizational unit. If you need more granular organization <em>within</em> a collection, that's where slots come in. See the <a href=\"/docs/slots\">Slots documentation</a> to learn more.",
+          "Related Guides",
+          [
+            "<a href=\"/docs/slots\">Slots</a> — subdivide collections into categories or budget tiers",
+            "<a href=\"/docs/selections-and-budgets\">Selections & Budgets</a> — mark favorites and track spending within collections",
+            "<a href=\"/docs/sharing\">Sharing</a> — share collections with friends or make them public"
+          ],
+          "Frequently Asked Questions",
+          "How many collections can I have?",
+          "There's no limit. Create as many collections as you need — one per project, season, room, or any theme that makes sense to you.",
+          "Can I move products between collections?",
+          "Yes. Open a product's details by clicking on it, then change the collection from the edit dialog. You can also change which <a href=\"/docs/slots\">slot</a> a product belongs to.",
+          "What happens when I delete a collection?",
+          "Deleting a collection permanently removes it along with all the products and slots inside it. Make sure to move any products you want to keep to another collection first."
+        ]
+      },
+      "slots": {
+        "meta": {
+          "title": "Slots",
+          "description": "Learn how to use slots in Tote to subdivide collections. Organize products into categories, set per-slot budgets, and manage selection limits.",
+          "ogTitle": "Slots — Tote",
+          "ogDescription": "Learn how to use slots in Tote to subdivide collections into categories with budgets and selection limits."
+        },
+        "title": "Slots",
+        "lead": "Tote saves products from any online store and organizes them into collections. Slots are optional groupings within a collection — use them when you need to break things down further into categories, budget tiers, or decision-making groups.",
+        "body": [
+          "What is a Slot?",
+          "A slot is a way to subdivide a collection. While collections organize products by project or theme, slots help you organize products <em>within</em> that project. For example:",
+          [
+            "A <strong>Living Room</strong> collection might have slots for \"Seating\", \"Lighting\", and \"Decor\"",
+            "A <strong>Gift Ideas</strong> collection might have slots for \"Under $25\", \"$25-50\", and \"Splurge\"",
+            "A <strong>Wardrobe</strong> collection might have slots for \"Tops\", \"Bottoms\", and \"Accessories\""
+          ],
+          "When to Use Slots",
+          "Slots are completely optional. Many people find that collections alone are enough to stay organized. Consider using slots when:",
+          [
+            "You have many products in a single collection and want to group them",
+            "You're comparing options for specific needs (e.g., \"which couch to buy?\")",
+            "You want to set different budgets for different categories",
+            "You're planning with multiple decision points"
+          ],
+          "You don't have to use slots at all. If your collection only has a handful of products, slots might add unnecessary complexity. Start without them and add slots later if you find yourself wanting to group things.",
+          "Creating a Slot",
+          "Inside a collection, click \"Add Slot\" to create a new grouping. Give it a name that describes what products belong there. You can then drag products into the slot or add new products directly to it.",
+          "Slot Features",
+          "Budget per Slot",
+          "Each slot can have its own budget, separate from the collection budget. This is useful when you have specific spending limits for different categories—like \"$200 for lighting\" within a larger renovation budget.",
+          "Selection Limits",
+          "Slots can have a maximum selection count, helping you narrow down choices. For example, if you're choosing one coffee table from five options, set the limit to 1 and mark your favorite as selected.",
+          "Collapse and Expand",
+          "Slots can be collapsed to hide their products, giving you a compact overview of your collection structure. Click the slot header to toggle between collapsed and expanded views. This is especially helpful when you have many slots and want to focus on one at a time.",
+          "Reordering Slots",
+          "Drag and drop slots to rearrange their order within a collection. You can also drag products between slots to reorganize them.",
+          "Deleting a Slot",
+          "When you delete a slot, the products inside it aren't deleted — they move to the \"Ungrouped\" section at the bottom of the collection. This means you can safely remove a slot without losing any saved products.",
+          "Ungrouped Products",
+          "Products that aren't in any slot appear in an \"Ungrouped\" section at the bottom of the collection. You can leave them there or drag them into slots as you organize.",
+          "Related Guides",
+          [
+            "<a href=\"/docs/collections\">Collections</a> — the top-level folders that contain slots",
+            "<a href=\"/docs/selections-and-budgets\">Selections & Budgets</a> — selection limits and budgets work per slot",
+            "<a href=\"/docs/adding-links\">Adding Links</a> — save products directly into a specific slot"
+          ],
+          "Collections vs. Slots: Quick Reference",
+          {
+            "title": "Use a Collection when...",
+            "x": "You're starting a new project, theme, or category of products. Collections are your main organizational unit—like folders on your computer."
+          },
+          {
+            "title": "Use a Slot when...",
+            "x": "You need to group products within an existing collection. Slots are subcategories—like sections within a folder."
+          }
+        ]
+      },
+      "adding-links": {
+        "meta": {
+          "title": "Adding Links",
+          "description": "Learn how to save products to Tote using the browser extension or by adding links manually. Covers one-click saving, right-click context menu, and product notes.",
+          "ogTitle": "Adding Links — Tote",
+          "ogDescription": "Learn how to save products to Tote using the browser extension or by adding links manually."
+        },
+        "title": "Adding Links",
+        "lead": "Tote is a free cross-store shopping organizer. Save products using the browser extension for one-click saving, or add links manually from any device.",
+        "body": [
+          "Using the Browser Extension",
+          "The fastest way to save products is with the Tote browser extension, which works in Chrome, Edge, Brave, and Arc. Once installed, you can save any product page with a single click.",
+          "Installing the Extension",
+          [
+            "Visit the Chrome Web Store and search for \"Tote\"",
+            "Click \"Add to Chrome\" to install",
+            "Sign in with your Tote account to sync your saved products"
+          ],
+          "Saving a Product",
+          [
+            "Navigate to any product page you want to save",
+            "Click the Tote extension icon in your browser toolbar",
+            "Choose which collection to save to (or create a new one)",
+            "The product image, title, price, and link are automatically captured"
+          ],
+          "The extension works best on product detail pages. If you're on a category or search results page, click through to the specific product first.",
+          "Adding Links Manually",
+          "You can also add products directly from the Tote web app. This is useful when you're on a device without the extension or want to add a link someone shared with you.",
+          "To Add a Link Manually",
+          [
+            "Open the collection where you want to add the product",
+            "Click \"Add Link\" in the header",
+            "Paste the product URL",
+            "Tote will automatically fetch the product details"
+          ],
+          "What Gets Saved",
+          "When you save a product, Tote captures:",
+          [
+            "<strong>Product name</strong> — the title from the product page",
+            "<strong>Image</strong> — the main product photo",
+            "<strong>Price</strong> — the current listed price",
+            "<strong>URL</strong> — so you can always get back to the original page",
+            "<strong>Description</strong> — a summary when available"
+          ],
+          "Right-Click \"Save to Tote\"",
+          "With the browser extension installed, you can right-click any product page and select <strong>\"Save to Tote\"</strong> from the context menu. This saves the product to your most recently used collection without opening the extension popup.",
+          "Product Notes",
+          "After saving a product, you can add personal notes — size preferences, color choices, gift recipient, or anything else you want to remember. Click on a saved product to open its details and type in the notes field.",
+          "Editing Saved Products",
+          "You can edit the title, price, or notes of any saved product. Click on the product to open its details, make your changes, and they're saved automatically.",
+          "Platform and Brand Detection",
+          "Tote automatically detects the store or marketplace (Amazon, IKEA, Etsy, etc.) and the product brand when this information is available on the page. This helps you filter and identify products at a glance.",
+          "Refreshing Product Data",
+          "Product details can change over time—prices drop, items sell out, listings get updated. Use the refresh button on any product to fetch the latest information from the original page.",
+          "Related Guides",
+          [
+            "<a href=\"/docs/extension\">Browser Extension</a> — detailed extension setup, pinning, and troubleshooting",
+            "<a href=\"/docs/collections\">Collections</a> — organize your saved products into groups",
+            "<a href=\"/docs/selections-and-budgets\">Selections & Budgets</a> — mark favorites and track spending on saved products"
+          ]
+        ]
+      },
+      "extension": {
+        "meta": {
+          "title": "Browser Extension",
+          "description": "Install and use the Tote browser extension on Chrome, Edge, Brave, or Arc to save products with one click. Covers installation, one-click saving, right-click context menu, slot selection, and sign-in.",
+          "ogTitle": "Browser Extension — Tote",
+          "ogDescription": "Install and use the Tote browser extension on Chrome, Edge, Brave, or Arc to save products with one click from any online store."
+        },
+        "title": "Browser Extension",
+        "lead": "Tote is a free cross-store shopping organizer. The browser extension lets you save products from any online store with a single click or right-click. It works on Chrome, Edge, Brave, Arc, and any Chromium-based browser.",
+        "body": [
+          "Looking for the short version? Visit the <a href=\"/chrome-extension\">Tote browser extension landing page</a> for the install link, supported browsers, and a quick product overview.",
+          "Installing the Extension",
+          [
+            "Visit the <store>Tote page on the Chrome Web Store</store> (this works for Edge, Brave, and Arc too)",
+            "Click <strong>\"Add to Chrome\"</strong> and confirm the installation",
+            "The Tote icon appears in your browser toolbar (you may need to click the puzzle-piece icon to pin it)"
+          ],
+          "Signing In",
+          "After installing, click the Tote icon to open the popup. You'll be prompted to sign in with the same account you use on tote.tools. Once signed in, your collections sync automatically between the extension and the web app.",
+          "Saving a Product",
+          "There are two ways to save a product:",
+          "One-Click Save",
+          [
+            "Navigate to any product page",
+            "Click the Tote extension icon in your toolbar",
+            "Choose which collection to save to",
+            "Optionally select a slot within the collection",
+            "Click <strong>\"Save\"</strong>"
+          ],
+          "The product image, title, price, and URL are captured automatically.",
+          "Right-Click Context Menu",
+          "Right-click anywhere on a product page and select <strong>\"Save to Tote\"</strong> from the context menu. The product is saved to your most recently used collection.",
+          "The right-click method is the fastest way to save — it skips the popup entirely and saves to your last-used collection.",
+          "Choosing a Collection and Slot",
+          "When saving via the popup, you can pick any existing collection from the dropdown. If the collection has slots, a second dropdown appears so you can place the product directly into the right group.",
+          "You can also create a new collection directly from the extension popup without leaving the page you're on.",
+          "What Gets Captured",
+          "The extension extracts metadata from the product page:",
+          [
+            "<strong>Product name</strong> — the title of the product",
+            "<strong>Image</strong> — the main product photo",
+            "<strong>Price</strong> — the current listed price",
+            "<strong>URL</strong> — a link back to the original page",
+            "<strong>Brand</strong> — detected from the page when available",
+            "<strong>Platform</strong> — the store or marketplace (e.g., Amazon, IKEA)"
+          ],
+          "Permissions and Privacy",
+          "The extension asks for browser permissions so it can read the active product page, open the popup, store your extension session, and offer the right-click save action. Tote uses those permissions to save products to your account. Tote does not sell your shopping behavior or run an ad network.",
+          [
+            "<strong>activeTab and tabs</strong> — identify the page you are trying to save",
+            "<strong>storage</strong> — remember extension state, like the last collection you used",
+            "<strong>cookies</strong> — keep your Tote sign-in connected through Clerk",
+            "<strong>contextMenus</strong> — show the \"Save to Tote\" right-click action",
+            "<strong>scripting and host access</strong> — read product metadata from the page you are saving"
+          ],
+          "Supported Stores",
+          "Tote works on virtually any online store. It reads the page you're on to identify the product name, image, and price. Most stores provide enough information for a complete save, but even a basic product page will capture the title, image, and URL.",
+          "Updates",
+          "Chrome and other Chromium browsers update extensions automatically from the Chrome Web Store. If you think you are not on the latest version, open your browser's Extensions page, enable developer mode, and click \"Update\". You can check the installed Tote version from the extension details page.",
+          "Troubleshooting",
+          "Extension not showing product details",
+          "Make sure you're on a specific product page, not a category or search results page. The extension works best when there's a single product in focus.",
+          "Missing price, image, or brand",
+          "Some stores hide product data, render it after a delay, or use unusual page markup. Save the item anyway if the title, image, or URL is enough to recognize it later. You can edit the saved product in Tote, or try refreshing the product page and saving again.",
+          "Not signed in",
+          "If your saved products aren't syncing, open the extension popup and check that you're signed in. Click \"Sign in\" if needed.",
+          "Right-click save used the wrong collection",
+          "The right-click action saves to your most recently used collection. Open the popup, choose the collection you want, and save once from the popup. After that, right-click saves will use that collection.",
+          "Related Guides",
+          [
+            "<a href=\"/docs/adding-links\">Adding Links</a> — other ways to save products, including manual URL entry",
+            "<a href=\"/docs/getting-started\">Getting Started</a> — full setup walkthrough from account creation to first save",
+            "<a href=\"/docs/collections\">Collections</a> — how to organize your saved products"
+          ],
+          "Frequently Asked Questions",
+          "Does Tote work on Firefox or Safari?",
+          "Tote works on Chrome, Edge, Brave, Arc, and any Chromium-based browser. A Safari extension is on the roadmap. In the meantime, you can use the web app on any browser to <a href=\"/docs/adding-links\">add links manually</a>.",
+          "How do I pin the Tote extension to my toolbar?",
+          "Click the puzzle-piece icon in Chrome's toolbar, find Tote in the list, and click the pin icon next to it. The Tote icon will then stay visible in your toolbar for one-click access.",
+          "Can I save products without opening the popup?",
+          "Yes — right-click any product page and select \"Save to Tote\" from the context menu. The product is saved to your most recently used collection instantly."
+        ]
+      },
+      "ios-app": {
+        "meta": {
+          "title": "iOS App",
+          "description": "Install and use the Tote iOS app to save products with your phone's Share button from Safari or any app, browse your collections, and sign in with Apple. Covers setup, saving, syncing, and troubleshooting.",
+          "ogTitle": "iOS App — Tote",
+          "ogDescription": "Tap Share, then Tote, to save a product from Safari or any app, then browse and organize your collections on the go."
+        },
+        "title": "iOS App",
+        "lead": "The Tote iOS app brings your collections to your phone and hooks into the <strong>Share</strong> button, so you can save a product from Safari — or from any app that can share a link — without opening a browser.",
+        "body": [
+          "Looking for the short version? Visit the <a href=\"/ios-app\">Tote for iPhone and iPad</a> page for a quick overview and the App Store download link.",
+          "Getting the App",
+          "<appstore>Download Tote on the App Store</appstore> — it's a free universal download: one app that runs on both iPhone and iPad, with the iPad layout using the extra width for a wider collection grid. Everything you save is stored in your Tote account, so it's there the moment you sign in on the app — nothing to migrate or import.",
+          "Signing In",
+          "Open the app and sign in with the same account you use on tote.tools — email, or Sign in with Apple if that's how you created your account. Your collections, saved products, and selections sync automatically between the app, the web app, and the browser extension.",
+          "Saving with the Share Button",
+          "The fastest way to save on iOS is the <strong>Share</strong> button — the square with an arrow pointing out of it. It works anywhere iOS lets you share a link: Safari, Instagram, Messages, a retailer's own app, and more.",
+          [
+            "On a product page or post, tap the <strong>Share</strong> icon",
+            "Choose <strong>Tote</strong> from the row of apps that slides up (scroll that row if you don't see it, then tap <strong>More</strong> to enable it once)",
+            "Pick a collection, and a slot if the collection has one",
+            "Tote saves the product without switching apps or opening a browser tab"
+          ],
+          "Sharing to Tote works before you've opened the main Tote app that session — it saves directly using your signed-in account.",
+          "What Gets Captured",
+          "Sharing a link to Tote reads the page the same way the browser extension does:",
+          [
+            "<strong>Product name</strong> — the title of the product",
+            "<strong>Image</strong> — the main product photo",
+            "<strong>Price</strong> — the current listed price",
+            "<strong>URL</strong> — a link back to the original page"
+          ],
+          "Using the App",
+          "Beyond saving, the app mirrors the web experience: browse collections, mark selections, track budgets, and refresh prices from your phone. Anything you change in the app shows up in the web app and vice versa.",
+          "Troubleshooting",
+          "Tote isn't in my Share options",
+          "Tap <strong>More</strong> at the end of the row of apps, find <strong>Tote</strong>, and turn it on. iOS remembers this choice, and Tote will appear in the main row from then on. If Tote still doesn't appear, confirm the app is installed and you've opened it at least once.",
+          "The share extension asks me to sign in again",
+          "Open the main Tote app and sign in there first. The share extension uses the same signed-in session as the app, so signing in from the app resolves this for both.",
+          "Missing price, image, or brand",
+          "Some stores hide product data or load it after a delay, which the share extension can't always wait for. Save the item anyway if the title, image, or URL is enough to recognize it later — you can edit the saved product in the app, or refresh the page in Safari and share again.",
+          "A saved item isn't showing up",
+          "Pull to refresh the collection in the app. If it's still missing, check that you saved to the collection you expected — the save screen remembers your last-used collection by default.",
+          "The app looks out of date compared to the web app",
+          "Changes sync automatically when the app has a network connection. Pull to refresh any screen to force a sync, and check that the app has permission to use cellular data or Wi-Fi in iOS Settings.",
+          "Related Guides",
+          [
+            "<a href=\"/docs/extension\">Browser Extension</a> — the equivalent one-click and right-click saving on desktop",
+            "<a href=\"/docs/adding-links\">Adding Links</a> — other ways to save products, including manual URL entry",
+            "<a href=\"/docs/collections\">Collections</a> — how to organize your saved products",
+            "<a href=\"/docs/selections-and-budgets\">Selections & Budgets</a> — mark favorites and track spending from the app"
+          ],
+          "Frequently Asked Questions",
+          "Is there an Android app?",
+          "No, and there isn't one on the current roadmap. The web app works in any Android browser in the meantime. If you'd like an Android app, tell us at <a href=\"mailto:support@gobloom.io?subject=Android%20app%20request\">support@gobloom.io</a> — requests are how we decide what to build next.",
+          "Do I need a separate account for the app?",
+          "No. Sign in with the same account you use on tote.tools or in the browser extension, and everything you've already saved is there. One account covers all of Tote — the web app, the browser extension, and the iPhone and iPad app all talk to each other, so a change in one shows up in the others.",
+          "Does the app work offline?",
+          "You can browse previously loaded collections without a connection. Saving a new product, syncing changes, and refreshing prices all require a network connection."
+        ]
+      },
+      "selections-and-budgets": {
+        "meta": {
+          "title": "Selections & Budgets",
+          "description": "Learn how to use product selections and budgets in Tote. Mark favorites, set selection limits, track collection and slot budgets, and see over-budget indicators.",
+          "ogTitle": "Selections & Budgets — Tote",
+          "ogDescription": "Learn how to use product selections and budgets in Tote to pick favorites and track spending."
+        },
+        "title": "Selections & Budgets",
+        "lead": "Tote saves products from any online store in one place. Use selections to mark your favorite products and budgets to track spending — two features that help you narrow down choices and stay on target.",
+        "body": [
+          "Product Selections",
+          "When you're comparing multiple options, selections let you mark which products you've decided on (or are leaning toward). Think of it as starring your favorites within a collection.",
+          "How to Select a Product",
+          "Click the select button on any product card to mark it as selected. Selected products get a visual indicator so they stand out from the rest.",
+          "Selection Counters",
+          "Slots display an <strong>X / Y</strong> counter showing how many products you've selected out of the selection limit. For example, \"2 / 3\" means you've selected 2 products out of a maximum of 3.",
+          "Selection Limits",
+          "You can set a maximum number of selections per slot. This is useful when you're making decisions:",
+          [
+            "Choosing <strong>1 couch</strong> from 5 options — set the limit to 1",
+            "Picking <strong>3 wall art pieces</strong> from a dozen — set the limit to 3",
+            "No limit needed? Leave it unset and select as many as you like"
+          ],
+          "When you hover over a product card, the selection badge animates toward the select button — a subtle hint that you can click to toggle the selection.",
+          "Budgets",
+          "Budgets help you track the total cost of your selections against a spending target.",
+          "Collection Budgets",
+          "Set an overall budget for a collection to see at a glance whether your selected products fit within your spending plan. The collection header shows the total price of selected items compared to your budget.",
+          "Slot Budgets",
+          "Each slot can have its own budget, independent of the collection budget. This is useful when you have category-specific limits — like \"$500 for seating\" and \"$200 for lighting\" within a larger room renovation.",
+          "Over-Budget Indicators",
+          "When the total price of your selected products exceeds the budget, Tote shows a visual indicator so you know you need to make adjustments. This works at both the collection and slot level.",
+          "Selections + Budgets Together",
+          "Selections and budgets work hand in hand. Only <strong>selected</strong> products count toward the budget total. This means you can save many options, mark your favorites, and immediately see whether your picks fit your budget — without unselected options skewing the numbers.",
+          "You're furnishing a living room with a $2,000 budget. You save 8 couches, 5 coffee tables, and 10 lamps. As you select your top picks in each slot, the budget tracker updates in real time — helping you balance splurges in one category with savings in another.",
+          "Related Guides",
+          [
+            "<a href=\"/docs/collections\">Collections</a> — set budgets at the collection level",
+            "<a href=\"/docs/slots\">Slots</a> — set per-slot budgets and selection limits",
+            "<a href=\"/docs/sharing\">Sharing</a> — collaborators can select products in shared collections"
+          ],
+          "Frequently Asked Questions",
+          "Do unselected products count toward the budget?",
+          "No. Only selected products are included in the budget total. This lets you save many options and compare freely without inflating the number.",
+          "Can I set a budget without using selection limits?",
+          "Yes. Budgets and selection limits are independent features. You can set a budget on a collection or <a href=\"/docs/slots\">slot</a> without restricting how many products can be selected — or use selection limits without a budget.",
+          "Where do I set a budget?",
+          "You can set a budget on a collection by editing the collection, or on individual slots by clicking the edit button on the slot header. See <a href=\"/docs/collections\">Collections</a> and <a href=\"/docs/slots\">Slots</a> for details."
+        ]
+      },
+      "sharing": {
+        "meta": {
+          "title": "Sharing",
+          "description": "Learn how to share collections in Tote. Create invite links for collaborators, make collections public, and manage shared wishlists.",
+          "ogTitle": "Sharing — Tote",
+          "ogDescription": "Learn how to share collections in Tote with invite links, public pages, and collaborative wishlists."
+        },
+        "title": "Sharing",
+        "lead": "Tote is a free cross-store shopping organizer. Share your collections with friends, family, or collaborators for joint wishlists, gift planning, or group projects.",
+        "body": [
+          "How Sharing Works",
+          "When you share a collection, you create an invite link that others can use to join. Each invite is single-use and carries a role—either Viewer or Editor—that controls what the person can do once they join.",
+          "Sharing a Collection",
+          [
+            "Open the collection you want to share",
+            "Click the <strong>Manage team</strong> button in the collection header",
+            "Choose a role (Viewer or Editor) and optionally add a name or email as a note",
+            "Click <strong>Create link</strong> and copy the invite URL",
+            "Send the link to the person you want to collaborate with"
+          ],
+          "Shared collections work great for gift registries. Share a wishlist with family so everyone can see what you're hoping for—and avoid duplicate gifts.",
+          "Joining a Shared Collection",
+          "When someone shares a collection with you:",
+          [
+            "Click the invite link they sent you",
+            "Sign in to your Tote account (or create one)",
+            "The shared collection appears in your collections list"
+          ],
+          "Roles",
+          "Every member of a shared collection has a role that determines what they can do. Roles from most to least access:",
+          [
+            "<strong>Owner</strong> — full control, including deleting the collection and transferring ownership to someone else. There is always exactly one owner.",
+            "<strong>Admin</strong> — can read, edit, publish, and manage members (invite, change roles, remove). Cannot delete the collection.",
+            "<strong>Editor</strong> — can view and edit (add products, create slots, refresh prices). Cannot manage members or publish.",
+            "<strong>Viewer</strong> — read-only access. Can see everything but cannot make changes."
+          ],
+          "When you create an invite link you choose Viewer or Editor. Owners can promote a member to Admin or transfer ownership after they join.",
+          "Managing Members",
+          "Open <strong>Manage team</strong> to see everyone who has joined. From there you can change a member's role or remove them entirely. You can also see all outstanding invites and revoke any you no longer want active.",
+          "Leaving a Shared Collection",
+          "If you no longer want access to a collection someone shared with you, you can leave it from your collections page. This removes it from your list but doesn't affect other collaborators.",
+          "Public Links",
+          "In addition to sharing with collaborators, you can make a collection publicly viewable. Public links let anyone see your collection without signing in—perfect for wishlists, registries, or sharing recommendations.",
+          "Public links are a great way to create a \"link in bio\" for social media. Curate your favorite products into a collection, make it public, and share the link in your Instagram, TikTok, or anywhere else. Update it anytime with your latest finds.",
+          "Making a Collection Public",
+          [
+            "Open the collection and click \"Share\"",
+            "In the General Access section, click \"Make Public\"",
+            "Copy the public link to share anywhere"
+          ],
+          "Your Own Short Link",
+          "Every public collection gets your own unique, trustworthy link on tote.tools — with your username right in it so people know it's from you:",
+          "<code>tote.tools/s/yourname/summer-wishlist</code>",
+          "Tote creates this automatically from your collection name when you publish. You can change it to whatever you like in the Share dialog — great for social media bios, texts, or anywhere you want a link that's easy to recognize and trust.",
+          "To get your own short link, make sure you've set a username in your account settings. Without a username, your public link will still work but will be longer.",
+          "How Public Links Work",
+          "When you make a collection public, Tote creates a <strong>snapshot</strong> of your collection. This public copy is separate from your working collection—changes you make won't automatically appear on the public version.",
+          "After adding or removing products, you need to click \"Update Public Version\" to push your changes to the public link. This gives you control over what others see.",
+          "Updating the Public Version",
+          "When you're ready to share your latest changes:",
+          [
+            "Open the Share dialog",
+            "Click \"Update Public Version\"",
+            "Your changes are now visible to anyone with the public link"
+          ],
+          "Making a Collection Private Again",
+          "You can revoke public access at any time by clicking \"Make Private\" in the Share dialog. The public link will stop working immediately.",
+          "Privacy",
+          "Only people with the invite link can access a shared collection. Your other collections remain completely private. Tote never shares your data with advertisers or third parties.",
+          "Related Guides",
+          [
+            "<a href=\"/docs/collections\">Collections</a> — create and organize the collections you share",
+            "<a href=\"/docs/getting-started\">Getting Started</a> — set up your account before accepting invite links",
+            "<a href=\"/docs/extension\">Browser Extension</a> — save products to shared collections from any store"
+          ],
+          "Frequently Asked Questions",
+          "Can people edit my shared collection?",
+          "It depends on the role you assign when creating the invite link. Editors can add products, create slots, and refresh prices. Viewers can only look. After someone joins, an owner can promote them to Admin, which also lets them manage other members. See the <a href=\"#roles\">Roles</a> section above for the full breakdown.",
+          "Is my shared collection visible to everyone?",
+          "No. Shared collections are only accessible to people who have the invite link. If you want anyone to see your collection without signing in, you can make it public separately — see the <a href=\"#public-links\">Public Links</a> section above.",
+          "How do I stop sharing a collection?",
+          "For public links, open the publish dialog and click \"Make Private\" to revoke access immediately. For invite-based sharing, open <strong>Manage team</strong> and remove individual members, or revoke any pending invites you no longer want active.",
+          "Can I customize my public collection link?",
+          "Yes! When you publish a collection, Tote creates a short link from the collection name. You can change it to whatever you like in the Share dialog — for example, <code>tote.tools/s/yourname/summer-wishlist</code>."
+        ]
+      }
+    }
+  }
+}

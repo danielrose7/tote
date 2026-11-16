@@ -60,6 +60,10 @@
         "saveFirst": "Save your first item",
         "dismiss": "Dismiss"
       }
+    },
+    "docs": {
+      "copyLink": "Copy link to {{section}}",
+      "copied": "Copied!"
     }
   }
 }

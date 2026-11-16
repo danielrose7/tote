@@ -1,0 +1,576 @@
+{
+  "docs": {
+    "navLabel": "Centro de ayuda",
+    "sidebarLabel": "Ayuda",
+    "nav": {
+      "overview": "Resumen",
+      "getting-started": "Primeros pasos",
+      "collections": "Colecciones",
+      "slots": "Secciones",
+      "adding-links": "Agregar enlaces",
+      "extension": "Extensión del navegador",
+      "ios-app": "App de iOS",
+      "selections-and-budgets": "Selecciones y presupuestos",
+      "sharing": "Compartir"
+    },
+    "site": {
+      "name": "Centro de ayuda de Tote",
+      "description": "Aprende a usar Tote para guardar, organizar y seguir productos de cualquier lugar de la web."
+    },
+    "common": {
+      "labels": {
+        "tip": "Consejo:",
+        "example": "Ejemplo:",
+        "important": "Importante:"
+      }
+    },
+    "index": {
+      "meta": {
+        "title": "Centro de ayuda",
+        "description": "Aprende a usar Tote para guardar, organizar y seguir productos de cualquier lugar de la web. Guías sobre colecciones, secciones, cómo compartir y la extensión del navegador.",
+        "ogTitle": "Centro de ayuda — Tote",
+        "ogDescription": "Aprende a usar Tote para guardar, organizar y seguir productos de cualquier lugar de la web."
+      },
+      "title": "Centro de ayuda",
+      "lead": "Tote es una herramienta gratuita que guarda en un solo lugar productos de cualquier tienda en línea. Aprende a organizar, seguir y compartir lo que encuentras.",
+      "guidesHeading": "Guías",
+      "guidesIntro": "Tote es un carrito de compras universal que funciona con cualquier tienda en línea. Guarda productos con un clic, organízalos en colecciones y sigue los precios a lo largo del tiempo.",
+      "cards": {
+        "getting-started": {
+          "description": "¿Eres nuevo en Tote? Regístrate, instala la extensión y guarda tu primer producto en minutos.",
+          "linkText": "Empieza"
+        },
+        "collections": {
+          "description": "Carpetas principales para organizar tus productos guardados por proyecto, temporada o el tema que prefieras.",
+          "linkText": "Conoce las colecciones"
+        },
+        "slots": {
+          "description": "Agrupaciones opcionales dentro de una colección para organizar con más detalle, como niveles de presupuesto o categorías por habitación.",
+          "linkText": "Conoce las secciones"
+        },
+        "adding-links": {
+          "description": "Guarda productos con la extensión del navegador o agrega enlaces manualmente desde cualquier dispositivo.",
+          "linkText": "Conoce cómo agregar enlaces"
+        },
+        "extension": {
+          "description": "Instala y usa la extensión en Chrome, Edge, Brave o Arc para guardar con un clic, con el menú contextual del clic derecho y más.",
+          "linkText": "Conoce la extensión"
+        },
+        "ios-app": {
+          "description": "Toca Compartir y luego Tote para guardar desde Safari o cualquier app, y explora tus colecciones donde estés.",
+          "linkText": "Conoce la app de iOS"
+        },
+        "selections-and-budgets": {
+          "description": "Marca tus productos favoritos, define límites de selección y controla el gasto con presupuestos por colección y por sección.",
+          "linkText": "Conoce las selecciones"
+        },
+        "sharing": {
+          "description": "Comparte colecciones con amigos o familiares para armar listas de deseos en conjunto y planear regalos.",
+          "linkText": "Conoce cómo compartir"
+        }
+      },
+      "useCasesHeading": "Casos de uso",
+      "useCasesIntro": "Mira cómo usa la gente Tote en situaciones de compra concretas: desde listas de regalos para las fiestas hasta el abastecimiento profesional de diseño de interiores.",
+      "useCasesTitle": "Explora los casos de uso",
+      "useCasesDescription": "Listas de regalos, remodelaciones del hogar, planificación del guardarropa, compras en familia y proyectos profesionales.",
+      "useCasesLink": "Ver casos de uso"
+    },
+    "pages": {
+      "getting-started": {
+        "meta": {
+          "title": "Primeros pasos",
+          "description": "Empieza con Tote en minutos. Regístrate, instala la extensión del navegador, guarda tu primer producto y organiza tus compras de todas las tiendas.",
+          "ogTitle": "Primeros pasos — Tote",
+          "ogDescription": "Empieza con Tote en minutos. Regístrate, instala la extensión del navegador y guarda tu primer producto."
+        },
+        "title": "Primeros pasos",
+        "lead": "Tote es una herramienta gratuita que guarda en un solo lugar productos de cualquier tienda en línea. Configúrala en unos minutos y empieza a organizar tus compras.",
+        "body": [
+          "1. Crea tu cuenta",
+          "Entra a <a href=\"https://tote.tools\">tote.tools</a> y regístrate con tu correo o tu cuenta de Google. Tu cuenta mantiene tus productos guardados sincronizados en todos tus dispositivos.",
+          "2. Instala la extensión del navegador",
+          "La extensión del navegador es la forma más rápida de guardar productos. <store>Instálala desde Chrome Web Store</store>: funciona en Chrome, Edge, Brave y Arc. Luego inicia sesión con la misma cuenta que acabas de crear.",
+          "Consulta la <a href=\"/docs/extension\">guía de la extensión del navegador</a> para ver las instrucciones de instalación detalladas.",
+          "3. Guarda tu primer producto",
+          "Abre la página de cualquier producto (unos zapatos, un mueble, un utensilio de cocina) y haz clic en el ícono de la extensión de Tote en tu barra de herramientas. Elige una colección (o usa la predeterminada) y el producto se guarda al instante.",
+          "Tote captura automáticamente el nombre del producto, la imagen, el precio y el enlace a la página original.",
+          "4. Organiza con colecciones",
+          "Las colecciones son carpetas para tus productos guardados. Puedes crear una para «Muebles de la sala», otra para «Ideas de regalo» y otra para «Guardarropa». Crea todas las que necesites.",
+          "Conoce más en la <a href=\"/docs/collections\">guía de colecciones</a>.",
+          "5. Sigue comprando",
+          "Mientras exploras distintas tiendas, sigue guardando productos en Tote. Todo queda en un solo lugar sin importar de qué tienda venga. Vuelve cuando quieras para revisar, comparar o comprar.",
+          "También puedes hacer clic derecho en cualquier página de producto y elegir «Guardar en Tote» en el menú contextual, sin abrir la ventana de la extensión.",
+          "Próximos pasos",
+          [
+            "<a href=\"/docs/collections\">Colecciones</a>: organiza los productos en grupos",
+            "<a href=\"/docs/slots\">Secciones</a>: subdivide las colecciones para tener más detalle",
+            "<a href=\"/docs/selections-and-budgets\">Selecciones y presupuestos</a>: elige tus favoritos y controla el gasto",
+            "<a href=\"/docs/sharing\">Compartir</a>: colabora con otras personas en listas de deseos"
+          ],
+          "Preguntas frecuentes",
+          "¿Tote es gratis?",
+          "Sí. Tote es gratuito: crea una cuenta, instala la extensión y empieza a guardar productos sin costo.",
+          "¿Con qué tiendas funciona Tote?",
+          "Tote funciona con prácticamente cualquier tienda en línea. Lee los metadatos estándar del producto (imágenes, títulos, precios) de la página, así que funciona en Amazon, IKEA, Etsy, Zara, boutiques pequeñas y todo lo que hay en medio.",
+          "¿Necesito la extensión del navegador?",
+          "No. La extensión hace más rápido el guardado (un clic) y funciona en Chrome, Edge, Brave y Arc, pero también puedes agregar productos manualmente pegando una URL en la app web. Consulta <a href=\"/docs/adding-links\">Agregar enlaces</a> para ver los detalles.",
+          "¿Tote funciona en mi teléfono?",
+          "La app web de Tote funciona en cualquier dispositivo con navegador. La extensión del navegador es solo para computadora, pero puedes agregar enlaces manualmente desde tu teléfono pegando las URL de los productos."
+        ]
+      },
+      "collections": {
+        "meta": {
+          "title": "Colecciones",
+          "description": "Aprende a crear y organizar colecciones en Tote. Agrupa los productos guardados por proyecto, temporada o tema, con colores, modos de vista y seguimiento de presupuesto.",
+          "ogTitle": "Colecciones — Tote",
+          "ogDescription": "Aprende a crear y organizar colecciones en Tote. Agrupa los productos guardados por proyecto, temporada o tema."
+        },
+        "title": "Colecciones",
+        "lead": "Tote guarda en un solo lugar productos de cualquier tienda en línea. Las colecciones son la forma principal de organizarlos: piensa en ellas como carpetas o tableros para distintos proyectos, temporadas o temas.",
+        "body": [
+          "¿Qué es una colección?",
+          "Una colección es un contenedor que reúne todos los productos relacionados con un propósito específico. Por ejemplo, podrías tener colecciones para:",
+          [
+            "<strong>Remodelación del hogar</strong>: muebles, decoración y materiales para renovar una habitación",
+            "<strong>Ideas de regalo</strong>: obsequios que estás considerando para amigos y familiares",
+            "<strong>Renovar el guardarropa</strong>: ropa y accesorios para la próxima temporada",
+            "<strong>Lista de deseos</strong>: cosas que quieres comprar algún día"
+          ],
+          "Crear una colección",
+          "Para crear una colección nueva, ve a tu página de colecciones y haz clic en el botón «Agregar colección». Ponle un nombre y, si quieres, elige un color para identificarla de un vistazo.",
+          "Funciones de las colecciones",
+          "Colores",
+          "Cada colección puede tener su propio color, lo que facilita distinguir visualmente los distintos proyectos en tu lista de colecciones.",
+          "Modos de vista",
+          "Las colecciones se pueden mostrar en vista de cuadrícula (tarjetas visuales con imágenes) o en vista de tabla (lista compacta con detalles). Elige la vista que mejor se adapte a tu forma de explorar.",
+          "Seguimiento de presupuesto",
+          "Define un presupuesto opcional para tu colección y controla el gasto. Tote te muestra el valor total de los productos de la colección en comparación con tu presupuesto.",
+          "Empieza con sencillez, con solo una o dos colecciones. Siempre puedes reorganizar más adelante a medida que cambien tus necesidades.",
+          "Colección predeterminada",
+          "Cuando guardas un producto sin elegir una colección específica, va a tu colección predeterminada. Es tu «bandeja de entrada» general para los productos guardados. Puedes mover los artículos a otras colecciones en cualquier momento.",
+          "Insignias con el número de artículos",
+          "Cada colección muestra una insignia con la cantidad de productos que contiene. Así te das una idea rápida de qué tan llena está cada colección sin abrirla.",
+          "Eliminar una colección",
+          "Para eliminar una colección, ábrela y usa el menú de la colección. Al eliminarla se borran también todos los productos que contiene, así que asegúrate de mover antes lo que quieras conservar.",
+          "Reordenar colecciones",
+          "Arrastra y suelta las colecciones para reordenarlas en tu página de colecciones. Pon tus proyectos más activos arriba para acceder a ellos fácilmente.",
+          "Colecciones y secciones",
+          "Las colecciones son tu unidad principal de organización. Si necesitas una organización más detallada <em>dentro</em> de una colección, para eso están las secciones. Consulta la <a href=\"/docs/slots\">documentación de secciones</a> para saber más.",
+          "Guías relacionadas",
+          [
+            "<a href=\"/docs/slots\">Secciones</a>: subdivide las colecciones en categorías o niveles de presupuesto",
+            "<a href=\"/docs/selections-and-budgets\">Selecciones y presupuestos</a>: marca favoritos y controla el gasto dentro de las colecciones",
+            "<a href=\"/docs/sharing\">Compartir</a>: comparte colecciones con amigos o hazlas públicas"
+          ],
+          "Preguntas frecuentes",
+          "¿Cuántas colecciones puedo tener?",
+          "No hay límite. Crea todas las colecciones que necesites: una por proyecto, temporada, habitación o cualquier tema que tenga sentido para ti.",
+          "¿Puedo mover productos entre colecciones?",
+          "Sí. Abre los detalles de un producto haciendo clic en él y cambia la colección desde el cuadro de edición. También puedes cambiar a qué <a href=\"/docs/slots\">sección</a> pertenece un producto.",
+          "¿Qué pasa cuando elimino una colección?",
+          "Al eliminar una colección se borran de forma permanente todos los productos y secciones que contiene. Asegúrate de mover antes a otra colección los productos que quieras conservar."
+        ]
+      },
+      "slots": {
+        "meta": {
+          "title": "Secciones",
+          "description": "Aprende a usar las secciones de Tote para subdividir colecciones. Organiza los productos en categorías, define presupuestos por sección y administra los límites de selección.",
+          "ogTitle": "Secciones — Tote",
+          "ogDescription": "Aprende a usar las secciones de Tote para subdividir colecciones en categorías con presupuestos y límites de selección."
+        },
+        "title": "Secciones",
+        "lead": "Tote guarda productos de cualquier tienda en línea y los organiza en colecciones. Las secciones son agrupaciones opcionales dentro de una colección: úsalas cuando necesites dividir aún más en categorías, niveles de presupuesto o grupos de decisión.",
+        "body": [
+          "¿Qué es una sección?",
+          "Una sección es una forma de subdividir una colección. Mientras que las colecciones organizan los productos por proyecto o tema, las secciones te ayudan a organizarlos <em>dentro</em> de ese proyecto. Por ejemplo:",
+          [
+            "Una colección de <strong>Sala</strong> podría tener secciones como «Asientos», «Iluminación» y «Decoración»",
+            "Una colección de <strong>Ideas de regalo</strong> podría tener secciones como «Menos de $25», «$25-50» y «Un gusto especial»",
+            "Una colección de <strong>Guardarropa</strong> podría tener secciones como «Blusas y camisas», «Pantalones y faldas» y «Accesorios»"
+          ],
+          "Cuándo usar secciones",
+          "Las secciones son totalmente opcionales. Mucha gente descubre que con las colecciones basta para mantenerse organizada. Considera usar secciones cuando:",
+          [
+            "Tienes muchos productos en una sola colección y quieres agruparlos",
+            "Estás comparando opciones para necesidades específicas (por ejemplo, «¿qué sofá comprar?»)",
+            "Quieres definir presupuestos distintos para distintas categorías",
+            "Estás planeando con varios puntos de decisión"
+          ],
+          "No tienes que usar secciones. Si tu colección tiene solo unos pocos productos, las secciones podrían agregar complejidad innecesaria. Empieza sin ellas y agrégalas más adelante si ves que quieres agrupar las cosas.",
+          "Crear una sección",
+          "Dentro de una colección, haz clic en «Agregar sección» para crear una nueva agrupación. Ponle un nombre que describa qué productos van ahí. Luego puedes arrastrar productos a la sección o agregar productos nuevos directamente en ella.",
+          "Funciones de las secciones",
+          "Presupuesto por sección",
+          "Cada sección puede tener su propio presupuesto, independiente del presupuesto de la colección. Es útil cuando tienes límites de gasto específicos para distintas categorías, como «$200 para iluminación» dentro de un presupuesto de remodelación más grande.",
+          "Límites de selección",
+          "Las secciones pueden tener un número máximo de selecciones, lo que te ayuda a reducir las opciones. Por ejemplo, si vas a elegir una mesa de centro entre cinco opciones, define el límite en 1 y marca tu favorita como elegida.",
+          "Contraer y expandir",
+          "Las secciones se pueden contraer para ocultar sus productos y ver de forma compacta la estructura de tu colección. Haz clic en el encabezado de la sección para alternar entre la vista contraída y la expandida. Es especialmente útil cuando tienes muchas secciones y quieres enfocarte en una a la vez.",
+          "Reordenar secciones",
+          "Arrastra y suelta las secciones para cambiar su orden dentro de una colección. También puedes arrastrar productos entre secciones para reorganizarlos.",
+          "Eliminar una sección",
+          "Cuando eliminas una sección, los productos que contiene no se borran: pasan a la sección «Sin agrupar» al final de la colección. Así puedes quitar una sección sin perder ningún producto guardado.",
+          "Productos sin agrupar",
+          "Los productos que no están en ninguna sección aparecen en una sección «Sin agrupar» al final de la colección. Puedes dejarlos ahí o arrastrarlos a las secciones a medida que organizas.",
+          "Guías relacionadas",
+          [
+            "<a href=\"/docs/collections\">Colecciones</a>: las carpetas principales que contienen las secciones",
+            "<a href=\"/docs/selections-and-budgets\">Selecciones y presupuestos</a>: los límites de selección y los presupuestos funcionan por sección",
+            "<a href=\"/docs/adding-links\">Agregar enlaces</a>: guarda productos directamente en una sección específica"
+          ],
+          "Colecciones y secciones: referencia rápida",
+          {
+            "title": "Usa una colección cuando...",
+            "x": "Empiezas un proyecto, tema o categoría de productos nueva. Las colecciones son tu unidad principal de organización, como las carpetas de tu computadora."
+          },
+          {
+            "title": "Usa una sección cuando...",
+            "x": "Necesitas agrupar productos dentro de una colección existente. Las secciones son subcategorías, como los apartados dentro de una carpeta."
+          }
+        ]
+      },
+      "adding-links": {
+        "meta": {
+          "title": "Agregar enlaces",
+          "description": "Aprende a guardar productos en Tote con la extensión del navegador o agregando enlaces manualmente. Incluye el guardado con un clic, el menú contextual del clic derecho y las notas de producto.",
+          "ogTitle": "Agregar enlaces — Tote",
+          "ogDescription": "Aprende a guardar productos en Tote con la extensión del navegador o agregando enlaces manualmente."
+        },
+        "title": "Agregar enlaces",
+        "lead": "Tote es un organizador de compras gratuito para todas las tiendas. Guarda productos con la extensión del navegador con un solo clic, o agrega enlaces manualmente desde cualquier dispositivo.",
+        "body": [
+          "Con la extensión del navegador",
+          "La forma más rápida de guardar productos es con la extensión de Tote, que funciona en Chrome, Edge, Brave y Arc. Una vez instalada, puedes guardar cualquier página de producto con un solo clic.",
+          "Instalar la extensión",
+          [
+            "Entra a Chrome Web Store y busca «Tote»",
+            "Haz clic en «Agregar a Chrome» para instalarla",
+            "Inicia sesión con tu cuenta de Tote para sincronizar tus productos guardados"
+          ],
+          "Guardar un producto",
+          [
+            "Abre la página del producto que quieres guardar",
+            "Haz clic en el ícono de la extensión de Tote en la barra de herramientas del navegador",
+            "Elige en qué colección guardarlo (o crea una nueva)",
+            "La imagen, el título, el precio y el enlace del producto se capturan automáticamente"
+          ],
+          "La extensión funciona mejor en las páginas de detalle de producto. Si estás en una página de categoría o de resultados de búsqueda, entra primero al producto específico.",
+          "Agregar enlaces manualmente",
+          "También puedes agregar productos directamente desde la app web de Tote. Es útil cuando estás en un dispositivo sin la extensión o quieres agregar un enlace que alguien te compartió.",
+          "Para agregar un enlace manualmente",
+          [
+            "Abre la colección donde quieres agregar el producto",
+            "Haz clic en «Agregar enlace» en el encabezado",
+            "Pega la URL del producto",
+            "Tote obtendrá automáticamente los detalles del producto"
+          ],
+          "Qué se guarda",
+          "Cuando guardas un producto, Tote captura:",
+          [
+            "<strong>Nombre del producto</strong>: el título de la página del producto",
+            "<strong>Imagen</strong>: la foto principal del producto",
+            "<strong>Precio</strong>: el precio actual publicado",
+            "<strong>URL</strong>: para que siempre puedas volver a la página original",
+            "<strong>Descripción</strong>: un resumen, cuando está disponible"
+          ],
+          "Clic derecho en «Guardar en Tote»",
+          "Con la extensión instalada, puedes hacer clic derecho en cualquier página de producto y elegir <strong>«Guardar en Tote»</strong> en el menú contextual. Así el producto se guarda en la colección que usaste más recientemente, sin abrir la ventana de la extensión.",
+          "Notas del producto",
+          "Después de guardar un producto, puedes agregar notas personales: preferencias de talla, opciones de color, para quién es el regalo o cualquier otra cosa que quieras recordar. Haz clic en un producto guardado para abrir sus detalles y escribe en el campo de notas.",
+          "Editar productos guardados",
+          "Puedes editar el título, el precio o las notas de cualquier producto guardado. Haz clic en el producto para abrir sus detalles, haz tus cambios y se guardan automáticamente.",
+          "Detección de plataforma y marca",
+          "Tote detecta automáticamente la tienda o el mercado (Amazon, IKEA, Etsy, etc.) y la marca del producto cuando esa información está disponible en la página. Esto te ayuda a filtrar e identificar productos de un vistazo.",
+          "Actualizar los datos del producto",
+          "Los detalles de un producto pueden cambiar con el tiempo: bajan los precios, se agotan los artículos, se actualizan las publicaciones. Usa el botón de actualizar de cualquier producto para obtener la información más reciente de la página original.",
+          "Guías relacionadas",
+          [
+            "<a href=\"/docs/extension\">Extensión del navegador</a>: instalación detallada, cómo fijarla y solución de problemas",
+            "<a href=\"/docs/collections\">Colecciones</a>: organiza tus productos guardados en grupos",
+            "<a href=\"/docs/selections-and-budgets\">Selecciones y presupuestos</a>: marca favoritos y controla el gasto de tus productos guardados"
+          ]
+        ]
+      },
+      "extension": {
+        "meta": {
+          "title": "Extensión del navegador",
+          "description": "Instala y usa la extensión de Tote en Chrome, Edge, Brave o Arc para guardar productos con un clic. Incluye la instalación, el guardado con un clic, el menú contextual del clic derecho, la elección de sección y el inicio de sesión.",
+          "ogTitle": "Extensión del navegador — Tote",
+          "ogDescription": "Instala y usa la extensión de Tote en Chrome, Edge, Brave o Arc para guardar productos con un clic desde cualquier tienda en línea."
+        },
+        "title": "Extensión del navegador",
+        "lead": "Tote es un organizador de compras gratuito para todas las tiendas. La extensión del navegador te permite guardar productos de cualquier tienda en línea con un clic o con el clic derecho. Funciona en Chrome, Edge, Brave, Arc y cualquier navegador basado en Chromium.",
+        "body": [
+          "¿Buscas la versión corta? Visita la <a href=\"/chrome-extension\">página de la extensión del navegador de Tote</a> para ver el enlace de instalación, los navegadores compatibles y un resumen rápido del producto.",
+          "Instalar la extensión",
+          [
+            "Visita la <store>página de Tote en Chrome Web Store</store> (también sirve para Edge, Brave y Arc)",
+            "Haz clic en <strong>«Agregar a Chrome»</strong> y confirma la instalación",
+            "El ícono de Tote aparece en la barra de herramientas del navegador (quizá debas hacer clic en el ícono de la pieza de rompecabezas para fijarlo)"
+          ],
+          "Iniciar sesión",
+          "Después de instalarla, haz clic en el ícono de Tote para abrir la ventana de la extensión. Te pedirá iniciar sesión con la misma cuenta que usas en tote.tools. Una vez dentro, tus colecciones se sincronizan automáticamente entre la extensión y la app web.",
+          "Guardar un producto",
+          "Hay dos formas de guardar un producto:",
+          "Guardado con un clic",
+          [
+            "Abre la página de cualquier producto",
+            "Haz clic en el ícono de la extensión de Tote en tu barra de herramientas",
+            "Elige en qué colección guardarlo",
+            "Si quieres, elige una sección dentro de la colección",
+            "Haz clic en <strong>«Guardar»</strong>"
+          ],
+          "La imagen, el título, el precio y la URL del producto se capturan automáticamente.",
+          "Menú contextual con el clic derecho",
+          "Haz clic derecho en cualquier parte de una página de producto y elige <strong>«Guardar en Tote»</strong> en el menú contextual. El producto se guarda en la colección que usaste más recientemente.",
+          "El clic derecho es la forma más rápida de guardar: omite por completo la ventana de la extensión y guarda en la última colección que usaste.",
+          "Elegir una colección y una sección",
+          "Al guardar desde la ventana de la extensión, puedes elegir cualquier colección existente en el menú desplegable. Si la colección tiene secciones, aparece un segundo menú para colocar el producto directamente en el grupo correcto.",
+          "También puedes crear una colección nueva directamente desde la ventana de la extensión, sin salir de la página en la que estás.",
+          "Qué se captura",
+          "La extensión extrae metadatos de la página del producto:",
+          [
+            "<strong>Nombre del producto</strong>: el título del producto",
+            "<strong>Imagen</strong>: la foto principal del producto",
+            "<strong>Precio</strong>: el precio actual publicado",
+            "<strong>URL</strong>: un enlace a la página original",
+            "<strong>Marca</strong>: se detecta en la página cuando está disponible",
+            "<strong>Plataforma</strong>: la tienda o el mercado (por ejemplo, Amazon, IKEA)"
+          ],
+          "Permisos y privacidad",
+          "La extensión pide permisos del navegador para poder leer la página de producto activa, abrir su ventana, guardar la sesión de la extensión y ofrecer la acción de guardar con el clic derecho. Tote usa esos permisos para guardar productos en tu cuenta. Tote no vende tu comportamiento de compra ni opera una red publicitaria.",
+          [
+            "<strong>activeTab y tabs</strong>: identifican la página que intentas guardar",
+            "<strong>storage</strong>: recuerda el estado de la extensión, como la última colección que usaste",
+            "<strong>cookies</strong>: mantienen conectado tu inicio de sesión de Tote a través de Clerk",
+            "<strong>contextMenus</strong>: muestran la acción «Guardar en Tote» del clic derecho",
+            "<strong>scripting y acceso a sitios</strong>: leen los metadatos del producto de la página que estás guardando"
+          ],
+          "Tiendas compatibles",
+          "Tote funciona en prácticamente cualquier tienda en línea. Lee la página en la que estás para identificar el nombre, la imagen y el precio del producto. La mayoría de las tiendas ofrecen suficiente información para un guardado completo, pero incluso una página de producto básica captura el título, la imagen y la URL.",
+          "Actualizaciones",
+          "Chrome y otros navegadores basados en Chromium actualizan las extensiones automáticamente desde Chrome Web Store. Si crees que no tienes la última versión, abre la página de Extensiones de tu navegador, activa el modo de desarrollador y haz clic en «Actualizar». Puedes ver la versión de Tote instalada en la página de detalles de la extensión.",
+          "Solución de problemas",
+          "La extensión no muestra los detalles del producto",
+          "Asegúrate de estar en la página de un producto específico, no en una página de categoría o de resultados de búsqueda. La extensión funciona mejor cuando hay un solo producto en foco.",
+          "Faltan el precio, la imagen o la marca",
+          "Algunas tiendas ocultan los datos del producto, los muestran con retraso o usan un marcado de página poco habitual. Guarda el artículo de todos modos si el título, la imagen o la URL bastan para reconocerlo después. Puedes editar el producto guardado en Tote, o intentar actualizar la página del producto y guardarlo de nuevo.",
+          "No has iniciado sesión",
+          "Si tus productos guardados no se sincronizan, abre la ventana de la extensión y comprueba que hayas iniciado sesión. Haz clic en «Iniciar sesión» si hace falta.",
+          "El guardado con clic derecho usó una colección equivocada",
+          "La acción del clic derecho guarda en la colección que usaste más recientemente. Abre la ventana de la extensión, elige la colección que quieres y guarda una vez desde ahí. Después, los guardados con clic derecho usarán esa colección.",
+          "Guías relacionadas",
+          [
+            "<a href=\"/docs/adding-links\">Agregar enlaces</a>: otras formas de guardar productos, incluida la entrada manual de URL",
+            "<a href=\"/docs/getting-started\">Primeros pasos</a>: guía completa de configuración, desde crear la cuenta hasta el primer guardado",
+            "<a href=\"/docs/collections\">Colecciones</a>: cómo organizar tus productos guardados"
+          ],
+          "Preguntas frecuentes",
+          "¿Tote funciona en Firefox o Safari?",
+          "Tote funciona en Chrome, Edge, Brave, Arc y cualquier navegador basado en Chromium. Una extensión para Safari está en la hoja de ruta. Mientras tanto, puedes usar la app web en cualquier navegador para <a href=\"/docs/adding-links\">agregar enlaces manualmente</a>.",
+          "¿Cómo fijo la extensión de Tote en mi barra de herramientas?",
+          "Haz clic en el ícono de la pieza de rompecabezas en la barra de herramientas de Chrome, busca Tote en la lista y haz clic en el ícono de fijar junto a él. Así el ícono de Tote seguirá visible en tu barra de herramientas para acceder con un clic.",
+          "¿Puedo guardar productos sin abrir la ventana de la extensión?",
+          "Sí: haz clic derecho en cualquier página de producto y elige «Guardar en Tote» en el menú contextual. El producto se guarda al instante en la colección que usaste más recientemente."
+        ]
+      },
+      "ios-app": {
+        "meta": {
+          "title": "App de iOS",
+          "description": "Instala y usa la app de iOS de Tote para guardar productos con el botón Compartir de tu teléfono desde Safari o cualquier app, explorar tus colecciones e iniciar sesión con Apple. Incluye la configuración, el guardado, la sincronización y la solución de problemas.",
+          "ogTitle": "App de iOS — Tote",
+          "ogDescription": "Toca Compartir y luego Tote para guardar un producto desde Safari o cualquier app, y explora y organiza tus colecciones donde estés."
+        },
+        "title": "App de iOS",
+        "lead": "La app de iOS de Tote lleva tus colecciones a tu teléfono y se integra con el botón <strong>Compartir</strong>, para que puedas guardar un producto desde Safari, o desde cualquier app que pueda compartir un enlace, sin abrir un navegador.",
+        "body": [
+          "¿Buscas la versión corta? Visita la página de <a href=\"/ios-app\">Tote para iPhone y iPad</a> para ver un resumen rápido y el enlace de descarga del App Store.",
+          "Descargar la app",
+          "<appstore>Descarga Tote en el App Store</appstore>. Es una descarga universal y gratuita: una sola app que funciona tanto en iPhone como en iPad, y en el iPad el diseño aprovecha el ancho extra con una cuadrícula de colecciones más amplia. Todo lo que guardas está almacenado en tu cuenta de Tote, así que está ahí en cuanto inicias sesión en la app, sin nada que migrar ni importar.",
+          "Iniciar sesión",
+          "Abre la app e inicia sesión con la misma cuenta que usas en tote.tools: con tu correo, o con Iniciar sesión con Apple si así creaste tu cuenta. Tus colecciones, productos guardados y selecciones se sincronizan automáticamente entre la app, la app web y la extensión del navegador.",
+          "Guardar con el botón Compartir",
+          "La forma más rápida de guardar en iOS es el botón <strong>Compartir</strong>: el cuadrado con una flecha que sale de él. Funciona en cualquier lugar donde iOS te permita compartir un enlace: Safari, Instagram, Mensajes, la app de una tienda y más.",
+          [
+            "En la página de un producto o en una publicación, toca el ícono de <strong>Compartir</strong>",
+            "Elige <strong>Tote</strong> en la fila de apps que aparece (desplaza esa fila si no la ves y toca <strong>Más</strong> para activarla una sola vez)",
+            "Elige una colección y, si la colección tiene secciones, una sección",
+            "Tote guarda el producto sin cambiar de app ni abrir una pestaña del navegador"
+          ],
+          "Compartir con Tote funciona incluso antes de que hayas abierto la app principal de Tote en esa sesión: guarda directamente con tu cuenta ya iniciada.",
+          "Qué se captura",
+          "Al compartir un enlace con Tote, se lee la página igual que lo hace la extensión del navegador:",
+          [
+            "<strong>Nombre del producto</strong>: el título del producto",
+            "<strong>Imagen</strong>: la foto principal del producto",
+            "<strong>Precio</strong>: el precio actual publicado",
+            "<strong>URL</strong>: un enlace a la página original"
+          ],
+          "Usar la app",
+          "Además de guardar, la app replica la experiencia web: explora colecciones, marca selecciones, controla presupuestos y actualiza precios desde tu teléfono. Todo lo que cambies en la app aparece en la app web y viceversa.",
+          "Solución de problemas",
+          "Tote no aparece en mis opciones de Compartir",
+          "Toca <strong>Más</strong> al final de la fila de apps, busca <strong>Tote</strong> y actívala. iOS recuerda esta elección y, a partir de entonces, Tote aparecerá en la fila principal. Si Tote sigue sin aparecer, confirma que la app esté instalada y que la hayas abierto al menos una vez.",
+          "La extensión de compartir me pide iniciar sesión otra vez",
+          "Abre primero la app principal de Tote e inicia sesión ahí. La extensión de compartir usa la misma sesión iniciada que la app, así que al iniciar sesión desde la app se resuelve para ambas.",
+          "Faltan el precio, la imagen o la marca",
+          "Algunas tiendas ocultan los datos del producto o los cargan con retraso, y la extensión de compartir no siempre puede esperar. Guarda el artículo de todos modos si el título, la imagen o la URL bastan para reconocerlo después: puedes editar el producto guardado en la app, o actualizar la página en Safari y compartir de nuevo.",
+          "Un artículo guardado no aparece",
+          "Desliza hacia abajo para actualizar la colección en la app. Si sigue sin aparecer, comprueba que hayas guardado en la colección que esperabas: la pantalla de guardado recuerda por defecto la última colección que usaste.",
+          "La app se ve desactualizada en comparación con la app web",
+          "Los cambios se sincronizan automáticamente cuando la app tiene conexión a internet. Desliza hacia abajo en cualquier pantalla para forzar una sincronización y comprueba que la app tenga permiso para usar datos móviles o Wi-Fi en los Ajustes de iOS.",
+          "Guías relacionadas",
+          [
+            "<a href=\"/docs/extension\">Extensión del navegador</a>: el equivalente del guardado con un clic y con clic derecho en la computadora",
+            "<a href=\"/docs/adding-links\">Agregar enlaces</a>: otras formas de guardar productos, incluida la entrada manual de URL",
+            "<a href=\"/docs/collections\">Colecciones</a>: cómo organizar tus productos guardados",
+            "<a href=\"/docs/selections-and-budgets\">Selecciones y presupuestos</a>: marca favoritos y controla el gasto desde la app"
+          ],
+          "Preguntas frecuentes",
+          "¿Hay una app para Android?",
+          "No, y tampoco está en la hoja de ruta actual. Mientras tanto, la app web funciona en cualquier navegador de Android. Si te gustaría una app para Android, escríbenos a <a href=\"mailto:support@gobloom.io?subject=Android%20app%20request\">support@gobloom.io</a>: las solicitudes son lo que nos ayuda a decidir qué construir después.",
+          "¿Necesito una cuenta distinta para la app?",
+          "No. Inicia sesión con la misma cuenta que usas en tote.tools o en la extensión del navegador y todo lo que ya guardaste estará ahí. Una sola cuenta cubre todo Tote: la app web, la extensión del navegador y la app para iPhone y iPad se comunican entre sí, así que un cambio en una aparece en las demás.",
+          "¿La app funciona sin conexión?",
+          "Puedes explorar las colecciones cargadas previamente sin conexión. Guardar un producto nuevo, sincronizar cambios y actualizar precios requieren conexión a internet."
+        ]
+      },
+      "selections-and-budgets": {
+        "meta": {
+          "title": "Selecciones y presupuestos",
+          "description": "Aprende a usar las selecciones de productos y los presupuestos en Tote. Marca favoritos, define límites de selección, controla los presupuestos de colecciones y secciones, y mira los indicadores de exceso de presupuesto.",
+          "ogTitle": "Selecciones y presupuestos — Tote",
+          "ogDescription": "Aprende a usar las selecciones de productos y los presupuestos en Tote para elegir favoritos y controlar el gasto."
+        },
+        "title": "Selecciones y presupuestos",
+        "lead": "Tote guarda en un solo lugar productos de cualquier tienda en línea. Usa las selecciones para marcar tus productos favoritos y los presupuestos para controlar el gasto: dos funciones que te ayudan a reducir las opciones y mantenerte en tu meta.",
+        "body": [
+          "Selecciones de productos",
+          "Cuando comparas varias opciones, las selecciones te permiten marcar qué productos ya elegiste (o te inclinas por elegir). Piensa en ello como marcar con una estrella tus favoritos dentro de una colección.",
+          "Cómo elegir un producto",
+          "Haz clic en el botón de elegir de cualquier tarjeta de producto para marcarlo como elegido. Los productos elegidos tienen un indicador visual para que destaquen del resto.",
+          "Contadores de selección",
+          "Las secciones muestran un contador <strong>X / Y</strong> con cuántos productos has elegido del límite de selección. Por ejemplo, «2 / 3» significa que has elegido 2 productos de un máximo de 3.",
+          "Límites de selección",
+          "Puedes definir un número máximo de selecciones por sección. Es útil cuando estás tomando decisiones:",
+          [
+            "Elegir <strong>1 sofá</strong> entre 5 opciones: define el límite en 1",
+            "Escoger <strong>3 piezas de arte para la pared</strong> entre una docena: define el límite en 3",
+            "¿No necesitas un límite? Déjalo sin definir y elige tantos como quieras"
+          ],
+          "Cuando pasas el cursor sobre una tarjeta de producto, la insignia de selección se anima hacia el botón de elegir: una pista sutil de que puedes hacer clic para alternar la selección.",
+          "Presupuestos",
+          "Los presupuestos te ayudan a controlar el costo total de tus selecciones frente a una meta de gasto.",
+          "Presupuestos de colección",
+          "Define un presupuesto general para una colección y comprueba de un vistazo si tus productos elegidos caben en tu plan de gasto. El encabezado de la colección muestra el precio total de los artículos elegidos en comparación con tu presupuesto.",
+          "Presupuestos de sección",
+          "Cada sección puede tener su propio presupuesto, independiente del presupuesto de la colección. Es útil cuando tienes límites por categoría, como «$500 para asientos» y «$200 para iluminación» dentro de una remodelación de habitación más grande.",
+          "Indicadores de exceso de presupuesto",
+          "Cuando el precio total de tus productos elegidos supera el presupuesto, Tote muestra un indicador visual para que sepas que debes hacer ajustes. Funciona tanto a nivel de colección como de sección.",
+          "Selecciones y presupuestos juntos",
+          "Las selecciones y los presupuestos funcionan en conjunto. Solo los productos <strong>elegidos</strong> cuentan para el total del presupuesto. Así puedes guardar muchas opciones, marcar tus favoritos y ver de inmediato si tus elecciones caben en tu presupuesto, sin que las opciones no elegidas distorsionen las cifras.",
+          "Estás amueblando una sala con un presupuesto de $2,000. Guardas 8 sofás, 5 mesas de centro y 10 lámparas. A medida que eliges tus mejores opciones en cada sección, el control de presupuesto se actualiza en tiempo real, y te ayuda a equilibrar un gusto especial en una categoría con ahorros en otra.",
+          "Guías relacionadas",
+          [
+            "<a href=\"/docs/collections\">Colecciones</a>: define presupuestos a nivel de colección",
+            "<a href=\"/docs/slots\">Secciones</a>: define presupuestos y límites de selección por sección",
+            "<a href=\"/docs/sharing\">Compartir</a>: los colaboradores pueden elegir productos en las colecciones compartidas"
+          ],
+          "Preguntas frecuentes",
+          "¿Los productos no elegidos cuentan para el presupuesto?",
+          "No. Solo los productos elegidos se incluyen en el total del presupuesto. Así puedes guardar muchas opciones y compararlas libremente sin inflar la cifra.",
+          "¿Puedo definir un presupuesto sin usar límites de selección?",
+          "Sí. Los presupuestos y los límites de selección son funciones independientes. Puedes definir un presupuesto en una colección o en una <a href=\"/docs/slots\">sección</a> sin restringir cuántos productos se pueden elegir, o usar límites de selección sin presupuesto.",
+          "¿Dónde defino un presupuesto?",
+          "Puedes definir un presupuesto en una colección editándola, o en secciones individuales haciendo clic en el botón de editar del encabezado de la sección. Consulta <a href=\"/docs/collections\">Colecciones</a> y <a href=\"/docs/slots\">Secciones</a> para ver los detalles."
+        ]
+      },
+      "sharing": {
+        "meta": {
+          "title": "Compartir",
+          "description": "Aprende a compartir colecciones en Tote. Crea enlaces de invitación para colaboradores, haz públicas tus colecciones y administra listas de deseos compartidas.",
+          "ogTitle": "Compartir — Tote",
+          "ogDescription": "Aprende a compartir colecciones en Tote con enlaces de invitación, páginas públicas y listas de deseos colaborativas."
+        },
+        "title": "Compartir",
+        "lead": "Tote es un organizador de compras gratuito para todas las tiendas. Comparte tus colecciones con amigos, familiares o colaboradores para armar listas de deseos en conjunto, planear regalos o hacer proyectos en grupo.",
+        "body": [
+          "Cómo funciona compartir",
+          "Cuando compartes una colección, creas un enlace de invitación que otras personas pueden usar para unirse. Cada invitación es de un solo uso y lleva un rol (Lector o Editor) que controla lo que la persona puede hacer una vez que se une.",
+          "Compartir una colección",
+          [
+            "Abre la colección que quieres compartir",
+            "Haz clic en el botón <strong>Administrar equipo</strong> del encabezado de la colección",
+            "Elige un rol (Lector o Editor) y, si quieres, agrega un nombre o correo como nota",
+            "Haz clic en <strong>Crear enlace</strong> y copia la URL de invitación",
+            "Envía el enlace a la persona con la que quieres colaborar"
+          ],
+          "Las colecciones compartidas funcionan muy bien como mesas de regalos. Comparte una lista de deseos con tu familia para que todos vean lo que esperas, y evita regalos repetidos.",
+          "Unirse a una colección compartida",
+          "Cuando alguien comparte una colección contigo:",
+          [
+            "Haz clic en el enlace de invitación que te enviaron",
+            "Inicia sesión en tu cuenta de Tote (o crea una)",
+            "La colección compartida aparece en tu lista de colecciones"
+          ],
+          "Roles",
+          "Cada miembro de una colección compartida tiene un rol que determina lo que puede hacer. Los roles, de mayor a menor acceso:",
+          [
+            "<strong>Propietario</strong>: control total, incluido eliminar la colección y transferir la propiedad a otra persona. Siempre hay exactamente un propietario.",
+            "<strong>Administrador</strong>: puede ver, editar, publicar y administrar miembros (invitar, cambiar roles, quitar). No puede eliminar la colección.",
+            "<strong>Editor</strong>: puede ver y editar (agregar productos, crear secciones, actualizar precios). No puede administrar miembros ni publicar.",
+            "<strong>Lector</strong>: acceso de solo lectura. Puede verlo todo, pero no puede hacer cambios."
+          ],
+          "Al crear un enlace de invitación eliges Lector o Editor. Los propietarios pueden ascender a un miembro a Administrador o transferir la propiedad después de que se una.",
+          "Administrar miembros",
+          "Abre <strong>Administrar equipo</strong> para ver a todos los que se han unido. Desde ahí puedes cambiar el rol de un miembro o quitarlo por completo. También puedes ver todas las invitaciones pendientes y revocar las que ya no quieras activas.",
+          "Salir de una colección compartida",
+          "Si ya no quieres tener acceso a una colección que alguien compartió contigo, puedes salir de ella desde tu página de colecciones. Esto la quita de tu lista, pero no afecta a los demás colaboradores.",
+          "Enlaces públicos",
+          "Además de compartir con colaboradores, puedes hacer que una colección sea visible públicamente. Los enlaces públicos permiten que cualquiera vea tu colección sin iniciar sesión: ideales para listas de deseos, mesas de regalos o recomendaciones.",
+          "Los enlaces públicos son una excelente forma de crear un «enlace en la bio» para redes sociales. Reúne tus productos favoritos en una colección, hazla pública y comparte el enlace en tu Instagram, TikTok o donde quieras. Actualízala cuando quieras con tus hallazgos más recientes.",
+          "Hacer pública una colección",
+          [
+            "Abre la colección y haz clic en «Compartir»",
+            "En la sección de Acceso general, haz clic en «Hacer pública»",
+            "Copia el enlace público para compartirlo donde quieras"
+          ],
+          "Tu propio enlace corto",
+          "Cada colección pública recibe tu propio enlace único y confiable en tote.tools, con tu nombre de usuario dentro para que la gente sepa que es tuyo:",
+          "<code>tote.tools/s/yourname/summer-wishlist</code>",
+          "Tote lo crea automáticamente a partir del nombre de tu colección cuando la publicas. Puedes cambiarlo por lo que quieras en el cuadro de Compartir: ideal para biografías de redes sociales, mensajes o cualquier lugar donde quieras un enlace fácil de reconocer y en el que se pueda confiar.",
+          "Para tener tu propio enlace corto, asegúrate de haber definido un nombre de usuario en la configuración de tu cuenta. Sin nombre de usuario, tu enlace público seguirá funcionando, pero será más largo.",
+          "Cómo funcionan los enlaces públicos",
+          "Cuando haces pública una colección, Tote crea una <strong>copia instantánea</strong> de tu colección. Esta copia pública es independiente de tu colección de trabajo: los cambios que hagas no aparecerán automáticamente en la versión pública.",
+          "Después de agregar o quitar productos, debes hacer clic en «Actualizar versión pública» para enviar tus cambios al enlace público. Así tú controlas lo que ven los demás.",
+          "Actualizar la versión pública",
+          "Cuando estés listo para compartir tus últimos cambios:",
+          [
+            "Abre el cuadro de Compartir",
+            "Haz clic en «Actualizar versión pública»",
+            "Tus cambios ya son visibles para cualquiera que tenga el enlace público"
+          ],
+          "Volver a hacer privada una colección",
+          "Puedes revocar el acceso público en cualquier momento haciendo clic en «Hacer privada» en el cuadro de Compartir. El enlace público deja de funcionar de inmediato.",
+          "Privacidad",
+          "Solo las personas con el enlace de invitación pueden acceder a una colección compartida. Tus demás colecciones permanecen completamente privadas. Tote nunca comparte tus datos con anunciantes ni con terceros.",
+          "Guías relacionadas",
+          [
+            "<a href=\"/docs/collections\">Colecciones</a>: crea y organiza las colecciones que compartes",
+            "<a href=\"/docs/getting-started\">Primeros pasos</a>: configura tu cuenta antes de aceptar enlaces de invitación",
+            "<a href=\"/docs/extension\">Extensión del navegador</a>: guarda productos en colecciones compartidas desde cualquier tienda"
+          ],
+          "Preguntas frecuentes",
+          "¿Otras personas pueden editar mi colección compartida?",
+          "Depende del rol que asignes al crear el enlace de invitación. Los editores pueden agregar productos, crear secciones y actualizar precios. Los lectores solo pueden mirar. Cuando alguien se une, un propietario puede ascenderlo a Administrador, lo que además le permite administrar a otros miembros. Consulta la sección de <a href=\"#roles\">Roles</a> más arriba para ver el desglose completo.",
+          "¿Mi colección compartida es visible para todos?",
+          "No. Las colecciones compartidas solo son accesibles para quienes tienen el enlace de invitación. Si quieres que cualquiera vea tu colección sin iniciar sesión, puedes hacerla pública por separado: consulta la sección de <a href=\"#public-links\">Enlaces públicos</a> más arriba.",
+          "¿Cómo dejo de compartir una colección?",
+          "Para los enlaces públicos, abre el cuadro de publicación y haz clic en «Hacer privada» para revocar el acceso de inmediato. Para compartir por invitación, abre <strong>Administrar equipo</strong> y quita a los miembros individuales, o revoca las invitaciones pendientes que ya no quieras activas.",
+          "¿Puedo personalizar el enlace de mi colección pública?",
+          "¡Sí! Cuando publicas una colección, Tote crea un enlace corto a partir del nombre de la colección. Puedes cambiarlo por lo que quieras en el cuadro de Compartir, por ejemplo, <code>tote.tools/s/yourname/summer-wishlist</code>."
+        ]
+      }
+    }
+  }
+}

@@ -53,7 +53,7 @@ session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits �
 - The curator's prompts beyond the system strings (e.g. few-shot examples, the English
   gift word list) were not translated or audited.
 
-### Phase 2 (public pages) — landing, templates, ios-app, chrome-extension, use-cases done
+### Phase 2 (public pages) — landing, templates, ios-app, chrome-extension, use-cases, docs done
 
 - **URLs:** English unprefixed, Spanish at `/es/...` (`(localized)/[locale]`, static via
   `generateStaticParams`, `dynamicParams = false`). `/en/...` 308-redirects to the unprefixed
@@ -77,7 +77,13 @@ session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits �
 - **Use cases:** `/use-cases` and its five pages share `UseCaseArticle` (data-driven from the
   `useCases` catalog area + `use-cases/useCasesConfig.ts`); English and `/es` use one
   `[slug]` route each. Public collection titles stay English (user content).
-- **Still English:** docs, `/privacy` (needs legal review), `/s/*` and `/view/*`
+- **Docs:** `/docs` and its eight guides render from `docs/structure.json` (block layout + anchor
+  ids, shared by every language) plus a flat list of strings per page in the `docs` catalog area;
+  inline markup is `<strong> <em> <code> <a href>` and `<store>`/`<appstore>` (`DocsInline.tsx`).
+  Anchor ids stay English so shared `#links` work across languages. FAQ JSON-LD is derived from
+  the FAQ section. UI labels quoted in the Spanish docs (e.g. «Guardar en Tote», «Agregar a
+  Chrome») must match the extension strings when Phase 3 localizes it.
+- **Still English:** `/privacy` (needs legal review), `/s/*` and `/view/*`
   (user content; only the chrome around it could translate). Template collections themselves
   are user content.
 - **Fixed on the way:** the English templates title was doubled ("… — Tote — Tote").

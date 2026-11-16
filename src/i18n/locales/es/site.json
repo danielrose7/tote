@@ -60,6 +60,10 @@
         "saveFirst": "Guarda tu primer artículo",
         "dismiss": "Descartar"
       }
+    },
+    "docs": {
+      "copyLink": "Copiar enlace a {{section}}",
+      "copied": "¡Copiado!"
     }
   }
 }

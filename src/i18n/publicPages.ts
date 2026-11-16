@@ -17,6 +17,15 @@ export const TRANSLATED_PUBLIC_PATHS = [
   '/use-cases/personal-style',
   '/use-cases/family-shopping',
   '/use-cases/professional-projects',
+  '/docs',
+  '/docs/getting-started',
+  '/docs/collections',
+  '/docs/slots',
+  '/docs/adding-links',
+  '/docs/extension',
+  '/docs/ios-app',
+  '/docs/selections-and-budgets',
+  '/docs/sharing',
 ] as const;
 
 export function isTranslatedPath(path: string): boolean {

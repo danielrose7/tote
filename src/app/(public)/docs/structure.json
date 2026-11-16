@@ -1,0 +1,945 @@
+{
+ "getting-started": [
+  {
+   "t": "h2",
+   "id": "1-create-your-account"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "2-install-the-browser-extension"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "3-save-your-first-product"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "4-organize-with-collections"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "5-keep-shopping"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "next-steps"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "frequently-asked-questions"
+  },
+  {
+   "t": "h3",
+   "id": "faq-is-tote-free"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-what-stores"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-need-extension"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-mobile"
+  },
+  {
+   "t": "p"
+  }
+ ],
+ "collections": [
+  {
+   "t": "h2",
+   "id": "what-is-a-collection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "creating-a-collection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "collection-features"
+  },
+  {
+   "t": "h3",
+   "id": "colors"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "view-modes"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "budget-tracking"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "default-collection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "item-count-badges"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "deleting-a-collection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "reordering-collections"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "collections-vs-slots"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "related-guides"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "frequently-asked-questions"
+  },
+  {
+   "t": "h3",
+   "id": "faq-how-many-collections"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-move-products"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-delete-collection"
+  },
+  {
+   "t": "p"
+  }
+ ],
+ "slots": [
+  {
+   "t": "h2",
+   "id": "what-is-a-slot"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "when-to-use-slots"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "creating-a-slot"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "slot-features"
+  },
+  {
+   "t": "h3",
+   "id": "budget-per-slot"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "selection-limits"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "collapse-and-expand"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "reordering-slots"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "deleting-a-slot"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "ungrouped-products"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "related-guides"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "collections-vs-slots-quick-reference"
+  },
+  {
+   "t": "card"
+  },
+  {
+   "t": "card"
+  }
+ ],
+ "adding-links": [
+  {
+   "t": "h2",
+   "id": "using-the-browser-extension"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "installing-the-extension"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "h3",
+   "id": "saving-a-product"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "adding-links-manually"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "to-add-a-link-manually"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "h2",
+   "id": "what-gets-saved"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "right-click-save-to-tote"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "product-notes"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "editing-saved-products"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "platform-and-brand-detection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "refreshing-product-data"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "related-guides"
+  },
+  {
+   "t": "ul"
+  }
+ ],
+ "extension": [
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "installing-the-extension"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "h2",
+   "id": "signing-in"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "saving-a-product"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "one-click-save"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "right-click-context-menu"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "choosing-a-collection-and-slot"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "what-gets-captured"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "permissions-and-privacy"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "supported-stores"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "updates"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "troubleshooting"
+  },
+  {
+   "t": "h3",
+   "id": "extension-not-showing-product-details"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "missing-price-or-image"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "not-signed-in"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "right-click-save-wrong-collection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "related-guides"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "frequently-asked-questions"
+  },
+  {
+   "t": "h3",
+   "id": "faq-firefox-safari"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-pin-extension"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-save-without-popup"
+  },
+  {
+   "t": "p"
+  }
+ ],
+ "ios-app": [
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "getting-the-app"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "signing-in"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "saving-with-the-share-button"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "what-gets-captured"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "using-the-app"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "troubleshooting"
+  },
+  {
+   "t": "h3",
+   "id": "tote-missing-from-share-options"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "share-not-signed-in"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "missing-price-or-image"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "saved-item-not-showing-up"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "app-out-of-sync"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "related-guides"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "frequently-asked-questions"
+  },
+  {
+   "t": "h3",
+   "id": "faq-android"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-same-account"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-offline"
+  },
+  {
+   "t": "p"
+  }
+ ],
+ "selections-and-budgets": [
+  {
+   "t": "h2",
+   "id": "product-selections"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "how-to-select-a-product"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "selection-counters"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "selection-limits"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "budgets"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "collection-budgets"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "slot-budgets"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "over-budget-indicators"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "selections-budgets-together"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "tip",
+   "label": "example"
+  },
+  {
+   "t": "h2",
+   "id": "related-guides"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "frequently-asked-questions"
+  },
+  {
+   "t": "h3",
+   "id": "faq-unselected-count"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-budget-without-limits"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-where-set-budget"
+  },
+  {
+   "t": "p"
+  }
+ ],
+ "sharing": [
+  {
+   "t": "h2",
+   "id": "how-sharing-works"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "sharing-a-collection"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h2",
+   "id": "joining-a-shared-collection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "h2",
+   "id": "roles"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "managing-members"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "leaving-a-shared-collection"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "public-links"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h3",
+   "id": "making-a-collection-public"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "h3",
+   "id": "your-own-short-link"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "tip",
+   "label": "tip"
+  },
+  {
+   "t": "h3",
+   "id": "how-public-links-work"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "tip",
+   "label": "important"
+  },
+  {
+   "t": "h3",
+   "id": "updating-the-public-version"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "ol"
+  },
+  {
+   "t": "h3",
+   "id": "making-a-collection-private-again"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "privacy"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h2",
+   "id": "related-guides"
+  },
+  {
+   "t": "ul"
+  },
+  {
+   "t": "h2",
+   "id": "frequently-asked-questions"
+  },
+  {
+   "t": "h3",
+   "id": "faq-edit-shared"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-visible-to-everyone"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-stop-sharing"
+  },
+  {
+   "t": "p"
+  },
+  {
+   "t": "h3",
+   "id": "faq-customize-link"
+  },
+  {
+   "t": "p"
+  }
+ ]
+}

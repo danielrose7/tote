@@ -15,6 +15,7 @@ const AREAS: PublicArea[] = [
   'chromeExtension',
   'iosApp',
   'useCases',
+  'docs',
 ];
 
 // Flatten including arrays, so list lengths and each item are compared.
@@ -65,10 +66,11 @@ describe('public URLs', () => {
       '/es/templates?category=Gifts',
     );
     expect(localizedPath('es', '/#comparison')).toBe('/es#comparison');
-    // No Spanish docs yet: link to the page that exists, not a 404.
     expect(localizedPath('es', '/docs/getting-started')).toBe(
-      '/docs/getting-started',
+      '/es/docs/getting-started',
     );
+    // No Spanish privacy policy: link to the page that exists, not a 404.
+    expect(localizedPath('es', '/privacy')).toBe('/privacy');
     expect(localizedPath('es', 'https://gobloom.io')).toBe(
       'https://gobloom.io',
     );
@@ -95,7 +97,7 @@ describe('public URLs', () => {
       expect(en.languages?.['x-default']).toBe(localizedPath('en', path));
       expect(es.canonical).toBe(localizedPath('es', path));
     }
-    expect(isTranslatedPath('/docs')).toBe(false);
-    expect(alternatesFor('en', '/docs')).toEqual({ canonical: '/docs' });
+    expect(isTranslatedPath('/privacy')).toBe(false);
+    expect(alternatesFor('en', '/privacy')).toEqual({ canonical: '/privacy' });
   });
 });

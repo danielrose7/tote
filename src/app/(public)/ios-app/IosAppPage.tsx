@@ -158,7 +158,7 @@ const gridGlyphs = [
 export async function IosAppPage({ locale }: { locale: Locale }) {
   const { t } = await getPublicT(locale, ['iosApp']);
   const list = <T,>(key: string) => t(key, { returnObjects: true }) as T[];
-  // Docs and the privacy policy aren't translated yet: English URLs.
+  // The privacy policy isn't translated yet, so localizedPath leaves it English.
   const href = (path: string) => localizedPath(locale, path);
   const platforms = [
     { label: t('iosApp.platforms.web'), status: 'live' as const },

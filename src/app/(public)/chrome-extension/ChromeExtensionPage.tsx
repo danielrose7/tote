@@ -19,7 +19,6 @@ type Card = { title: string; description: string };
 export async function ChromeExtensionPage({ locale }: { locale: Locale }) {
   const { t } = await getPublicT(locale, ['chromeExtension']);
   const list = <T,>(key: string) => t(key, { returnObjects: true }) as T[];
-  // Docs aren't translated yet, so this stays the English URL in every locale.
   const docsHref = localizedPath(locale, '/docs/extension');
   return (
     <div className={styles.page}>

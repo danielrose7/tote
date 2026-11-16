@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useState } from 'react';
+import { useTranslation } from '@/i18n/client';
 import styles from './docs.module.css';
 
 interface AnchorHeadingProps {
@@ -10,6 +11,7 @@ interface AnchorHeadingProps {
 }
 
 export function AnchorHeading({ as: Tag, id, children }: AnchorHeadingProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleClick = () => {
@@ -31,7 +33,9 @@ export function AnchorHeading({ as: Tag, id, children }: AnchorHeadingProps) {
           handleClick();
           window.history.replaceState(null, '', `#${id}`);
         }}
-        aria-label={`Copy link to ${typeof children === 'string' ? children : 'section'}`}
+        aria-label={t('site.docs.copyLink', {
+          section: typeof children === 'string' ? children : '',
+        })}
       >
         {copied ? (
           <>
@@ -47,7 +51,7 @@ export function AnchorHeading({ as: Tag, id, children }: AnchorHeadingProps) {
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            <span className={styles.anchorTooltip}>Copied!</span>
+            <span className={styles.anchorTooltip}>{t('site.docs.copied')}</span>
           </>
         ) : (
           <svg
