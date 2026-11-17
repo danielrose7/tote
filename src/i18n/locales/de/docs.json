@@ -1,0 +1,577 @@
+{
+  "docs": {
+    "navLabel": "Hilfe-Center",
+    "sidebarLabel": "Hilfe",
+    "nav": {
+      "overview": "Überblick",
+      "getting-started": "Erste Schritte",
+      "collections": "Sammlungen",
+      "slots": "Abschnitte",
+      "adding-links": "Links hinzufügen",
+      "extension": "Browser-Erweiterung",
+      "ios-app": "iOS-App",
+      "selections-and-budgets": "Auswahlen & Budgets",
+      "sharing": "Teilen"
+    },
+    "site": {
+      "name": "Tote-Hilfe-Center",
+      "description": "So nutzt du Tote, um Produkte von überall im Web zu speichern, zu ordnen und im Blick zu behalten."
+    },
+    "common": {
+      "labels": {
+        "tip": "Tipp:",
+        "example": "Beispiel:",
+        "important": "Wichtig:"
+      }
+    },
+    "index": {
+      "meta": {
+        "title": "Hilfe-Center",
+        "description": "So nutzt du Tote, um Produkte von überall im Web zu speichern, zu ordnen und im Blick zu behalten. Anleitungen zu Sammlungen, Abschnitten, Teilen und der Browser-Erweiterung.",
+        "ogTitle": "Hilfe-Center — Tote",
+        "ogDescription": "So nutzt du Tote, um Produkte von überall im Web zu speichern, zu ordnen und im Blick zu behalten."
+      },
+      "title": "Hilfe-Center",
+      "lead": "Tote ist ein kostenloses Tool, das Produkte aus jedem Onlineshop an einem Ort speichert. Hier erfährst du, wie du deine Funde ordnest, im Blick behältst und teilst.",
+      "guidesHeading": "Anleitungen",
+      "guidesIntro": "Tote ist ein universeller Warenkorb, der in jedem Onlineshop funktioniert. Speichere Produkte mit einem Klick, ordne sie in Sammlungen und verfolge Preise über die Zeit.",
+      "cards": {
+        "getting-started": {
+          "description": "Neu bei Tote? Registrier dich, installier die Erweiterung und speichere dein erstes Produkt in wenigen Minuten.",
+          "linkText": "Loslegen"
+        },
+        "collections": {
+          "description": "Ordner auf oberster Ebene, um deine gespeicherten Produkte nach Projekt, Saison oder einem beliebigen Thema zu ordnen.",
+          "linkText": "Mehr über Sammlungen"
+        },
+        "slots": {
+          "description": "Optionale Gruppen innerhalb einer Sammlung für eine feinere Ordnung, etwa nach Preisklassen oder Räumen.",
+          "linkText": "Mehr über Abschnitte"
+        },
+        "adding-links": {
+          "description": "Speichere Produkte mit der Browser-Erweiterung oder füg Links von jedem Gerät aus von Hand hinzu.",
+          "linkText": "Mehr über das Hinzufügen von Links"
+        },
+        "extension": {
+          "description": "Installier und nutze die Erweiterung in Chrome, Edge, Brave oder Arc — für Speichern mit einem Klick, das Kontextmenü per Rechtsklick und mehr.",
+          "linkText": "Mehr über die Erweiterung"
+        },
+        "ios-app": {
+          "description": "Tipp auf Teilen und dann auf Tote, um aus Safari oder jeder anderen App zu speichern, und hab deine Sammlungen unterwegs dabei.",
+          "linkText": "Mehr über die iOS-App"
+        },
+        "selections-and-budgets": {
+          "description": "Markiere Lieblingsprodukte, leg Auswahllimits fest und behalte Ausgaben mit Budgets für Sammlungen und Abschnitte im Blick.",
+          "linkText": "Mehr über Auswahlen"
+        },
+        "sharing": {
+          "description": "Teile Sammlungen mit Freunden oder Familie für gemeinsame Wunschlisten und Geschenkplanung.",
+          "linkText": "Mehr über das Teilen"
+        }
+      },
+      "useCasesHeading": "Anwendungsfälle",
+      "useCasesIntro": "So nutzen Leute Tote in konkreten Einkaufssituationen — von Geschenklisten für die Feiertage bis zum professionellen Sourcing für Innenarchitektur.",
+      "useCasesTitle": "Anwendungsfälle entdecken",
+      "useCasesDescription": "Geschenklisten, Renovierungen, Garderobenplanung, Familieneinkäufe und professionelle Projekte.",
+      "useCasesLink": "Anwendungsfälle ansehen"
+    },
+    "pages": {
+      "getting-started": {
+        "meta": {
+          "title": "Erste Schritte",
+          "description": "Starte in wenigen Minuten mit Tote. Registrier dich, installier die Browser-Erweiterung, speichere dein erstes Produkt und ordne deine Einkäufe über alle Shops hinweg.",
+          "ogTitle": "Erste Schritte — Tote",
+          "ogDescription": "Starte in wenigen Minuten mit Tote. Registrier dich, installier die Browser-Erweiterung und speichere dein erstes Produkt."
+        },
+        "title": "Erste Schritte",
+        "lead": "Tote ist ein kostenloses Tool, das Produkte aus jedem Onlineshop an einem Ort speichert. Richte es in ein paar Minuten ein und fang an, deine Einkäufe zu ordnen.",
+        "body": [
+          "1. Konto erstellen",
+          "Geh auf <a href=\"https://tote.tools\">tote.tools</a> und registrier dich mit deiner E-Mail-Adresse oder deinem Google-Konto. Dein Konto hält deine gespeicherten Produkte auf all deinen Geräten synchron.",
+          "2. Browser-Erweiterung installieren",
+          "Mit der Browser-Erweiterung speicherst du Produkte am schnellsten. <store>Installier sie aus dem Chrome Web Store</store> — sie funktioniert in Chrome, Edge, Brave und Arc. Melde dich dann mit dem Konto an, das du gerade erstellt hast.",
+          "Ausführliche Einrichtungshinweise findest du in der <a href=\"/docs/extension\">Anleitung zur Browser-Erweiterung</a>.",
+          "3. Erstes Produkt speichern",
+          "Öffne eine beliebige Produktseite — ein Paar Schuhe, ein Möbelstück, ein Küchengerät — und klick auf das Tote-Symbol in deiner Symbolleiste. Wähl eine Sammlung (oder nutz die Standardsammlung), und das Produkt ist sofort gespeichert.",
+          "Tote erfasst automatisch Produktname, Bild, Preis und den Link zurück zur Originalseite.",
+          "4. Mit Sammlungen ordnen",
+          "Sammlungen sind Ordner für deine gespeicherten Produkte. Du könntest eine für „Wohnzimmermöbel“ anlegen, eine für „Geschenkideen“ und eine für „Garderobe“. Erstelle so viele, wie du brauchst.",
+          "Mehr dazu in der <a href=\"/docs/collections\">Anleitung zu Sammlungen</a>.",
+          "5. Weiter einkaufen",
+          "Speichere beim Stöbern in verschiedenen Shops weiter Produkte in Tote. Alles bleibt an einem Ort, egal aus welchem Shop es stammt. Komm jederzeit zurück, um zu prüfen, zu vergleichen oder zu kaufen.",
+          "Du kannst auch auf jeder Produktseite mit der rechten Maustaste klicken und im Kontextmenü „In Tote speichern“ wählen — ohne das Pop-up der Erweiterung zu öffnen.",
+          "Nächste Schritte",
+          [
+            "<a href=\"/docs/collections\">Sammlungen</a> — Produkte in Gruppen ordnen",
+            "<a href=\"/docs/slots\">Abschnitte</a> — Sammlungen genauer unterteilen",
+            "<a href=\"/docs/selections-and-budgets\">Auswahlen & Budgets</a> — Favoriten wählen und Ausgaben verfolgen",
+            "<a href=\"/docs/sharing\">Teilen</a> — gemeinsam mit anderen an Wunschlisten arbeiten"
+          ],
+          "Häufige Fragen",
+          "Ist Tote kostenlos?",
+          "Ja. Tote ist kostenlos — erstelle ein Konto, installier die Erweiterung und speichere Produkte, ohne etwas zu bezahlen.",
+          "Mit welchen Shops funktioniert Tote?",
+          "Tote funktioniert mit praktisch jedem Onlineshop. Es liest die üblichen Produkt-Metadaten (Bilder, Titel, Preise) von der Seite und funktioniert daher bei Amazon, IKEA, Etsy, Zara, kleinen Boutiquen und allem dazwischen.",
+          "Brauche ich die Browser-Erweiterung?",
+          "Nein. Mit der Erweiterung speicherst du schneller (mit einem Klick), und sie funktioniert in Chrome, Edge, Brave und Arc — du kannst Produkte aber auch von Hand hinzufügen, indem du in der Web-App eine URL einfügst. Details unter <a href=\"/docs/adding-links\">Links hinzufügen</a>.",
+          "Funktioniert Tote auf meinem Handy?",
+          "Die Tote-Web-App funktioniert auf jedem Gerät mit Browser. Die Browser-Erweiterung gibt es nur für den Desktop, aber auf dem Handy kannst du Links von Hand hinzufügen, indem du Produkt-URLs einfügst."
+        ]
+      },
+      "collections": {
+        "meta": {
+          "title": "Sammlungen",
+          "description": "So erstellst und ordnest du Sammlungen in Tote. Gruppiere gespeicherte Produkte nach Projekt, Saison oder Thema — mit Farben, Ansichten und Budgets.",
+          "ogTitle": "Sammlungen — Tote",
+          "ogDescription": "So erstellst und ordnest du Sammlungen in Tote. Gruppiere gespeicherte Produkte nach Projekt, Saison oder Thema."
+        },
+        "title": "Sammlungen",
+        "lead": "Tote speichert Produkte aus jedem Onlineshop an einem Ort. Sammlungen sind die oberste Ebene, um diese Produkte zu ordnen — stell sie dir als Ordner oder Boards für verschiedene Projekte, Saisons oder Themen vor.",
+        "body": [
+          "Was ist eine Sammlung?",
+          "Eine Sammlung ist ein Behälter für alle Produkte zu einem bestimmten Zweck. Du könntest zum Beispiel Sammlungen haben für:",
+          [
+            "<strong>Renovierung</strong> — Möbel, Deko und Material für die Umgestaltung eines Raums",
+            "<strong>Geschenkideen</strong> — Geschenke, die du für Freunde und Familie in Betracht ziehst",
+            "<strong>Neue Garderobe</strong> — Kleidung und Accessoires für die kommende Saison",
+            "<strong>Wunschliste</strong> — Dinge, die du irgendwann kaufen möchtest"
+          ],
+          "Sammlung erstellen",
+          "Um eine neue Sammlung zu erstellen, öffne deine Sammlungsseite und klick auf „Sammlung hinzufügen“. Gib ihr einen Namen und wähl optional eine Farbe, damit du sie auf einen Blick erkennst.",
+          "Funktionen von Sammlungen",
+          "Farben",
+          "Jede Sammlung kann eine eigene Farbe haben. So unterscheidest du verschiedene Projekte in deiner Sammlungsliste ganz leicht.",
+          "Ansichten",
+          "Sammlungen lassen sich als Raster (visuelle Karten mit Bildern) oder als Tabelle (kompakte Liste mit Details) anzeigen. Wähl die Ansicht, die am besten zu deiner Art des Stöberns passt.",
+          "Budget im Blick",
+          "Leg optional ein Budget für deine Sammlung fest, um Ausgaben zu verfolgen. Tote zeigt dir den Gesamtwert der Produkte in der Sammlung im Vergleich zu deinem Budget.",
+          "Fang einfach mit ein oder zwei Sammlungen an. Du kannst später jederzeit umorganisieren, wenn sich deine Bedürfnisse ändern.",
+          "Standardsammlung",
+          "Wenn du ein Produkt speicherst, ohne eine bestimmte Sammlung zu wählen, landet es in deiner Standardsammlung. Sie ist dein allgemeiner „Posteingang“ für gespeicherte Produkte. Du kannst Artikel jederzeit in andere Sammlungen verschieben.",
+          "Anzahl der Artikel",
+          "Jede Sammlung zeigt ein Abzeichen mit der Anzahl ihrer Produkte. So siehst du schnell, wie voll eine Sammlung ist, ohne sie zu öffnen.",
+          "Sammlung löschen",
+          "Um eine Sammlung zu löschen, öffne sie und nutze das Sammlungsmenü. Beim Löschen werden die Sammlung und alle Produkte darin entfernt — verschieb also vorher alles, was du behalten willst.",
+          "Sammlungen neu anordnen",
+          "Zieh Sammlungen per Drag & Drop, um sie auf deiner Sammlungsseite neu anzuordnen. Leg deine aktivsten Projekte nach oben, damit du sie schnell erreichst.",
+          "Sammlungen vs. Abschnitte",
+          "Sammlungen sind deine wichtigste Ordnungseinheit. Wenn du <em>innerhalb</em> einer Sammlung feiner ordnen willst, kommen Abschnitte ins Spiel. Mehr dazu in der <a href=\"/docs/slots\">Dokumentation zu Abschnitten</a>.",
+          "Weitere Anleitungen",
+          [
+            "<a href=\"/docs/slots\">Abschnitte</a> — Sammlungen in Kategorien oder Preisklassen unterteilen",
+            "<a href=\"/docs/selections-and-budgets\">Auswahlen & Budgets</a> — Favoriten markieren und Ausgaben in Sammlungen verfolgen",
+            "<a href=\"/docs/sharing\">Teilen</a> — Sammlungen mit Freunden teilen oder öffentlich machen"
+          ],
+          "Häufige Fragen",
+          "Wie viele Sammlungen kann ich haben?",
+          "Es gibt keine Begrenzung. Erstelle so viele Sammlungen, wie du brauchst — eine pro Projekt, Saison, Raum oder Thema, das für dich Sinn ergibt.",
+          "Kann ich Produkte zwischen Sammlungen verschieben?",
+          "Ja. Klick auf ein Produkt, um seine Details zu öffnen, und ändere im Bearbeitungsdialog die Sammlung. Du kannst dort auch ändern, zu welchem <a href=\"/docs/slots\">Abschnitt</a> ein Produkt gehört.",
+          "Was passiert, wenn ich eine Sammlung lösche?",
+          "Beim Löschen wird die Sammlung zusammen mit allen Produkten und Abschnitten darin endgültig entfernt. Verschieb vorher alle Produkte, die du behalten willst, in eine andere Sammlung."
+        ]
+      },
+      "slots": {
+        "meta": {
+          "title": "Abschnitte",
+          "description": "So nutzt du Abschnitte in Tote, um Sammlungen zu unterteilen. Ordne Produkte in Kategorien, leg Budgets pro Abschnitt fest und verwalte Auswahllimits.",
+          "ogTitle": "Abschnitte — Tote",
+          "ogDescription": "So nutzt du Abschnitte in Tote, um Sammlungen in Kategorien mit Budgets und Auswahllimits zu unterteilen."
+        },
+        "title": "Abschnitte",
+        "lead": "Tote speichert Produkte aus jedem Onlineshop und ordnet sie in Sammlungen. Abschnitte sind optionale Gruppen innerhalb einer Sammlung — nutze sie, wenn du weiter unterteilen willst: nach Kategorien, Preisklassen oder Entscheidungsgruppen.",
+        "body": [
+          "Was ist ein Abschnitt?",
+          "Ein Abschnitt unterteilt eine Sammlung. Während Sammlungen Produkte nach Projekt oder Thema ordnen, helfen Abschnitte dir, Produkte <em>innerhalb</em> dieses Projekts zu ordnen. Zum Beispiel:",
+          [
+            "Eine Sammlung <strong>Wohnzimmer</strong> könnte Abschnitte für „Sitzmöbel“, „Beleuchtung“ und „Deko“ haben",
+            "Eine Sammlung <strong>Geschenkideen</strong> könnte Abschnitte für „Unter 25 €“, „25–50 €“ und „Gönn dir“ haben",
+            "Eine Sammlung <strong>Garderobe</strong> könnte Abschnitte für „Oberteile“, „Hosen & Röcke“ und „Accessoires“ haben"
+          ],
+          "Wann Abschnitte sinnvoll sind",
+          "Abschnitte sind völlig optional. Vielen reichen Sammlungen allein, um den Überblick zu behalten. Abschnitte lohnen sich, wenn:",
+          [
+            "du viele Produkte in einer Sammlung hast und sie gruppieren willst",
+            "du Optionen für einen konkreten Bedarf vergleichst (z. B. „Welches Sofa kaufe ich?“)",
+            "du für verschiedene Kategorien unterschiedliche Budgets festlegen willst",
+            "du mit mehreren Entscheidungspunkten planst"
+          ],
+          "Du musst Abschnitte überhaupt nicht nutzen. Wenn deine Sammlung nur eine Handvoll Produkte enthält, machen Abschnitte sie unnötig kompliziert. Fang ohne an und füg später Abschnitte hinzu, wenn du merkst, dass du gruppieren möchtest.",
+          "Abschnitt erstellen",
+          "Klick in einer Sammlung auf „Abschnitt hinzufügen“, um eine neue Gruppe zu erstellen. Gib ihr einen Namen, der beschreibt, welche Produkte dorthin gehören. Dann kannst du Produkte in den Abschnitt ziehen oder neue Produkte direkt dort hinzufügen.",
+          "Funktionen von Abschnitten",
+          "Budget pro Abschnitt",
+          "Jeder Abschnitt kann ein eigenes Budget haben, unabhängig vom Budget der Sammlung. Das ist praktisch, wenn du für verschiedene Kategorien feste Ausgabengrenzen hast — etwa „200 € für Beleuchtung“ innerhalb eines größeren Renovierungsbudgets.",
+          "Auswahllimits",
+          "Abschnitte können eine maximale Anzahl an Auswahlen haben, die dir hilft, die Optionen einzugrenzen. Wenn du zum Beispiel einen Couchtisch aus fünf Optionen wählst, setz das Limit auf 1 und markiere deinen Favoriten als ausgewählt.",
+          "Ein- und ausklappen",
+          "Abschnitte lassen sich einklappen, um ihre Produkte auszublenden — so bekommst du einen kompakten Überblick über den Aufbau deiner Sammlung. Klick auf die Kopfzeile eines Abschnitts, um zwischen ein- und ausgeklappt zu wechseln. Das hilft besonders, wenn du viele Abschnitte hast und dich auf einen konzentrieren willst.",
+          "Abschnitte neu anordnen",
+          "Zieh Abschnitte per Drag & Drop, um ihre Reihenfolge in einer Sammlung zu ändern. Du kannst auch Produkte zwischen Abschnitten verschieben, um sie neu zu ordnen.",
+          "Abschnitt löschen",
+          "Wenn du einen Abschnitt löschst, werden die Produkte darin nicht gelöscht — sie wandern in den Bereich „Ohne Abschnitt“ am Ende der Sammlung. Du kannst einen Abschnitt also gefahrlos entfernen, ohne gespeicherte Produkte zu verlieren.",
+          "Produkte ohne Abschnitt",
+          "Produkte, die zu keinem Abschnitt gehören, erscheinen im Bereich „Ohne Abschnitt“ am Ende der Sammlung. Du kannst sie dort lassen oder beim Ordnen in Abschnitte ziehen.",
+          "Weitere Anleitungen",
+          [
+            "<a href=\"/docs/collections\">Sammlungen</a> — die Ordner auf oberster Ebene, die Abschnitte enthalten",
+            "<a href=\"/docs/selections-and-budgets\">Auswahlen & Budgets</a> — Auswahllimits und Budgets gelten pro Abschnitt",
+            "<a href=\"/docs/adding-links\">Links hinzufügen</a> — Produkte direkt in einen bestimmten Abschnitt speichern"
+          ],
+          "Sammlungen vs. Abschnitte: Kurzübersicht",
+          {
+            "title": "Nimm eine Sammlung, wenn …",
+            "x": "du ein neues Projekt, Thema oder eine neue Produktkategorie beginnst. Sammlungen sind deine wichtigste Ordnungseinheit — wie Ordner auf deinem Computer."
+          },
+          {
+            "title": "Nimm einen Abschnitt, wenn …",
+            "x": "du Produkte innerhalb einer bestehenden Sammlung gruppieren willst. Abschnitte sind Unterkategorien — wie Bereiche innerhalb eines Ordners."
+          }
+        ]
+      },
+      "adding-links": {
+        "meta": {
+          "title": "Links hinzufügen",
+          "description": "So speicherst du Produkte in Tote mit der Browser-Erweiterung oder fügst Links von Hand hinzu. Mit Speichern per Klick, Kontextmenü per Rechtsklick und Produktnotizen.",
+          "ogTitle": "Links hinzufügen — Tote",
+          "ogDescription": "So speicherst du Produkte in Tote mit der Browser-Erweiterung oder fügst Links von Hand hinzu."
+        },
+        "title": "Links hinzufügen",
+        "lead": "Tote ist ein kostenloser, shopübergreifender Einkaufsorganizer. Speichere Produkte mit einem Klick über die Browser-Erweiterung oder füg Links von jedem Gerät aus von Hand hinzu.",
+        "body": [
+          "Mit der Browser-Erweiterung",
+          "Am schnellsten speicherst du Produkte mit der Tote-Erweiterung, die in Chrome, Edge, Brave und Arc funktioniert. Nach der Installation speicherst du jede Produktseite mit einem einzigen Klick.",
+          "Erweiterung installieren",
+          [
+            "Öffne den Chrome Web Store und such nach „Tote“",
+            "Klick auf „Hinzufügen“, um sie zu installieren",
+            "Melde dich mit deinem Tote-Konto an, um deine gespeicherten Produkte zu synchronisieren"
+          ],
+          "Produkt speichern",
+          [
+            "Öffne eine Produktseite, die du speichern möchtest",
+            "Klick auf das Tote-Symbol in der Symbolleiste deines Browsers",
+            "Wähl die Sammlung, in die gespeichert werden soll (oder erstelle eine neue)",
+            "Produktbild, Titel, Preis und Link werden automatisch erfasst"
+          ],
+          "Die Erweiterung funktioniert am besten auf Produktdetailseiten. Wenn du auf einer Kategorie- oder Suchergebnisseite bist, klick dich zuerst zum konkreten Produkt durch.",
+          "Links von Hand hinzufügen",
+          "Du kannst Produkte auch direkt in der Tote-Web-App hinzufügen. Das ist praktisch, wenn du an einem Gerät ohne Erweiterung bist oder einen Link hinzufügen willst, den dir jemand geschickt hat.",
+          "So fügst du einen Link von Hand hinzu",
+          [
+            "Öffne die Sammlung, in die das Produkt soll",
+            "Klick in der Kopfzeile auf „Link hinzufügen“",
+            "Füg die Produkt-URL ein",
+            "Tote ruft die Produktdetails automatisch ab"
+          ],
+          "Was gespeichert wird",
+          "Wenn du ein Produkt speicherst, erfasst Tote:",
+          [
+            "<strong>Produktname</strong> — den Titel von der Produktseite",
+            "<strong>Bild</strong> — das Hauptfoto des Produkts",
+            "<strong>Preis</strong> — den aktuell angegebenen Preis",
+            "<strong>URL</strong> — damit du jederzeit zur Originalseite zurückfindest",
+            "<strong>Beschreibung</strong> — eine Zusammenfassung, sofern verfügbar"
+          ],
+          "Rechtsklick: „In Tote speichern“",
+          "Mit installierter Erweiterung kannst du auf jeder Produktseite mit der rechten Maustaste klicken und im Kontextmenü <strong>„In Tote speichern“</strong> wählen. Das Produkt wird dann in der zuletzt verwendeten Sammlung gespeichert, ohne dass sich das Pop-up der Erweiterung öffnet.",
+          "Produktnotizen",
+          "Nach dem Speichern kannst du persönliche Notizen hinzufügen — Größenwünsche, Farbwahl, für wen das Geschenk ist oder was du dir sonst merken willst. Klick auf ein gespeichertes Produkt, um seine Details zu öffnen, und schreib ins Notizfeld.",
+          "Gespeicherte Produkte bearbeiten",
+          "Du kannst Titel, Preis oder Notizen jedes gespeicherten Produkts bearbeiten. Klick auf das Produkt, um seine Details zu öffnen, nimm deine Änderungen vor — sie werden automatisch gespeichert.",
+          "Shop- und Markenerkennung",
+          "Tote erkennt automatisch den Shop oder Marktplatz (Amazon, IKEA, Etsy usw.) und die Marke des Produkts, wenn diese Angaben auf der Seite verfügbar sind. So kannst du Produkte auf einen Blick filtern und zuordnen.",
+          "Produktdaten aktualisieren",
+          "Produktdetails ändern sich mit der Zeit — Preise sinken, Artikel sind ausverkauft, Angebote werden überarbeitet. Nutze die Aktualisieren-Taste an einem Produkt, um die neuesten Informationen von der Originalseite abzurufen.",
+          "Weitere Anleitungen",
+          [
+            "<a href=\"/docs/extension\">Browser-Erweiterung</a> — ausführliche Einrichtung, Anheften und Problemlösung",
+            "<a href=\"/docs/collections\">Sammlungen</a> — gespeicherte Produkte in Gruppen ordnen",
+            "<a href=\"/docs/selections-and-budgets\">Auswahlen & Budgets</a> — Favoriten markieren und Ausgaben für gespeicherte Produkte verfolgen"
+          ]
+        ]
+      },
+      "extension": {
+        "meta": {
+          "title": "Browser-Erweiterung",
+          "description": "Installier und nutze die Tote-Erweiterung in Chrome, Edge, Brave oder Arc, um Produkte mit einem Klick zu speichern. Mit Installation, Speichern per Klick, Kontextmenü per Rechtsklick, Auswahl des Abschnitts und Anmeldung.",
+          "ogTitle": "Browser-Erweiterung — Tote",
+          "ogDescription": "Installier und nutze die Tote-Erweiterung in Chrome, Edge, Brave oder Arc, um Produkte aus jedem Onlineshop mit einem Klick zu speichern."
+        },
+        "title": "Browser-Erweiterung",
+        "lead": "Tote ist ein kostenloser, shopübergreifender Einkaufsorganizer. Mit der Browser-Erweiterung speicherst du Produkte aus jedem Onlineshop mit einem Klick oder per Rechtsklick. Sie funktioniert in Chrome, Edge, Brave, Arc und jedem anderen Chromium-basierten Browser.",
+        "body": [
+          "Du willst die Kurzfassung? Auf der <a href=\"/chrome-extension\">Seite der Tote-Browser-Erweiterung</a> findest du den Installationslink, die unterstützten Browser und einen kurzen Überblick.",
+          "Erweiterung installieren",
+          [
+            "Öffne die <store>Tote-Seite im Chrome Web Store</store> (das funktioniert auch für Edge, Brave und Arc)",
+            "Klick auf <strong>„Hinzufügen“</strong> und bestätige die Installation",
+            "Das Tote-Symbol erscheint in der Symbolleiste deines Browsers (eventuell musst du auf das Puzzleteil-Symbol klicken, um es anzuheften)"
+          ],
+          "Anmelden",
+          "Klick nach der Installation auf das Tote-Symbol, um das Pop-up zu öffnen. Du wirst gebeten, dich mit demselben Konto anzumelden, das du auf tote.tools nutzt. Danach synchronisieren sich deine Sammlungen automatisch zwischen Erweiterung und Web-App.",
+          "Produkt speichern",
+          "Es gibt zwei Möglichkeiten, ein Produkt zu speichern:",
+          "Speichern mit einem Klick",
+          [
+            "Öffne eine beliebige Produktseite",
+            "Klick auf das Tote-Symbol in deiner Symbolleiste",
+            "Wähl die Sammlung, in die gespeichert werden soll",
+            "Wähl optional einen Abschnitt innerhalb der Sammlung",
+            "Klick auf <strong>„Speichern“</strong>"
+          ],
+          "Produktbild, Titel, Preis und URL werden automatisch erfasst.",
+          "Kontextmenü per Rechtsklick",
+          "Klick irgendwo auf einer Produktseite mit der rechten Maustaste und wähl im Kontextmenü <strong>„In Tote speichern“</strong>. Das Produkt wird in der zuletzt verwendeten Sammlung gespeichert.",
+          "Per Rechtsklick speicherst du am schnellsten — das Pop-up wird komplett übersprungen, und gespeichert wird in der zuletzt verwendeten Sammlung.",
+          "Sammlung und Abschnitt wählen",
+          "Beim Speichern über das Pop-up kannst du jede vorhandene Sammlung aus der Liste wählen. Hat die Sammlung Abschnitte, erscheint eine zweite Liste, damit du das Produkt direkt in die richtige Gruppe legen kannst.",
+          "Du kannst im Pop-up der Erweiterung auch direkt eine neue Sammlung erstellen, ohne die aktuelle Seite zu verlassen.",
+          "Was erfasst wird",
+          "Die Erweiterung liest Metadaten von der Produktseite aus:",
+          [
+            "<strong>Produktname</strong> — der Titel des Produkts",
+            "<strong>Bild</strong> — das Hauptfoto des Produkts",
+            "<strong>Preis</strong> — der aktuell angegebene Preis",
+            "<strong>URL</strong> — ein Link zurück zur Originalseite",
+            "<strong>Marke</strong> — von der Seite erkannt, sofern verfügbar",
+            "<strong>Plattform</strong> — der Shop oder Marktplatz (z. B. Amazon, IKEA)"
+          ],
+          "Berechtigungen und Datenschutz",
+          "Die Erweiterung fragt nach Browser-Berechtigungen, damit sie die aktive Produktseite lesen, das Pop-up öffnen, deine Sitzung in der Erweiterung speichern und das Speichern per Rechtsklick anbieten kann. Tote nutzt diese Berechtigungen, um Produkte in deinem Konto zu speichern. Tote verkauft dein Einkaufsverhalten nicht und betreibt kein Werbenetzwerk.",
+          [
+            "<strong>activeTab und tabs</strong> — die Seite erkennen, die du speichern willst",
+            "<strong>storage</strong> — den Zustand der Erweiterung merken, etwa die zuletzt verwendete Sammlung",
+            "<strong>cookies</strong> — deine Tote-Anmeldung über Clerk verbunden halten",
+            "<strong>contextMenus</strong> — die Rechtsklick-Aktion „In Tote speichern“ anzeigen",
+            "<strong>scripting und Host-Zugriff</strong> — Produkt-Metadaten von der Seite lesen, die du speicherst"
+          ],
+          "Unterstützte Shops",
+          "Tote funktioniert in praktisch jedem Onlineshop. Es liest die aktuelle Seite, um Produktname, Bild und Preis zu erkennen. Die meisten Shops liefern genug Informationen für einen vollständigen Eintrag, aber selbst bei einer einfachen Produktseite werden Titel, Bild und URL erfasst.",
+          "Updates",
+          "Chrome und andere Chromium-Browser aktualisieren Erweiterungen automatisch aus dem Chrome Web Store. Wenn du vermutest, dass du nicht die neueste Version hast, öffne die Erweiterungsseite deines Browsers, aktiviere den Entwicklermodus und klick auf „Aktualisieren“. Die installierte Tote-Version siehst du auf der Detailseite der Erweiterung.",
+          "Problemlösung",
+          "Die Erweiterung zeigt keine Produktdetails",
+          "Stell sicher, dass du auf einer konkreten Produktseite bist, nicht auf einer Kategorie- oder Suchergebnisseite. Die Erweiterung funktioniert am besten, wenn ein einzelnes Produkt im Mittelpunkt steht.",
+          "Preis, Bild oder Marke fehlen",
+          "Manche Shops verstecken Produktdaten, laden sie verzögert oder nutzen ungewöhnliches Seiten-Markup. Speichere den Artikel trotzdem, wenn Titel, Bild oder URL reichen, um ihn später wiederzuerkennen. Du kannst das gespeicherte Produkt in Tote bearbeiten oder die Produktseite neu laden und erneut speichern.",
+          "Nicht angemeldet",
+          "Wenn sich deine gespeicherten Produkte nicht synchronisieren, öffne das Pop-up der Erweiterung und prüf, ob du angemeldet bist. Klick bei Bedarf auf „Anmelden“.",
+          "Rechtsklick hat in die falsche Sammlung gespeichert",
+          "Die Rechtsklick-Aktion speichert in die zuletzt verwendete Sammlung. Öffne das Pop-up, wähl die gewünschte Sammlung und speichere einmal über das Pop-up. Danach verwenden Speicherungen per Rechtsklick diese Sammlung.",
+          "Weitere Anleitungen",
+          [
+            "<a href=\"/docs/adding-links\">Links hinzufügen</a> — weitere Wege, Produkte zu speichern, auch per manueller URL-Eingabe",
+            "<a href=\"/docs/getting-started\">Erste Schritte</a> — die komplette Einrichtung, von der Kontoerstellung bis zum ersten Speichern",
+            "<a href=\"/docs/collections\">Sammlungen</a> — so ordnest du deine gespeicherten Produkte"
+          ],
+          "Häufige Fragen",
+          "Funktioniert Tote in Firefox oder Safari?",
+          "Tote funktioniert in Chrome, Edge, Brave, Arc und jedem Chromium-basierten Browser. Eine Safari-Erweiterung ist geplant. Bis dahin kannst du in jedem Browser die Web-App nutzen, um <a href=\"/docs/adding-links\">Links von Hand hinzuzufügen</a>.",
+          "Wie hefte ich die Tote-Erweiterung an meine Symbolleiste an?",
+          "Klick auf das Puzzleteil-Symbol in der Chrome-Symbolleiste, such Tote in der Liste und klick auf die Stecknadel daneben. Das Tote-Symbol bleibt dann in deiner Symbolleiste sichtbar, sodass du mit einem Klick darauf zugreifen kannst.",
+          "Kann ich Produkte speichern, ohne das Pop-up zu öffnen?",
+          "Ja — klick auf einer Produktseite mit der rechten Maustaste und wähl im Kontextmenü „In Tote speichern“. Das Produkt wird sofort in der zuletzt verwendeten Sammlung gespeichert."
+        ]
+      },
+      "ios-app": {
+        "meta": {
+          "title": "iOS-App",
+          "description": "Installier und nutze die Tote-App für iOS, um Produkte über die Teilen-Taste aus Safari oder jeder anderen App zu speichern, deine Sammlungen zu durchsuchen und dich mit Apple anzumelden. Mit Einrichtung, Speichern, Synchronisierung und Problemlösung.",
+          "ogTitle": "iOS-App — Tote",
+          "ogDescription": "Tipp auf Teilen und dann auf Tote, um ein Produkt aus Safari oder jeder anderen App zu speichern, und durchsuche und ordne deine Sammlungen unterwegs."
+        },
+        "title": "iOS-App",
+        "lead": "Die Tote-App für iOS bringt deine Sammlungen aufs Handy und klinkt sich in die <strong>Teilen</strong>-Taste ein — so speicherst du ein Produkt aus Safari oder aus jeder App, die einen Link teilen kann, ohne einen Browser zu öffnen.",
+        "body": [
+          "Du willst die Kurzfassung? Auf der Seite <a href=\"/ios-app\">Tote für iPhone und iPad</a> findest du einen kurzen Überblick und den Download-Link zum App Store.",
+          "App herunterladen",
+          "<appstore>Lade Tote im App Store</appstore> — ein kostenloser Universal-Download: eine App für iPhone und iPad, wobei das iPad-Layout die zusätzliche Breite für ein breiteres Sammlungsraster nutzt. Alles, was du speicherst, liegt in deinem Tote-Konto und ist da, sobald du dich in der App anmeldest — nichts zu übertragen oder zu importieren.",
+          "Anmelden",
+          "Öffne die App und melde dich mit demselben Konto an, das du auf tote.tools nutzt — per E-Mail oder mit „Mit Apple anmelden“, falls du dein Konto so erstellt hast. Deine Sammlungen, gespeicherten Produkte und Auswahlen synchronisieren sich automatisch zwischen App, Web-App und Browser-Erweiterung.",
+          "Mit der Teilen-Taste speichern",
+          "Am schnellsten speicherst du unter iOS mit der <strong>Teilen</strong>-Taste — dem Quadrat mit dem Pfeil, der nach oben herauszeigt. Sie funktioniert überall, wo iOS das Teilen eines Links erlaubt: in Safari, Instagram, Nachrichten, der App eines Händlers und mehr.",
+          [
+            "Tipp auf einer Produktseite oder einem Beitrag auf das <strong>Teilen</strong>-Symbol",
+            "Wähl <strong>Tote</strong> in der Reihe von Apps, die erscheint (scroll durch die Reihe, wenn du es nicht siehst, und tipp einmalig auf <strong>Mehr</strong>, um es zu aktivieren)",
+            "Wähl eine Sammlung und, falls vorhanden, einen Abschnitt",
+            "Tote speichert das Produkt, ohne die App zu wechseln oder einen Browser-Tab zu öffnen"
+          ],
+          "Teilen an Tote funktioniert auch, wenn du die Tote-App in dieser Sitzung noch nicht geöffnet hast — gespeichert wird direkt mit deinem angemeldeten Konto.",
+          "Was erfasst wird",
+          "Wenn du einen Link an Tote teilst, wird die Seite genauso gelesen wie von der Browser-Erweiterung:",
+          [
+            "<strong>Produktname</strong> — der Titel des Produkts",
+            "<strong>Bild</strong> — das Hauptfoto des Produkts",
+            "<strong>Preis</strong> — der aktuell angegebene Preis",
+            "<strong>URL</strong> — ein Link zurück zur Originalseite"
+          ],
+          "Die App nutzen",
+          "Über das Speichern hinaus bildet die App das Web nach: Sammlungen durchsuchen, Auswahlen markieren, Budgets verfolgen und Preise aktualisieren — alles vom Handy aus. Was du in der App änderst, erscheint in der Web-App und umgekehrt.",
+          "Problemlösung",
+          "Tote fehlt in meinen Teilen-Optionen",
+          "Tipp am Ende der App-Reihe auf <strong>Mehr</strong>, such <strong>Tote</strong> und schalte es ein. iOS merkt sich diese Wahl, und Tote erscheint ab dann in der Hauptreihe. Wenn Tote immer noch nicht erscheint, prüf, ob die App installiert ist und du sie mindestens einmal geöffnet hast.",
+          "Die Teilen-Erweiterung will, dass ich mich erneut anmelde",
+          "Öffne zuerst die Tote-App und melde dich dort an. Die Teilen-Erweiterung nutzt dieselbe Sitzung wie die App, daher löst eine Anmeldung in der App das Problem für beide.",
+          "Preis, Bild oder Marke fehlen",
+          "Manche Shops verstecken Produktdaten oder laden sie verzögert, worauf die Teilen-Erweiterung nicht immer warten kann. Speichere den Artikel trotzdem, wenn Titel, Bild oder URL reichen, um ihn später wiederzuerkennen — du kannst das gespeicherte Produkt in der App bearbeiten oder die Seite in Safari neu laden und erneut teilen.",
+          "Ein gespeicherter Artikel wird nicht angezeigt",
+          "Zieh die Sammlung in der App nach unten, um sie zu aktualisieren. Fehlt der Artikel immer noch, prüf, ob du in die erwartete Sammlung gespeichert hast — der Speicherbildschirm merkt sich standardmäßig die zuletzt verwendete Sammlung.",
+          "Die App wirkt veraltet im Vergleich zur Web-App",
+          "Änderungen synchronisieren sich automatisch, wenn die App eine Netzwerkverbindung hat. Zieh einen beliebigen Bildschirm nach unten, um eine Synchronisierung zu erzwingen, und prüf in den iOS-Einstellungen, ob die App mobile Daten oder WLAN nutzen darf.",
+          "Weitere Anleitungen",
+          [
+            "<a href=\"/docs/extension\">Browser-Erweiterung</a> — das Gegenstück auf dem Desktop: Speichern per Klick und per Rechtsklick",
+            "<a href=\"/docs/adding-links\">Links hinzufügen</a> — weitere Wege, Produkte zu speichern, auch per manueller URL-Eingabe",
+            "<a href=\"/docs/collections\">Sammlungen</a> — so ordnest du deine gespeicherten Produkte",
+            "<a href=\"/docs/selections-and-budgets\">Auswahlen & Budgets</a> — Favoriten markieren und Ausgaben in der App verfolgen"
+          ],
+          "Häufige Fragen",
+          "Gibt es eine Android-App?",
+          "Nein, und derzeit ist auch keine geplant. Bis dahin funktioniert die Web-App in jedem Android-Browser. Wenn du dir eine Android-App wünschst, schreib uns an <a href=\"mailto:support@gobloom.io?subject=Android%20app%20request\">support@gobloom.io</a> — anhand solcher Anfragen entscheiden wir, was wir als Nächstes bauen.",
+          "Brauche ich ein eigenes Konto für die App?",
+          "Nein. Melde dich mit demselben Konto an, das du auf tote.tools oder in der Browser-Erweiterung nutzt, und alles, was du schon gespeichert hast, ist da. Ein Konto deckt ganz Tote ab — Web-App, Browser-Erweiterung und die App für iPhone und iPad sind miteinander verbunden, sodass eine Änderung an einer Stelle überall erscheint.",
+          "Funktioniert die App offline?",
+          "Bereits geladene Sammlungen kannst du ohne Verbindung durchsehen. Neue Produkte speichern, Änderungen synchronisieren und Preise aktualisieren erfordern eine Netzwerkverbindung."
+        ]
+      },
+      "selections-and-budgets": {
+        "meta": {
+          "title": "Auswahlen & Budgets",
+          "description": "So nutzt du Auswahlen und Budgets in Tote. Markiere Favoriten, leg Auswahllimits fest, verfolge Budgets für Sammlungen und Abschnitte und erkenne Budgetüberschreitungen.",
+          "ogTitle": "Auswahlen & Budgets — Tote",
+          "ogDescription": "So nutzt du Auswahlen und Budgets in Tote, um Favoriten zu wählen und Ausgaben zu verfolgen."
+        },
+        "title": "Auswahlen & Budgets",
+        "lead": "Tote speichert Produkte aus jedem Onlineshop an einem Ort. Mit Auswahlen markierst du deine Lieblingsprodukte, mit Budgets verfolgst du Ausgaben — zwei Funktionen, die dir helfen, Optionen einzugrenzen und im Rahmen zu bleiben.",
+        "body": [
+          "Produktauswahl",
+          "Wenn du mehrere Optionen vergleichst, markierst du mit Auswahlen, für welche Produkte du dich entschieden hast (oder zu welchen du tendierst). Stell es dir vor wie Sternchen für deine Favoriten in einer Sammlung.",
+          "Produkt auswählen",
+          "Klick auf einer Produktkarte auf die Auswahl-Taste, um es als ausgewählt zu markieren. Ausgewählte Produkte bekommen eine visuelle Markierung, damit sie sich vom Rest abheben.",
+          "Auswahlzähler",
+          "Abschnitte zeigen einen Zähler <strong>X / Y</strong>, der angibt, wie viele Produkte du von der maximalen Auswahl gewählt hast. „2 / 3“ heißt zum Beispiel, dass du 2 von maximal 3 Produkten ausgewählt hast.",
+          "Auswahllimits",
+          "Du kannst pro Abschnitt eine maximale Anzahl an Auswahlen festlegen. Das hilft beim Entscheiden:",
+          [
+            "<strong>1 Sofa</strong> aus 5 Optionen wählen — Limit auf 1 setzen",
+            "<strong>3 Wandbilder</strong> aus einem Dutzend aussuchen — Limit auf 3 setzen",
+            "Kein Limit nötig? Lass es leer und wähl so viele aus, wie du willst"
+          ],
+          "Wenn du mit der Maus über eine Produktkarte fährst, bewegt sich das Auswahl-Abzeichen zur Auswahl-Taste — ein dezenter Hinweis, dass du per Klick die Auswahl umschalten kannst.",
+          "Budgets",
+          "Mit Budgets verfolgst du die Gesamtkosten deiner Auswahl im Vergleich zu einem Ausgabenziel.",
+          "Budgets für Sammlungen",
+          "Leg ein Gesamtbudget für eine Sammlung fest, um auf einen Blick zu sehen, ob deine ausgewählten Produkte in deinen Ausgabenplan passen. Die Kopfzeile der Sammlung zeigt den Gesamtpreis der ausgewählten Artikel im Vergleich zu deinem Budget.",
+          "Budgets für Abschnitte",
+          "Jeder Abschnitt kann ein eigenes Budget haben, unabhängig vom Budget der Sammlung. Das ist praktisch bei Grenzen pro Kategorie — etwa „500 € für Sitzmöbel“ und „200 € für Beleuchtung“ innerhalb einer größeren Raumrenovierung.",
+          "Anzeige bei Budgetüberschreitung",
+          "Wenn der Gesamtpreis deiner ausgewählten Produkte das Budget übersteigt, zeigt Tote eine visuelle Markierung, damit du weißt, dass du nachjustieren musst. Das funktioniert sowohl auf Ebene der Sammlung als auch des Abschnitts.",
+          "Auswahlen + Budgets zusammen",
+          "Auswahlen und Budgets greifen ineinander. Nur <strong>ausgewählte</strong> Produkte zählen zur Budgetsumme. Du kannst also viele Optionen speichern, deine Favoriten markieren und sofort sehen, ob deine Auswahl ins Budget passt — ohne dass nicht ausgewählte Optionen die Zahlen verzerren.",
+          "Du richtest ein Wohnzimmer mit einem Budget von 2.000 € ein. Du speicherst 8 Sofas, 5 Couchtische und 10 Lampen. Während du in jedem Abschnitt deine Favoriten auswählst, aktualisiert sich die Budgetanzeige in Echtzeit — so kannst du Ausreißer in einer Kategorie mit Einsparungen in einer anderen ausgleichen.",
+          "Weitere Anleitungen",
+          [
+            "<a href=\"/docs/collections\">Sammlungen</a> — Budgets auf Ebene der Sammlung festlegen",
+            "<a href=\"/docs/slots\">Abschnitte</a> — Budgets und Auswahllimits pro Abschnitt festlegen",
+            "<a href=\"/docs/sharing\">Teilen</a> — Mitwirkende können in geteilten Sammlungen Produkte auswählen"
+          ],
+          "Häufige Fragen",
+          "Zählen nicht ausgewählte Produkte zum Budget?",
+          "Nein. Nur ausgewählte Produkte fließen in die Budgetsumme ein. So kannst du viele Optionen speichern und frei vergleichen, ohne die Zahl aufzublähen.",
+          "Kann ich ein Budget festlegen, ohne Auswahllimits zu nutzen?",
+          "Ja. Budgets und Auswahllimits sind unabhängige Funktionen. Du kannst ein Budget für eine Sammlung oder einen <a href=\"/docs/slots\">Abschnitt</a> festlegen, ohne zu begrenzen, wie viele Produkte ausgewählt werden können — oder Auswahllimits ohne Budget nutzen.",
+          "Wo lege ich ein Budget fest?",
+          "Ein Budget für eine Sammlung legst du beim Bearbeiten der Sammlung fest, für einzelne Abschnitte über die Bearbeiten-Taste in der Kopfzeile des Abschnitts. Details unter <a href=\"/docs/collections\">Sammlungen</a> und <a href=\"/docs/slots\">Abschnitte</a>."
+        ]
+      },
+      "sharing": {
+        "meta": {
+          "title": "Teilen",
+          "description": "So teilst du Sammlungen in Tote. Erstelle Einladungslinks für Mitwirkende, mach Sammlungen öffentlich und verwalte geteilte Wunschlisten.",
+          "ogTitle": "Teilen — Tote",
+          "ogDescription": "So teilst du Sammlungen in Tote — mit Einladungslinks, öffentlichen Seiten und gemeinsamen Wunschlisten."
+        },
+        "title": "Teilen",
+        "lead": "Tote ist ein kostenloser, shopübergreifender Einkaufsorganizer. Teile deine Sammlungen mit Freunden, Familie oder Mitwirkenden — für gemeinsame Wunschlisten, Geschenkplanung oder Gruppenprojekte.",
+        "body": [
+          "So funktioniert das Teilen",
+          "Wenn du eine Sammlung teilst, erstellst du einen Einladungslink, über den andere beitreten können. Jede Einladung ist nur einmal verwendbar und hat eine Rolle — Betrachter oder Bearbeiter —, die festlegt, was die Person nach dem Beitritt tun kann.",
+          "Sammlung teilen",
+          [
+            "Öffne die Sammlung, die du teilen möchtest",
+            "Klick in der Kopfzeile der Sammlung auf <strong>Team verwalten</strong>",
+            "Wähl eine Rolle (Betrachter oder Bearbeiter) und füg optional einen Namen oder eine E-Mail-Adresse als Notiz hinzu",
+            "Klick auf <strong>Link erstellen</strong> und kopier die Einladungs-URL",
+            "Schick den Link an die Person, mit der du zusammenarbeiten möchtest"
+          ],
+          "Geteilte Sammlungen eignen sich hervorragend als Geschenkliste. Teile eine Wunschliste mit der Familie, damit alle sehen, was du dir wünschst — und doppelte Geschenke vermieden werden.",
+          "Einer geteilten Sammlung beitreten",
+          "Wenn jemand eine Sammlung mit dir teilt:",
+          [
+            "Klick auf den Einladungslink, den du bekommen hast",
+            "Melde dich bei deinem Tote-Konto an (oder erstelle eins)",
+            "Die geteilte Sammlung erscheint in deiner Sammlungsliste"
+          ],
+          "Rollen",
+          "Jedes Mitglied einer geteilten Sammlung hat eine Rolle, die bestimmt, was es tun kann. Die Rollen, von den meisten zu den wenigsten Rechten:",
+          [
+            "<strong>Eigentümer</strong> — volle Kontrolle, einschließlich Löschen der Sammlung und Übertragen des Eigentums an jemand anderen. Es gibt immer genau einen Eigentümer.",
+            "<strong>Admin</strong> — kann ansehen, bearbeiten, veröffentlichen und Mitglieder verwalten (einladen, Rollen ändern, entfernen). Kann die Sammlung nicht löschen.",
+            "<strong>Bearbeiter</strong> — kann ansehen und bearbeiten (Produkte hinzufügen, Abschnitte erstellen, Preise aktualisieren). Kann keine Mitglieder verwalten und nicht veröffentlichen.",
+            "<strong>Betrachter</strong> — nur Lesezugriff. Sieht alles, kann aber nichts ändern."
+          ],
+          "Beim Erstellen eines Einladungslinks wählst du Betrachter oder Bearbeiter. Eigentümer können ein Mitglied nach dem Beitritt zum Admin machen oder das Eigentum übertragen.",
+          "Mitglieder verwalten",
+          "Öffne <strong>Team verwalten</strong>, um alle zu sehen, die beigetreten sind. Dort kannst du die Rolle eines Mitglieds ändern oder es ganz entfernen. Außerdem siehst du alle offenen Einladungen und kannst jede widerrufen, die nicht mehr gültig sein soll.",
+          "Eine geteilte Sammlung verlassen",
+          "Es gibt noch keine „Verlassen“-Taste. Wenn du keinen Zugriff mehr auf eine Sammlung haben willst, die jemand mit dir geteilt hat, bitte einen Eigentümer oder Admin, dich unter „Team verwalten“ zu entfernen. Das Entfernen eines Mitglieds hat keine Auswirkungen auf die anderen Mitwirkenden.",
+          "Öffentliche Links",
+          "Neben dem Teilen mit Mitwirkenden kannst du eine Sammlung öffentlich sichtbar machen. Über öffentliche Links kann jede Person deine Sammlung ohne Anmeldung sehen — ideal für Wunschlisten, Geschenklisten oder Empfehlungen.",
+          "Öffentliche Links eignen sich prima als „Link in Bio“ für Social Media. Stell deine Lieblingsprodukte in einer Sammlung zusammen, mach sie öffentlich und teile den Link auf Instagram, TikTok oder wo auch immer. Aktualisiere sie jederzeit mit deinen neuesten Funden.",
+          "Sammlung öffentlich machen",
+          [
+            "Öffne die Sammlung und klick in der Kopfzeile auf „Sammlung veröffentlichen“",
+            "Bearbeite optional den Slug der öffentlichen URL, wähl ein Layout (Minimal oder Feature) und entscheide, ob andere unabhängige Kopien erstellen dürfen",
+            "Klick auf „Schnappschuss veröffentlichen“",
+            "Kopier den öffentlichen Link und teile ihn, wo du willst"
+          ],
+          "Dein eigener Kurzlink",
+          "Jede öffentliche Sammlung bekommt deinen eigenen, eindeutigen und vertrauenswürdigen Link auf tote.tools — mit deinem Benutzernamen darin, damit alle wissen, dass er von dir kommt:",
+          "<code>tote.tools/s/yourname/summer-wishlist</code>",
+          "Tote erstellt ihn beim Veröffentlichen automatisch aus dem Namen deiner Sammlung. Im Veröffentlichungsdialog kannst du ihn beliebig ändern — ideal für Social-Media-Bios, Nachrichten oder überall, wo ein Link leicht zu erkennen und vertrauenswürdig sein soll.",
+          "Für einen eigenen Kurzlink musst du in deinen Kontoeinstellungen einen Benutzernamen festgelegt haben. Ohne Benutzernamen funktioniert dein öffentlicher Link trotzdem, ist aber länger.",
+          "So funktionieren öffentliche Links",
+          "Wenn du eine Sammlung öffentlich machst, erstellt Tote einen <strong>Schnappschuss</strong> deiner Sammlung. Diese öffentliche Kopie ist von deiner Arbeitssammlung getrennt — Änderungen erscheinen nicht automatisch in der öffentlichen Version.",
+          "Nachdem du Produkte hinzugefügt oder entfernt hast, klick im Veröffentlichungsdialog auf „Öffentlichen Schnappschuss ersetzen“, um deine Änderungen auf den öffentlichen Link zu übertragen. So behältst du die Kontrolle darüber, was andere sehen.",
+          "Die öffentliche Version aktualisieren",
+          "Wenn du deine neuesten Änderungen teilen willst:",
+          [
+            "Öffne die Sammlung und klick in der Kopfzeile auf „Sammlung veröffentlichen“",
+            "Klick auf „Öffentlichen Schnappschuss ersetzen“",
+            "Deine Änderungen sind jetzt für alle mit dem öffentlichen Link sichtbar"
+          ],
+          "Eine Sammlung wieder privat machen",
+          "Du kannst den öffentlichen Zugriff jederzeit widerrufen, indem du im Veröffentlichungsdialog auf „Nicht mehr veröffentlichen“ klickst. Der öffentliche Link funktioniert dann sofort nicht mehr.",
+          "Datenschutz",
+          "Nur Personen mit dem Einladungslink können auf eine geteilte Sammlung zugreifen. Deine anderen Sammlungen bleiben vollständig privat. Tote gibt deine Daten niemals an Werbetreibende oder Dritte weiter.",
+          "Weitere Anleitungen",
+          [
+            "<a href=\"/docs/collections\">Sammlungen</a> — die Sammlungen erstellen und ordnen, die du teilst",
+            "<a href=\"/docs/getting-started\">Erste Schritte</a> — dein Konto einrichten, bevor du Einladungslinks annimmst",
+            "<a href=\"/docs/extension\">Browser-Erweiterung</a> — Produkte aus jedem Shop in geteilte Sammlungen speichern"
+          ],
+          "Häufige Fragen",
+          "Können andere meine geteilte Sammlung bearbeiten?",
+          "Das hängt von der Rolle ab, die du beim Erstellen des Einladungslinks vergibst. Bearbeiter können Produkte hinzufügen, Abschnitte erstellen und Preise aktualisieren. Betrachter können nur ansehen. Nach dem Beitritt kann ein Eigentümer jemanden zum Admin machen, der dann auch andere Mitglieder verwalten kann. Die vollständige Übersicht findest du oben im Bereich <a href=\"#roles\">Rollen</a>.",
+          "Ist meine geteilte Sammlung für alle sichtbar?",
+          "Nein. Geteilte Sammlungen sind nur für Personen mit dem Einladungslink zugänglich. Wenn alle deine Sammlung ohne Anmeldung sehen sollen, kannst du sie zusätzlich öffentlich machen — siehe den Bereich <a href=\"#public-links\">Öffentliche Links</a> oben.",
+          "Wie beende ich das Teilen einer Sammlung?",
+          "Bei öffentlichen Links öffnest du den Veröffentlichungsdialog und klickst auf „Nicht mehr veröffentlichen“ — der Zugriff wird sofort widerrufen. Beim Teilen per Einladung öffnest du <strong>Team verwalten</strong> und entfernst einzelne Mitglieder oder widerrufst offene Einladungen, die nicht mehr gültig sein sollen.",
+          "Kann ich den Link meiner öffentlichen Sammlung anpassen?",
+          "Ja! Wenn du eine Sammlung veröffentlichst, erstellt Tote einen Kurzlink aus dem Namen der Sammlung. Im Veröffentlichungsdialog kannst du ihn beliebig ändern — zum Beispiel <code>tote.tools/s/yourname/summer-wishlist</code>."
+        ]
+      }
+    }
+  }
+}

@@ -12,4 +12,7 @@ describe('outputLanguageDirective', () => {
     expect(directive).toContain('Spanish');
     expect(directive).toContain('JSON keys');
   });
+  it('asks for informal German', () => {
+    expect(outputLanguageDirective('de')).toContain('German (informal "du")');
+  });
 });

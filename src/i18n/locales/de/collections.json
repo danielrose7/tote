@@ -1,0 +1,109 @@
+{
+  "collections": {
+    "common": {
+      "cancel": "Abbrechen",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "done": "Fertig",
+      "untitled": "Ohne Titel",
+      "itemCount_one": "{{count}} Artikel",
+      "itemCount_other": "{{count}} Artikel"
+    },
+    "viewMode": {
+      "label": "Ansicht",
+      "grid": "Rasteransicht",
+      "table": "Tabellenansicht"
+    },
+    "type": {
+      "section": "Abschnitt",
+      "product": "Produkt",
+      "link": "Link",
+      "photo": "Foto",
+      "note": "Notiz",
+      "text": "Text",
+      "photoTitle": "Foto"
+    },
+    "role": {
+      "owner": "Eigentümer",
+      "admin": "Admin",
+      "editor": "Bearbeiter",
+      "viewer": "Betrachter"
+    },
+    "table": {
+      "today": "Heute",
+      "yesterday": "Gestern",
+      "daysAgo_one": "vor {{count}} Tag",
+      "daysAgo_other": "vor {{count}} Tagen",
+      "weeksAgo_one": "vor {{count}} Woche",
+      "weeksAgo_other": "vor {{count}} Wochen",
+      "monthsAgo_one": "vor {{count}} Monat",
+      "monthsAgo_other": "vor {{count}} Monaten",
+      "yearsAgo_one": "vor {{count}} Jahr",
+      "yearsAgo_other": "vor {{count}} Jahren",
+      "untitledSection": "Abschnitt ohne Titel",
+      "title": "Titel",
+      "price": "Preis",
+      "section": "Abschnitt",
+      "added": "Hinzugefügt"
+    },
+    "list": {
+      "loadError": "Deine Sammlungen konnten nicht geladen werden. Bitte lade die Seite neu.",
+      "searchPlaceholder": "Sammlungen durchsuchen…",
+      "searchLabel": "Sammlungen durchsuchen",
+      "newLabel": "Neu:",
+      "addedToOne": "Du wurdest zu <link>{{name}}</link> hinzugefügt",
+      "addedToMany_one": "Du wurdest kürzlich zu {{count}} geteilten Sammlung hinzugefügt",
+      "addedToMany_other": "Du wurdest kürzlich zu {{count}} geteilten Sammlungen hinzugefügt",
+      "emptyTitle": "Noch keine Sammlungen",
+      "emptyDescription": "Deine Sammlungen erscheinen hier.",
+      "noResults": "Keine Sammlungen passen zu „{{query}}“",
+      "itemCountShared_one": "{{count}} Artikel · Geteilt",
+      "itemCountShared_other": "{{count}} Artikel · Geteilt"
+    },
+    "create": {
+      "failedTitle": "Sammlung konnte nicht erstellt werden",
+      "nameRequired": "Ein Name für die Sammlung ist erforderlich",
+      "queuedTitle": "Sammlung vorgemerkt",
+      "syncingNow": "„{{name}}“ wird jetzt synchronisiert.",
+      "syncWhenOnline": "„{{name}}“ wird synchronisiert, sobald du wieder online bist.",
+      "title": "Sammlung hinzufügen",
+      "description": "Organisiere Links, Produkte, Fotos und Notizen.",
+      "nameLabel": "Name der Sammlung *",
+      "descriptionLabel": "Beschreibung (optional)",
+      "color": "Farbe",
+      "selectColor": "Farbe {{color}} auswählen"
+    },
+    "detail": {
+      "breadcrumb": "Sammlungen",
+      "loadError": "Diese Sammlung konnte nicht geladen werden. Bitte lade die Seite neu.",
+      "makeCopy": "Kopie erstellen",
+      "publish": "Sammlung veröffentlichen",
+      "manageTeam": "Team verwalten",
+      "edit": "Sammlung bearbeiten",
+      "copiedFrom": "Kopiert von {{name}}"
+    },
+    "sync": {
+      "failed": "Synchronisierung fehlgeschlagen · {{operation}}",
+      "dismiss": "Synchronisierungsfehler ausblenden",
+      "saving": "Wird gespeichert...",
+      "saved": "Gespeichert {{time}}",
+      "lastSaved": "Zuletzt gespeichert {{time}}"
+    },
+    "view": {
+      "reorderItem": "{{name}} verschieben",
+      "refreshMetadata": "Metadaten aktualisieren",
+      "refreshing": "Wird aktualisiert…",
+      "refresh": "Aktualisieren",
+      "visit": "Öffnen →",
+      "reorderFailed": "Neu anordnen fehlgeschlagen",
+      "refreshFailed": "Aktualisieren fehlgeschlagen",
+      "emptyTitle": "Diese Sammlung ist leer",
+      "emptyDescription": "Artikel, die du dieser Sammlung hinzufügst, erscheinen hier.",
+      "refreshAll": "Alle aktualisieren",
+      "refreshAllLower": "Alle aktualisieren",
+      "reorderSections": "Abschnitte anordnen",
+      "reorder": "Neu anordnen",
+      "ungrouped": "Ohne Abschnitt"
+    }
+  }
+}

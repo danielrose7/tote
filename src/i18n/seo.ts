@@ -3,7 +3,11 @@ import { DEFAULT_LOCALE, LOCALES, type Locale } from './config';
 import { isTranslatedPath, localizedPath } from './publicPages';
 
 /** BCP 47 / Open Graph tags for each UI locale. */
-const OG_LOCALES: Record<Locale, string> = { en: 'en_US', es: 'es_419' };
+const OG_LOCALES: Record<Locale, string> = {
+  en: 'en_US',
+  es: 'es_419',
+  de: 'de_DE',
+};
 
 /**
  * Canonical + hreflang for a public page. Every language version lists all the

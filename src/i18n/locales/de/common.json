@@ -1,0 +1,23 @@
+{
+  "common": {
+    "retry": "Erneut versuchen"
+  },
+  "settings": {
+    "language": {
+      "label": "Sprache",
+      "hint": "Gilt überall in Tote: im Web, in der Chrome-Erweiterung und in der iOS-App.",
+      "saveError": "Deine Sprache konnte nicht gespeichert werden."
+    }
+  },
+  "refresh": {
+    "failedTitleAll": "Aktualisieren fehlgeschlagen",
+    "failedTitleSome": "Einige Artikel sind fehlgeschlagen",
+    "failedDescription_one": "{{count}} Artikel konnte nicht gelesen werden. Prüf deine Verbindung und versuch es noch einmal.",
+    "failedDescription_other": "{{count}} Artikel konnten nicht gelesen werden. Prüf deine Verbindung und versuch es noch einmal.",
+    "thinTitle": "Einige Details fehlen",
+    "thinWithExtension_one": "Bei {{count}} Artikel lässt sich selbst mit der Erweiterung nur wenig auslesen. Du kannst die Details von Hand ergänzen.",
+    "thinWithExtension_other": "Bei {{count}} Artikeln lässt sich selbst mit der Erweiterung nur wenig auslesen. Du kannst die Details von Hand ergänzen.",
+    "thinWithoutExtension_one": "Bei {{count}} Artikel können unsere Server nur wenig auslesen. Die Tote-Erweiterung liest Seiten in deinem Browser und findet meist Bild und Preis.",
+    "thinWithoutExtension_other": "Bei {{count}} Artikeln können unsere Server nur wenig auslesen. Die Tote-Erweiterung liest Seiten in deinem Browser und findet meist Bild und Preis."
+  }
+}

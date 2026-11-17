@@ -1,0 +1,20 @@
+{
+  "templates": {
+    "meta": {
+      "title": "Vorlagen-Sammlungen",
+      "description": "Kuratierte Sammlungen zum Kopieren und Anpassen. Stöbere in Geschenkideen, Einrichtung fürs Zuhause, Babyausstattung und mehr."
+    },
+    "navLabel": "Vorlagen-Seite",
+    "heading": "Vorlagen",
+    "subheading": "Kuratierte Sammlungen zum Kopieren und Anpassen.",
+    "all": "Alle",
+    "categories": {
+      "babyNursery": "Baby & Kinderzimmer",
+      "gifts": "Geschenke",
+      "garden": "Garten",
+      "styleWardrobe": "Stil & Garderobe"
+    },
+    "itemCount_one": "{{count}} Artikel",
+    "itemCount_other": "{{count}} Artikel"
+  }
+}

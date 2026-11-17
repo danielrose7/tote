@@ -1,0 +1,309 @@
+{
+  "curate": {
+    "newCuration": "Neue Kuration",
+    "usageTitle": "{{input}} rein / {{output}} raus / {{searches}} Suchen",
+    "cost": {
+      "under": "<{{amount}}",
+      "approx": "~{{amount}}"
+    },
+    "gap": "Lücke",
+    "history": {
+      "heading": "Kurationen",
+      "creditsAdded": "Credits hinzugefügt",
+      "balanceUpdated": "Dein Guthaben wurde aktualisiert.",
+      "addCreditsToStart": "Füg Credits hinzu, um eine neue Kuration zu starten",
+      "empty": "Noch keine Sitzungen. <link>Starte deine erste Kuration</link>."
+    },
+    "phase": {
+      "started": "Start",
+      "interviewRound1": "Interview",
+      "researching": "Recherche",
+      "interviewRound2": "Nachfragen",
+      "framing": "Konzept",
+      "planning": "Planung",
+      "extracting": "Auslesen",
+      "curating": "Kuration",
+      "hospitality": "Feinschliff",
+      "complete": "Fertig",
+      "error": "Fehler"
+    },
+    "status": {
+      "started": "Warte auf Bestätigung des Workflows",
+      "interviewRound1": "Warte auf Antworten zu Runde 1",
+      "researching": "Recherchiere die Kategorie — meist 30–90 s...",
+      "interviewRound2": "Warte auf Nachfragen",
+      "framing": "Erstelle das Kurations-Briefing — meist unter einer Minute...",
+      "briefReview": "Prüf das Briefing und gib es frei, um fortzufahren",
+      "planning": "Plane den Aufbau der Sammlung...",
+      "extracting": "Lese Seiten aus...",
+      "curating": "Stelle die Auswahl zusammen — meist 60–90 s...",
+      "hospitality": "Verfeinere die Sammlung...",
+      "refining": "Verfeinere die Sammlung...",
+      "complete": "Sammlung fertig",
+      "error": "Etwas ist schiefgelaufen"
+    },
+    "badge": {
+      "started": "gestartet",
+      "interviewRound1": "interview-runde-1",
+      "researching": "recherche",
+      "interviewRound2": "interview-runde-2",
+      "framing": "konzept",
+      "briefReview": "briefing-prüfung",
+      "planning": "planung",
+      "extracting": "auslesen",
+      "curating": "kuration",
+      "hospitality": "feinschliff",
+      "refining": "verfeinern",
+      "complete": "fertig",
+      "error": "fehler"
+    },
+    "extraction": {
+      "extracting": "Wird ausgelesen",
+      "extracted": "Ausgelesen",
+      "skipped": "Übersprungen"
+    },
+    "pipeline": {
+      "scope": "Umfang",
+      "scout": "Erkundung",
+      "polish": "Schliff",
+      "round1": "Runde 1",
+      "research": "Recherche",
+      "round2": "Runde 2",
+      "followUp": "Nachfragen",
+      "framing": "Konzept",
+      "plan": "Plan",
+      "links": "Links",
+      "extract": "Auslesen",
+      "curation": "Kuration",
+      "refine": "Verfeinern {{n}}",
+      "publish": "Veröffentlichen"
+    },
+    "errors": {
+      "submitAnswers": "Antworten konnten nicht gesendet werden.",
+      "approveBrief": "Briefing konnte nicht freigegeben werden.",
+      "importFailed": "Import fehlgeschlagen",
+      "unknown": "Unbekannter Fehler"
+    },
+    "new": {
+      "quickFillBabyLabel": "Babyausstattung (3 Mon.)",
+      "quickFillBabyTopic": "Babyausstattung für ein 3 Monate altes Baby — natürliche Materialien, durchdachtes Design, kleine Wohnung in Salt Lake City",
+      "quickFillGardenLabel": "Gartenausrüstung",
+      "quickFillGardenTopic": "Durchdachte Gartenausrüstung — Werkzeug, Arbeitskleidung und Schuhe, zu denen passionierte Gärtner greifen",
+      "startFailed": "Kuration konnte nicht gestartet werden. Prüf CURATOR_ENABLED.",
+      "allSessions": "Alle Sitzungen",
+      "describe": "Beschreib, was du kuratieren möchtest. Sei konkret — nenn Kontext, Anlass oder eine Quelle wie eine E-Mail oder Produktkategorie.",
+      "scopeNote": "Wir recherchieren die Kategorie und stellen eine gezielte Auswahl zusammen — meist 15–25 gut gewählte Artikel in einer Handvoll Abschnitten.",
+      "topicLabel": "Thema",
+      "topicPlaceholder": "z. B. Durchdachte Gartenausrüstung — Werkzeug, Arbeitskleidung und Schuhe, zu denen passionierte Gärtner greifen",
+      "quickFill": "Schnellauswahl:",
+      "starting": "Wird gestartet…",
+      "start": "Kuration starten"
+    },
+    "page": {
+      "heading": "Sammlungs-Kurator",
+      "settingUp": "Wird eingerichtet...",
+      "connecting": "Verbinde mit dem Workflow und warte auf die ersten Ereignisse des Kurators...",
+      "extractingPages": "Seiten werden ausgelesen ({{current}} / {{total}})",
+      "extractingGapPages": "Seiten für Lücken werden ausgelesen ({{current}} / {{total}})",
+      "runCreated": "Durchlauf erstellt",
+      "refinementPasses": "Meist 1–2 Verfeinerungsdurchläufe.",
+      "streamDisconnected": "Stream getrennt — zum Neuverbinden klicken",
+      "reconnect": "↺ Neu verbinden",
+      "streamStatus": "Stream: {{status}}",
+      "session": "Sitzung <code>{{sessionId}}</code>",
+      "approach": "So gehen wir vor:",
+      "approachNote": "Jeweils eine gezielte Auswahl — kein vollständiger Ratgeber.",
+      "urlsPending_one": "{{count}} URL ausstehend",
+      "urlsPending_other": "{{count}} URLs ausstehend",
+      "newCollection": "Neue Sammlung",
+      "copied": "Kopiert!",
+      "copyJson": "JSON kopieren",
+      "importing": "Wird importiert...",
+      "addToTote": "Zu Tote hinzufügen",
+      "somethingWrong": "Etwas ist schiefgelaufen.",
+      "tryAgain": "Erneut versuchen",
+      "newTopic": "Neues Thema"
+    },
+    "interview": {
+      "theCategory": "die Kategorie",
+      "round2": "Runde 2 von 2. Wir haben {{subject}} recherchiert — mit diesen Fragen klären wir die Details, bevor wir loslegen.",
+      "round1": "Runde 1 von 2. Nach deinen Antworten recherchieren wir die Kategorie (~30–90 s) und kommen dann mit ein paar gezielteren Nachfragen zurück.",
+      "notesPlaceholder": "Weitere Hinweise (optional)",
+      "submitFollowUp": "Nachfragen senden",
+      "submitAnswers": "Antworten senden"
+    },
+    "brief": {
+      "intro": "Mit diesem Briefing bauen wir deine Sammlung. Gib es frei, um fortzufahren, oder ergänze unten eine Korrektur.",
+      "avoid": "Vermeiden: {{items}}",
+      "anythingOff": "Stimmt etwas nicht? (optional)",
+      "correctionExample": "z. B. Sie ist über 70, keine frischgebackene Mutter — bitte Babyprodukte aus dem Briefing entfernen",
+      "approving": "Wird freigegeben...",
+      "approve": "Passt so →",
+      "submitCorrection": "Korrektur senden"
+    },
+    "result": {
+      "sections_one": "{{count}} Abschnitt",
+      "sections_other": "{{count}} Abschnitte",
+      "items_one": "{{count}} Artikel",
+      "items_other": "{{count}} Artikel",
+      "joiner": " · "
+    }
+  },
+  "import": {
+    "signIn": "Melde dich an, um Importe zu nutzen.",
+    "restricted": "Zugriff eingeschränkt.",
+    "parseFailed": "JSON konnte nicht gelesen werden",
+    "failed": "Import fehlgeschlagen",
+    "unknown": "Unbekannter Fehler",
+    "imported": "Sammlung importiert",
+    "importedDescription": "„{{title}}“ — {{sections}}, {{items}}",
+    "sections_one": "{{count}} Abschnitt",
+    "sections_other": "{{count}} Abschnitte",
+    "items_one": "{{count}} Artikel",
+    "items_other": "{{count}} Artikel",
+    "heading": "Sammlung importieren",
+    "subheading": "Füg ein JSON im Format „Tote Draft Import Payload“ ein, um eine Sammlung zu erstellen.",
+    "jsonLabel": "Import-JSON",
+    "hint": "Füg deine Daten ein und sende sie ab, um vor dem Import eine Vorschau zu sehen.",
+    "preview": "Import-Vorschau",
+    "previewMeta": "{{sections}}, {{items}}",
+    "back": "Zurück",
+    "importing": "Wird importiert...",
+    "importTitle": "„{{title}}“ importieren"
+  },
+  "clone": {
+    "notAvailable": "Diese Sammlung kann nicht kopiert werden.",
+    "copyFailed": "Diese Sammlung konnte nicht kopiert werden.",
+    "preparing": "Deine Kopie wird vorbereitet...",
+    "useThisList": "Diese Liste verwenden",
+    "signInPrompt": "Melde dich an oder erstelle ein Konto, um diese Sammlung in dein eigenes Tote zu kopieren.",
+    "signUp": "Registrieren und kopieren",
+    "haveAccount": "Du hast schon ein Konto?",
+    "logIn": "Anmelden",
+    "unableToCopy": "Kopieren nicht möglich",
+    "backToCollections": "Zurück zu den Sammlungen",
+    "backToHome": "Zurück zur Startseite",
+    "copying": "Diese Liste wird in dein Konto kopiert..."
+  },
+  "invite": {
+    "acceptFailed": "Diese Einladung konnte nicht angenommen werden",
+    "accepted": "Einladung angenommen",
+    "addedToAccount": "Die Sammlung wurde deinem Konto hinzugefügt.",
+    "invited": "Du wurdest eingeladen",
+    "signInPrompt": "Melde dich an, um diese geteilte Sammlung deinem Konto hinzuzufügen.",
+    "signIn": "Anmelden und fortfahren",
+    "accepting": "Einladung wird angenommen...",
+    "loading": "Wird geladen...",
+    "unavailable": "Einladung nicht verfügbar",
+    "goToCollections": "Zu den Sammlungen",
+    "opening": "Sammlung wird geöffnet..."
+  },
+  "settings": {
+    "signIn": "Bitte melde dich an, um die Einstellungen zu öffnen.",
+    "backToHome": "Zurück zur Startseite",
+    "title": "Einstellungen",
+    "logOut": "Abmelden",
+    "tabs": {
+      "account": "Konto",
+      "billing": "Abrechnung"
+    },
+    "delete": {
+      "title": "Gefahrenzone",
+      "description": "Dein Konto und alle zugehörigen Daten endgültig löschen. Das lässt sich nicht rückgängig machen.",
+      "confirmPhrase": "mein konto löschen",
+      "label": "Gib zur Bestätigung <strong>{{phrase}}</strong> ein",
+      "button": "Konto löschen",
+      "deleting": "Wird gelöscht…",
+      "error": "Etwas ist schiefgelaufen. Bitte versuch es noch einmal."
+    },
+    "profile": {
+      "title": "Dein öffentliches Profil",
+      "addUsername": "Leg unten im Profil einen Benutzernamen fest, um eine öffentliche Profil-URL zu bekommen.",
+      "publishHint": "Veröffentliche eine Sammlung, um dein öffentliches Profil unter <code>{{path}}</code> zu aktivieren. Sammlungen sind standardmäßig privat.",
+      "published_one": "{{count}} Sammlung veröffentlicht.",
+      "published_other": "{{count}} Sammlungen veröffentlicht.",
+      "copy": "Kopieren",
+      "copied": "Kopiert!",
+      "view": "Ansehen →"
+    }
+  },
+  "billing": {
+    "title": "KI-Credits",
+    "subtitle": "Modell- und Suchkosten, zum Selbstkostenpreis weitergegeben.",
+    "loading": "Wird geladen...",
+    "noCredits": "Keine Credits",
+    "cancel": "Abbrechen",
+    "addCredits": "Credits hinzufügen",
+    "packs": {
+      "starter": "Starter",
+      "standard": "Standard",
+      "pro": "Pro"
+    },
+    "packDescription": "Fügt {{amount}} KI-Credits hinzu",
+    "redirecting": "Weiterleitung...",
+    "recentActivity": "Letzte Aktivität",
+    "refresh": "Aktualisieren",
+    "loadingActivity": "Aktivität wird geladen...",
+    "noActivity": "Noch keine Credit-Aktivität.",
+    "tx": {
+      "purchase": "Credit-Kauf",
+      "grant": "Credit-Gutschrift",
+      "chat": "Chat",
+      "curator": "Kurator"
+    },
+    "group": {
+      "purchases": "Credit-Käufe",
+      "grants": "Credit-Gutschriften",
+      "curation": "Kuration {{id}}",
+      "chat": "Sammlungs-Chat {{id}}",
+      "collection": "Sammlung {{id}}",
+      "session": "Sitzung {{id}}"
+    },
+    "details": {
+      "tokens": "{{tokens}} Tokens",
+      "searches_one": "{{count}} Suche",
+      "searches_other": "{{count}} Suchen",
+      "browserSessions_one": "{{count}} Browser-Sitzung",
+      "browserSessions_other": "{{count}} Browser-Sitzungen",
+      "balance": "Guthaben {{amount}}"
+    }
+  },
+  "shell": {
+    "dismiss": "Ausblenden",
+    "refreshPage": "Seite neu laden",
+    "header": {
+      "breadcrumb": "Navigationspfad",
+      "myProfile": "Mein Profil",
+      "curator": "Kurator",
+      "addLink": "+ Link hinzufügen",
+      "addContent": "+ Inhalt hinzufügen",
+      "addCollection": "+ Sammlung hinzufügen",
+      "saveTabs": "Meine Tabs speichern"
+    },
+    "errorBoundary": {
+      "message": "Etwas ist schiefgelaufen.",
+      "tryAgain": "Erneut versuchen"
+    },
+    "main": {
+      "fallbackMessage": "Etwas ist schiefgelaufen. Bitte lade die Seite neu."
+    },
+    "offline": {
+      "pending_one": "Du bist offline. {{count}} Änderung ist auf diesem Gerät gespeichert.",
+      "pending_other": "Du bist offline. {{count}} Änderungen sind auf diesem Gerät gespeichert.",
+      "cached": "Du bist offline. Zwischengespeicherte Sammlungen bleiben verfügbar."
+    },
+    "maintenance": {
+      "message": "Bis Ende Juni führen wir zur Vorbereitung unserer iOS-App Wartungsarbeiten an der Datenbank durch. Danke für deine Geduld."
+    },
+    "iosAppBanner": {
+      "label": "Hol dir die Tote-App für iOS",
+      "message": "Tote gibt es als App für iPhone und iPad. Speichere aus Safari oder jeder anderen App über die Teilen-Taste und hab deine Sammlungen immer dabei.",
+      "cta": "App laden"
+    },
+    "extractionTip": {
+      "message": "Wir konnten nicht alles von dieser Seite auslesen. Du kannst sie trotzdem so hinzufügen. Die Tote-Erweiterung und die iOS-App lesen Seiten in deinem eigenen Browser, daher bekommst du meist auch Bild und Preis.",
+      "getExtension": "Erweiterung holen",
+      "iosApp": "iOS-App"
+    }
+  }
+}

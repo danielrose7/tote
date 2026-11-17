@@ -1,0 +1,512 @@
+{
+  "useCases": {
+    "navLabel": "Anwendungsfälle",
+    "sidebarLabel": "Anwendungsfälle",
+    "nav": {
+      "overview": "Überblick",
+      "gift-shopping": "Geschenk- & Wunschlisten",
+      "home-renovation": "Renovieren & Einrichten",
+      "personal-style": "Garderobe & Stil",
+      "family-shopping": "Einkaufen für die Familie",
+      "professional-projects": "Professionelle Projekte"
+    },
+    "names": {
+      "gift-shopping": "Geschenk- & Wunschlisten",
+      "home-renovation": "Renovieren & Einrichten",
+      "personal-style": "Garderobe & Stil-Board",
+      "family-shopping": "Gemeinsam einkaufen als Familie",
+      "professional-projects": "Professionelle Projekte"
+    },
+    "site": {
+      "name": "Tote-Anwendungsfälle",
+      "description": "So nutzen Leute Tote, um Einkäufe zu organisieren: für Geschenke, Renovierungen, Garderobe, Familienprojekte und professionelles Sourcing."
+    },
+    "common": {
+      "ctaStart": "Jetzt starten — kostenlos →",
+      "ctaTry": "Tote ausprobieren — kostenlos →",
+      "tip": "Tipp:",
+      "setupHeading": "Probier dieses Setup",
+      "howHeading": "So funktioniert’s",
+      "faqHeading": "Häufige Fragen",
+      "relatedHeading": "Ähnliche Anwendungsfälle"
+    },
+    "index": {
+      "meta": {
+        "title": "Wunschlisten, Renovierungsprojekte und Design-Inspiration organisieren",
+        "description": "So nutzen Leute Tote, um Einkäufe zu organisieren — von Geschenklisten für die Feiertage und Renovierungen bis zur Garderobenplanung und professionellem Design-Sourcing.",
+        "ogTitle": "Wunschlisten, Renovierungsprojekte und Design-Inspiration organisieren — Tote",
+        "ogDescription": "So nutzen Leute Tote, um Einkäufe zu organisieren — von Geschenklisten für die Feiertage und Renovierungen bis zur Garderobenplanung und professionellem Design-Sourcing."
+      },
+      "title": "Ein Ort für alles, was du speicherst",
+      "lead": "Von Geschenklisten bis zu Renovierungsprojekten: Tote hält deine Funde aus allen Shops, in denen du einkaufst, geordnet zusammen.",
+      "cards": {
+        "gift-shopping": {
+          "title": "Geschenk- & Wunschlisten",
+          "description": "Speichere Geschenkideen aus jedem Shop, ordne sie nach Anlass und teile sie mit der Familie, damit alle wissen, was sie besorgen sollen.",
+          "linkText": "Geschenkliste organisieren"
+        },
+        "home-renovation": {
+          "title": "Renovieren & Einrichten",
+          "description": "Ordne Möbel und Materialien Raum für Raum. Vergleiche Preise über Shops hinweg und teile Boards mit deinem Partner oder deinem Handwerksbetrieb.",
+          "linkText": "Renovierung planen"
+        },
+        "personal-style": {
+          "title": "Garderobe & Stil-Board",
+          "description": "Speichere Kleidung aus jedem Shop in einem Stil-Board. Ordne nach Saison, stell eine Capsule Wardrobe zusammen und achte auf Preissenkungen.",
+          "linkText": "Stil-Board erstellen"
+        },
+        "family-shopping": {
+          "title": "Gemeinsam einkaufen als Familie",
+          "description": "Speichert und vergleicht Optionen gemeinsam. Bleibt im Budget — beim Schulstart, bei der Einrichtung des neuen Zuhauses oder bei jedem gemeinsamen Projekt.",
+          "linkText": "Als Familie gemeinsam einkaufen"
+        },
+        "professional-projects": {
+          "title": "Professionelles Design & Kundenprojekte",
+          "description": "Halte das Sourcing über alle Kunden hinweg geordnet. Teile ansprechende Moodboards zur Freigabe und verfolge Budgets pro Projekt.",
+          "linkText": "Designprojekte verwalten"
+        }
+      }
+    },
+    "pages": {
+      "gift-shopping": {
+        "meta": {
+          "title": "Wunschlisten-App für Geburtstage, Feiertage und Hochzeitslisten",
+          "description": "Erstelle eine Wunschliste aus jedem Shop. Organisiere Geburtstagslisten, Weihnachtswunschlisten und Ideen für Hochzeits- oder Babylisten an einem Ort und teile sie mit der Familie.",
+          "ogTitle": "Wunschlisten-App für Geburtstage, Feiertage und Hochzeitslisten — Tote",
+          "ogDescription": "Erstelle und teile Wunschlisten für Geburtstage, Feiertage und besondere Anlässe — über alle Shops hinweg, in denen du einkaufst."
+        },
+        "title": "Die Wunschliste, die wirklich mit dir mitkommt",
+        "lead": "Amazon-Listen, Lesezeichen, Nachrichten an dich selbst, Screenshots — Geschenkideen verstreuen sich in dem Moment, in dem du sie speicherst. Tote hält alles an einem Ort, nach Anlass geordnet und bereit zum Teilen.",
+        "answer": {
+          "question": "Wie bleibt eine Wunschliste über verschiedene Shops hinweg brauchbar?",
+          "answer": "Speichere Links aus verschiedenen Shops, komm später zurück, um sie zu vergleichen, markiere die wichtigsten Geschenke und teile die engere Auswahl, wenn du so weit bist. Tote hält die Liste auch nach dem Speichern brauchbar.",
+          "steps": [
+            "Speichere Geschenkideen aus jedem Shop beim Stöbern",
+            "Vergleiche Optionen und bring die engere Auswahl an einem Ort voran",
+            "Teile die Liste, wenn die Familie fragt, was sie besorgen soll"
+          ]
+        },
+        "collections": {
+          "title": "Geschenklisten zum Stöbern",
+          "intro": "Starte mit einer echten öffentlichen Sammlung und übernimm die Struktur für deinen eigenen Anlass.",
+          "descriptions": [
+            "Eine praktische Geschenkliste, die sich an die Eltern richtet, nicht nur an die Babyliste fürs Neugeborene.",
+            "Geschenkideen für jemanden, der oft genug kocht, um Wert darauf zu legen — ohne dass die Liste zur Spezialausrüstungs-Show wird.",
+            "Eine gezielte Geschenkliste für die Familie, aufgebaut um eine echte Beziehung und einen echten Anwendungsfall."
+          ]
+        },
+        "intro": "Im Juni entdeckst du das perfekte Geschenk und speicherst es irgendwo — als Lesezeichen, als Nachricht an dich selbst, auf einer Amazon-Liste. Im Dezember findest du es nicht mehr. Gleichzeitig fragt deine Familie, was du dir wünschst, und ihr schickt euch Links hin und her. Jemand kauft dasselbe doppelt. Niemand hat einen klaren Überblick, was schon besorgt ist.",
+        "solutionHeading": "Von verstreuten Links zu einer klaren engeren Auswahl",
+        "cards": [
+          {
+            "title": "Aus jedem Shop speichern",
+            "description": "Amazon, Etsy, kleine Boutiquen, Markenseiten — wo auch immer du das Geschenk findest, es landet in derselben Liste, statt in Tabs oder Notizen zu verschwinden."
+          },
+          {
+            "title": "Die engere Auswahl voranbringen",
+            "description": "Vergleiche Optionen nebeneinander, markiere Favoriten und nutze Auswahlen, um „eins davon“ zu signalisieren, statt andere raten zu lassen."
+          },
+          {
+            "title": "Teilen, wenn es darauf ankommt",
+            "description": "Schick die Liste an die Familie oder mach sie öffentlich, wenn du so weit bist. Alle sehen dieselbe engere Auswahl, sodass doppelte Geschenke und Hin-und-her-Nachrichten schnell aufhören."
+          }
+        ],
+        "setupIntro": "Eine einfache Geschenkliste funktioniert meist am besten:",
+        "setup": [
+          "Erstelle eine Sammlung für den Anlass: „Weihnachtswunschliste {{year}}“, „Geburtstagswunschliste“ oder „Ideen für die Hochzeitsliste“",
+          "Füg Abschnitte nur hinzu, wenn sie bei der Entscheidung helfen: „Große Geschenke“, „Unter 50 €“ oder ein Abschnitt pro beschenkter Person",
+          "Markiere mit Auswahlen die Geschenke, auf die sich die Familie wirklich konzentrieren soll"
+        ],
+        "steps": [
+          {
+            "lead": "Speichere Geschenkideen beim Stöbern.",
+            "body": "Installier die Chrome-Erweiterung und speichere jede Produktseite mit einem Klick in eine Geschenk-Sammlung. Tote erfasst Name, Bild, Preis und Link automatisch."
+          },
+          {
+            "lead": "Komm später zum Vergleichen zurück.",
+            "body": "Halte die engere Auswahl an einem Ort, aktualisiere bei Bedarf die Preise und markiere die wichtigsten Geschenke."
+          },
+          {
+            "lead": "Teile die Entscheidung, nicht das Chaos.",
+            "body": "Schick einen einzigen Link an Familie oder Freunde, damit sie dieselbe Liste durchsehen können — ohne Tote-Konto."
+          }
+        ],
+        "tip": "Du stellst eine Liste für die Feiertage zusammen? Leg ein Budget fest, bevor du anfängst zu speichern. Wenn die engere Auswahl länger wird, weißt du trotzdem, was realistisch zu kaufen oder zu wünschen ist.",
+        "faq": [
+          {
+            "q": "Können andere meine Wunschliste sehen?",
+            "a": "Nur wenn du sie teilst. Sammlungen sind standardmäßig privat. Du kannst per Einladungslink teilen (die Empfänger brauchen ein Tote-Konto) oder die Sammlung öffentlich machen (alle mit dem Link können sie ansehen)."
+          },
+          {
+            "q": "Kann ich mit Leuten teilen, die Tote nicht haben?",
+            "a": "Ja. Öffentliche Sammlungen kann jede Person ansehen — ohne Konto. Schick einfach den Link."
+          },
+          {
+            "q": "Wie vermeide ich doppelte Geschenke?",
+            "a": "Teile eine Sammlung mit deiner Familie. Alle sehen, was auf der Liste steht, und können absprechen, wer was kauft. Markiere vergebene Artikel mit Auswahlen."
+          },
+          {
+            "q": "Kann ich Tote als Hochzeits- oder Babyliste nutzen?",
+            "a": "Tote eignet sich gut als schlanke Wunschliste für solche Anlässe. Erstelle eine Sammlung, füg Artikel aus jedem Shop hinzu und teile den Link. Es ist keine klassische Geschenkliste mit Kaufverfolgung, aber alle haben eine einzige, aktuelle Liste als Bezugspunkt."
+          }
+        ],
+        "related": {
+          "family-shopping": "Einkäufe mit Partner oder Familie abstimmen",
+          "home-renovation": "Einrichtungsprojekte mit Budgets und Raumkategorien organisieren",
+          "personal-style": "saisonale Garderobe kuratieren und Sale-Preise verfolgen"
+        }
+      },
+      "home-renovation": {
+        "meta": {
+          "title": "Renovierungsplaner für Möbel, Materialien und Budgets",
+          "description": "Organisiere eine Renovierung Raum für Raum. Verfolge Preise für Möbel, Armaturen und Materialien über Shops hinweg, leg Budgets fest und teile Pläne mit deinem Partner oder deinem Handwerksbetrieb.",
+          "ogTitle": "Renovierungsplaner für Möbel, Materialien und Budgets — Tote",
+          "ogDescription": "Plane eine Renovierung Raum für Raum, verfolge Preise über Shops hinweg und teile Boards mit deinem Partner oder deinem Handwerksbetrieb."
+        },
+        "title": "Jeder Raum. Jeder Shop. Ein Board.",
+        "lead": "Renovieren heißt IKEA, Wayfair, ein Laden um die Ecke und vierzig Browser-Tabs — ohne klares Bild, was wohin gehört. Tote ordnet alles Raum für Raum, mit Preisen und Budgets an einem Ort.",
+        "answer": {
+          "question": "Wie bleiben Renovierungsentscheidungen über verschiedene Shops hinweg brauchbar?",
+          "answer": "Speichere Möbel, Armaturen und Materialien aus verschiedenen Shops, komm später zurück, um sie Raum für Raum zu vergleichen, behalte das Budget im Blick und teile die engere Auswahl mit allen Beteiligten. Tote hält das Projekt auch nach dem Speichern brauchbar.",
+          "steps": [
+            "Speichere Möbel, Armaturen und Materialien aus jedem Shop",
+            "Vergleiche Optionen und bring das Projekt Raum für Raum voran",
+            "Teile das Board mit deinem Partner oder deinem Handwerksbetrieb"
+          ]
+        },
+        "collections": {
+          "title": "Ähnliche öffentliche Sammlungen",
+          "intro": "Das sind noch keine vollständigen Renovierungs-Boards, aber sie zeigen dasselbe Muster: konkrete Entscheidungen, aus mehreren Shops gespeichert und in einer durchsuchbaren Liste geordnet.",
+          "descriptions": [
+            "Eine Projektliste rund ums Zuhause mit praktischer Ausrüstung, gruppiert um einen klaren Anwendungsfall im Freien.",
+            "Eine Sammlung fürs Kinderzimmer, die wie ein kleines Einrichtungs-Board funktioniert.",
+            "Ein nützliches Beispiel für den Vergleich von Wohnaccessoires, wenn Platz, Budget und Alltagsnutzung zählen."
+          ]
+        },
+        "intro": "Du suchst bei IKEA nach einem Sofa, bei Wayfair nach einem Teppich, im Laden um die Ecke nach Leuchten und bei Amazon nach Kleinteilen. Jeder Shop hat seine eigene Wunschliste (oder gar keine). Du jonglierst mit Browser-Tabs, Screenshots und einer Tabelle, die schon veraltet ist. Gleichzeitig ist dein Budget ein bewegliches Ziel, und dein Partner hat die Hälfte der Optionen noch nicht gesehen.",
+        "solutionHeading": "Von verstreuten Tabs zu Entscheidungen Raum für Raum",
+        "cards": [
+          {
+            "title": "Aus jedem Shop speichern",
+            "description": "IKEA, Wayfair, Etsy, Markenseiten, Läden vor Ort. Alles landet an einem Ort, statt sich auf Tabs, Screenshots und eine Tabelle zu verteilen."
+          },
+          {
+            "title": "Das Projekt Raum für Raum voranbringen",
+            "description": "Gruppiere Optionen nach Raum, vergleiche Kategorien nebeneinander, aktualisiere Preise, wenn es darauf ankommt, und behalte die aktuelle engere Auswahl im Blick, ohne sie jedes Mal neu aufzubauen."
+          },
+          {
+            "title": "Denselben Plan teilen",
+            "description": "Lade deinen Partner zur Zusammenarbeit ein oder schick einen Link an Handwerksbetrieb oder Innenarchitektin. Alle sehen dieselben Optionen, Preise und Prioritäten."
+          }
+        ],
+        "setupIntro": "Ein einfaches Renovierungs-Board funktioniert meist am besten:",
+        "setup": [
+          "Erstelle eine Sammlung pro Raum: „Wohnzimmer“, „Küche“, „Schlafzimmer“",
+          "Füg Abschnitte nur dort hinzu, wo sie bei der Entscheidung helfen: „Sitzmöbel“, „Beleuchtung“, „Teppiche“ oder „Beschläge“",
+          "Leg ein Budget fest, bevor du Produkte vergleichst, und markiere dann mit Auswahlen den aktuellen Favoriten"
+        ],
+        "steps": [
+          {
+            "lead": "Beim Stöbern speichern.",
+            "body": "Installier die Browser-Erweiterung. Wenn du ein Möbelstück oder Material findest, das dir gefällt, speichere es mit einem Klick in die Sammlung des passenden Raums. Tote erfasst Bild, Preis und Link."
+          },
+          {
+            "lead": "Mit Abschnitten und Auswahlen ordnen.",
+            "body": "Gruppiere Artikel nach Kategorie (Sitzmöbel, Beleuchtung, Teppiche). Markiere mit Auswahlen deine Favoriten und vergleiche Optionen nebeneinander."
+          },
+          {
+            "lead": "Budgets festlegen und teilen.",
+            "body": "Gib jeder Sammlung oder jedem Abschnitt ein Budget. Lade deinen Partner zur Zusammenarbeit ein oder teile einen Link mit deinem Handwerksbetrieb zur Ansicht."
+          }
+        ],
+        "tip": "Wird ein Raum zu voll, kürz die Liste wieder auf eine echte engere Auswahl. Es geht nicht darum, alles zu speichern, sondern darum, die Entscheidung voranzubringen.",
+        "faq": [
+          {
+            "q": "Kann ich ein Budget pro Raum festlegen?",
+            "a": "Jede Sammlung (jeder Raum) kann ein eigenes Budget haben. Für noch mehr Detail kannst du auch Budgets für einzelne Abschnitte (Kategorien) innerhalb eines Raums festlegen."
+          },
+          {
+            "q": "Wie teile ich mit meinem Handwerksbetrieb?",
+            "a": "Mach die Sammlung öffentlich und schick den Link — so lässt sich alles ohne Konto ansehen. Sollen dort auch Artikel hinzugefügt werden, schick stattdessen einen Einladungslink."
+          },
+          {
+            "q": "Funktioniert es mit IKEA und Wayfair?",
+            "a": "Tote funktioniert mit so gut wie jedem Onlineshop — IKEA, Wayfair, Amazon, Etsy, CB2, West Elm, Läden vor Ort und mehr. Wenn du eine Produktseite sehen kannst, kann Tote sie speichern."
+          },
+          {
+            "q": "Können mein Partner und ich beide Artikel hinzufügen?",
+            "a": "Teile die Sammlung per Einladungslink, dann könnt ihr beide Produkte speichern, ordnen und Auswahlen markieren. Änderungen erscheinen bei euch beiden sofort."
+          }
+        ],
+        "related": {
+          "family-shopping": "bei jedem Einkaufsprojekt mit deinem Partner zusammenarbeiten",
+          "professional-projects": "Sourcing über mehrere Kundenprojekte hinweg verwalten",
+          "gift-shopping": "Geschenkideen für jeden Anlass organisieren und teilen"
+        }
+      },
+      "personal-style": {
+        "meta": {
+          "title": "Garderobenplaner und Stil-Board für Capsule-Outfits",
+          "description": "Plane Outfits und stell eine Capsule Wardrobe zusammen — mit einem Stil-Board, das über alle Shops hinweg funktioniert. Speichere Kleidung an einem Ort, ordne nach Kategorie und verfolge Sale-Preise.",
+          "ogTitle": "Garderobenplaner und Stil-Board für Capsule-Outfits — Tote",
+          "ogDescription": "Stell eine Capsule Wardrobe zusammen, speichere Kleidung aus jedem Shop und verfolge Sale-Preise in einem Stil-Board."
+        },
+        "title": "Dein Stil-Board, über alle Shops hinweg",
+        "lead": "Du hast eine Jacke bei Zara gespeichert, Jeans bei H&M, Schuhe aus einer Boutique. Wenn du so weit bist zu kaufen, findest du nichts davon wieder. Tote hält jedes Teil zusammen — so geordnet, wie du über deine Garderobe denkst.",
+        "answer": {
+          "question": "Wie bleiben Outfit-Ideen über verschiedene Shops hinweg brauchbar?",
+          "answer": "Speichere Teile aus verschiedenen Shops, komm später zurück, um sie zu vergleichen, behalte eine engere Auswahl dessen, was noch zum Plan passt, und aktualisiere die Preise, wenn du kaufen willst. Tote hält dein Stil-Board auch nach dem Speichern brauchbar.",
+          "steps": [
+            "Speichere Kleidung und Accessoires aus jedem Shop",
+            "Vergleiche Teile und halte die engere Auswahl fokussiert",
+            "Aktualisiere Preise und kauf, wenn du so weit bist"
+          ]
+        },
+        "collections": {
+          "title": "Stil-Boards zum Stöbern",
+          "intro": "Nutz eine öffentliche Sammlung als Ausgangspunkt dafür, wie sich ein shopübergreifendes Garderoben-Board ordnen lässt.",
+          "descriptions": [
+            "Ein gezieltes Garderoben-Board für Alltagsteile, bei denen Herkunft, Qualität und häufiges Tragen zählen."
+          ]
+        },
+        "intro": "Du entdeckst eine Jacke bei Zara, speicherst Jeans bei H&M, setzt ein Lesezeichen für Schuhe aus einer Boutique und machst einen Screenshot von einer Tasche auf Depop. Jeder Shop hat seine eigene Wunschliste — oder gar keine. Wenn du so weit bist zu kaufen, weißt du nicht mehr, was du gespeichert hast, wo, und ob es noch auf Lager ist.",
+        "solutionHeading": "Von gespeicherten Teilen zu einer tragbaren engeren Auswahl",
+        "cards": [
+          {
+            "title": "Aus jedem Shop speichern",
+            "description": "Zara, H&M, ASOS, Depop, Boutiquen. Alle Teile landen in einem Board, statt sich in Lesezeichen und Shop-Wunschlisten zu verlieren."
+          },
+          {
+            "title": "Die engere Auswahl fokussiert halten",
+            "description": "Vergleiche Teile nach Kategorie, nutze Auswahlen, wenn du weniger Optionen willst, und bleib ehrlich, was noch in die Garderobe gehört."
+          },
+          {
+            "title": "Kaufen, wenn der Zeitpunkt stimmt",
+            "description": "Aktualisiere Preise, um Sales oder ausverkaufte Artikel vor dem Kauf zu erkennen. Du musst nicht jeden Shop erneut besuchen, nur um zu sehen, was sich geändert hat."
+          }
+        ],
+        "setupIntro": "Ein einfaches Garderoben-Board funktioniert meist am besten:",
+        "setup": [
+          "Erstelle eine Sammlung wie „Capsule Wardrobe“, „Frühlings-Outfits“ oder „Urlaubs-Looks“",
+          "Füg Abschnitte nur dort hinzu, wo sie bei der Entscheidung helfen: „Oberteile“, „Hosen & Röcke“, „Schuhe“, „Jacken & Mäntel“",
+          "Begrenze jede Kategorie mit Auswahllimits, damit die engere Auswahl tragbar bleibt statt endlos"
+        ],
+        "steps": [
+          {
+            "lead": "Beim Stöbern Teile speichern.",
+            "body": "Installier die Chrome-Erweiterung. Wenn dir etwas gefällt — bei Zara, H&M, ASOS, Depop oder einer Boutique vor Ort — speichere es mit einem Klick. Tote erfasst Bild, Preis und Link."
+          },
+          {
+            "lead": "In deinem Stil-Board ordnen.",
+            "body": "Sortiere Teile nach Saison oder Projekt in Sammlungen. Nutze Abschnitte für Kategorien wie Oberteile, Hosen und Schuhe. Markiere deine Favoriten mit Auswahlen."
+          },
+          {
+            "lead": "Aktualisieren und kaufen.",
+            "body": "Wenn du einkaufen willst, aktualisiere die Preise, um zu sehen, was im Sale ist. Klick dich durch und kauf direkt im ursprünglichen Shop."
+          }
+        ],
+        "tip": "Du stellst eine Capsule Wardrobe zusammen? Auswahllimits ordnen das Board nicht nur — sie erzwingen die Entscheidung.",
+        "faq": [
+          {
+            "q": "Kann ich nach Saison ordnen?",
+            "a": "Auf jeden Fall. Erstelle eine Sammlung pro Saison — „Sommer-Basics“, „Winter-Essentials“ — und speichere die passenden Teile in die jeweilige Sammlung. Innerhalb einer Sammlung kannst du zusätzlich mit Abschnitten nach Kategorie unterteilen."
+          },
+          {
+            "q": "Wie verfolge ich Sale-Preise?",
+            "a": "Nutze die Preisaktualisierung, um gespeicherte Produkte mit ihren aktuellen Preisen zu aktualisieren. So erkennst du Rabatte, ohne jeden Shop einzeln zu besuchen."
+          },
+          {
+            "q": "Funktioniert es mit Zara, H&M und anderen Modehändlern?",
+            "a": "Es funktioniert mit so gut wie jedem Onlineshop — Zara, H&M, ASOS, Depop, Nordstrom, Net-a-Porter, Boutiquen, was auch immer. Wenn du die Produktseite sehen kannst, kann Tote sie speichern."
+          },
+          {
+            "q": "Kann ich mein Stil-Board mit einer Freundin teilen?",
+            "a": "Natürlich. Teile per Einladungslink, wenn ihr zusammenarbeiten wollt, oder mach es öffentlich, damit alle mit dem Link deine Auswahl durchsehen können."
+          }
+        ],
+        "related": {
+          "gift-shopping": "teilbare Wunschlisten für Geburtstage und Feiertage erstellen",
+          "home-renovation": "derselbe geordnete Ansatz, angewandt auf die Einrichtung deines Zuhauses",
+          "professional-projects": "Stil-Sourcing für Kunden verwalten"
+        }
+      },
+      "family-shopping": {
+        "meta": {
+          "title": "Geteilte Einkaufsliste für Paare und Familien",
+          "description": "Erstelle eine geteilte Einkaufsliste für Paare und Familien. Speichert Produkte aus jedem Shop, vergleicht Optionen gemeinsam, vermeidet Doppelkäufe und bleibt im Budget.",
+          "ogTitle": "Geteilte Einkaufsliste für Paare und Familien — Tote",
+          "ogDescription": "Kauft gemeinsam ein — mit einem geteilten Board für Möbel, Schulsachen, Geschenke oder jedes Haushaltsprojekt."
+        },
+        "title": "Gemeinsam einkaufen — ohne Gruppenchat",
+        "lead": "Du schickst einen Link. Die andere Person macht einen Screenshot von einem anderen. Jemand kauft dasselbe doppelt. Tote gibt eurem Haushalt ein gemeinsames Einkaufs-Board, damit alle dieselben Optionen und Entscheidungen an einem Ort sehen.",
+        "answer": {
+          "question": "Wie bleibt ein gemeinsames Einkaufsprojekt mit einer anderen Person brauchbar?",
+          "answer": "Speichert Links aus verschiedenen Shops in einem geteilten Board, kommt später zurück, um sie gemeinsam zu vergleichen, bringt die engere Auswahl voran und arbeitet alle nach demselben Plan. Tote ersetzt das Chaos im Chatverlauf durch einen Ort zum Entscheiden.",
+          "steps": [
+            "Erstellt eine geteilte Sammlung für euer Projekt",
+            "Alle speichern Produkte aus jedem Shop",
+            "Vergleicht Optionen und wählt gemeinsam Favoriten",
+            "Kauft aus derselben engeren Auswahl, statt zu raten"
+          ]
+        },
+        "collections": {
+          "title": "Familienlisten zum Stöbern",
+          "intro": "Diese öffentlichen Sammlungen zeigen, wie ein geteiltes Board auf eine Entscheidung im Haushalt fokussiert bleibt.",
+          "descriptions": [
+            "Eine Babylisten-Struktur für Familien, die weniger Wegwerfkäufe und mehr nützliche Ausstattung wollen.",
+            "Eine kompakte Ausrüstungsliste für die Familie, bei der jeder Artikel den Platz rechtfertigen muss, den er einnimmt.",
+            "Eine teilbare Spielzeugliste für Familienmitglieder, die etwas Sinnvolles kaufen wollen, ohne nach noch einem Link zu fragen."
+          ]
+        },
+        "intro": "Dein Partner schickt dir einen Link zu einem Sofa. Du machst einen Screenshot von einem anderen. Der Einkauf zum Schulstart wird zu einem Durcheinander aus Tabs, Nachrichten und „Hast du das schon gekauft?“. Es gibt keine gemeinsame Ansicht, keine Abstimmung und keinen Überblick übers Budget.",
+        "solutionHeading": "Vom Gruppenchat-Chaos zu einer gemeinsamen Entscheidung",
+        "cards": [
+          {
+            "title": "In ein Board speichern",
+            "description": "Statt Links hin und her zu schicken, speichern beide in dieselbe Sammlung. Die Optionen bleiben für alle sichtbar."
+          },
+          {
+            "title": "Die engere Auswahl gemeinsam voranbringen",
+            "description": "Vergleicht Favoriten nebeneinander, markiert sie und haltet eine aktuelle Version der Entscheidung fest, statt über Screenshots zu diskutieren."
+          },
+          {
+            "title": "Nach demselben Plan kaufen",
+            "description": "Budgets, Favoriten und Prioritäten bleiben an einem Ort, sodass beide wissen, was noch zur Wahl steht und was schon entschieden ist."
+          }
+        ],
+        "setupIntro": "Ein geteiltes Projekt-Board funktioniert meist am besten, wenn es eng gefasst bleibt:",
+        "setup": [
+          "Erstellt eine Sammlung für ein echtes Projekt wie „Neue Wohnung“ oder „Schulstart“",
+          "Fügt Abschnitte nur dort hinzu, wo sie helfen: Abschnitte pro Raum oder einfache Phasen wie „Im Vergleich“ und „Ausgewählt“",
+          "Ladet die andere Person sofort ein, damit von Anfang an beide in dieselbe engere Auswahl speichern"
+        ],
+        "steps": [
+          {
+            "lead": "Erstellt eine geteilte Sammlung.",
+            "body": "Eine Person erstellt die Sammlung und schickt einen Einladungslink. Die andere tritt mit einem Klick bei."
+          },
+          {
+            "lead": "Beide speichern Produkte.",
+            "body": "Jede Person stöbert in Shops und speichert Produkte mit der Browser-Erweiterung in die geteilte Sammlung. Alles erscheint in einem Board."
+          },
+          {
+            "lead": "Gemeinsam entscheiden.",
+            "body": "Seht euch die Optionen an, markiert Favoriten, legt ein Budget fest und kauft, wenn ihr so weit seid. Kein Rätselraten mehr, was die andere Person gefunden hat."
+          }
+        ],
+        "tip": "Wenn sich ein geteiltes Board unübersichtlich anfühlt, teilt es nach Projekten auf. Ein Board für „Neue Wohnung“ funktioniert meist besser als ein riesiges Board für alles.",
+        "faq": [
+          {
+            "q": "Kann mein Partner auch Artikel hinzufügen?",
+            "a": "Wenn du eine Sammlung per Einladungslink teilst, kann jede Person, die beitritt, Produkte hinzufügen, Artikel umsortieren und Auswahlen markieren — genau wie du."
+          },
+          {
+            "q": "Brauchen wir beide ein Konto für eine geteilte Einkaufsliste?",
+            "a": "Zum Hinzufügen und Zusammenarbeiten ja — beide brauchen ein kostenloses Tote-Konto. Soll jemand deine Auswahl nur ansehen, mach die Sammlung öffentlich; dann geht das auch ohne Konto."
+          },
+          {
+            "q": "Können wir getrennte Sammlungen haben?",
+            "a": "Auf jeden Fall. Jede Person hat standardmäßig ihre eigenen privaten Sammlungen. Du entscheidest, welche du teilst. Teile eine Sammlung „Neues Zuhause“ mit deinem Partner und behalte deine persönliche „Geburtstagswunschliste“ privat."
+          },
+          {
+            "q": "Wie vermeiden wir, dasselbe doppelt zu kaufen?",
+            "a": "Alles liegt in einem geteilten Board, sodass beide sehen, was gespeichert und ausgewählt ist. Markiert mit Auswahlen, welche Artikel „vergeben“ oder entschieden sind."
+          }
+        ],
+        "related": {
+          "gift-shopping": "Geschenke abstimmen und Doppelte vermeiden",
+          "home-renovation": "ein Renovierungsprojekt mit deinem Partner organisieren",
+          "personal-style": "deine Garderobe mit geteilter Inspiration kuratieren"
+        }
+      },
+      "professional-projects": {
+        "meta": {
+          "title": "Sourcing-Board für Innenarchitektur und Kundenprojekte",
+          "description": "Organisiere das Sourcing für Innenarchitektur nach Kunde und Projekt. Speichere Produkte von jedem Anbieter, teile Moodboards zur Freigabe und verfolge Budgets an einem Ort.",
+          "ogTitle": "Sourcing-Board für Innenarchitektur und Kundenprojekte — Tote",
+          "ogDescription": "Erstelle Sourcing-Boards für Kundenprojekte, teile Moodboards zur Freigabe und verfolge Budgets über alle Anbieter hinweg."
+        },
+        "title": "Sourcing-Boards, die Kunden wirklich prüfen können",
+        "lead": "Du suchst für drei Kunden gleichzeitig, jeder mit eigenen Shops, eigenem Budget und eigenem Geschmack. Das aktuelle Setup: eine Tabelle, ein PDF-Moodboard und eine E-Mail-Kette. Tote hält jedes Projekt getrennt und teilbar — ganz ohne PDF.",
+        "answer": {
+          "question": "Wie bleiben Sourcing-Entscheidungen über Kundenprojekte hinweg brauchbar?",
+          "answer": "Speichere Produkte verschiedener Anbieter in einem Board für den Kunden, komm später zurück, um sie zu vergleichen, bring engere Auswahl und Budget voran und teile denselben Link zur Prüfung. Tote hält das Sourcing auch nach der ersten Speicherrunde brauchbar.",
+          "steps": [
+            "Speichere Produkte von Anbietern, Händlern und Fachhandelsseiten",
+            "Vergleiche Optionen und bring die engere Auswahl voran",
+            "Teile ein Board mit deinem Kunden zur Prüfung"
+          ]
+        },
+        "collections": {
+          "title": "Sourcing-Boards zum Stöbern",
+          "intro": "Diese öffentlichen Sammlungen zeigen die Form eines Boards, das bereit für den Kunden ist: klares Briefing, kuratierte Optionen und ein Link zur Prüfung.",
+          "descriptions": [
+            "Ein raumbezogenes Sourcing-Board mit klarer Zielgruppe, klaren Vorgaben und eigener Produkthaltung.",
+            "Ein kuratiertes Set, das zeigt, wie Tote eine ausgefeilte engere Auswahl rund um ein konkretes Projekt präsentieren kann.",
+            "Ein kompaktes Beispiel für Produkt-Sourcing, bei dem das fertige Board nützlich genug ist, um es direkt zu teilen."
+          ]
+        },
+        "intro": "Du suchst Materialien für drei Kunden gleichzeitig. Jedes Projekt hat eigene Shops, Budgets und Vorlieben. Du speicherst Links in Tabellen, verschickst Moodboards als PDF per E-Mail und verlierst den Überblick, welche Option dem Kunden gefallen hat. Wenn sich Preise ändern, ist deine Tabelle schon veraltet.",
+        "solutionHeading": "Von Sourcing-Links zu einer engeren Auswahl, bereit für den Kunden",
+        "cards": [
+          {
+            "title": "Von jedem Anbieter speichern",
+            "description": "Fachhandelsseiten, Einzelhändler, Großhändler, Markenseiten. Alles landet in einem Board, statt sich auf Tabellen und PDFs zu verteilen."
+          },
+          {
+            "title": "Die engere Auswahl voranbringen",
+            "description": "Vergleiche Optionen nach Raum oder Kategorie, behalte das Budget im Blick und grenze das Board auf das ein, was der Kunde wirklich prüfen muss."
+          },
+          {
+            "title": "Ein Board teilen, bereit für den Kunden",
+            "description": "Schick einen Link statt eines PDFs, einer Tabelle und eines E-Mail-Verlaufs. Der Kunde sieht dieselbe engere Auswahl, mit der du arbeitest."
+          }
+        ],
+        "setupIntro": "Ein sauberer Sourcing-Workflow bleibt meist einfach:",
+        "setup": [
+          "Erstelle eine Sammlung pro Kunde oder pro Projektphase",
+          "Füg Abschnitte nur dort hinzu, wo sie bei der Prüfung helfen: „Wohnzimmer“, „Beleuchtung“, „Fliesen“ oder „Beschläge“",
+          "Leg vor dem Teilen ein Budget fest und hebe mit Auswahlen die engere Auswahl hervor, die der Kunde prüfen soll"
+        ],
+        "steps": [
+          {
+            "lead": "Von überall beschaffen.",
+            "body": "Stöbere auf Anbieter-Websites, in Onlineshops und auf Fachhandelsseiten. Speichere Produkte mit der Browser-Erweiterung in die passende Kunden-Sammlung."
+          },
+          {
+            "lead": "Deine Auswahl ordnen.",
+            "body": "Gruppiere Optionen mit Abschnitten nach Raum oder Kategorie. Markiere deine Empfehlungen als Auswahl. Leg Budgets fest, um im Rahmen des Kunden zu bleiben."
+          },
+          {
+            "lead": "Teilen und Feedback einholen.",
+            "body": "Schick dem Kunden einen öffentlichen Link. Er sieht ein ansprechendes Moodboard mit allem übersichtlich angeordnet. Aktualisiere und teile so oft wie nötig."
+          }
+        ],
+        "tip": "Kunden brauchen nicht jede Option, die du gefunden hast. Sie brauchen die engere Auswahl, hinter der du stehen kannst.",
+        "faq": [
+          {
+            "q": "Kann ich mehrere Kundenprojekte verwalten?",
+            "a": "Auf jeden Fall. Erstelle für jeden Kunden oder jedes Projekt eine eigene Sammlung. Sie sind völlig unabhängig — andere Artikel, andere Budgets, andere Freigabeeinstellungen."
+          },
+          {
+            "q": "Können Kunden ansehen, ohne zu bearbeiten?",
+            "a": "Mach die Sammlung öffentlich und teile den Link. Kunden können das Board durchsehen, Bilder und Preise sehen und sich zu den Produkten durchklicken — aber nichts verändern."
+          },
+          {
+            "q": "Wie teile ich ein Moodboard zur Freigabe?",
+            "a": "Mach die Sammlung öffentlich und schick den Link an deinen Kunden. Er sieht ein visuelles Board mit allen kuratierten Optionen. Du kannst die Sammlung jederzeit aktualisieren, der Link bleibt gleich."
+          },
+          {
+            "q": "Funktioniert es mit Fachhandels- und Großhandelsseiten?",
+            "a": "Tote funktioniert mit jeder Website, die Produktseiten hat — Fachhandelsseiten, Onlineshops, Großhändler, alles. Wenn du es im Browser ansehen kannst, kannst du es speichern."
+          }
+        ],
+        "related": {
+          "home-renovation": "derselbe Raum-für-Raum-Ansatz für private Projekte",
+          "personal-style": "Stil-Boards für die eigene Garderobe oder die von Kunden kuratieren",
+          "family-shopping": "gemeinsam einkaufen bei Gruppenprojekten"
+        }
+      }
+    }
+  }
+}

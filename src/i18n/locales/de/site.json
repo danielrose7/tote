@@ -1,0 +1,69 @@
+{
+  "site": {
+    "nav": {
+      "label": "Website",
+      "openMenu": "Menü öffnen",
+      "closeMenu": "Menü schließen",
+      "links": {
+        "useCases": "Anwendungsfälle",
+        "templates": "Vorlagen",
+        "extension": "Erweiterung",
+        "ios": "iOS-App",
+        "docs": "Hilfe"
+      }
+    },
+    "install": {
+      "addTo": "Zu {{browser}} hinzufügen",
+      "appStore": "Im App Store laden"
+    },
+    "auth": {
+      "logIn": "Anmelden",
+      "signUp": "Registrieren",
+      "openTote": "Tote öffnen"
+    },
+    "footer": {
+      "tagline": "Aus jedem Shop speichern. An einem Ort ordnen. Für alle, die jetzt speichern und später entscheiden.",
+      "madeIn": "Gemacht in Silverton, Colorado",
+      "language": "Sprache",
+      "groups": {
+        "useCases": "Anwendungsfälle",
+        "whyTote": "Warum Tote",
+        "product": "Produkt"
+      },
+      "links": {
+        "giftShopping": "Geschenk- & Wunschlisten",
+        "homeRenovation": "Renovieren",
+        "personalStyle": "Garderobe & Stil",
+        "familyShopping": "Einkaufen für die Familie",
+        "professionalProjects": "Beschaffung für Kunden",
+        "vsBookmarks": "Tote vs. Lesezeichen",
+        "vsWishlists": "Tote vs. Shop-Wunschlisten",
+        "vsSpreadsheets": "Tote vs. Tabellen",
+        "private": "Privat von Grund auf",
+        "templates": "Vorlagen",
+        "extension": "Browser-Erweiterung",
+        "ios": "iOS-App",
+        "docs": "Hilfe",
+        "gettingStarted": "Erste Schritte",
+        "privacy": "Datenschutz"
+      }
+    },
+    "cta": {
+      "preFooter": {
+        "headline": "Führ deine eigene Liste wie diese.",
+        "sub": "Speichere aus jedem Shop und komm zurück, wenn du bereit bist zu entscheiden.",
+        "saveFirst": "Ersten Artikel speichern",
+        "saveCopy": "Kopie dieser Liste speichern"
+      },
+      "sticky": {
+        "text": "Speichere aus jedem Shop und komm zurück, wenn du bereit bist zu entscheiden.",
+        "saveFirst": "Ersten Artikel speichern",
+        "dismiss": "Ausblenden"
+      }
+    },
+    "docs": {
+      "copyLink": "Link zu {{section}} kopieren",
+      "copied": "Kopiert!"
+    }
+  }
+}

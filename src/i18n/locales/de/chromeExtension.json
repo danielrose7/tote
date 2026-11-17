@@ -1,0 +1,57 @@
+{
+  "chromeExtension": {
+    "meta": {
+      "title": "Chrome-Erweiterung",
+      "description": "Installier die Tote-Erweiterung für Chrome und speichere Produkte aus jedem Onlineshop mit einem Klick in geordnete Sammlungen.",
+      "ogTitle": "Tote-Erweiterung für Chrome",
+      "ogDescription": "Speichere Produkte aus jedem Onlineshop in Tote-Sammlungen, ohne Links zwischen Tabs hin und her zu kopieren."
+    },
+    "navLabel": "Seite der Browser-Erweiterung",
+    "eyebrow": "Tote für Chrome",
+    "title": "Aus jedem Shop speichern, ohne aus dem Fluss zu kommen.",
+    "lead": "Die Tote-Erweiterung erfasst Produktdetails, während du einkaufst, und schickt jeden Fund in die Sammlung, in der du die Entscheidung triffst.",
+    "setupGuide": "Einrichtungsanleitung lesen",
+    "supportedBrowsers": "Unterstützte Browser",
+    "heroAlt": "Die Tote-Browser-Erweiterung speichert ein Produkt aus einem Onlineshop",
+    "capture": {
+      "label": "Was sie erfasst",
+      "title": "Genug Details, um später zu vergleichen.",
+      "body": "Tote liest die Produktseite, die du gerade ansiehst, und füllt das Wichtige automatisch aus. Wenn eine Shopseite ungewöhnlich wenig hergibt, kannst du das gespeicherte Produkt in Tote nachbearbeiten.",
+      "details": [
+        "Produktname, Bild, Preis, Shop und Quell-URL",
+        "Auswahl von Sammlung und Abschnitt vor dem Speichern",
+        "Speichern per Rechtsklick für schnelle Mehrfachfunde",
+        "Synchronisiert mit deinem Tote-Konto in Web-App und Erweiterung"
+      ]
+    },
+    "workflows": {
+      "label": "So wird sie genutzt",
+      "title": "Gemacht für den Moment, in dem du etwas Speicherwürdiges findest.",
+      "items": [
+        {
+          "title": "Recherchieren ohne Tab-Chaos",
+          "description": "Speichere Optionen beim Stöbern und schließ den Tab in der Gewissheit, dass Link, Bild und Preis in Tote auf dich warten."
+        },
+        {
+          "title": "Ordnen, solange der Kontext frisch ist",
+          "description": "Wähl im Pop-up die passende Sammlung und den Abschnitt, damit jeder Fund dort landet, wo die Entscheidung fällt."
+        },
+        {
+          "title": "Zurückkommen, bereit zum Vergleichen",
+          "description": "Nutz Tote später, um Preise zu aktualisieren, Favoriten in die engere Wahl zu nehmen, eine Sammlung zu teilen und vom Vielleicht zur Entscheidung zu kommen."
+        }
+      ]
+    },
+    "docs": {
+      "label": "Du brauchst die Details?",
+      "title": "Installieren, anmelden, speichern und Probleme lösen.",
+      "body": "Die Anleitung zur Erweiterung erklärt Berechtigungen, das Anheften des Symbols in der Symbolleiste, Speichern mit einem Klick und per Rechtsklick, Abschnitte in Sammlungen und was zu tun ist, wenn eine Shopseite keine vollständigen Produktdaten liefert.",
+      "open": "Hilfe zur Erweiterung öffnen"
+    },
+    "final": {
+      "label": "Jetzt speichern",
+      "title": "Gib deinem nächsten Vergleich ein echtes Zuhause.",
+      "createAccount": "Tote-Konto erstellen"
+    }
+  }
+}

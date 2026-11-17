@@ -24,6 +24,7 @@ Prior art, worth reading before touching this:
 | Plurals, enum labels, dates/numbers/prices via `useFormat()` | Done. dayjs removed from the web app |
 | API error messages | Done — stable `code` + status-based `t()` messages (`src/i18n/apiError.ts`) |
 | **Spanish (es)** — catalog, Clerk UI, LLM output language | Done (machine-authored, **no native review yet**) |
+| **German (de)** — app + public catalogs, Clerk UI, LLM output language, `/de/...` pages | Done 16 Nov (machine-authored, **no native review yet**) |
 
 **Measured costs** (the PRODUCT.md bundle-size principle): i18next + react-i18next is
 about 18 kB gzip on the client. The English catalog is embedded in each full page load of
@@ -46,12 +47,37 @@ session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits �
 - LLM output: `outputLanguageDirective()` (`src/lib/llmLanguage.ts`) appended to chat and
   curator system prompts; `curation/start` carries `locale`. Gift-relationship word list is
   still English-only — review.
-- `src/i18n/es.test.ts` guards placeholder/tag parity and full key coverage.
+- `src/i18n/locales.test.ts` (was `es.test.ts`) guards placeholder/tag parity and full key
+  coverage for every non-English locale; `public.test.ts` does the same for public areas.
 - Checked in a browser with the cookie `tote-locale=es`: `/import` (server) and
   `/invite/abc` (client) render Spanish, no hydration errors. The Settings picker and
   authenticated pages still need a real Clerk dev instance to see.
 - The curator's prompts beyond the system strings (e.g. few-shot examples, the English
   gift word list) were not translated or audited.
+
+### German (de) — done, local commits
+
+Second locale, following the order sun-calendar and story-points ship (en, es, de, fr, pt, ja).
+
+- `src/i18n/locales/de/*.json`: all 13 areas (app + public). Informal *du*, matching both
+  sibling projects and our Spanish *tú*. Terms: Sammlung (collection), Abschnitt (section and
+  "slot" — same as Spanish *sección*), Artikel (item; plural is identical), Auswahl /
+  auswählen (selection), Budget, veröffentlichen, Schnappschuss (snapshot), Einladung,
+  Eigentümer / Admin / Bearbeiter / Betrachter (roles), „Ohne Abschnitt“ (ungrouped),
+  „hinzufügen“ for Add. German quotes „…“. Example prices in docs/use-cases are in € (US
+  copy uses $). Confirmation phrases: „diese Sammlung löschen“, „mein konto löschen“.
+- Wiring: `LOCALES`/`LOCALE_LABELS`, `catalogs.ts` loaders (own chunk), `OG_LOCALES`
+  (`de_DE`), `useClerkLocalization` (`deDE`), `outputLanguageDirective` (German, informal
+  "du"). Pages under `/de/...` come from `PREFIXED_LOCALES`, no route changes.
+- **Register mismatch:** Clerk's `deDE` is formal *Sie*, and Clerk ships only that German
+  variant. Sign-in and profile screens will read formal; the rest of the app is *du*. Fix
+  later with a small override object on top of `deDE` if reviewers mind.
+- UI labels quoted in German docs („In Tote speichern“, „Hinzufügen“) must match the
+  extension strings when Phase 3 localizes it, same as for Spanish.
+- Verified: vitest (134), `pnpm i18n:check` (0 missing), `next build` in a throwaway
+  worktree with dummy env — every `/de/...` page prerenders with `lang="de"`, self canonical,
+  reciprocal hreflang (en/es/de/x-default), `og:locale` `de_DE`, German titles and headings.
+  Not verified: authenticated app in a browser (needs real Clerk), `/de/templates` card data.
 
 ### Phase 2 (public pages) — landing, templates, ios-app, chrome-extension, use-cases, docs done
 
@@ -123,7 +149,7 @@ still need a real Clerk dev instance to check by eye.
 |---|---|
 | Library | **i18next** (react-i18next) on every surface. One library, one JSON catalog format. Chosen over next-intl because next-intl is Next-only and would leave the extension and Expo app on something else. |
 | First locale | **es** (neutral Latin American Spanish). Split to `es-419`/`es-ES` only if reviewers ask. |
-| Later locales | de, fr, pt-BR, ja (the set sun-calendar and story-points converged on). Gate on Spanish results. |
+| Later locales | de (done), then fr, pt-BR, ja (the set sun-calendar and story-points converged on). Gate on Spanish results. |
 | Language setting | **Synced** — stored on the user's profile in Postgres, read and written by all three surfaces via `/api/v2/`. Signed-out fallbacks below. |
 | Public-page URLs | **Common standard:** default locale unprefixed (`/docs`), others prefixed (`/es/docs`), `hreflang` + `x-default`, sitemap alternates, translated metadata. |
 | Authenticated app URLs | **No prefix.** Locale comes from the profile (cookie when signed out). Collection URLs are shared across mixed-language teams. |

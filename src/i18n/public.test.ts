@@ -3,6 +3,7 @@ import { loadPublicResources, type PublicArea } from './catalogs';
 import {
   isTranslatedPath,
   localizedPath,
+  PREFIXED_LOCALES,
   splitLocalePath,
   TRANSLATED_PUBLIC_PATHS,
 } from './publicPages';
@@ -39,14 +40,14 @@ const slots = (s: string) =>
     .sort()
     .join();
 
-describe('public Spanish catalogs', () => {
+describe.each(PREFIXED_LOCALES)('public %s catalogs', (locale) => {
   for (const area of AREAS) {
     it(`${area}: same keys, list lengths and tags as English`, async () => {
-      const res = await loadPublicResources('es', [area]);
+      const res = await loadPublicResources(locale, [area]);
       const en = flatten(res.en.translation);
-      const es = flatten(res.es.translation);
-      expect(Object.keys(es).sort()).toEqual(Object.keys(en).sort());
-      const bad = Object.keys(en).filter((k) => slots(en[k]) !== slots(es[k]));
+      const tr = flatten(res[locale].translation);
+      expect(Object.keys(tr).sort()).toEqual(Object.keys(en).sort());
+      const bad = Object.keys(en).filter((k) => slots(en[k]) !== slots(tr[k]));
       expect(bad).toEqual([]);
     });
   }
@@ -82,6 +83,10 @@ describe('public URLs', () => {
       path: '/templates',
     });
     expect(splitLocalePath('/es')).toEqual({ locale: 'es', path: '/' });
+    expect(splitLocalePath('/de/docs/sharing')).toEqual({
+      locale: 'de',
+      path: '/docs/sharing',
+    });
     expect(splitLocalePath('/templates')).toEqual({
       locale: 'en',
       path: '/templates',
@@ -92,10 +97,13 @@ describe('public URLs', () => {
   it('emits reciprocal hreflang with x-default only for translated pages', () => {
     for (const path of TRANSLATED_PUBLIC_PATHS) {
       const en = alternatesFor('en', path);
-      const es = alternatesFor('es', path);
-      expect(en.languages).toEqual(es.languages);
       expect(en.languages?.['x-default']).toBe(localizedPath('en', path));
-      expect(es.canonical).toBe(localizedPath('es', path));
+      expect(en.languages?.de).toBe(localizedPath('de', path));
+      for (const locale of PREFIXED_LOCALES) {
+        const alt = alternatesFor(locale, path);
+        expect(alt.languages).toEqual(en.languages);
+        expect(alt.canonical).toBe(localizedPath(locale, path));
+      }
     }
     expect(isTranslatedPath('/privacy')).toBe(false);
     expect(alternatesFor('en', '/privacy')).toEqual({ canonical: '/privacy' });

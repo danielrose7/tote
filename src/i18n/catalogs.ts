@@ -36,6 +36,8 @@ import { pseudoizeCatalog } from './pseudo';
  * other locales are dynamic imports so each is its own chunk and only the
  * active one is ever sent to the browser.
  */
+// Explicit per-locale imports (not a template path) so the bundler emits one
+// chunk per language and nothing else.
 const loaders: Record<string, () => Promise<{ default: Catalog }>> = {
   es: async () => {
     const parts = await Promise.all([
@@ -45,6 +47,17 @@ const loaders: Record<string, () => Promise<{ default: Catalog }>> = {
       import('./locales/es/dialogs.json'),
       import('./locales/es/pages.json'),
       import('./locales/es/errors.json'),
+    ]);
+    return { default: merge(...parts.map((p) => p.default as Catalog)) };
+  },
+  de: async () => {
+    const parts = await Promise.all([
+      import('./locales/de/common.json'),
+      import('./locales/de/slots.json'),
+      import('./locales/de/collections.json'),
+      import('./locales/de/dialogs.json'),
+      import('./locales/de/pages.json'),
+      import('./locales/de/errors.json'),
     ]);
     return { default: merge(...parts.map((p) => p.default as Catalog)) };
   },
@@ -94,30 +107,37 @@ const publicLoaders: Record<
   site: {
     en: () => import('./locales/en/site.json'),
     es: () => import('./locales/es/site.json'),
+    de: () => import('./locales/de/site.json'),
   },
   iosApp: {
     en: () => import('./locales/en/iosApp.json'),
     es: () => import('./locales/es/iosApp.json'),
+    de: () => import('./locales/de/iosApp.json'),
   },
   chromeExtension: {
     en: () => import('./locales/en/chromeExtension.json'),
     es: () => import('./locales/es/chromeExtension.json'),
+    de: () => import('./locales/de/chromeExtension.json'),
   },
   templates: {
     en: () => import('./locales/en/templates.json'),
     es: () => import('./locales/es/templates.json'),
+    de: () => import('./locales/de/templates.json'),
   },
   docs: {
     en: () => import('./locales/en/docs.json'),
     es: () => import('./locales/es/docs.json'),
+    de: () => import('./locales/de/docs.json'),
   },
   useCases: {
     en: () => import('./locales/en/useCases.json'),
     es: () => import('./locales/es/useCases.json'),
+    de: () => import('./locales/de/useCases.json'),
   },
   landing: {
     en: () => import('./locales/en/landing.json'),
     es: () => import('./locales/es/landing.json'),
+    de: () => import('./locales/de/landing.json'),
   },
 };
 

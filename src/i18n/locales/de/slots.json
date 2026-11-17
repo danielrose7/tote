@@ -1,0 +1,87 @@
+{
+  "slots": {
+    "common": {
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "edit": "Bearbeiten",
+      "delete": "Löschen"
+    },
+    "type": {
+      "section": "Abschnitt",
+      "product": "Produkt",
+      "link": "Link",
+      "photo": "Foto",
+      "note": "Notiz",
+      "text": "Text"
+    },
+    "item": {
+      "untitled": "Ohne Titel",
+      "photo": "Foto",
+      "select": "Auswählen",
+      "deselect": "Abwählen",
+      "refreshMetadata": "Metadaten aktualisieren",
+      "refreshing": "Wird aktualisiert…",
+      "refresh": "Aktualisieren",
+      "visit": "Öffnen →",
+      "reorder": "{{name}} verschieben"
+    },
+    "toast": {
+      "updateFailed": "Abschnitt konnte nicht aktualisiert werden",
+      "deleteFailed": "Abschnitt konnte nicht gelöscht werden",
+      "reorderFailed": "Neu anordnen fehlgeschlagen",
+      "refreshFailed": "Aktualisieren fehlgeschlagen",
+      "unknownError": "Unbekannter Fehler"
+    },
+    "edit": {
+      "namePlaceholder": "Name des Abschnitts",
+      "pick": "Auswahl",
+      "any": "Beliebig",
+      "budget": "Budget"
+    },
+    "section": {
+      "untitled": "Abschnitt ohne Titel",
+      "selected": "{{count}}/{{max}} ausgewählt",
+      "itemCount_one": "{{count}} Artikel",
+      "itemCount_other": "{{count}} Artikel",
+      "done": "Fertig",
+      "reorder": "Neu anordnen",
+      "refreshAll": "Alle aktualisieren",
+      "editSection": "Abschnitt bearbeiten",
+      "deleteSection": "Abschnitt löschen",
+      "empty": "Noch keine Artikel in diesem Abschnitt"
+    },
+    "swap": {
+      "title": "Auswahllimit erreicht",
+      "descriptionSwap_one": "„{{title}}“ erlaubt {{count}} Auswahl. Deine bisherige Auswahl durch diese ersetzen?",
+      "descriptionSwap_other": "„{{title}}“ erlaubt {{count}} Auswahlen. Deine bisherige Auswahl durch diese ersetzen?",
+      "descriptionUnselect_one": "„{{title}}“ erlaubt {{count}} Auswahl. Wähl eine zum Abwählen aus.",
+      "descriptionUnselect_other": "„{{title}}“ erlaubt {{count}} Auswahlen. Wähl eine zum Abwählen aus.",
+      "fallbackTitle": "Dieser Abschnitt",
+      "selecting": "Neu",
+      "replacing": "Wird ersetzt",
+      "unselect": "Abwählen",
+      "confirm": "Ersetzen"
+    },
+    "delete": {
+      "title": "„{{title}}“ löschen?",
+      "fallbackTitle": "Abschnitt",
+      "emptyBody": "Dieser Abschnitt ist leer und wird endgültig entfernt.",
+      "hasItems_one": "Dieser Abschnitt enthält {{count}} Artikel. Was soll damit passieren?",
+      "hasItems_other": "Dieser Abschnitt enthält {{count}} Artikel. Was soll damit passieren?",
+      "removeAll_one": "{{count}} Artikel aus der Sammlung entfernen",
+      "removeAll_other": "Alle {{count}} Artikel aus der Sammlung entfernen",
+      "moveUngrouped": "Artikel nach „Ohne Abschnitt“ verschieben",
+      "moveSection": "Artikel in einen anderen Abschnitt verschieben",
+      "moveAndDelete": "Verschieben & Abschnitt löschen"
+    },
+    "sectionSelector": {
+      "untitled": "Abschnitt ohne Titel",
+      "clearSelection": "Auswahl aufheben",
+      "placeholder": "Zu Abschnitt hinzufügen (optional)",
+      "creating": "Wird erstellt...",
+      "create": "„{{name}}“ erstellen",
+      "empty": "Noch keine Abschnitte. Tipp einen Namen ein, um einen zu erstellen.",
+      "noMatch": "Keine passenden Abschnitte"
+    }
+  }
+}

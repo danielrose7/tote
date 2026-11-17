@@ -1,0 +1,76 @@
+{
+  "iosApp": {
+    "meta": {
+      "title": "iOS-App für iPhone und iPad",
+      "description": "Tipp auf Teilen und dann auf Tote, um ein Produkt aus Safari oder jeder anderen App zu speichern. Durchsuche und ordne deine Sammlungen auf iPhone und iPad.",
+      "ogTitle": "Tote für iPhone und iPad",
+      "ogDescription": "Tipp auf Teilen und dann auf Tote, um aus Safari oder jeder anderen App zu speichern. Sammlungen durchsuchen, Budgets im Blick behalten und dort weitermachen, wo du aufgehört hast — auf iPhone und iPad."
+    },
+    "navLabel": "Seite der iOS-App",
+    "eyebrow": "Tote für iPhone und iPad",
+    "title": "Teilen. Tote. Fertig.",
+    "lead": "Etwas gefunden, das du vielleicht kaufst? Tipp auf Teilen, wähl Tote, und es landet direkt in der Sammlung, in der du die Entscheidung triffst — ohne Links zu kopieren, ohne zusätzlichen Tab.",
+    "getApp": "Im App Store laden",
+    "createAccount": "Tote-Konto erstellen",
+    "noteLive": "Melde dich mit demselben Konto an, das du schon auf tote.tools oder in der Browser-Erweiterung nutzt — alles, was du gespeichert hast, wartet auf dich.",
+    "noteSoon": "Tote für iPhone und iPad kommt bald. Registrier dich schon heute mit dem Konto, das bereits im Web und in der Browser-Erweiterung funktioniert, und alles wartet auf dich, sobald die App erscheint.",
+    "trust": "Privat von Grund auf — keine Werbung, kein Tracking, kein Verkauf deiner Einkaufsdaten, in der Web-App, der Browser-Erweiterung und der iOS-App gleichermaßen. Lies die <link>Datenschutzerklärung</link>.",
+    "platformsLabel": "Verfügbarkeit von Tote nach Plattform",
+    "platforms": {
+      "web": "Web-App",
+      "browsers": "Chrome, Edge, Brave, Arc",
+      "ios": "iPhone und iPad",
+      "iosSoon": "iPhone und iPad — bald verfügbar"
+    },
+    "mock": {
+      "product": "Tolles Ding",
+      "site": "ifound.com",
+      "copy": "Kopieren",
+      "bookmarks": "Lesezeichen hinzufügen",
+      "readingList": "Zur Leseliste hinzufügen",
+      "airdrop": "AirDrop",
+      "messages": "Nachrichten",
+      "mail": "Mail",
+      "tote": "Tote"
+    },
+    "capture": {
+      "label": "Was sie erfasst",
+      "title": "Genug Details, um später zu vergleichen.",
+      "body": "Tote liest die Seite, die du teilst, und füllt das Wichtige automatisch aus. Wenn eine Shopseite ungewöhnlich wenig hergibt, kannst du das gespeicherte Produkt in Tote nachbearbeiten.",
+      "details": [
+        "Produktname, Bild, Preis und Quell-URL",
+        "Gespeichert über die Teilen-Taste, aus Safari oder jeder anderen App",
+        "Auswahl von Sammlung und Abschnitt vor dem Speichern",
+        "Synchronisiert zwischen iPhone, iPad, Web und Browser-Erweiterung"
+      ]
+    },
+    "workflows": {
+      "label": "So wird sie genutzt",
+      "title": "Gemacht für den Moment, in dem du etwas Speicherwürdiges findest.",
+      "items": [
+        {
+          "title": "Speichern, wo immer du es findest",
+          "description": "Hat eine App eine Teilen-Taste, kann sie in Tote speichern — eine Shopseite, ein Link von einer Freundin, ein Beitrag, an dem du vorbeigescrollt bist."
+        },
+        {
+          "title": "Genau dort weitermachen, wo du aufgehört hast",
+          "description": "Deine Sammlungen, Abschnitte und Auswahlen sind dieselben wie im Web — kein separates Mobilkonto zu verwalten."
+        },
+        {
+          "title": "Auf dem größeren Bildschirm vergleichen",
+          "description": "Eine App für beide Geräte. Auf dem iPad breiten sich Sammlungen in einem weiteren Raster aus, sodass du eine engere Auswahl bequem nebeneinander vergleichen kannst."
+        }
+      ]
+    },
+    "docs": {
+      "label": "Du brauchst die Details?",
+      "title": "Einrichten, speichern und Probleme lösen.",
+      "body": "Die iOS-Anleitung erklärt die Anmeldung, wie du Tote zu deinen Teilen-Optionen hinzufügst, was erfasst wird und was zu tun ist, wenn ein gespeicherter Artikel nicht erscheint.",
+      "open": "Hilfe zur iOS-App öffnen"
+    },
+    "final": {
+      "label": "Jetzt speichern",
+      "title": "Alles, was du gespeichert hast, ist schon in der App."
+    }
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "landing": {
+    "meta": {
+      "title": "Aus jedem Shop speichern. An einem Ort entscheiden.",
+      "description": "Speichere Produkte aus jedem Shop, vergleiche Optionen an einem Ort, aktualisiere Preise später und behalte Budget und engere Auswahl im Blick.",
+      "ogTitle": "Tote — Aus jedem Shop speichern. An einem Ort entscheiden.",
+      "ogDescription": "Aus jedem Shop speichern, an einem Ort vergleichen und von verstreuten Links zu einer klaren engeren Auswahl kommen."
+    },
+    "announcement": "Tote für iPhone und iPad ist jetzt im App Store →",
+    "eyebrow": "Ein Warenkorb, der keinem Shop gehört",
+    "heroTitle": "Speichere alles, was du vielleicht kaufst — aus jedem Shop.",
+    "heroSubtitle": "Einmal ordnen. Wieder ansehen, wenn du bereit bist zu entscheiden.",
+    "saveFirst": "Ersten Artikel speichern",
+    "saveNext": "Nächsten Artikel speichern",
+    "heroNote": "Speichere jetzt, was du findest — kostenlos. Komm zurück mit weniger Tabs, einem klareren Budget und einer engeren Auswahl, mit der du wirklich etwas anfangen kannst.",
+    "badgeTop": "Eine Sammlung über alle Shops hinweg",
+    "badgeBottom": "Preise aktualisieren, Budgets verfolgen und die Auswahl eingrenzen",
+    "heroAlt": "Die Tote-Browser-Erweiterung speichert ein Produkt von einer Shopseite",
+    "collectionAlt": "Eine Tote-Sammlung mit gespeicherten Produkten und Preisen",
+    "source": {
+      "label": "Von überall speichern",
+      "title": "Große Händler, kleine Läden und der Rest des Internets.",
+      "body": "Wenn du es online kaufen kannst, kannst du es in Tote speichern.",
+      "categories": ["Große Händler", "Kleine Läden", "Überall online"]
+    },
+    "useCases": {
+      "label": "Anwendungsfälle",
+      "title": "Ein Ort zum Vergleichen, Eingrenzen und Entscheiden.",
+      "body": "Wenn sich ein Projekt über fünf Shops verteilt, ist das Speichern der Links der leichte Teil. Sie später noch nützlich zu haben, ist schwieriger. Tote gibt dir einen Ort zum Vergleichen, Teilen und Entscheiden.",
+      "explore": "Anwendungsfall ansehen",
+      "items": [
+        {
+          "title": "Geschenk- & Wunschlisten",
+          "description": "Sammle Geschenkideen aus allen Shops in einer Liste und teile eine aufgeräumte Übersicht, statt einen Haufen Links weiterzuleiten.",
+          "tags": ["Anlässe", "Feiertage", "Wunschlisten"]
+        },
+        {
+          "title": "Renovieren",
+          "description": "Speichere Möbel, Armaturen und Materialien Raum für Raum. Vergleiche Optionen, verfolge Budgets und behalte die engere Auswahl im Blick.",
+          "tags": ["Räume", "Budgets", "Freigaben"]
+        },
+        {
+          "title": "Garderobe & Stil",
+          "description": "Stell ein Stil-Board aus Boutiquen, Secondhand-Seiten und Markenshops zusammen. Halte alles nach Saison oder Look zusammen.",
+          "tags": ["Capsules", "Saisonal", "Sales"]
+        },
+        {
+          "title": "Einkaufen für die Familie",
+          "description": "Halte gemeinsame Projekte aus dem Gruppenchat heraus. Vergleicht Optionen zusammen, behaltet die Summen im Blick und entscheidet ohne doppelte Links.",
+          "tags": ["Geteilte Listen", "Budgets", "Entscheidungen"]
+        },
+        {
+          "title": "Beschaffung für Kunden",
+          "description": "Organisiere Sourcing-Boards für Kunden, aktualisiere Preise vor Besprechungen und teile Boards, die sich wirklich öffnen lassen.",
+          "tags": ["Designer", "Stylisten", "Kundenprojekte"]
+        }
+      ]
+    },
+    "checklist": {
+      "title": "Was Tote zusammenhält",
+      "items": [
+        "Produkte aus verschiedenen Shops",
+        "Preise, die du später aktualisieren kannst",
+        "Sammlungen für jedes Projekt",
+        "Budgets und Auswahlen, die Entscheidungen voranbringen"
+      ]
+    },
+    "principles": {
+      "label": "Warum Leute wechseln",
+      "title": "Gemacht für das chaotische Dazwischen — zwischen Finden und Kaufen.",
+      "items": [
+        {
+          "title": "Alle Optionen an einem Ort",
+          "description": "Du speicherst aus Shops, Marktplätzen und Markenseiten. Tote hält die Optionen zusammen, statt sie über Tabs und Wunschlisten zu verstreuen."
+        },
+        {
+          "title": "Ordnen nach der Entscheidung, die ansteht",
+          "description": "Du ordnest nach Raum, Person, Saison, Kunde oder Anlass, damit die Sammlung auch später noch Sinn ergibt."
+        },
+        {
+          "title": "Preise aktualisieren, bevor du entscheidest",
+          "description": "Du kannst später zurückkommen und aktualisieren, was du gespeichert hast, damit du aktuelle Preise siehst, bevor du kaufst, teilst oder wählst."
+        },
+        {
+          "title": "Budget und engere Auswahl beisammen",
+          "description": "Du verfolgst, was in die engere Wahl kommt, setzt Grenzen und hast eine laufende Summe genau dort, wo die Entscheidung fällt."
+        },
+        {
+          "title": "Privat von Grund auf",
+          "description": "Keine Werbung. Kein Tracking. Kein Verkauf deiner Einkaufsgewohnheiten. Teilen ist freiwillig, und eine Sammlung bleibt privat, bis du sie veröffentlichst."
+        }
+      ]
+    },
+    "comparison": {
+      "label": "Wir vs. die üblichen Notlösungen",
+      "title": "Die meisten Tools helfen beim Speichern. Tote hilft beim Entscheiden.",
+      "body": "Lesezeichen, Shop-Wunschlisten, Tabellen und Gruppenchats helfen jeweils bei einem Teil der Aufgabe. Tote hält Optionen, Preischecks, Budget, engere Auswahl und Teilen an einem Ort.",
+      "included": "enthalten",
+      "notIncluded": "nicht enthalten",
+      "columns": {
+        "spreadsheets": "Tabellen",
+        "wishlists": "Shop-Wunschlisten",
+        "groupChats": "Gruppenchats",
+        "bookmarks": "Lesezeichen",
+        "tote": "Tote"
+      },
+      "rows": [
+        "Link schnell speichern",
+        "Funktioniert shopübergreifend",
+        "Preise später aktualisieren",
+        "Budgets integriert",
+        "Auswahl und engere Wahl",
+        "Leicht mit anderen teilen",
+        "Privat von Grund auf"
+      ]
+    },
+    "audiences": {
+      "label": "Für wen es ist",
+      "title": "Gemacht für die Art, wie du vor dem Kaufen speicherst.",
+      "items": [
+        {
+          "title": "Für alle, die vergleichen",
+          "description": "Du recherchierst, vergleichst und sammelst Ideen über längere Zeit. Tote gibt diesen gespeicherten Links ein echtes Zuhause."
+        },
+        {
+          "title": "Für Paare und Familien",
+          "description": "Haltet gemeinsame Projekte aus dem Gruppenchat heraus. Vergleicht Optionen zusammen, einigt euch auf eine Auswahl und bleibt im Budget."
+        },
+        {
+          "title": "Für Stylisten und Designer",
+          "description": "Mach aus verstreutem Sourcing Boards, die vorzeigbar, aktuell und leicht freizugeben sind."
+        },
+        {
+          "title": "Für alle, die genug von Tabellen haben",
+          "description": "Weiterhin flexibel, aber visuell. Weiterhin geordnet, aber mit viel weniger Handarbeit. Tote liefert Struktur, engere Auswahl und Summen ohne Fleißarbeit."
+        }
+      ]
+    },
+    "questions": {
+      "label": "Fragen",
+      "title": "Was Leute meistens zuerst wissen wollen.",
+      "items": [
+        {
+          "question": "Warum nicht einfach Lesezeichen oder Notizen?",
+          "answer": "Lesezeichen und Notizen helfen dir, einen Link zu speichern. Tote hilft dir, später zurückzukommen — mit Bildern, Preisen, Sammlungen und einer engeren Auswahl, die immer noch Sinn ergibt."
+        },
+        {
+          "question": "Funktioniert Tote nur mit großen Händlern?",
+          "answer": "Nein. Tote funktioniert mit großen Händlern, Secondhand-Seiten, kleinen Läden und dem Rest des Webs — überall, wo du online einkaufst."
+        },
+        {
+          "question": "Kann ich später zurückkommen, wenn ich bereit bin zu entscheiden?",
+          "answer": "Genau darum geht es. Jetzt speichern, später wieder ansehen, Preise aktualisieren, wenn es darauf ankommt, und die Entscheidung an einem Ort voranbringen."
+        },
+        {
+          "question": "Ist Tote kostenlos?",
+          "answer": "Ja. Speichern, Ordnen und Teilen sind kostenlos, und dieser Kern soll kostenlos bleiben. Alles, was später etwas kostet, würde zusätzliche Arbeit für dich erledigen — etwa Preise beobachten — statt abzuschotten, was du schon nutzt."
+        },
+        {
+          "question": "Ist Tote privat?",
+          "answer": "Ja. Keine Werbung, kein Tracking und kein Verkauf deines Einkaufsverhaltens. Teilen ist freiwillig — eine Sammlung bleibt privat, bis du sie veröffentlichst."
+        }
+      ]
+    },
+    "privacy": {
+      "label": "Privat von Grund auf",
+      "title": "Tote respektiert, dass dein Einkaufsleben dir gehört.",
+      "body": "Kein Tracking, keine Werbung und kein Verkauf deines Verhaltens an andere. Speichere privat und teile, wenn du willst — eine Sammlung bleibt deine, bis du dich entscheidest, sie zu veröffentlichen."
+    },
+    "final": {
+      "label": "Hier anfangen",
+      "title": "Von verstreuten Links zu einer klaren engeren Auswahl.",
+      "body": "Nutz Tote, wenn du das nächste Mal eine Geschenkliste anfängst, einen Raum planst, Outfit-Ideen speicherst oder Optionen für jemand anderen suchst. Speichern, Ordnen und Teilen sind kostenlos."
+    }
+  }
+}

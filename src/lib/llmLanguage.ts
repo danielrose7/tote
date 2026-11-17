@@ -3,6 +3,7 @@ import { isLocale, type Locale } from '@/i18n/config';
 const LANGUAGE_NAMES: Record<Locale, string | null> = {
   en: null,
   es: 'Spanish (neutral Latin American, informal "tú")',
+  de: 'German (informal "du")',
 };
 
 /**
