@@ -121,6 +121,15 @@ Problem sites that were originally failing:
 
 ## Key Files to Know
 
+- **Retailer adapters**: `src/lib/extractors/sites.ts` — host-aware extraction for
+  Amazon, Target, Wayfair, Walmart. Add a retailer here when it lacks Product
+  JSON-LD or the generic heuristics pick carousel prices/thumbnails. Notes per
+  retailer: `../docs/PLATFORM_METADATA_PATTERNS.md#large-retailers-host-aware-adapters`.
+  Fixtures in `src/lib/extractors/__fixtures__/retailers.ts` mirror the real DOM —
+  add one per new adapter, with the decoys that fooled the old code.
+- **Mobile parity**: `src/lib/extractors/mobileParity.test.ts` runs the iOS
+  WebView script (`../mobile-app/src/lib/extractorScript.ts`) against the same
+  fixtures, so a fix ported to only one side fails `pnpm test`.
 - **Extraction Logic**: `src/lib/extractors/index.ts`
   - `extractMetadata()` - Main entry point for DOM extraction
   - `extractPriceFromDOM()` - Handles price extraction from multiple patterns

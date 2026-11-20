@@ -302,6 +302,31 @@ Quick reference for how different platforms typically structure their product me
 
 ---
 
+## Large Retailers (host-aware adapters)
+
+Big retailers don't run a commerce platform we can detect, often ship no Product
+JSON-LD, and surround the product with sponsored carousels whose prices and
+thumbnails fool the generic heuristics. They get a per-host adapter in
+`chrome-extension/src/lib/extractors/sites.ts` (mirrored in
+`mobile-app/src/lib/extractorScript.ts`). When a host matches, its values win and the
+generic DOM price/image heuristics are skipped; JSON-LD and og: still fill gaps.
+
+Verified live against 5 products each (Nov 2026). Fixtures:
+`chrome-extension/src/lib/extractors/__fixtures__/retailers.ts`.
+
+| Retailer | Structured data | Title | Price | Main image | Gotchas |
+| --- | --- | --- | --- | --- | --- |
+| Amazon | None (no JSON-LD, no og:) | `#productTitle` | `.priceToPay` (read whole element; its `.a-offscreen` can be empty) | `#landingImage[data-old-hires]` (1500px) | Sponsored `#sp_detail` carousel; `<title>` is `Amazon.com: … : Category`; thumbnails `._AC_US40_.jpg` → strip size token for full size |
+| Target | og: only | `[data-test="product-title"]` | `[data-test="product-price"]` | `[data-test="image-gallery-item-0"] img` | **Price is fetched after hydration** (store-specific) — absent from server HTML, so the iOS WebView watches the DOM (MutationObserver, 4s cap) until it renders; og:image can lag the selected variant |
+| Wayfair | og:, no Product JSON-LD | `h1[data-rtl-id="listingHeaderNameHeading"]` | `[data-test-id="PricingFull-leadPrice"]` | og:image | iPhone UA gets `assets.wfcdn.com/avif/im/…` (AVIF behind `.jpg`) → rewrite to `/im/`; gallery files share the og filename stem + `-<id>` |
+| Walmart | og:, no Product JSON-LD | `#main-title` | `[data-seo-id="hero-price"]` | og:image | Carousel prices superscript cents: `$12599current price $125.99` |
+| Etsy | Full Product JSON-LD | generic | generic | JSON-LD `ImageObject.contentURL` | `contentURL` (not `url`) — handled generically |
+| Best Buy | Full Product JSON-LD | generic | generic | generic | JSON-LD `url` omits the `/sku/<n>` suffix of the page path — matched by prefix |
+| Apple Store | Full Product JSON-LD | generic | generic | generic | — |
+
+Price text on these sites is often glued: `$9.99$9.99`, `$169.99$16999`. The price
+parser keeps the first well-formed number.
+
 ## Extraction Priority Matrix
 
 | Platform | 1st Priority | 2nd Priority | 3rd Priority | Needs JS? |

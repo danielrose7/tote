@@ -7,105 +7,14 @@ import type {
 	ProductVariant,
 	RawPageCapture,
 } from "./types";
+import { extractPriceFromText, PRICE_REGEX, resolveUrl } from "./shared";
+import { extractFromSite } from "./sites";
 
 // Decode HTML entities (e.g. &quot; → ") safely using a textarea
 function decodeHtmlEntities(text: string): string {
 	const textarea = document.createElement("textarea");
 	textarea.innerHTML = text;
 	return textarea.value;
-}
-
-// Currency symbols and their codes
-const CURRENCY_MAP: Record<string, string> = {
-	$: "USD",
-	"£": "GBP",
-	"€": "EUR",
-	"¥": "JPY",
-	"₹": "INR",
-	"₩": "KRW",
-	A$: "AUD",
-	C$: "CAD",
-	kr: "SEK",
-	Fr: "CHF",
-};
-
-// Price patterns for extraction
-const PRICE_REGEX =
-	/(?:[$£€¥₹₩]|A\$|C\$|kr|Fr\.?)\s*[\d.,]+|\d[\d.,]*\s*(?:[$£€¥₹₩]|USD|EUR|GBP)/gi;
-
-function extractPriceFromText(
-	text: string,
-): { price: string; currency: string } | null {
-	const cleaned = text.replace(/\s+/g, " ").trim();
-	PRICE_REGEX.lastIndex = 0;
-	const match = PRICE_REGEX.exec(cleaned);
-
-	if (!match) return null;
-
-	const priceStr = match[0];
-
-	let currency = "USD";
-	for (const [symbol, code] of Object.entries(CURRENCY_MAP)) {
-		if (priceStr.includes(symbol)) {
-			currency = code;
-			break;
-		}
-	}
-
-	// Match digits and any combination of . or , separators
-	const numericMatch = priceStr.match(/[\d.,]+/);
-	if (!numericMatch) return null;
-
-	let price = numericMatch[0];
-
-	// European format: 1.234,56 (dot = thousand, comma = decimal)
-	if (/^\d{1,3}(?:\.\d{3})+,\d{2}$/.test(price)) {
-		price = price.replace(/\./g, "").replace(",", ".");
-	}
-	// US format: 1,234.56 (comma = thousand, dot = decimal)
-	else if (/^\d{1,3}(?:,\d{3})+(?:\.\d{2})?$/.test(price)) {
-		price = price.replace(/,/g, "");
-	}
-	// Simple comma decimal: 29,99
-	else if (/^\d+,\d{2}$/.test(price)) {
-		price = price.replace(",", ".");
-	}
-
-	return { price, currency };
-}
-
-// Fix URLs that JSON-LD generators over-encode: %3F→?, %3D→=, %26→&.
-// We deliberately do NOT use decodeURIComponent (decodes %2F, %20, etc.)
-// or decodeURI (skips reserved chars like %3F). Only query-structure chars.
-function fixOverEncodedUrl(url: string): string {
-	return url.replace(/%3F/gi, "?").replace(/%3D/gi, "=").replace(/%26/gi, "&");
-}
-
-// Return true if the URL contains an unresolved template variable like {width}.
-// Shopify lazy-load uses srcset templates (e.g. image_{width}x.jpg) where JS
-// substitutes the actual width. If captured before substitution, the URL is
-// broken and will 404.
-function hasTemplateVariable(url: string): boolean {
-	return /\{[^}]+\}/.test(url);
-}
-
-// Resolve a potentially-relative URL to an absolute one using the current page origin.
-function resolveUrl(url: string | undefined): string | undefined {
-	if (!url) return undefined;
-	url = fixOverEncodedUrl(url);
-	// Reject unresolved template variables like {width} — Shopify lazy-load
-	// uses these in srcset templates and JS substitutes real values at runtime.
-	if (hasTemplateVariable(url)) return undefined;
-	if (url.startsWith("http://") || url.startsWith("https://")) return url;
-	// Protocol-relative URLs (e.g. //cdn.shopify.com/...) — always treat as https.
-	// Doing this explicitly avoids relying on window.location as a base, which
-	// can misbehave in jsdom test environments where document.baseURI isn't set.
-	if (url.startsWith("//")) return `https:${url}`;
-	try {
-		return new URL(url, window.location.href).href;
-	} catch {
-		return url;
-	}
 }
 
 // Check whether a URL from JSON-LD refers to the current page.
@@ -116,7 +25,12 @@ function urlPathMatchesPage(url: string): boolean {
 		const resolved = new URL(url, window.location.href);
 		if (resolved.origin !== window.location.origin) return true;
 		const normalize = (p: string) => p.replace(/\/+$/, "").toLowerCase();
-		return normalize(resolved.pathname) === normalize(window.location.pathname);
+		const ld = normalize(resolved.pathname);
+		const page = normalize(window.location.pathname);
+		// Same product when one path extends the other: Best Buy's JSON-LD url is
+		// /product/<slug>/<id> while the page is /product/<slug>/<id>/sku/<sku>.
+		// A stale SPA product (the case this guards against) has a different path.
+		return ld === page || page.startsWith(`${ld}/`) || ld.startsWith(`${page}/`);
 	} catch {
 		return true;
 	}
@@ -304,39 +218,28 @@ function findProduct(data: unknown): ProductFindResult | null {
 	return null;
 }
 
-function extractImage(
-	image: string | string[] | { url: string }[] | undefined,
-): string | undefined {
+// JSON-LD ImageObject: { url } or { contentUrl } (Etsy spells it contentURL)
+function imageObjectUrl(img: unknown): string | undefined {
+	if (typeof img === "string") return img;
+	if (!img || typeof img !== "object") return undefined;
+	const o = img as Record<string, unknown>;
+	const url = o.url ?? o.contentUrl ?? o.contentURL;
+	return typeof url === "string" ? url : undefined;
+}
+
+function extractImage(image: unknown): string | undefined {
 	if (!image) return undefined;
-	if (typeof image === "string") return image;
-	if (Array.isArray(image)) {
-		const first = image[0];
-		if (typeof first === "string") return first;
-		if (first && typeof first === "object" && "url" in first) return first.url;
-	}
-	return undefined;
+	if (Array.isArray(image)) return imageObjectUrl(image[0]);
+	return imageObjectUrl(image);
 }
 
 // Extract all image URLs from JSON-LD image field (may be string, array, or object array)
 function extractAllImages(image: unknown): string[] {
 	if (!image) return [];
-	if (typeof image === "string")
-		return [resolveUrl(image)].filter(Boolean) as string[];
-	if (Array.isArray(image)) {
-		return image
-			.map((img) => {
-				if (typeof img === "string") return resolveUrl(img);
-				if (img && typeof img === "object" && "url" in img)
-					return resolveUrl(img.url);
-				return undefined;
-			})
-			.filter(Boolean) as string[];
-	}
-	if (typeof image === "object" && "url" in image) {
-		const url = resolveUrl(String(image.url));
-		return url ? [url] : [];
-	}
-	return [];
+	const list = Array.isArray(image) ? image : [image];
+	return list
+		.map((img) => resolveUrl(imageObjectUrl(img)))
+		.filter(Boolean) as string[];
 }
 
 // Extract variant list from JSON-LD hasVariant array
@@ -1438,16 +1341,23 @@ export function extractMetadata(): ExtractionResult {
 	const extractedFields: string[] = [];
 
 	// Collect from all sources
+	// Retailer-specific adapters (Amazon, Target, …) win when the host matches.
+	// On those pages the generic DOM heuristics are skipped entirely — they
+	// pick sponsored thumbnails and carousel prices — leaving only structured
+	// data (JSON-LD, og:) as the fallback for anything the adapter missed.
+	const site = extractFromSite();
+	const useDomHeuristics = !site.adapter;
 	const jsonLd = extractJsonLd();
 	const og = extractOpenGraph();
 	// Pass the best-known product title to DOM extraction for heading-match scoring.
 	// Prefers JSON-LD/OG over h1 since many sites don't use h1 for product names.
-	const knownTitle = jsonLd?.title || og.title || undefined;
-	const domPrice = extractPriceFromDOM(knownTitle);
+	const knownTitle = site.title || jsonLd?.title || og.title || undefined;
+	const domPrice = useDomHeuristics ? extractPriceFromDOM(knownTitle) : {};
 	const ogImageUrl = og.imageUrl;
-	const { images: domImages, activeSlideUrl } =
-		extractAllImagesFromDOM(ogImageUrl);
-	const domImageFallback = extractImageFromDOM();
+	const { images: domImages, activeSlideUrl } = useDomHeuristics
+		? extractAllImagesFromDOM(ogImageUrl)
+		: { images: [] as string[], activeSlideUrl: undefined };
+	const domImageFallback = useDomHeuristics ? extractImageFromDOM() : undefined;
 	const platform = detectPlatform();
 	const collectionItems = extractCollectionItems();
 	const shouldTreatAsCollection =
@@ -1462,6 +1372,7 @@ export function extractMetadata(): ExtractionResult {
 	// Merge all image sources, deduplicate.
 	const allImages = deduplicateImages(
 		[
+			...(site.images || []),
 			...(jsonLd?.images || []),
 			...(filteredOgImageUrl ? [filteredOgImageUrl] : []),
 			...domImages,
@@ -1471,28 +1382,36 @@ export function extractMetadata(): ExtractionResult {
 	// Image priority: JSON-LD variant match > active carousel slide > og:image > DOM fallback.
 	// activeSlideUrl reflects the variant the user actually has selected (e.g. Flickity
 	// is-selected cell), so it wins over the static og:image when variants differ.
-	const title = jsonLd?.title || og.title;
+	const title = site.title || jsonLd?.title || og.title;
 	const description = jsonLd?.description || og.description;
+	// Keep price and currency from the same source so a site price never
+	// pairs with another source's currency.
+	const priceSource = [site, jsonLd, domPrice, og].find((p) => p?.price);
 	const merged: ExtractedMetadata = {
 		url,
 		title: title ? decodeHtmlEntities(title) : undefined,
 		description: description ? decodeHtmlEntities(description) : undefined,
 		imageUrl:
+			site.imageUrl ||
 			jsonLd?.imageUrl ||
 			activeSlideUrl ||
 			filteredOgImageUrl ||
 			domImages[0] ||
 			domImageFallback,
 		images: allImages.length > 1 ? allImages : undefined,
-		price: jsonLd?.price || domPrice.price || og.price,
-		currency: jsonLd?.currency || domPrice.currency || og.currency,
+		price: priceSource?.price,
+		currency:
+			priceSource?.currency ||
+			jsonLd?.currency ||
+			domPrice.currency ||
+			og.currency,
 		brand: jsonLd?.brand || og.brand,
 		sku: jsonLd?.sku,
 		color: jsonLd?.color,
 		variants: jsonLd?.variants,
 		pageType: shouldTreatAsCollection
 			? "collection"
-			: title || jsonLd?.price || og.price || domPrice.price
+			: title || priceSource
 				? "product"
 				: "unknown",
 		collectionItems: shouldTreatAsCollection ? collectionItems : undefined,

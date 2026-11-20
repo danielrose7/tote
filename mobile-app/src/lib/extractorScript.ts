@@ -26,6 +26,21 @@ export const extractorScript = `
 
     var PRICE_REGEX = /(?:[$£€¥₹₩]|A\\$|C\\$|kr|Fr\\.?)\\s*[\\d.,]+|\\d[\\d.,]*\\s*(?:[$£€¥₹₩]|USD|EUR|GBP)/gi;
 
+    // Well-formed numbers: 1,234.56 / 1.234,56 / 1234.56 / 29,99 / 40
+    var VALID_NUMBER = /^(?:\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,2})?|\\d{1,3}(?:\\.\\d{3})+(?:,\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)$/;
+
+    // Big retailers render a price twice for accessibility (an offscreen "$9.99"
+    // next to visual "$" "9" "." "99" spans), or superscript the cents, so the
+    // element text reads "$9.99$9.99" or "$9.999.99". When the digit run isn't a
+    // well-formed number, keep the leading "d.dd" (or "d,dd") price.
+    function firstWellFormedNumber(raw) {
+      if (VALID_NUMBER.test(raw)) return raw;
+      var decimal = raw.match(/^\\d{1,3}(?:,\\d{3})*\\.\\d{2}|^\\d+[.,]\\d{2}/);
+      if (decimal) return decimal[0];
+      var integer = raw.match(/^\\d+/);
+      return integer ? integer[0] : raw;
+    }
+
     function extractPriceFromText(text) {
       var cleaned = text.replace(/\\s+/g, ' ').trim();
       PRICE_REGEX.lastIndex = 0;
@@ -37,9 +52,9 @@ export const extractorScript = `
       for (var i = 0; i < symbols.length; i++) {
         if (priceStr.indexOf(symbols[i]) !== -1) { currency = CURRENCY_MAP[symbols[i]]; break; }
       }
-      var numericMatch = priceStr.match(/[\\d.,]+/);
+      var numericMatch = priceStr.match(/\\d[\\d.,]*/);
       if (!numericMatch) return null;
-      var price = numericMatch[0];
+      var price = firstWellFormedNumber(numericMatch[0].replace(/[.,]+$/, ''));
       if (/^\\d{1,3}(?:\\.\\d{3})+,\\d{2}$/.test(price)) price = price.replace(/\\./g, '').replace(',', '.');
       else if (/^\\d{1,3}(?:,\\d{3})+(?:\\.\\d{2})?$/.test(price)) price = price.replace(/,/g, '');
       else if (/^\\d+,\\d{2}$/.test(price)) price = price.replace(',', '.');
@@ -58,15 +73,17 @@ export const extractorScript = `
 
     // ── JSON-LD ───────────────────────────────────────────────────────────
 
+    // JSON-LD ImageObject: { url } or { contentUrl } (Etsy spells it contentURL)
+    function imageObjectUrl(img) {
+      if (typeof img === 'string') return img;
+      if (!img || typeof img !== 'object') return undefined;
+      var url = img.url || img.contentUrl || img.contentURL;
+      return typeof url === 'string' ? url : undefined;
+    }
+
     function extractImage(image) {
       if (!image) return undefined;
-      if (typeof image === 'string') return image;
-      if (Array.isArray(image)) {
-        var first = image[0];
-        if (typeof first === 'string') return first;
-        if (first && first.url) return first.url;
-      }
-      return undefined;
+      return imageObjectUrl(Array.isArray(image) ? image[0] : image);
     }
 
     function extractProductPrice(offers) {
@@ -150,7 +167,12 @@ export const extractorScript = `
         var resolved = new URL(url, window.location.href);
         if (resolved.origin !== window.location.origin) return true;
         var normalize = function(p) { return p.replace(/\\/+$/, '').toLowerCase(); };
-        return normalize(resolved.pathname) === normalize(window.location.pathname);
+        var ld = normalize(resolved.pathname);
+        var page = normalize(window.location.pathname);
+        // Same product when one path extends the other: Best Buy's JSON-LD url is
+        // /product/<slug>/<id> while the page is /product/<slug>/<id>/sku/<sku>.
+        // A stale SPA product (the case this guards against) has a different path.
+        return ld === page || page.indexOf(ld + '/') === 0 || ld.indexOf(page + '/') === 0;
       } catch(e) { return true; }
     }
 
@@ -517,41 +539,293 @@ export const extractorScript = `
       return items;
     }
 
+    // ── Site adapters ─────────────────────────────────────────────────────
+    // Host-aware extraction for big retailers. Mirrors
+    // chrome-extension/src/lib/extractors/sites.ts — keep in sync. The app only
+    // saves title, imageUrl and price, so galleries are not ported.
+
+    function siteText(selector) {
+      var el = document.querySelector(selector);
+      var t = el && el.textContent ? el.textContent.replace(/\\s+/g, ' ').trim() : '';
+      return t || undefined;
+    }
+
+    function sitePriceFrom(selectors, read) {
+      for (var i = 0; i < selectors.length; i++) {
+        var els = document.querySelectorAll(selectors[i]);
+        for (var j = 0; j < els.length; j++) {
+          var raw = read ? read(els[j]) : els[j].textContent;
+          var parsed = raw ? extractPriceFromText(raw) : null;
+          if (parsed) return parsed;
+        }
+      }
+      return {};
+    }
+
+    // Largest srcset candidate, else src. Ignores data: placeholders.
+    function siteImgUrl(img) {
+      if (!img) return undefined;
+      var srcset = img.getAttribute('srcset');
+      if (srcset) {
+        var best = null;
+        var entries = srcset.split(',');
+        for (var i = 0; i < entries.length; i++) {
+          var parts = entries[i].trim().split(/\\s+/);
+          var w = parseInt(parts[1] || '', 10) || 0;
+          if (parts[0] && (!best || w > best.w)) best = { url: parts[0], w: w };
+        }
+        if (best) return resolveUrl(best.url);
+      }
+      var src = img.getAttribute('src');
+      return src && src.indexOf('data:') !== 0 ? resolveUrl(src) : undefined;
+    }
+
+    function amazonPriceText(el) {
+      var off = el.querySelector('.a-offscreen');
+      var t = off && off.textContent ? off.textContent.trim() : '';
+      return t || el.textContent;
+    }
+
+    function amazonMainImage() {
+      var img = document.querySelector('#landingImage, #imgTagWrapperId img, #main-image, #main-image-container img, img[data-a-hires]');
+      if (!img) return undefined;
+      var hires = img.getAttribute('data-old-hires') || img.getAttribute('data-a-hires');
+      if (hires) return resolveUrl(hires);
+      var dynamic = img.getAttribute('data-a-dynamic-image');
+      if (dynamic) {
+        try {
+          var sizes = JSON.parse(dynamic);
+          var bestUrl = null, bestArea = -1;
+          Object.keys(sizes).forEach(function(u) {
+            var area = sizes[u][0] * sizes[u][1];
+            if (area > bestArea) { bestArea = area; bestUrl = u; }
+          });
+          if (bestUrl) return resolveUrl(bestUrl);
+        } catch(e) {}
+      }
+      return siteImgUrl(img);
+    }
+
+    // "Amazon.com: Bedsure Fleece Throw : Home & Kitchen" → "Bedsure Fleece Throw"
+    function amazonDocumentTitle() {
+      var m = document.title.match(/^Amazon\\.[a-z.]+\\s*:\\s*(.+)$/i);
+      if (!m) return undefined;
+      return m[1].replace(/\\s+:\\s+[^:]+$/, '').trim() || undefined;
+    }
+
+    function wayfairJpeg(url) {
+      return url ? url.replace(/(assets\\.wfcdn\\.com)\\/avif\\/im\\//, '$1/im/') : url;
+    }
+
+    function merge(a, b) {
+      var out = {};
+      Object.keys(a).forEach(function(k) { out[k] = a[k]; });
+      Object.keys(b).forEach(function(k) { out[k] = b[k]; });
+      return out;
+    }
+
+    var SITE_ADAPTERS = [
+      {
+        id: 'amazon',
+        hosts: /(^|\\.)amazon\\.(com|ca|co\\.uk|de|fr|it|es|nl|se|pl|com\\.au|com\\.mx|com\\.br|co\\.jp|in|sg|ae)$/,
+        extract: function() {
+          return merge({
+            title: siteText('#productTitle') || siteText('#title') || amazonDocumentTitle(),
+            imageUrl: amazonMainImage(),
+          }, sitePriceFrom([
+            '#corePriceDisplay_desktop_feature_div .priceToPay',
+            '#corePriceDisplay_mobile_feature_div .priceToPay',
+            '#corePrice_feature_div .priceToPay',
+            '#corePrice_mobile_feature_div .priceToPay',
+            '#apex_desktop .priceToPay',
+            '.priceToPay',
+            '#corePrice_feature_div .a-price:not(.a-text-price)',
+            '#corePrice_mobile_feature_div .a-price:not(.a-text-price)',
+            '#apex_desktop .a-price:not(.a-text-price)',
+            '#tp_price_block_total_price_ww',
+            '#price_inside_buybox',
+            '#priceblock_dealprice',
+            '#priceblock_ourprice',
+          ], amazonPriceText));
+        },
+      },
+      {
+        // Target fetches the price after hydration — Main waits for it (waitForContent).
+        id: 'target',
+        hosts: /(^|\\.)target\\.com$/,
+        extract: function() {
+          return merge({
+            title: siteText('[data-test="product-title"]'),
+            imageUrl: siteImgUrl(document.querySelector('[data-test="image-gallery-item-0"] img')),
+          }, sitePriceFrom(['[data-test="product-price"]']));
+        },
+      },
+      {
+        // iPhone user agents get an AVIF og:image behind a .jpg name.
+        id: 'wayfair',
+        hosts: /(^|\\.)(wayfair|allmodern|birchlane|jossandmain|perigold)\\.(com|ca|co\\.uk|de)$/,
+        extract: function() {
+          var og = document.querySelector('meta[property="og:image"]');
+          var ogUrl = og && og.getAttribute('content');
+          return merge({
+            title: siteText('h1[data-rtl-id="listingHeaderNameHeading"]'),
+            imageUrl: wayfairJpeg(ogUrl ? resolveUrl(ogUrl) : undefined),
+          }, sitePriceFrom([
+            '[data-test-id="PricingFull-leadPrice"]',
+            '[data-test-id="StandardPricingPrice-PRIMARY"]',
+          ]));
+        },
+      },
+      {
+        // Carousel tiles superscript the cents ("$12599"); trust only the hero price.
+        id: 'walmart',
+        hosts: /(^|\\.)walmart\\.(com|ca)$/,
+        extract: function() {
+          return merge({
+            title: siteText('#main-title, h1[itemprop="name"]'),
+          }, sitePriceFrom(['[data-seo-id="hero-price"]', '[itemprop="price"]']));
+        },
+      },
+    ];
+
+    // adapter is set whenever the host matched; the generic DOM heuristics are
+    // then skipped (they pick sponsored thumbnails and carousel prices there).
+    function extractFromSite() {
+      var host = window.location.hostname.toLowerCase();
+      for (var i = 0; i < SITE_ADAPTERS.length; i++) {
+        var a = SITE_ADAPTERS[i];
+        if (!a.hosts.test(host)) continue;
+        try { return merge({ adapter: a.id }, a.extract()); }
+        catch(e) { return { adapter: a.id }; }
+      }
+      return {};
+    }
+
     // ── Main ──────────────────────────────────────────────────────────────
 
-    var jsonLd = extractJsonLd();
-    var og = extractOpenGraph();
-    var knownTitle = (jsonLd && jsonLd.title) || og.title || undefined;
-    var domPrice = extractPriceFromDOM(knownTitle);
-    var domImage = extractImageFromDOM();
-    var activeSlideUrl = extractActiveSlideImage();
-    var collectionItems = extractCollectionItems();
-    var shouldTreatAsCollection = collectionItems.length >= 2 && isLikelyCollectionPage();
+    // Retailer sites that render the price client-side (Target fetches it per
+    // store after hydration) aren't ready at onLoadEnd. When an adapter matched
+    // but price or image is still missing, watch the DOM and report as soon as
+    // both appear — or after WAIT_TIMEOUT_MS with whatever we have.
+    var WAIT_TIMEOUT_MS = 4000;
+    // Throttle, not debounce: a carousel that mutates continuously would keep
+    // resetting a debounce until the timeout. This checks at most every 100ms.
+    var CHECK_INTERVAL_MS = 100;
 
-    // Filter og:image through isExcludedImage — store-wide share images
-    // (e.g. Shopify-share-image.png) must not become the primary product image.
-    var ogImageUrl = og.imageUrl;
-    var filteredOgImageUrl = ogImageUrl && !isExcludedImage(ogImageUrl) ? ogImageUrl : undefined;
+    function extractAll() {
+      // Retailer adapters win when the host matches; on those pages the generic
+      // DOM heuristics are skipped and only structured data (JSON-LD, og:) is
+      // used as a fallback for anything the adapter missed.
+      var site = extractFromSite();
+      var useDom = !site.adapter;
+      var jsonLd = extractJsonLd();
+      var og = extractOpenGraph();
+      var knownTitle = site.title || (jsonLd && jsonLd.title) || og.title || undefined;
+      var domPrice = useDom ? extractPriceFromDOM(knownTitle) : {};
+      var domImage = useDom ? extractImageFromDOM() : undefined;
+      var activeSlideUrl = useDom ? extractActiveSlideImage() : undefined;
+      var collectionItems = extractCollectionItems();
+      var shouldTreatAsCollection = collectionItems.length >= 2 && isLikelyCollectionPage();
 
-    var title = (jsonLd && jsonLd.title) || og.title;
-    var description = (jsonLd && jsonLd.description) || og.description;
+      // Filter og:image through isExcludedImage — store-wide share images
+      // (e.g. Shopify-share-image.png) must not become the primary product image.
+      var ogImageUrl = og.imageUrl;
+      var filteredOgImageUrl = ogImageUrl && !isExcludedImage(ogImageUrl) ? ogImageUrl : undefined;
 
-    // Image priority: JSON-LD variant match > active carousel slide > og:image > DOM fallback.
-    var result = {
-      url: window.location.href,
-      title: title ? decodeHtmlEntities(title) : undefined,
-      description: description ? decodeHtmlEntities(description) : undefined,
-      imageUrl: (jsonLd && jsonLd.imageUrl) || activeSlideUrl || filteredOgImageUrl || domImage,
-      price: (jsonLd && jsonLd.price) || domPrice.price || og.price,
-      currency: (jsonLd && jsonLd.currency) || domPrice.currency || og.currency,
-      brand: (jsonLd && jsonLd.brand) || og.brand,
-      pageType: shouldTreatAsCollection
-        ? 'collection'
-        : (title || (jsonLd && jsonLd.price) || og.price || domPrice.price ? 'product' : 'unknown'),
-      collectionItems: shouldTreatAsCollection ? collectionItems : undefined,
-    };
+      var title = site.title || (jsonLd && jsonLd.title) || og.title;
+      var description = (jsonLd && jsonLd.description) || og.description;
+      // Keep price and currency from the same source.
+      var priceSource = [site, jsonLd, domPrice, og].filter(function(p) { return p && p.price; })[0];
 
-    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'METADATA_RESULT', data: result }));
+      // Image priority: site adapter > JSON-LD variant match > active carousel slide > og:image > DOM fallback.
+      return {
+        adapter: site.adapter,
+        result: {
+          url: window.location.href,
+          title: title ? decodeHtmlEntities(title) : undefined,
+          description: description ? decodeHtmlEntities(description) : undefined,
+          imageUrl: site.imageUrl || (jsonLd && jsonLd.imageUrl) || activeSlideUrl || filteredOgImageUrl || domImage,
+          price: priceSource && priceSource.price,
+          currency: (priceSource && priceSource.currency) || (jsonLd && jsonLd.currency) || domPrice.currency || og.currency,
+          brand: (jsonLd && jsonLd.brand) || og.brand,
+          pageType: shouldTreatAsCollection
+            ? 'collection'
+            : (title || priceSource ? 'product' : 'unknown'),
+          collectionItems: shouldTreatAsCollection ? collectionItems : undefined,
+        },
+      };
+    }
+
+    function post(message) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(message));
+    }
+
+    function isComplete(extracted) {
+      return !extracted.adapter || Boolean(extracted.result.price && extracted.result.imageUrl);
+    }
+
+    function waitForContent(initial) {
+      var state = { watching: true };
+      window.__toteExtractorWatch = state;
+      var latest = initial.result;
+      var pendingCheck = null;
+      var observer = null;
+      var timeout = null;
+
+      function stop() {
+        state.watching = false;
+        if (observer) observer.disconnect();
+        if (pendingCheck) clearTimeout(pendingCheck);
+        if (timeout) clearTimeout(timeout);
+      }
+
+      function finish() {
+        if (!state.watching) return;
+        stop();
+        post({ type: 'METADATA_RESULT', data: latest });
+      }
+
+      function check() {
+        pendingCheck = null;
+        if (!state.watching) return;
+        try {
+          var extracted = extractAll();
+          latest = extracted.result;
+          if (isComplete(extracted)) finish();
+        } catch(e) {
+          stop();
+          post({ type: 'METADATA_ERROR', error: String(e) });
+        }
+      }
+
+      observer = new MutationObserver(function() {
+        if (!pendingCheck) pendingCheck = setTimeout(check, CHECK_INTERVAL_MS);
+      });
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['src', 'srcset', 'content', 'data-old-hires', 'data-a-hires'],
+      });
+      timeout = setTimeout(function() {
+        check();
+        finish();
+      }, WAIT_TIMEOUT_MS);
+    }
+
+    // onLoadEnd can fire more than once for the same document (some redirects
+    // and SPA routing), injecting this script again. Let the first watcher
+    // report rather than starting a second one that posts a competing result.
+    var existing = window.__toteExtractorWatch;
+    if (existing && existing.watching) return;
+
+    var initial = extractAll();
+    if (isComplete(initial)) {
+      post({ type: 'METADATA_RESULT', data: initial.result });
+    } else {
+      waitForContent(initial);
+    }
   } catch(e) {
     window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'METADATA_ERROR', error: String(e) }));
   }
