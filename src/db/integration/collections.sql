@@ -125,20 +125,6 @@ $$;
 DO $$
 BEGIN
 	BEGIN
-		UPDATE account_data_sources
-		SET rollback_expires_at = cutover_at
-		WHERE user_id = 'user_owner';
-		RAISE EXCEPTION 'expected rollback window constraint to fail';
-	EXCEPTION
-		WHEN check_violation THEN
-			NULL;
-	END;
-END;
-$$;
-
-DO $$
-BEGIN
-	BEGIN
 		INSERT INTO collection_invites (
 			collection_id,
 			created_by_user_id,

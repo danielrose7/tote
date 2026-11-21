@@ -158,16 +158,16 @@ and the `/api/v2/` routes. Removed in full: the `jazz-tools` dependency, `src/sc
 Accounts that only ever had Jazz data now see an ordinary empty account — their Jazz data is
 not referenced anywhere in the app and there is no migration path back.
 
-Two deliberate leftovers, both invisible to users:
+One deliberate leftover, invisible to users:
 
 - **`legacy_jazz_id` / `source_jazz_id` / `jazz_published_id` columns — still load-bearing, do
   not drop.** 59 of 65 collections carry a `legacy_jazz_id`, and `publicationRepository`
   matches an existing publication by _either_ `source_collection_id` _or_ `source_jazz_id`.
   Dropping these would make re-publishing a migrated collection create a duplicate publication
   instead of updating the existing one. The names are historical; the data is live.
-- **The `account_data_sources` and `account_collection_migrations` tables.** No longer read or
-  written by application code (4 rows each, all terminal state). Safe to drop in a future
-  migration.
+
+The `account_data_sources` / `account_collection_migrations` cutover-tracking tables were
+dropped in `019_drop_account_migration_tables.sql`.
 
 ## UI Conventions
 
