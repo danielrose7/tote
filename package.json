@@ -11,6 +11,7 @@
     "start": "next start",
     "test": "vitest run",
     "i18n:check": "node scripts/i18n-check.mjs",
+    "indexnow:submit": "node scripts/submit-indexnow.mjs",
     "test:db": "node scripts/test-collections-db.mjs",
     "test:watch": "vitest",
     "format-and-lint": "biome check .",
