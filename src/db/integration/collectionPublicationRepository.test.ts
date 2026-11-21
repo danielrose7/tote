@@ -1,11 +1,11 @@
 import { eq } from 'drizzle-orm';
+import { beforeEach, vi } from 'vitest';
 import {
   getCollectionPublicationStatus,
   publishCollectionSnapshot,
   unpublishCollectionSnapshot,
 } from '@/lib/collections/publicationRepository';
 import {
-  ablyOutbox,
   collectionNodes,
   collections,
   publishedBlocks,
@@ -16,7 +16,17 @@ import {
   collectionMemberFactory,
   collectionNodeFactory,
 } from '../testing/factories';
+import { publishedEvents } from '../testing/realtimePublishMock';
 import { dbTest, expect } from '../testing/vitest';
+
+vi.mock(
+  '@/lib/collections/realtimePublish',
+  () => import('../testing/realtimePublishMock'),
+);
+
+beforeEach(() => {
+  publishedEvents.length = 0;
+});
 
 async function createPublishableCollection(ownerUserId: string) {
   const collection = await collectionFactory.create({
@@ -148,10 +158,9 @@ dbTest(
       layout: 'minimal',
       allowCloning: false,
     });
-    const publicationEvents = await db
-      .select()
-      .from(ablyOutbox)
-      .where(eq(ablyOutbox.channel, `collection:${collection.id}`));
+    const publicationEvents = publishedEvents.filter(
+      (event) => event.channel === `collection:${collection.id}`,
+    );
     expect(publicationEvents.map((event) => event.name)).toEqual([
       'publication.updated',
       'publication.updated',
@@ -234,10 +243,9 @@ dbTest('unpublishes only the public snapshot', async ({ db }) => {
       .from(collections)
       .where(eq(collections.id, collection.id)),
   ).toHaveLength(1);
-  const events = await db
-    .select()
-    .from(ablyOutbox)
-    .where(eq(ablyOutbox.channel, `collection:${collection.id}`));
+  const events = publishedEvents.filter(
+    (event) => event.channel === `collection:${collection.id}`,
+  );
   expect(events.map((event) => event.name)).toEqual([
     'publication.updated',
     'publication.deleted',

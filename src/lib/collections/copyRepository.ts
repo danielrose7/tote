@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import {
-  ablyOutbox,
   collectionLineage,
   collectionMembers,
   collectionMutationReceipts,
@@ -12,6 +11,7 @@ import {
 } from '@/db/schema';
 import { withTransactionalDb } from '../transactionalDb';
 import { fingerprintMutationRequest } from './idempotency';
+import { publishRealtimeEvents, type RealtimeEvent } from './realtimePublish';
 import type { CollectionDatabase } from './repository';
 
 export type CopyCollectionInput = {
@@ -55,6 +55,7 @@ async function copyCollectionWithDatabase(
   sourceCollectionId: string,
   input: CopyCollectionInput,
   database: CollectionDatabase,
+  events: RealtimeEvent[],
 ): Promise<CopyCollectionResult> {
   const requestFingerprint = fingerprintMutationRequest({
     sourceCollectionId,
@@ -176,8 +177,7 @@ async function copyCollectionWithDatabase(
     sourceRef: `collection:${sourceCollectionId}`,
     createdByUserId: actorUserId,
   });
-  await database.insert(ablyOutbox).values({
-    mutationId: input.mutationId,
+  events.push({
     channel: `collection:${copyId}`,
     name: 'collection.copied',
     data: {
@@ -204,27 +204,31 @@ export async function copyCollection(
   input: CopyCollectionInput,
   database?: CollectionDatabase,
 ): Promise<CopyCollectionResult> {
-  if (database) {
-    return copyCollectionWithDatabase(
-      actorUserId,
-      sourceCollectionId,
-      input,
-      database,
-    );
-  }
-
-  return withTransactionalDb((transactionalDatabase) =>
-    transactionalDatabase.transaction(
-      (transaction) =>
-        copyCollectionWithDatabase(
-          actorUserId,
-          sourceCollectionId,
-          input,
-          transaction,
+  const events: RealtimeEvent[] = [];
+  const result = database
+    ? await copyCollectionWithDatabase(
+        actorUserId,
+        sourceCollectionId,
+        input,
+        database,
+        events,
+      )
+    : await withTransactionalDb((transactionalDatabase) =>
+        transactionalDatabase.transaction(
+          (transaction) =>
+            copyCollectionWithDatabase(
+              actorUserId,
+              sourceCollectionId,
+              input,
+              transaction,
+              events,
+            ),
+          { isolationLevel: 'repeatable read' },
         ),
-      { isolationLevel: 'repeatable read' },
-    ),
-  );
+      );
+  // Publish only once the transaction above has committed.
+  await publishRealtimeEvents(events);
+  return result;
 }
 
 async function copyPublishedCollectionWithDatabase(
@@ -232,6 +236,7 @@ async function copyPublishedCollectionWithDatabase(
   publicationId: string,
   input: CopyCollectionInput,
   database: CollectionDatabase,
+  events: RealtimeEvent[],
 ): Promise<CopyCollectionResult> {
   const requestFingerprint = fingerprintMutationRequest({
     publicationId,
@@ -356,8 +361,7 @@ async function copyPublishedCollectionWithDatabase(
     sourceRef: `publication:${publication.id}`,
     createdByUserId: actorUserId,
   });
-  await database.insert(ablyOutbox).values({
-    mutationId: input.mutationId,
+  events.push({
     channel: `collection:${copyId}`,
     name: 'collection.copied',
     data: {
@@ -384,25 +388,29 @@ export async function copyPublishedCollection(
   input: CopyCollectionInput,
   database?: CollectionDatabase,
 ): Promise<CopyCollectionResult> {
-  if (database) {
-    return copyPublishedCollectionWithDatabase(
-      actorUserId,
-      publicationId,
-      input,
-      database,
-    );
-  }
-
-  return withTransactionalDb((transactionalDatabase) =>
-    transactionalDatabase.transaction(
-      (transaction) =>
-        copyPublishedCollectionWithDatabase(
-          actorUserId,
-          publicationId,
-          input,
-          transaction,
+  const events: RealtimeEvent[] = [];
+  const result = database
+    ? await copyPublishedCollectionWithDatabase(
+        actorUserId,
+        publicationId,
+        input,
+        database,
+        events,
+      )
+    : await withTransactionalDb((transactionalDatabase) =>
+        transactionalDatabase.transaction(
+          (transaction) =>
+            copyPublishedCollectionWithDatabase(
+              actorUserId,
+              publicationId,
+              input,
+              transaction,
+              events,
+            ),
+          { isolationLevel: 'repeatable read' },
         ),
-      { isolationLevel: 'repeatable read' },
-    ),
-  );
+      );
+  // Publish only once the transaction above has committed.
+  await publishRealtimeEvents(events);
+  return result;
 }

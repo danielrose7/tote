@@ -9,7 +9,7 @@
  * new user-keyed column, add it to `preview` and `mergeAccounts` too.
  */
 
-import { randomUUID } from 'node:crypto';
+import { publishRealtimeEvents } from '../collections/realtimePublish';
 import { sql } from '../db';
 
 export type MergePreview = {
@@ -77,7 +77,6 @@ export async function mergeAccounts(
     };
   }
 
-  const mutationId = randomUUID();
   // Lower number = more privilege. Revoked memberships rank below every role.
   const results = await sql.transaction((tx) => [
     // --- Collection membership (PK is collection_id + user_id) ---
@@ -139,23 +138,28 @@ export async function mergeAccounts(
     // --- Users table: hide the retired account from team lists ---
     tx`UPDATE users SET deleted_at = now(), updated_at = now() WHERE id = ${sourceId}`,
 
-    // --- Realtime: tell open clients on either account to refetch ---
+    // --- Realtime: channels whose open clients should refetch (published below) ---
     tx`
-      INSERT INTO ably_outbox (mutation_id, channel, name, data)
-      SELECT ${mutationId}, ch, 'account.merged', '{}'::jsonb
-      FROM (
-        SELECT 'user:' || ${sourceId} || ':collections' AS ch
-        UNION SELECT 'user:' || ${targetId} || ':collections'
-        UNION SELECT 'collection:' || collection_id::text
-          FROM collection_members WHERE user_id = ${targetId}
-      ) channels
+      SELECT 'user:' || ${sourceId} || ':collections' AS channel
+      UNION SELECT 'user:' || ${targetId} || ':collections'
+      UNION SELECT 'collection:' || collection_id::text
+        FROM collection_members WHERE user_id = ${targetId}
     `,
     tx`SELECT balance_cents FROM user_credits WHERE clerk_user_id = ${targetId}`,
   ]);
 
+  const channelRows = results[results.length - 2] as { channel: string }[];
   const balanceRows = results[results.length - 1] as {
     balance_cents: number;
   }[];
+  // The transaction has committed; tell open clients on either account to refetch.
+  await publishRealtimeEvents(
+    channelRows.map(({ channel }) => ({
+      channel,
+      name: 'account.merged',
+      data: {},
+    })),
+  );
   return {
     ok: true,
     preview,

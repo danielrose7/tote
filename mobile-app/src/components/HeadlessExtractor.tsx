@@ -2,7 +2,7 @@
  * Invisible WebView that extracts metadata for a URL-only node and
  * updates it in the background. Fires onDone when complete (success or fail).
  *
- * The updateNode call writes to the Ably outbox, so CollectionDetailScreen
+ * The server publishes a realtime notification after updateNode commits, so CollectionDetailScreen
  * refreshes automatically via useCollectionRealtime when data is enriched.
  */
 

@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
+import { beforeEach, vi } from 'vitest';
 import {
   copyCollection,
   copyPublishedCollection,
 } from '@/lib/collections/copyRepository';
 import {
-  ablyOutbox,
   collectionInvites,
   collectionLineage,
   collectionMembers,
@@ -18,7 +18,17 @@ import {
   collectionMemberFactory,
   collectionNodeFactory,
 } from '../testing/factories';
+import { publishedEvents } from '../testing/realtimePublishMock';
 import { dbTest, expect } from '../testing/vitest';
+
+vi.mock(
+  '@/lib/collections/realtimePublish',
+  () => import('../testing/realtimePublishMock'),
+);
+
+beforeEach(() => {
+  publishedEvents.length = 0;
+});
 
 async function createCopySource(
   ownerUserId: string,
@@ -144,14 +154,12 @@ dbTest(
         .from(publishedCollections)
         .where(eq(publishedCollections.sourceCollectionId, copy.id)),
     ).toEqual([]);
-    const [event] = await db
-      .select()
-      .from(ablyOutbox)
-      .where(eq(ablyOutbox.channel, `collection:${copy.id}`));
-    expect(event).toMatchObject({
-      mutationId: '7f094d97-6a69-4f90-bef0-9e0afc92f124',
-      name: 'collection.copied',
-    });
+    const copyEvents = publishedEvents.filter(
+      (event) => event.channel === `collection:${copy.id}`,
+    );
+    expect(copyEvents).toEqual([
+      expect.objectContaining({ name: 'collection.copied' }),
+    ]);
 
     await db
       .update(collectionNodes)

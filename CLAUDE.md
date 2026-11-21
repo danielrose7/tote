@@ -47,12 +47,15 @@ docs/
 
 ## Realtime Architecture
 
-Mutations write to `ably_outbox` in the same DB transaction. The Ably Postgres connector polls via `pg_notify('ably_adbc')` and publishes to channels. Clients subscribe via `useCollectionRealtime` and call `queryClient.invalidateQueries` on message.
+After a mutation commits, the server publishes change notifications straight to Ably's REST API via `publishRealtimeEvents()` (`src/lib/collections/realtimePublish.ts`). Clients subscribe via `useCollectionRealtime` and call `queryClient.invalidateQueries` on any message — they ignore message names and payloads.
 
 - `user:<id>:collections` — collection list changes
 - `collection:<id>` — individual collection changes
 
-The Ably connector **must** use `NEON_DB_DATABASE_URL_UNPOOLED` — PgBouncer doesn't support `LISTEN/NOTIFY`.
+Rules for new mutations:
+- Publish only **after commit**. Single-statement writes in `repository.ts` return their channels via a `realtime_events` CTE; transactional writes (`copyRepository`, `publicationRepository`) push into an `events` array and the wrapper publishes once `transaction()` resolves.
+- Publishing is best-effort: failures are logged, never thrown, because the write already succeeded.
+- Never hold a long-lived Postgres connection (`LISTEN`, polling) for realtime — it keeps Neon compute from scaling to zero. The old `ably_outbox` + Ably Postgres connector path did exactly that (141 compute-hours in Nov 2026) and was removed; the `ably_outbox`/`ably_nodes` tables are unused and awaiting a drop migration.
 
 Token auth: clients fetch scoped subscribe-only tokens from `/api/v2/realtime/token` using `ABLY_ROOT_KEY` (server-only, never `NEXT_PUBLIC_*`).
 

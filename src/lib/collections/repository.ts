@@ -15,6 +15,7 @@ import {
 import { db as productionDb } from '../db';
 import { fingerprintMutationRequest } from './idempotency';
 import { roleCan } from './permissions';
+import { publishRealtimeEvents, type RealtimeEvent } from './realtimePublish';
 
 export type CollectionDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
 
@@ -387,7 +388,7 @@ export async function createCollection(
   }
 
   try {
-    await database.execute(sql`
+    const result = (await database.execute(sql`
 		WITH inserted_collection AS (
 			INSERT INTO collections (
 				id,
@@ -412,32 +413,23 @@ export async function createCollection(
 			FROM inserted_collection
 			RETURNING collection_id
 		),
-		inserted_realtime_events AS (
-			INSERT INTO ably_outbox (
-				mutation_id,
-				channel,
-				name,
-				data
-			)
+		realtime_events AS (
 			SELECT
-				${input.mutationId},
-				'collection:' || collection_id,
-				'collection.created',
+				'collection:' || collection_id AS channel,
+				'collection.created' AS name,
 				jsonb_build_object(
 					'collectionId',
 					collection_id,
 					'version',
 					1
-				)
+				) AS data
 			FROM inserted_member
 			UNION ALL
 			SELECT
-				${input.mutationId},
 				'user:' || ${actorUserId} || ':collections',
 				'collection.index.updated',
 				jsonb_build_object('collectionId', collection_id)
 			FROM inserted_member
-			RETURNING mutation_id
 		)
 		INSERT INTO collection_mutation_receipts (
 			user_id,
@@ -455,8 +447,10 @@ export async function createCollection(
 			jsonb_build_object('id', collection_id),
 			${expiresAt}
 		FROM inserted_member
-		WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
-		`);
+		WHERE EXISTS (SELECT 1 FROM realtime_events)
+		RETURNING (SELECT jsonb_agg(event) FROM realtime_events event) AS realtime_events
+		`)) as { rows: { realtime_events: RealtimeEvent[] | null }[] };
+    await publishRealtimeEvents(result.rows[0]?.realtime_events);
   } catch (error) {
     const concurrentReceipt = await getCollectionMutationReceipt(
       actorUserId,
@@ -629,27 +623,19 @@ export async function updateCollection(
 						FROM updated
 						RETURNING response
 					),
-					inserted_realtime_events AS (
-						INSERT INTO ably_outbox (
-							mutation_id,
-							channel,
-							name,
-							data
-						)
+					realtime_events AS (
 						SELECT
-							${mutationId},
-							'collection:' || ${collectionId},
-							'collection.updated',
+							'collection:' || ${collectionId} AS channel,
+							'collection.updated' AS name,
 							jsonb_build_object(
 								'collectionId',
 								${collectionId}::text,
 								'version',
 								(response ->> 'version')::bigint
-							)
+							) AS data
 						FROM inserted_receipt
 						UNION ALL
 						SELECT
-							${mutationId},
 							'user:' || member.user_id || ':collections',
 							'collection.index.updated',
 							jsonb_build_object(
@@ -662,15 +648,23 @@ export async function updateCollection(
 						INNER JOIN collection_members member
 							ON member.collection_id = ${collectionId}
 							AND member.revoked_at IS NULL
-						RETURNING mutation_id
 					)
-					SELECT receipt.response
+					SELECT
+						receipt.response,
+						(SELECT jsonb_agg(event) FROM realtime_events event) AS realtime_events
 					FROM inserted_receipt receipt
-					WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
+					WHERE EXISTS (SELECT 1 FROM realtime_events)
 				`,
-      )) as { rows: { response: { version: number } }[] };
+      )) as {
+        rows: {
+          response: { version: number };
+          realtime_events: RealtimeEvent[] | null;
+        }[];
+      };
 
       const receipt = result.rows[0];
+
+      await publishRealtimeEvents(receipt?.realtime_events);
       return receipt
         ? { status: 'ok', value: receipt.response }
         : { status: 'version_conflict' };
@@ -805,27 +799,19 @@ export async function deleteCollection(
 						FROM deleted
 						RETURNING response
 					),
-					inserted_realtime_events AS (
-						INSERT INTO ably_outbox (
-							mutation_id,
-							channel,
-							name,
-							data
-						)
+					realtime_events AS (
 						SELECT
-							${mutationId},
-							'collection:' || ${collectionId},
-							'collection.deleted',
+							'collection:' || ${collectionId} AS channel,
+							'collection.deleted' AS name,
 							jsonb_build_object(
 								'collectionId',
 								${collectionId}::text,
 								'version',
 								(response ->> 'version')::bigint
-							)
+							) AS data
 						FROM inserted_receipt
 						UNION ALL
 						SELECT
-							${mutationId},
 							'user:' || member.user_id || ':collections',
 							'collection.index.updated',
 							jsonb_build_object(
@@ -838,15 +824,23 @@ export async function deleteCollection(
 						INNER JOIN collection_members member
 							ON member.collection_id = ${collectionId}
 							AND member.revoked_at IS NULL
-						RETURNING mutation_id
 					)
-					SELECT receipt.response
+					SELECT
+						receipt.response,
+						(SELECT jsonb_agg(event) FROM realtime_events event) AS realtime_events
 					FROM inserted_receipt receipt
-					WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
+					WHERE EXISTS (SELECT 1 FROM realtime_events)
 				`,
-      )) as { rows: { response: { version: number } }[] };
+      )) as {
+        rows: {
+          response: { version: number };
+          realtime_events: RealtimeEvent[] | null;
+        }[];
+      };
 
       const receipt = result.rows[0];
+
+      await publishRealtimeEvents(receipt?.realtime_events);
       return receipt
         ? { status: 'ok', value: receipt.response }
         : { status: 'version_conflict' };
@@ -1022,17 +1016,10 @@ export async function createCollectionNode(
 					FROM inserted_node
 					RETURNING response
 				),
-				inserted_realtime_events AS (
-					INSERT INTO ably_outbox (
-						mutation_id,
-						channel,
-						name,
-						data
-					)
+				realtime_events AS (
 					SELECT
-						${input.mutationId},
-						'collection:' || ${collectionId},
-						'collection.node.created',
+						'collection:' || ${collectionId} AS channel,
+						'collection.node.created' AS name,
 						jsonb_build_object(
 							'collectionId',
 							${collectionId}::text,
@@ -1040,11 +1027,10 @@ export async function createCollectionNode(
 							response ->> 'id',
 							'version',
 							(response ->> 'version')::bigint
-						)
+						) AS data
 					FROM inserted_receipt
 					UNION ALL
 					SELECT
-						${input.mutationId},
 						'user:' || member.user_id || ':collections',
 						'collection.index.updated',
 						jsonb_build_object('collectionId', ${collectionId}::text)
@@ -1052,14 +1038,22 @@ export async function createCollectionNode(
 					INNER JOIN collection_members member
 						ON member.collection_id = ${collectionId}
 						AND member.revoked_at IS NULL
-					RETURNING mutation_id
 				)
-				SELECT receipt.response
+				SELECT
+					receipt.response,
+					(SELECT jsonb_agg(event) FROM realtime_events event) AS realtime_events
 				FROM inserted_receipt receipt
-				WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
-			`)) as { rows: { response: { id: string; version: number } }[] };
+				WHERE EXISTS (SELECT 1 FROM realtime_events)
+			`)) as {
+        rows: {
+          response: { id: string; version: number };
+          realtime_events: RealtimeEvent[] | null;
+        }[];
+      };
 
       const receipt = result.rows[0];
+
+      await publishRealtimeEvents(receipt?.realtime_events);
       if (!receipt) {
         throw new Error('Node creation did not produce a mutation receipt');
       }
@@ -1245,17 +1239,10 @@ export async function updateCollectionNode(
 					FROM updated_node
 					RETURNING response
 				),
-				inserted_realtime_events AS (
-					INSERT INTO ably_outbox (
-						mutation_id,
-						channel,
-						name,
-						data
-					)
+				realtime_events AS (
 					SELECT
-						${mutationId},
-						'collection:' || ${collectionId},
-						'collection.node.updated',
+						'collection:' || ${collectionId} AS channel,
+						'collection.node.updated' AS name,
 						jsonb_build_object(
 							'collectionId',
 							${collectionId}::text,
@@ -1263,11 +1250,10 @@ export async function updateCollectionNode(
 							${nodeId}::text,
 							'version',
 							(response ->> 'version')::bigint
-						)
+						) AS data
 					FROM inserted_receipt
 					UNION ALL
 					SELECT
-						${mutationId},
 						'user:' || member.user_id || ':collections',
 						'collection.index.updated',
 						jsonb_build_object('collectionId', ${collectionId}::text)
@@ -1275,14 +1261,22 @@ export async function updateCollectionNode(
 					INNER JOIN collection_members member
 						ON member.collection_id = ${collectionId}
 						AND member.revoked_at IS NULL
-					RETURNING mutation_id
 				)
-				SELECT receipt.response
+				SELECT
+					receipt.response,
+					(SELECT jsonb_agg(event) FROM realtime_events event) AS realtime_events
 				FROM inserted_receipt receipt
-				WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
-			`)) as { rows: { response: { version: number } }[] };
+				WHERE EXISTS (SELECT 1 FROM realtime_events)
+			`)) as {
+        rows: {
+          response: { version: number };
+          realtime_events: RealtimeEvent[] | null;
+        }[];
+      };
 
       const receipt = result.rows[0];
+
+      await publishRealtimeEvents(receipt?.realtime_events);
       if (receipt) {
         return {
           status: 'ok',
@@ -1519,27 +1513,19 @@ export async function reorderCollectionNodes(
 					AND count(*) > 0
 				RETURNING response
 			),
-			inserted_realtime_events AS (
-				INSERT INTO ably_outbox (
-					mutation_id,
-					channel,
-					name,
-					data
-				)
+			realtime_events AS (
 				SELECT
-					${input.mutationId},
-					'collection:' || ${collectionId},
-					'collection.nodes.reordered',
+					'collection:' || ${collectionId} AS channel,
+					'collection.nodes.reordered' AS name,
 					jsonb_build_object(
 						'collectionId',
 						${collectionId}::text,
 						'nodeIds',
 						(SELECT jsonb_agg(id ORDER BY "positionKey") FROM requested)
-					)
+					) AS data
 				FROM inserted_receipt
 				UNION ALL
 				SELECT
-					${input.mutationId},
 					'user:' || member.user_id || ':collections',
 					'collection.index.updated',
 					jsonb_build_object('collectionId', ${collectionId}::text)
@@ -1547,14 +1533,22 @@ export async function reorderCollectionNodes(
 				INNER JOIN collection_members member
 					ON member.collection_id = ${collectionId}
 					AND member.revoked_at IS NULL
-				RETURNING mutation_id
 			)
-			SELECT receipt.response
+			SELECT
+				receipt.response,
+				(SELECT jsonb_agg(event) FROM realtime_events event) AS realtime_events
 			FROM inserted_receipt receipt
-			WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
-		`)) as { rows: Array<{ response: { nodeCount: number } }> };
+			WHERE EXISTS (SELECT 1 FROM realtime_events)
+		`)) as {
+      rows: {
+        response: { nodeCount: number };
+        realtime_events: RealtimeEvent[] | null;
+      }[];
+    };
 
     const receipt = result.rows[0];
+
+    await publishRealtimeEvents(receipt?.realtime_events);
     if (!receipt) {
       return { status: 'version_conflict' };
     }
@@ -1716,17 +1710,10 @@ export async function deleteCollectionNode(
 					HAVING count(*) > 0
 					RETURNING response
 				),
-				inserted_realtime_events AS (
-					INSERT INTO ably_outbox (
-						mutation_id,
-						channel,
-						name,
-						data
-					)
+				realtime_events AS (
 					SELECT
-						${mutationId},
-						'collection:' || ${collectionId},
-						'collection.node.deleted',
+						'collection:' || ${collectionId} AS channel,
+						'collection.node.deleted' AS name,
 						jsonb_build_object(
 							'collectionId',
 							${collectionId}::text,
@@ -1734,11 +1721,10 @@ export async function deleteCollectionNode(
 							${nodeId}::text,
 							'deletedNodeCount',
 							(response ->> 'deletedNodeCount')::integer
-						)
+						) AS data
 					FROM inserted_receipt
 					UNION ALL
 					SELECT
-						${mutationId},
 						'user:' || member.user_id || ':collections',
 						'collection.index.updated',
 						jsonb_build_object('collectionId', ${collectionId}::text)
@@ -1746,14 +1732,22 @@ export async function deleteCollectionNode(
 					INNER JOIN collection_members member
 						ON member.collection_id = ${collectionId}
 						AND member.revoked_at IS NULL
-					RETURNING mutation_id
 				)
-				SELECT receipt.response
+				SELECT
+					receipt.response,
+					(SELECT jsonb_agg(event) FROM realtime_events event) AS realtime_events
 				FROM inserted_receipt receipt
-				WHERE EXISTS (SELECT 1 FROM inserted_realtime_events)
-			`)) as { rows: { response: { deletedNodeCount: number } }[] };
+				WHERE EXISTS (SELECT 1 FROM realtime_events)
+			`)) as {
+        rows: {
+          response: { deletedNodeCount: number };
+          realtime_events: RealtimeEvent[] | null;
+        }[];
+      };
 
       const receipt = result.rows[0];
+
+      await publishRealtimeEvents(receipt?.realtime_events);
       if (receipt) {
         return {
           status: 'ok',

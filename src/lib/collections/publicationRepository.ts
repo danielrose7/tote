@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, eq, isNull, or } from 'drizzle-orm';
 import {
-  ablyOutbox,
   collectionMembers,
   collectionNodes,
   collections,
@@ -11,6 +10,7 @@ import {
 import { db as productionDb } from '../db';
 import { withTransactionalDb } from '../transactionalDb';
 import { roleCan } from './permissions';
+import { publishRealtimeEvents, type RealtimeEvent } from './realtimePublish';
 import type { CollectionDatabase } from './repository';
 
 export type CollectionPublicationStatus = {
@@ -112,6 +112,7 @@ async function publishCollectionSnapshotWithDatabase(
   collectionId: string,
   input: PublishCollectionInput,
   database: CollectionDatabase,
+  events: RealtimeEvent[],
 ): Promise<PublicationMutationResult<CollectionPublicationStatus>> {
   const access = await getPublishAccess(actorUserId, collectionId, database);
   if (!access) return { status: 'not_found' };
@@ -236,8 +237,7 @@ async function publishCollectionSnapshotWithDatabase(
     await database.insert(publishedBlocks).values(blockRows);
   }
 
-  await database.insert(ablyOutbox).values({
-    mutationId: randomUUID(),
+  events.push({
     channel: `collection:${collectionId}`,
     name: 'publication.updated',
     data: {
@@ -269,31 +269,36 @@ export async function publishCollectionSnapshot(
   input: PublishCollectionInput,
   database?: CollectionDatabase,
 ): Promise<PublicationMutationResult<CollectionPublicationStatus>> {
-  if (database) {
-    return publishCollectionSnapshotWithDatabase(
-      actorUserId,
-      collectionId,
-      input,
-      database,
-    );
-  }
-
-  return withTransactionalDb((transactionalDatabase) =>
-    transactionalDatabase.transaction((transaction) =>
-      publishCollectionSnapshotWithDatabase(
+  const events: RealtimeEvent[] = [];
+  const result = database
+    ? await publishCollectionSnapshotWithDatabase(
         actorUserId,
         collectionId,
         input,
-        transaction,
-      ),
-    ),
-  );
+        database,
+        events,
+      )
+    : await withTransactionalDb((transactionalDatabase) =>
+        transactionalDatabase.transaction((transaction) =>
+          publishCollectionSnapshotWithDatabase(
+            actorUserId,
+            collectionId,
+            input,
+            transaction,
+            events,
+          ),
+        ),
+      );
+  // Publish only once the transaction above has committed.
+  await publishRealtimeEvents(events);
+  return result;
 }
 
 async function unpublishCollectionSnapshotWithDatabase(
   actorUserId: string,
   collectionId: string,
   database: CollectionDatabase,
+  events: RealtimeEvent[],
 ): Promise<PublicationMutationResult<{ unpublished: true }>> {
   const access = await getPublishAccess(actorUserId, collectionId, database);
   if (!access) return { status: 'not_found' };
@@ -304,8 +309,7 @@ async function unpublishCollectionSnapshotWithDatabase(
     .where(eq(publishedCollections.sourceCollectionId, collectionId))
     .returning({ id: publishedCollections.id });
   if (deletedPublication) {
-    await database.insert(ablyOutbox).values({
-      mutationId: randomUUID(),
+    events.push({
       channel: `collection:${collectionId}`,
       name: 'publication.deleted',
       data: {
@@ -323,21 +327,25 @@ export async function unpublishCollectionSnapshot(
   collectionId: string,
   database?: CollectionDatabase,
 ): Promise<PublicationMutationResult<{ unpublished: true }>> {
-  if (database) {
-    return unpublishCollectionSnapshotWithDatabase(
-      actorUserId,
-      collectionId,
-      database,
-    );
-  }
-
-  return withTransactionalDb((transactionalDatabase) =>
-    transactionalDatabase.transaction((transaction) =>
-      unpublishCollectionSnapshotWithDatabase(
+  const events: RealtimeEvent[] = [];
+  const result = database
+    ? await unpublishCollectionSnapshotWithDatabase(
         actorUserId,
         collectionId,
-        transaction,
-      ),
-    ),
-  );
+        database,
+        events,
+      )
+    : await withTransactionalDb((transactionalDatabase) =>
+        transactionalDatabase.transaction((transaction) =>
+          unpublishCollectionSnapshotWithDatabase(
+            actorUserId,
+            collectionId,
+            transaction,
+            events,
+          ),
+        ),
+      );
+  // Publish only once the transaction above has committed.
+  await publishRealtimeEvents(events);
+  return result;
 }
