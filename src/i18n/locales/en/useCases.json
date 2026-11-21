@@ -114,7 +114,7 @@
         "setupIntro": "A simple gift list usually works best:",
         "setup": [
           "Create one collection for the occasion: “Holiday Wishlist {{year}}”, “Birthday Wishlist”, or “Registry Ideas”",
-          "Add slots only if they help the decision: “Big gifts”, “Under $50”, or one slot per recipient",
+          "Add sections only if they help the decision: “Big gifts”, “Under $50”, or one section per recipient",
           "Use selections to mark the gifts you actually want family to focus on"
         ],
         "steps": [
@@ -202,7 +202,7 @@
         "setupIntro": "A simple renovation board usually works best:",
         "setup": [
           "Create one collection per room: “Living Room”, “Kitchen”, “Primary Bedroom”",
-          "Add slots only where they help the decision: “Seating”, “Lighting”, “Rugs”, or “Hardware”",
+          "Add sections only where they help the decision: “Seating”, “Lighting”, “Rugs”, or “Hardware”",
           "Set a budget before you start comparing products, then use selections to mark the current front-runner"
         ],
         "steps": [
@@ -211,19 +211,19 @@
             "body": "Install the browser extension. When you find a piece of furniture or material you like, click to save it to the right room's collection. Tote captures the image, price, and link."
           },
           {
-            "lead": "Organize with slots and selections.",
+            "lead": "Organize with sections and selections.",
             "body": "Group items by category (seating, lighting, rugs). Use selections to mark your top picks and compare options side by side."
           },
           {
             "lead": "Set budgets and share.",
-            "body": "Add a budget to each collection or slot. Invite your partner to collaborate or share a link with your contractor for review."
+            "body": "Add a budget to each collection or section. Invite your partner to collaborate or share a link with your contractor for review."
           }
         ],
         "tip": "When a room gets crowded, trim the list back to a real shortlist. The goal is not to save everything. It is to keep the decision moving.",
         "faq": [
           {
             "q": "Can I set a budget per room?",
-            "a": "Each collection (room) can have its own budget. You can also set budgets on individual slots (categories) within a room for even more detail."
+            "a": "Each collection (room) can have its own budget. You can also set budgets on individual sections (categories) within a room for even more detail."
           },
           {
             "q": "How do I share with my contractor?",
@@ -288,7 +288,7 @@
         "setupIntro": "A simple wardrobe board usually works best:",
         "setup": [
           "Create one collection such as “Capsule Wardrobe”, “Spring Outfits”, or “Vacation Looks”",
-          "Add slots only where they help the decision: “Tops”, “Bottoms”, “Shoes”, “Outerwear”",
+          "Add sections only where they help the decision: “Tops”, “Bottoms”, “Shoes”, “Outerwear”",
           "Use selection limits to cap each category and keep the shortlist wearable, not endless"
         ],
         "steps": [
@@ -298,7 +298,7 @@
           },
           {
             "lead": "Organize into your style board.",
-            "body": "Sort pieces into collections by season or project. Use slots for categories like tops, bottoms, and shoes. Mark your favorites with selections."
+            "body": "Sort pieces into collections by season or project. Use sections for categories like tops, bottoms, and shoes. Mark your favorites with selections."
           },
           {
             "lead": "Refresh and buy.",
@@ -309,7 +309,7 @@
         "faq": [
           {
             "q": "Can I organize by season?",
-            "a": "Absolutely. Create a collection for each season — “Summer Essentials”, “Winter Basics” — and save relevant pieces into each. You can also use slots within a collection to subdivide by category."
+            "a": "Absolutely. Create a collection for each season — “Summer Essentials”, “Winter Basics” — and save relevant pieces into each. You can also use sections within a collection to subdivide by category."
           },
           {
             "q": "How do I track sale prices?",
@@ -377,7 +377,7 @@
         "setupIntro": "A shared project board usually works best when it stays narrow:",
         "setup": [
           "Create one collection for a real project such as “New Apartment” or “Back to School”",
-          "Add slots only where they help: room-based slots or simple stages like “Comparing” and “Picked”",
+          "Add sections only where they help: room-based sections or simple stages like “Comparing” and “Picked”",
           "Invite the other person right away so both people save into the same shortlist from the start"
         ],
         "steps": [
@@ -465,7 +465,7 @@
         "setupIntro": "A clean sourcing workflow usually stays simple:",
         "setup": [
           "Create one collection per client or per project phase",
-          "Add slots only where they help the review: “Living Room”, “Lighting”, “Tile”, or “Hardware”",
+          "Add sections only where they help the review: “Living Room”, “Lighting”, “Tile”, or “Hardware”",
           "Set a budget before you share and use selections to highlight the shortlist you want the client to review"
         ],
         "steps": [
@@ -475,7 +475,7 @@
           },
           {
             "lead": "Organize your picks.",
-            "body": "Use slots to group options by room or category. Mark your recommended selections. Set budgets to stay within the client's range."
+            "body": "Use sections to group options by room or category. Mark your recommended selections. Set budgets to stay within the client's range."
           },
           {
             "lead": "Share and get feedback.",

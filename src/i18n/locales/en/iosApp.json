@@ -40,7 +40,7 @@
       "details": [
         "Product name, image, price, and source URL",
         "Saved with the Share button, from Safari or any app",
-        "Collection and slot selection before saving",
+        "Collection and section selection before saving",
         "Sync across iPhone, iPad, web, and the browser extension"
       ]
     },
@@ -54,7 +54,7 @@
         },
         {
           "title": "Pick up right where you left off",
-          "description": "Your collections, slots, and selections are the same ones you left on the web — no separate mobile account to manage."
+          "description": "Your collections, sections, and selections are the same ones you left on the web — no separate mobile account to manage."
         },
         {
           "title": "Compare on the bigger screen",

@@ -19,7 +19,7 @@
       "body": "Tote reads the product page you are viewing and fills in the useful parts automatically. You can still edit the saved product in Tote when a store page is unusually sparse.",
       "details": [
         "Product name, image, price, store, and source URL",
-        "Collection and slot selection before saving",
+        "Collection and section selection before saving",
         "Right-click saving for fast repeat captures",
         "Sync with your Tote account across the web app and extension"
       ]
@@ -34,7 +34,7 @@
         },
         {
           "title": "Organize while the context is fresh",
-          "description": "Choose the right collection and slot from the popup so every find lands where the decision is happening."
+          "description": "Choose the right collection and section from the popup so every find lands where the decision is happening."
         },
         {
           "title": "Come back ready to compare",
@@ -45,7 +45,7 @@
     "docs": {
       "label": "Need the details?",
       "title": "Install, sign in, save, and troubleshoot.",
-      "body": "The extension guide covers permissions, pinning the toolbar icon, one-click saves, right-click saves, collection slots, and what to do when a store page does not expose complete product data.",
+      "body": "The extension guide covers permissions, pinning the toolbar icon, one-click saves, right-click saves, collection sections, and what to do when a store page does not expose complete product data.",
       "open": "Open extension docs"
     },
     "final": {
