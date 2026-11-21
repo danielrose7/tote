@@ -36,7 +36,7 @@ docs/
 
 ## Key Files
 
-- `src/db/schema.ts` - Drizzle schema (collections, collection_nodes, collection_members, ably_outbox, ably_nodes)
+- `src/db/schema.ts` - Drizzle schema (collections, collection_nodes, collection_members, …)
 - `src/lib/collections/repository.ts` - All collection read/write operations
 - `src/lib/publishedCollectionsDb.ts` - Public collection queries (published/shared)
 - `src/lib/formatPrice.ts` - Shared price formatter; use everywhere prices are displayed
@@ -55,7 +55,7 @@ After a mutation commits, the server publishes change notifications straight to 
 Rules for new mutations:
 - Publish only **after commit**. Single-statement writes in `repository.ts` return their channels via a `realtime_events` CTE; transactional writes (`copyRepository`, `publicationRepository`) push into an `events` array and the wrapper publishes once `transaction()` resolves.
 - Publishing is best-effort: failures are logged, never thrown, because the write already succeeded.
-- Never hold a long-lived Postgres connection (`LISTEN`, polling) for realtime — it keeps Neon compute from scaling to zero. The old `ably_outbox` + Ably Postgres connector path did exactly that (141 compute-hours in Nov 2026) and was removed; the `ably_outbox`/`ably_nodes` tables are unused and awaiting a drop migration.
+- Never hold a long-lived Postgres connection (`LISTEN`, polling) for realtime — it keeps Neon compute from scaling to zero. The old `ably_outbox` + Ably Postgres connector path did exactly that (141 compute-hours in Nov 2026) and was removed; its tables were dropped in `018_drop_ably_outbox.sql`.
 
 Token auth: clients fetch scoped subscribe-only tokens from `/api/v2/realtime/token` using `ABLY_ROOT_KEY` (server-only, never `NEXT_PUBLIC_*`).
 

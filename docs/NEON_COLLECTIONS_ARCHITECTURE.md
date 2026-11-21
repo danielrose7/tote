@@ -1362,6 +1362,12 @@ the first migration phase.
 Neon's real-time comments guide recommends pairing Neon Postgres with Ably
 LiveSync for Vercel-hosted Next.js applications.
 
+> **Superseded (Nov 2026).** The outbox + Ably Postgres connector design below
+> was retired: the connector's `LISTEN` connection kept Neon compute from scaling
+> to zero. Mutations now publish to Ably's REST API after commit
+> (`src/lib/collections/realtimePublish.ts`), and `018_drop_ably_outbox.sql`
+> dropped the tables. Channel names are unchanged. Kept here for history.
+
 The architecture avoids running long-lived WebSocket servers on Vercel:
 
 ```text
