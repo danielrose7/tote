@@ -1,6 +1,10 @@
 {
   "common": {
-    "retry": "Retry"
+    "retry": "Retry",
+    "appMeta": {
+      "title": "Tote — One place, every store",
+      "description": "Save products from any online store in one place. Organize with collections, track prices, and share wishlists — all with complete privacy."
+    }
   },
   "settings": {
     "language": {

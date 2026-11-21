@@ -1,6 +1,10 @@
 {
   "common": {
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "appMeta": {
+      "title": "Tote — Un solo lugar, todas las tiendas",
+      "description": "Guarda productos de cualquier tienda en línea en un solo lugar. Organízalos en colecciones, sigue los precios y comparte listas de deseos, con total privacidad."
+    }
   },
   "settings": {
     "language": {

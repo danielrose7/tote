@@ -1,6 +1,10 @@
 {
   "common": {
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "appMeta": {
+      "title": "Tote — Ein Ort, jeder Shop",
+      "description": "Speichere Produkte aus jedem Onlineshop an einem Ort. Ordne sie in Sammlungen, verfolge Preise und teile Wunschlisten — mit voller Privatsphäre."
+    }
   },
   "settings": {
     "language": {

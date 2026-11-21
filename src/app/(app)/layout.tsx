@@ -1,13 +1,22 @@
+import type { Metadata } from 'next';
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
 import { loadResources } from '@/i18n/catalogs';
 import { I18nProvider } from '@/i18n/client';
 import { LocaleSync } from '@/i18n/LocaleSync';
-import { getLocale } from '@/i18n/server';
+import { getLocale, getT } from '@/i18n/server';
 import { Providers } from '../providers';
 import { RootShell } from '../RootShell';
 import { siteMetadata } from '../siteMetadata';
 
-export const metadata = siteMetadata;
+/** Site defaults, with the tab title and description in the user's language. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getT();
+  return {
+    ...siteMetadata,
+    title: { template: '%s — Tote', default: t('common.appMeta.title') },
+    description: t('common.appMeta.description'),
+  };
+}
 
 export default async function AppLayout({
   children,
