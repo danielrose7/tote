@@ -1,7 +1,7 @@
 # Localization plan
 
 Web app first, then the Chrome extension and the Expo iOS app. Spanish is the first
-language. Written 2026-11-14.
+language. Written 2026-11-14; tracker last updated 2026-11-21.
 
 Prior art, worth reading before touching this:
 
@@ -10,9 +10,111 @@ Prior art, worth reading before touching this:
 - `../story-points/CLAUDE.md` ("Every user-facing string goes through t()") — English
   source strings as keys, fallback to English, `tn()` for plurals, `xx` pseudo-locale.
 
-## Status · 14 November 2026
+## Tracker — start here (2026-11-21)
 
-**Phase 0 — web app: done (English only), local commits, not pushed.**
+| Phase | Scope | State |
+|---|---|---|
+| 0 | Plumbing, authenticated web app on `t()` | **Done**, pushed |
+| 1 | Spanish: app catalog, Clerk, LLM output language | **Done**, pushed — no native review |
+| 1b | German (de): app + public catalogs, Clerk, LLM | **Done**, pushed — no native review |
+| 2 | Public pages: landing, templates, ios-app, chrome-extension, use-cases, docs (`/es`, `/de`) | **Done**, pushed except the last commit (see below); `/privacy` intentionally English |
+| 3 | **Chrome extension** | **Not started — next** |
+| 4 | **Expo iOS app** (+ App Store metadata, share extension) | Not started |
+| 5 | Native-speaker review of es/de; fr / pt-BR / ja | Not started |
+
+**Git:** everything through `8040418` is on `origin/main` (deployed). `9a12bd5` ("section" wording
+in marketing copy) is on local `main` only. The same change also exists as `606999a` on branch
+`expo-sdk-58`, so expect a duplicate when those branches meet. Verify with
+`git log origin/main..main`. Migration 0007 (`users.locale`) ships with the production
+`pnpm build`; since the localization commits are on `origin/main`, confirm it ran in Neon
+before relying on the profile-synced language.
+
+**Rules for the next session**
+
+- Never push to `main` or run `pnpm build` / migrations without asking — a push deploys.
+- The repo's `.env.local` holds live credentials. Spot-check in a throwaway worktree with dummy
+  env (recipe at the end of "Open items from Phase 0"); `git worktree add <scratch>/wt main`,
+  `cp -cR node_modules`, dummy `pk_live_…` Clerk key, `NEON_DB_POSTGRES_URL` pointing nowhere.
+- `pnpm i18n:check` and `vitest run src/i18n` after touching strings (catalog key/tag parity
+  tests cover every non-English locale).
+- Terminology is fixed per locale (Phase 1 and German sections below). **The product says
+  "section", never "slot"** (marketing copy was corrected 2026-11-21; URL `/docs/slots`
+  and anchor ids intentionally kept).
+
+### Phase 3 — Chrome extension: pick-up notes
+
+Nothing is wired yet. Facts gathered so far:
+
+- It is a separate package (`chrome-extension/`, own `package.json`, pnpm lock, Vite +
+  `@crxjs/vite-plugin`, React 19). It has no i18n dependency. `CLAUDE.md` there covers
+  build, release (bump `manifest.json` and `package.json` together) and tests.
+- UI strings live in `src/popup/popup.tsx` (~470 lines), `src/popup/SaveUI.tsx` (~520), and
+  `src/background/service-worker.ts` (context-menu title `"Save to Tote"`, line ~240). Also
+  `manifest.json` name/description and the Chrome Web Store listing (`docs/CWS_LISTING.md`).
+- `SaveUI.test.tsx` asserts English strings (e.g. the `Save to Tote` button): update the
+  tests alongside the strings.
+- API calls use a `Bearer` token (`src/lib/captureApi.ts`). Read the signed-in user's
+  `locale` via `GET /api/v2/user/preferences`; fall back to `chrome.storage.local`, then
+  `chrome.i18n.getUILanguage()`, then `en`. A language change in the extension should
+  `PATCH` the same endpoint.
+- Decision already made: i18next with bundled catalogs, **not** `chrome.i18n` for display
+  strings. Use `_locales/` only for manifest name/description (`__MSG_…__`). Load one
+  locale lazily; watch bundle size.
+- **Strings the already-translated docs quote, which must match exactly:**
+  Spanish «Guardar en Tote», «Agregar a Chrome», «Guardar», «Iniciar sesión»;
+  German „In Tote speichern“, „Hinzufügen“. English: "Save to Tote", "Add to Chrome",
+  "Save", "Add section", "No section". Check `docs` catalog areas
+  (`src/i18n/locales/{es,de}/docs.json`, `extension` and `getting-started` pages) and
+  `chromeExtension.json` before finalizing wording.
+- The extraction logic is unaffected; keep the two extractor files in sync as always.
+- Done when: popup, context menu, errors/empty states and manifest strings are localized,
+  `xx` pseudo-locale shows no clipped text, tests pass, and the Spanish/German docs labels
+  match.
+
+### Phase 4 — Expo iOS app: pick-up notes
+
+- `mobile-app/` (React Native / Expo; has its own `CLAUDE.md`). No `expo-localization` or
+  i18n dependency yet. Roughly 60–70 literal strings by a rough grep, across
+  `src/screens/*` (collection detail, account settings), `src/components/*` (save sheet,
+  share sheet, accept-invite sheet, collection picker, …) and the share extension entry
+  `index.share.tsx`.
+- Locale: profile first (same endpoint as above), then `expo-localization`. Enable
+  per-app language via the config plugin `supportedLocales` (and `CFBundleLocalizations`
+  in `ios-overrides/Tote/Info.plist`); iOS applies it on relaunch. The share extension must
+  load strings too.
+- Reuse catalogs where strings overlap (a generated copy with a `--check` step, as
+  sun-calendar does) rather than hand-copying.
+- App Store metadata per locale (name, subtitle, description, keywords, screenshots text).
+- The working tree on branch `expo-sdk-58` has large uncommitted native changes (Podfile,
+  Xcode project, splash assets). Do not mix localization work into that without asking.
+
+### Backlog and loose ends
+
+- **Native review** of es and de (all machine-authored). Clerk's `deDE` is formal *Sie*
+  while the app is *du*; override if reviewers mind.
+- **`/privacy`** stays English until legal reviews a translation.
+- **Translated URL slugs** (`/es/casos-de-uso/…`) discussed 2026-11-21 and **deferred**: English
+  slugs under the locale prefix are the common SaaS pattern and keep hreflang/sitemap/switcher
+  logic simple. Revisit for the use-case pages if Spanish search traffic matters (needs a
+  per-locale slug map feeding `localizedPath`, `alternatesFor`, sitemap, proxy).
+- **Docs accuracy:** the sharing guide was rewritten to the real publish dialog on
+  2026-11-21 (Publish collection → Publish snapshot / Replace public snapshot / Unpublish;
+  Manage team → Create link). Unconfirmed: there is no "leave collection" button, so the
+  guide tells people to ask an owner/admin to remove them. Other UI labels in the docs
+  ("Add Content" → type "Section", "Add Link", "Add Collection") match the catalog as of
+  that date; re-check when the UI changes.
+- **Footer label nits:** footer says "Compras para clientes" / "Documentación de ayuda" where
+  the nav/sidebar say "Proyectos profesionales" / "Documentación".
+- **Not verified in a browser:** authenticated app (needs a real Clerk dev instance),
+  `/es/templates` and `/de/templates` card data (needs a database), FAQ rich results.
+- **Unchecked leftovers from Phase 0:** the Jazz-leftover bug at `ImportPageClient.tsx`
+  (no longer found at the old line — confirm it is gone), and ~127 pre-existing `tsc` errors.
+- **Curator prompts** beyond the system strings (few-shot examples, the English
+  gift-relationship word list) were never translated or audited.
+
+## Status · 14 November 2026 (historical detail, Phases 0–2)
+
+**Phase 0 — web app: done (English only).** (Originally local commits; now pushed — see the tracker.)
 
 | Piece | State |
 |---|---|
@@ -37,7 +139,7 @@ catalog per route area so a page only ships the areas it uses.
 session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits …" (was
 "1 item limit …"); negative currency renders "-$0.50" (was "$-0.50").
 
-### Phase 1 (Spanish) — done, local commits
+### Phase 1 (Spanish) — done
 
 - `src/i18n/locales/es/*.json`: neutral Latin American, informal *tú*; "agregar" for Add,
   "colección", "sección", "artículo" (item), "selección", "presupuesto", "publicar",
@@ -55,7 +157,7 @@ session" no longer pluralize; "1 week ago" (was "1 weeks ago"); "1 item limits �
 - The curator's prompts beyond the system strings (e.g. few-shot examples, the English
   gift word list) were not translated or audited.
 
-### German (de) — done, local commits
+### German (de) — done
 
 Second locale, following the order sun-calendar and story-points ship (en, es, de, fr, pt, ja).
 
@@ -157,9 +259,8 @@ still need a real Clerk dev instance to check by eye.
 
 ## Assumptions to confirm
 
-- Docs and use-case pages stay English in the first Spanish pass; landing, templates,
-  ios-app and chrome-extension pages are translated first. `/privacy` needs a legal
-  review before it is translated.
+- (Resolved) Docs and use-case pages were first planned to stay English; they are now
+  translated too. `/privacy` still needs a legal review before it is translated.
 - Per-device override is not built in v1. iOS's per-app language (Settings → Tote →
   Language) still wins on that device, as the OS applies it before launch.
 
@@ -178,7 +279,7 @@ it up on next launch (and on the existing Ably user channel for the web, if chea
 
 Privacy: a locale code is a plain preference. No analytics, no extra collection.
 
-## Phase 0 — Plumbing, English only (no visible change)
+## Phase 0 — Plumbing, English only (no visible change) — DONE
 
 1. Add `i18next`, `react-i18next`. **Measure bundle impact before committing** and confirm
    server components work (hooks don't — use i18next directly on the server).
@@ -207,7 +308,7 @@ Privacy: a locale code is a plain preference. No analytics, no extra collection.
 Exit: every user-visible string in the authenticated app goes through `t()`; `xx` shows no
 clipped text and no plain-English leftovers; no English-only plural or enum left.
 
-## Phase 1 — Spanish, authenticated app
+## Phase 1 — Spanish, authenticated app — DONE
 
 - Wrap ~420 literals, biggest files first.
 - `es` catalog. Seed shared vocabulary from `../story-points/src/locales/es.ts`.
@@ -218,7 +319,7 @@ clipped text and no plain-English leftovers; no English-only plural or enum left
 - Terminology table (like sun-calendar's): record the Spanish for collection, slot,
   selection, budget, publish, invite so it isn't re-derived.
 
-## Phase 2 — Public pages
+## Phase 2 — Public pages — DONE (original plan; see Status for what shipped)
 
 - `src/app` public routes gain locale-prefixed variants for non-default locales.
 - Prose pages are whole-page content per locale, not keys. Translate landing, templates,
@@ -228,7 +329,7 @@ clipped text and no plain-English leftovers; no English-only plural or enum left
 - Watch `AnchorHeading` ids derived from English heading text.
 - `/s/[username]/...` stays user content; only the chrome around it translates.
 
-## Phase 3 — Chrome extension
+## Phase 3 — Chrome extension — NEXT (original plan; pick-up notes are in the Tracker)
 
 - i18next with bundled catalogs; locale from `chrome.storage` / profile (it already talks
   to the API). Do **not** use `chrome.i18n` for display strings — it has no per-extension
@@ -236,7 +337,7 @@ clipped text and no plain-English leftovers; no English-only plural or enum left
 - Mind bundle size; load one locale lazily.
 - Extraction logic is unaffected and the two extractor files stay in sync as before.
 
-## Phase 4 — Expo iOS app
+## Phase 4 — Expo iOS app (original plan; pick-up notes are in the Tracker)
 
 - `expo-localization` + i18next; enable per-app language via the config plugin
   `supportedLocales`. iOS applies the per-app setting on relaunch.
@@ -246,8 +347,8 @@ clipped text and no plain-English leftovers; no English-only plural or enum left
 
 ## Later
 
-Native-speaker review of Spanish (nobody has reviewed machine-authored first passes —
-sun-calendar flagged the same gap), then de/fr/pt-BR/ja. RTL (Arabic, Hebrew) is a design
+Native-speaker review of Spanish and German (nobody has reviewed machine-authored first
+passes — sun-calendar flagged the same gap), then fr/pt-BR/ja. RTL (Arabic, Hebrew) is a design
 problem, not a flip — audit before promising it.
 
 ## Risks
