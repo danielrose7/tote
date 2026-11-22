@@ -13,7 +13,7 @@ import {
 import type { RootStackParamList } from '../navigation/types';
 import { Button } from '../components/Button';
 import { getTokenWithRetry, revokeApiKey } from '../lib/api';
-import { useReadableInset } from '../lib/layout';
+import { useReadablePadding } from '../lib/layout';
 import { clearAllCachedData } from '../lib/localDb';
 
 const API_BASE_URL = 'https://tote.tools';
@@ -30,7 +30,7 @@ export function AccountSettingsScreen({ navigation }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const inset = useReadableInset(560);
+  const sidePadding = useReadablePadding(560);
 
   async function handleSave() {
     if (!user) return;
@@ -133,7 +133,7 @@ export function AccountSettingsScreen({ navigation }: Props) {
   return (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[styles.content, { paddingHorizontal: inset }]}
+      contentContainerStyle={[styles.content, sidePadding]}
     >
       <Text style={styles.fieldLabel}>First name</Text>
       <TextInput

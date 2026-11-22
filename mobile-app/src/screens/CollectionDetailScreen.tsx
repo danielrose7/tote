@@ -17,13 +17,21 @@ import {
   RefreshControl,
   ScrollView,
   SectionList,
+  type StyleProp,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  type ViewStyle,
 } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, {
+  Extrapolation,
+  interpolate,
+  type SharedValue,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 import {
   Sortable,
   SortableGrid,
@@ -61,7 +69,7 @@ import { formatPrice } from '../lib/formatPrice';
 import {
   IDEAL_TILE_WIDTH,
   useGridLayout,
-  useReadableInset,
+  useReadablePadding,
 } from '../lib/layout';
 import { getCachedNodes, upsertNodes } from '../lib/localDb';
 import type { RootStackParamList } from '../navigation/types';
@@ -219,7 +227,6 @@ function ProductRow({
   refreshKey: number;
   itemIndex: number;
 }) {
-  const swipeRef = useRef<Swipeable>(null);
   const opacity = useRef(new Animated.Value(1)).current;
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -245,58 +252,47 @@ function ProductRow({
 
   return (
     <Animated.View style={{ opacity, transform: [{ translateY }] }}>
-      <Swipeable
-        ref={swipeRef}
-        renderLeftActions={(progress) => {
-          const translateX = progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [-160, 0],
-            extrapolate: 'clamp',
-          });
-          return (
-            <Animated.View
-              style={[styles.leftActions, { transform: [{ translateX }] }]}
+      <ReanimatedSwipeable
+        renderLeftActions={(progress, _translation, swipeable) => (
+          <SwipeActionsSlide
+            progress={progress}
+            closedOffset={-160}
+            style={styles.leftActions}
+          >
+            <TouchableOpacity
+              style={styles.editActionInner}
+              onPress={() => {
+                swipeable.close();
+                onEdit();
+              }}
             >
-              <TouchableOpacity
-                style={styles.editActionInner}
-                onPress={() => {
-                  swipeRef.current?.close();
-                  onEdit();
-                }}
-              >
-                <Text style={styles.editActionText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.refreshActionInner}
-                onPress={() => {
-                  swipeRef.current?.close();
-                  onRefresh();
-                }}
-              >
-                <Text style={styles.refreshActionText}>Refresh</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        }}
-        renderRightActions={(progress) => {
-          const translateX = progress.interpolate({
-            inputRange: [0, 1],
-            outputRange: [80, 0],
-            extrapolate: 'clamp',
-          });
-          return (
-            <Animated.View
-              style={[styles.deleteAction, { transform: [{ translateX }] }]}
+              <Text style={styles.editActionText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.refreshActionInner}
+              onPress={() => {
+                swipeable.close();
+                onRefresh();
+              }}
             >
-              <TouchableOpacity
-                style={styles.deleteActionInner}
-                onPress={onDelete}
-              >
-                <Text style={styles.deleteActionText}>Remove</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        }}
+              <Text style={styles.refreshActionText}>Refresh</Text>
+            </TouchableOpacity>
+          </SwipeActionsSlide>
+        )}
+        renderRightActions={(progress) => (
+          <SwipeActionsSlide
+            progress={progress}
+            closedOffset={80}
+            style={styles.deleteAction}
+          >
+            <TouchableOpacity
+              style={styles.deleteActionInner}
+              onPress={onDelete}
+            >
+              <Text style={styles.deleteActionText}>Remove</Text>
+            </TouchableOpacity>
+          </SwipeActionsSlide>
+        )}
         leftThreshold={40}
         rightThreshold={40}
         overshootLeft={false}
@@ -354,9 +350,39 @@ function ProductRow({
             </TouchableOpacity>
           )}
         </TouchableOpacity>
-      </Swipeable>
+      </ReanimatedSwipeable>
     </Animated.View>
   );
+}
+
+/**
+ * Slides a row's swipe actions in from `closedOffset` as the row opens.
+ * `progress` is 0 closed → 1 open (and past 1 on overshoot, hence the clamp).
+ */
+function SwipeActionsSlide({
+  progress,
+  closedOffset,
+  style,
+  children,
+}: {
+  progress: SharedValue<number>;
+  closedOffset: number;
+  style: StyleProp<ViewStyle>;
+  children: React.ReactNode;
+}) {
+  const slide = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: interpolate(
+          progress.value,
+          [0, 1],
+          [closedOffset, 0],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+  return <Reanimated.View style={[style, slide]}>{children}</Reanimated.View>;
 }
 
 function EditProductModal({
@@ -1367,7 +1393,7 @@ function MasonryGrid({
       contentInsetAdjustmentBehavior="never"
       contentContainerStyle={[
         styles.masonryContainer,
-        { paddingHorizontal: grid.sideInset },
+        grid.padding,
       ]}
       onScroll={onScroll}
       scrollEventThrottle={16}
@@ -1414,7 +1440,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   const [refreshKey, setRefreshKey] = useState(0);
   const { viewMode, setViewMode } = useViewMode();
   const reorderGrid = useGridLayout(IDEAL_TILE_WIDTH);
-  const listInset = useReadableInset();
+  const listPadding = useReadablePadding();
   const { track, syncState, lastSavedAt } = useSyncStatus();
   const scrollY = useRef(new Animated.Value(0)).current;
 
@@ -2028,7 +2054,11 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
   // dimensions — so it can't reuse MasonryGrid's flex sizing, only its column count.
   const reorderColumns = reorderGrid.columns;
   const gridItemSize = Math.floor(
-    (reorderGrid.width - 52 - REORDER_GRID_GAP * (reorderColumns - 1)) /
+    (reorderGrid.width -
+      insets.left -
+      insets.right -
+      52 -
+      REORDER_GRID_GAP * (reorderColumns - 1)) /
       reorderColumns,
   );
   const reorderSlotItems: ReorderableBlockItem[] = sectionNodes.map((slot) => ({
@@ -2271,7 +2301,14 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
         style={[styles.statusScrim, { height: insets.top + 24 }]}
         pointerEvents="none"
       />
-      <View style={[styles.floatingTopBar, { top: topBarTop }]}>
+      <View
+        style={[
+          styles.floatingTopBar,
+          // left/right include the safe area so the buttons clear the Duo's
+          // camera (and a sideways notch) instead of sitting under it.
+          { top: topBarTop, left: 16 + insets.left, right: 16 + insets.right },
+        ]}
+      >
         <TouchableOpacity
           style={styles.floatingCircleButton}
           onPress={() => navigation.goBack()}
@@ -2338,7 +2375,13 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
       ) : isReorderMode ? (
         <View style={styles.reorderModeContainer}>
           {pageHeader}
-          <View style={styles.reorderModeBody}>
+          <View
+            style={[
+              styles.reorderModeBody,
+              // Clear a side camera rail (Duo) on top of the base 16pt.
+              { paddingLeft: 16 + insets.left, paddingRight: 16 + insets.right },
+            ]}
+          >
             {hasMultipleSlots || reorderSections.length > 1 ? (
               <View style={styles.reorderControls}>
                 <View style={styles.reorderScopeSwitch}>
@@ -2546,7 +2589,7 @@ export function CollectionDetailScreen({ route, navigation }: Props) {
           ListHeaderComponent={pageHeader}
           contentContainerStyle={[
             styles.list,
-            { paddingHorizontal: listInset },
+            listPadding,
           ]}
           stickySectionHeadersEnabled={false}
           onRefresh={startBulkRefresh}
@@ -2807,7 +2850,7 @@ const styles = StyleSheet.create({
   },
   sectionHeaderLeft: { flex: 1, flexDirection: 'column', gap: 2 },
   modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   modalOverlay: {

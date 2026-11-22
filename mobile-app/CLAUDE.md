@@ -52,6 +52,40 @@ If it only appears once, something is out of sync.
 Caveat: the build phase lives in `ios/Tote.xcodeproj/project.pbxproj`, which prebuild
 also regenerates. After a prebuild, re-add it (or restore the pbxproj from git).
 
+### After any `expo prebuild`
+
+Prebuild rewrites the pbxproj and Podfile and silently drops hand-made settings.
+Check `git diff` for all of these and restore them:
+
+- The `[Tote] Check iOS overrides in sync` phase on both targets (above).
+- `DEVELOPMENT_TEAM` on both targets, every configuration.
+- `PrivacyInfo.xcprivacy` in the Tote target's Resources phase.
+- `IPHONEOS_DEPLOYMENT_TARGET = 17.0` on `ToteShareExtension` (the plugin writes
+  15.1; ClerkExpo needs 17).
+- `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` on `ToteShareExtension` — the plugin
+  resets them to 1.0 / 1. Keep them equal to the app's, or App Store Connect warns.
+- The three hand-written `post_install` hooks in `ios/Podfile`: no script sandboxing;
+  raise pod deployment targets below iOS 15, which Xcode 27 rejects; and put
+  expo-sqlite's own directory on its header search path (otherwise it compiles
+  against the SDK's `sqlite3.h` and fails with "cannot find 'exsqlite3_…' in scope").
+
+If `exsqlite3_…` errors appear after a `pnpm install`, run `pod install` again:
+expo-sqlite copies `sqlite3.c`/`.h` into its package during `pod install`, and pnpm
+deletes them whenever it re-links the package.
+
+`index.share.js` exists only because expo-share-extension hardcodes that filename as
+the Release bundle entry; it forwards to `index.share.tsx`. Don't delete it — Debug
+builds still work without it, so its absence only shows up when archiving.
+
+### Xcode 27 / UIScene
+
+The iOS 27 SDK refuses to launch apps without the UIScene lifecycle. Expo SDK 58
+provides it: `ios/Tote/SceneDelegate.swift` subclasses `ExpoAppSceneDelegate`, which
+also forwards `tote://` URLs and universal links to `Linking`, and
+`ios-overrides/Tote/Info.plist` declares `UIApplicationSceneManifest`. Don't add
+window setup or `openURL` handling back to `AppDelegate.swift` — under scenes UIKit
+never calls it.
+
 ## Key Files
 
 - `App.tsx` — Main app (sign-in + collection list)
@@ -131,19 +165,41 @@ Pattern: load from cache immediately → fetch from API in background → update
 
 ## Layout
 
-The app runs on iPad (`supportsTablet: true`), so **never hardcode a column count
-or read `Dimensions.get('window')` at render time** — the latter doesn't update on
-rotation or Split View resize.
+The app runs on iPad (`supportsTablet: true`) and iPhone Duo, so **never hardcode a
+column count or read `Dimensions.get('window')` at render time** — the latter doesn't
+update on rotation, Split View resize, or folding/unfolding a Duo.
+
+iPhone Duo: folded it's an ordinary 466pt-wide phone; open it's 669 × 951pt and
+**ignores `UISupportedInterfaceOrientations`**, so the app runs there sideways too
+(even though iPhone is otherwise portrait-only). Fold/unfold is just a window-size
+change; the layout hooks handle it with no Duo-specific code. Things to keep in mind:
+
+- The folded screen has a camera + status-bar rail down its right edge (seen in the
+  simulator), so `insets.right` is large and `insets.left` is 0. The layout hooks
+  therefore return **separate** `paddingLeft`/`paddingRight` that center content
+  inside the safe area — never pad both sides by the larger inset (that wastes the
+  same width again on the left). Anything absolutely positioned against a side edge
+  must add `useSafeAreaInsets().left/right` itself (see `floatingTopBar` and
+  `reorderModeBody` in `CollectionDetailScreen`).
+- `isRegular` (width ≥ 660pt) stands in for the regular horizontal size class: the
+  open Duo is regular in both poses, the folded Duo and every iPhone are compact.
+  Apple's Duo guidance is to design for those two classes, not per pose.
+- Test in the `iPhone Duo` simulator (iOS 27.1+). Folding and unfolding has to be
+  done in Simulator.app; `simctl` has no command for it. In `simctl io`,
+  `--display=primary` is the folded screen and `primary-1` the open one.
 
 Use `src/lib/layout.ts`:
 
-- `useGridLayout(idealTileWidth)` → `{ columns, columnWidth, gap, sideInset, width, isRegular }`.
+- `useGridLayout(idealTileWidth)` → `{ columns, columnWidth, gap, padding, contentWidth, width, isRegular }`.
   Column count is derived from how many `idealTileWidth`-ish tiles fit, the way Photos,
   Pinterest and SwiftUI's `LazyVGrid(.adaptive(minimum:))` do it. Tiles stay the same
   physical size on every device; the grid gains columns instead of stretching them.
-  `sideInset` both pads and centers, capping grids at 1100pt.
-- `useReadableInset(maxWidth?)` — centers a single column of rows/forms (default 720pt).
-- `useBreakpoints()` — raw `{ width, isRegular, gutter, gap }` if you need the primitives.
+  Spread `padding` (`{ paddingLeft, paddingRight }`) into the container style; it pads
+  and centers within the safe area, capping grids at 1100pt.
+- `useReadablePadding(maxWidth?)` → `{ paddingLeft, paddingRight }` centering a single
+  column of rows/forms (default 720pt).
+- `useBreakpoints()` — raw `{ width, safeLeft, safeRight, safeWidth, isRegular, gutter, gap }`
+  if you need the primitives.
 
 For full-width sheets and forms, the cheap fix is `width: '100%'` + `maxWidth` +
 `alignSelf: 'center'` in the stylesheet — a no-op on phones, since the caps never bind

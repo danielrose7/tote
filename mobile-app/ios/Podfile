@@ -13,10 +13,14 @@ def ccache_enabled?(podfile_properties)
 end
 
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
-ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
-ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
-ENV['RCT_HERMES_V1_ENABLED'] ||= '1' if podfile_properties['expo.useHermesV1'] == 'true'
-platform :ios, podfile_properties['ios.deploymentTarget'] || '15.1'
+ENV['RCT_USE_RN_DEP'] ||= podfile_properties['ios.buildReactNativeFromSource'] == 'true' ? '0' : '1'
+ENV['RCT_USE_PREBUILT_RNCORE'] ||= podfile_properties['ios.buildReactNativeFromSource'] == 'true' ? '0' : '1'
+ENV['RCT_HERMES_V1_ENABLED'] ||= '0' if podfile_properties['expo.useHermesV1'] == 'false'
+# An explicit `ios.usePrecompiledModules: false` must win even when the env var is already set
+# (e.g. EXPO_USE_PRECOMPILED_MODULES exported by EAS Build), so force-disable here before the default.
+ENV['EXPO_USE_PRECOMPILED_MODULES'] = '0' if podfile_properties['EXPO_USE_PRECOMPILED_MODULES'] == 'false'
+ENV['EXPO_USE_PRECOMPILED_MODULES'] ||= '1'
+platform :ios, podfile_properties['ios.deploymentTarget'] || '16.4'
 
 prepare_react_native_project!
 
@@ -69,19 +73,6 @@ target 'Tote' do
     end
 # @generated end post-install-build-settings
 
-    # Swift 6 strict concurrency in these pods' SwiftUI hosting-view protocol
-    # conformances trips "crosses into main actor-isolated code" errors under
-    # the project's default toolchain. Pin them to Swift 5 / minimal
-    # concurrency checking until upstream addresses it.
-    installer.pods_project.targets.each do |target|
-      if ['ExpoModulesCore', 'ExpoImage'].include?(target.name)
-        target.build_configurations.each do |config|
-          config.build_settings['SWIFT_VERSION'] = '5'
-          config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
-        end
-      end
-    end
-
     # Xcode's build-script sandboxing breaks some CocoaPods script build
     # phases (Hermes replacement, RN codegen) used here.
     installer.pods_project.targets.each do |target|
@@ -90,11 +81,36 @@ target 'Tote' do
       end
     end
 
+    # Xcode 27 rejects deployment targets below iOS 15 as a hard error, and
+    # several pods (GoogleSignIn, SDWebImage, AppAuth, Promises, ...) still
+    # declare 9.0–13.4. Raise those to 15.0; the app itself targets 17.0, so
+    # this changes nothing about where it runs.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if current && Gem::Version.new(current) < Gem::Version.new('15.0')
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+        end
+      end
+    end
+
+    # expo-sqlite vendors its own sqlite3.h (symbols renamed to exsqlite3_*)
+    # as a *project* header, so it's on no search path. When Swift builds the
+    # ExpoSQLite clang module, the umbrella's `#import "sqlite3.h"` then falls
+    # through to the iOS SDK's sqlite3.h, and every exsqlite3_* call fails with
+    # "cannot find in scope". Put the pod's own directory ahead of the SDK.
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'ExpoSQLite'
+      target.build_configurations.each do |config|
+        config.build_settings['HEADER_SEARCH_PATHS'] = '$(inherited) "${PODS_TARGET_SRCROOT}"'
+      end
+    end
+
     installer.pods_project.save
   end
 end
 
-target 'ToteShareExtension' do
+target 'ToteShareExtension' do     
   exclude = ["expo-updates"]
   use_expo_modules!(exclude: exclude)
   

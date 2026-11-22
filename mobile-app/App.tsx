@@ -1025,13 +1025,13 @@ function CollectionListContent({
       )
     : collections;
   const grid = useGridLayout(IDEAL_TILE_WIDTH);
-  const dockInset = Math.max(
-    grid.sideInset,
-    Math.round((grid.width - 600) / 2),
-  );
+  // Center a ≤600pt dock over the grid (same centre, clear of any rail).
+  const dockSlack = Math.max(0, Math.round((grid.contentWidth - 600) / 2));
+  const dockLeft = grid.padding.paddingLeft + dockSlack;
+  const dockRight = grid.padding.paddingRight + dockSlack;
 
   return (
-    <View style={[styles.container, { paddingHorizontal: grid.sideInset }]}>
+    <View style={[styles.container, grid.padding]}>
       <View style={styles.header}>
         <Text style={[styles.title, grid.isRegular && styles.titleRegular]}>
           Tote
@@ -1132,7 +1132,7 @@ function CollectionListContent({
           styles.collectionDock,
           // Keep the floating dock a comfortable thumb-width, not the full
           // 1024pt of an iPad — a search field that long looks unfinished.
-          { left: dockInset, right: dockInset },
+          { left: dockLeft, right: dockRight },
         ]}
       >
         <View style={styles.collectionSearch}>
@@ -1698,7 +1698,7 @@ const styles = StyleSheet.create({
     width: '70%',
   },
   modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   modalOverlay: {

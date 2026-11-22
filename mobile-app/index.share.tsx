@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   },
   // Both panes are stacked; only their transforms differ.
   pane: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#fff',
   },
   header: {
