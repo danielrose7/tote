@@ -52,3 +52,4 @@ chrome-extension/dist.pem
 /ios/
 /android/
 /.expo/
+.env*
