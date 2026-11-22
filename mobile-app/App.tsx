@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -35,7 +35,10 @@ import {
 import { MasonryGrid } from './src/components/MasonryGrid';
 import { SaveProductSheet } from './src/components/SaveProductSheet';
 import { useInviteLink } from './src/hooks/useInviteLink';
-import { usePendingUrl } from './src/hooks/usePendingUrl';
+import {
+  type PendingCapture,
+  usePendingUrl,
+} from './src/hooks/usePendingUrl';
 import type { Collection } from './src/lib/api';
 import {
   captureUrl,
@@ -1214,31 +1217,27 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
   const [enrichQueue, setEnrichQueue] = useState<EnrichJob[]>([]);
   const [enrichToken, setEnrichToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (pendingCaptures.length === 0) return;
-    const captures = pendingCaptures;
-    clearPendingCaptures();
-
-    (async () => {
+  // Saves links picked in the share extension. Each is saved with just its URL
+  // and share-sheet title, then queued for HeadlessExtractor, which fills in
+  // title, image and price with the WebView extractor.
+  const saveCaptures = useCallback(
+    async (captures: PendingCapture[]) => {
+      const failed: PendingCapture[] = [];
+      let lastError: unknown;
       const token = await getToken();
-      if (!token) return;
-
-      await Promise.all(
-        captures.map(async (capture) => {
-          try {
-            const result = await captureUrl(token, {
-              collectionId: capture.collectionId,
-              sectionId: capture.sectionId,
-              url: capture.url,
-              title: capture.title || capture.url,
-              imageUrl: capture.imageUrl,
-              price: capture.price,
-              description: capture.description,
-            });
-            // Skip enrichment if the share extension already extracted rich metadata
-            const hasRealTitle = capture.title && capture.title !== capture.url;
-            const hasRichData = hasRealTitle && capture.imageUrl;
-            if (!hasRichData) {
+      if (!token) {
+        failed.push(...captures);
+        lastError = new Error('You are signed out.');
+      } else {
+        await Promise.all(
+          captures.map(async (capture) => {
+            try {
+              const result = await captureUrl(token, {
+                collectionId: capture.collectionId,
+                sectionId: capture.sectionId,
+                url: capture.url,
+                title: capture.title || capture.url,
+              });
               setEnrichToken(token);
               setEnrichQueue((prev) => [
                 ...prev,
@@ -1249,14 +1248,40 @@ function AppScreens({ autoAdd }: { autoAdd: boolean }) {
                   url: capture.url,
                 },
               ]);
+            } catch (error) {
+              failed.push(capture);
+              lastError = error;
             }
-          } catch {
-            // Save failed silently — item not added; user will see nothing changed
-          }
-        }),
-      );
-      DeviceEventEmitter.emit('tote:collectionUpdated');
-    })();
+          }),
+        );
+        DeviceEventEmitter.emit('tote:collectionUpdated');
+      }
+
+      if (failed.length > 0) {
+        const detail =
+          lastError instanceof Error ? lastError.message : String(lastError);
+        Alert.alert(
+          failed.length === 1
+            ? "Couldn't save your link"
+            : `Couldn't save ${failed.length} links`,
+          detail,
+          [
+            { text: 'Discard', style: 'destructive' },
+            { text: 'Retry', onPress: () => saveCaptures(failed) },
+          ],
+        );
+      }
+    },
+    [getToken],
+  );
+
+  useEffect(() => {
+    if (pendingCaptures.length === 0) return;
+    const captures = pendingCaptures;
+    // Cleared up front so a re-render can't save them twice; saveCaptures
+    // offers anything that fails back to the user instead of dropping it.
+    clearPendingCaptures();
+    saveCaptures(captures);
   }, [pendingCaptures]);
 
   function handleDismissPendingUrl() {

@@ -16,10 +16,6 @@ export type PendingCapture = {
   title?: string;
   collectionId: string;
   sectionId?: string;
-  imageUrl?: string;
-  price?: string;
-  currency?: string;
-  description?: string;
 };
 
 async function fetchPendingCaptures(): Promise<PendingCapture[]> {

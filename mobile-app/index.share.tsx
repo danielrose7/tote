@@ -141,20 +141,10 @@ function CollectionThumb({ images, name }: { images: string[]; name: string }) {
   );
 }
 
-type PreprocessingResults = {
-  title?: string | null;
-  imageUrl?: string | null;
-  description?: string | null;
-  price?: string | null;
-  currency?: string | null;
-  brand?: string | null;
-};
-
 type Props = {
   url?: string;
   text?: string;
   title?: string;
-  preprocessingResults?: PreprocessingResults;
 };
 
 function ShareExtension(props: Props) {
@@ -162,8 +152,7 @@ function ShareExtension(props: Props) {
   // extension is presented in landscape.
   const { width: screenWidth } = useWindowDimensions();
   const url = props.url || props.text;
-  const pre = props.preprocessingResults;
-  const title = pre?.title || props.title;
+  const title = props.title;
 
   const [signedIn, setSignedIn] = useState<boolean | null>(null); // null = loading
   const [collections, setCollections] = useState<CaptureCollection[] | null>(
@@ -245,16 +234,13 @@ function ShareExtension(props: Props) {
 
     let didSave = false;
     try {
-      // Always enqueue — the main app saves immediately then enriches in the background
+      // Always enqueue — the main app saves immediately, then fills in title,
+      // image and price with the WebView extractor (src/lib/extractorScript.ts).
       const capture = JSON.stringify({
         url,
         title,
         collectionId,
         sectionId,
-        imageUrl: pre?.imageUrl ?? undefined,
-        price: pre?.price ?? undefined,
-        currency: pre?.currency ?? undefined,
-        description: pre?.description ?? undefined,
       });
       await AppGroupModule?.enqueuePendingCapture?.(capture);
       // Clear the legacy URL queue so the main app doesn't also show SaveProductSheet
@@ -414,13 +400,6 @@ function ShareExtension(props: Props) {
   const itemPreview =
     title || url ? (
       <View style={styles.itemPreview}>
-        {pre?.imageUrl ? (
-          <Image
-            source={{ uri: pre.imageUrl }}
-            style={styles.itemImage}
-            resizeMode="cover"
-          />
-        ) : null}
         <View style={styles.itemText}>
           <Text
             allowFontScaling={false}
@@ -715,13 +694,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 14,
     backgroundColor: '#f6f6f7',
-  },
-  itemImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 10,
-    marginRight: 12,
-    backgroundColor: '#ebebed',
   },
   itemText: {
     flex: 1,

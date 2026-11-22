@@ -421,22 +421,6 @@ class ShareExtensionViewController: UIViewController {
           }
         }
 
-        // Check for propertyList separately (not else-if) to handle preprocessing results
-        // Safari provides both URL and propertyList when JavaScript preprocessing is enabled
-        if provider.hasItemConformingToTypeIdentifier(UTType.propertyList.identifier) {
-          self.appendPendingUrlDebugEvent("provider-propertyList")
-          group.enter()
-          provider.loadItem(forTypeIdentifier: UTType.propertyList.identifier, options: nil) { (item, error) in
-            DispatchQueue.main.async {
-              if let itemDict = item as? NSDictionary,
-                 let results = itemDict[NSExtensionJavaScriptPreprocessingResultsKey] as? NSDictionary {
-                sharedItems["preprocessingResults"] = results
-              }
-              group.leave()
-            }
-          }
-        }
-
         // Only check for plain text if no URL was found
         if !provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) && provider.hasItemConformingToTypeIdentifier(UTType.text.identifier) {
           self.appendPendingUrlDebugEvent("provider-text")

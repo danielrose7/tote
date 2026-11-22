@@ -51,8 +51,6 @@
 				<integer>1</integer>
 			</dict>
 		</dict>
-		<key>NSExtensionJavaScriptPreprocessingFile</key>
-		<string>Action</string>
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.share-services</string>
 		<key>NSExtensionPrincipalClass</key>
