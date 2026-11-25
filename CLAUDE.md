@@ -76,7 +76,8 @@ the `/api/v2` routes and agent tools. Add new operations there rather than writi
   and WebMCP tools run the same options through `MutationObserver`.
 - `src/lib/webmcp/` — WebMCP site tools, registered by `WebMcpTools` in `(app)/layout.tsx`
   only when the browser exposes `document.modelContext`. Keep the catalog small and every
-  tool's `annotations` set (some agents reject tools without them).
+  tool's `annotations` set (some agents reject tools without them). Published pages
+  register their own read-only tools (`SharedCollectionTools`, `sharedCollection.ts`).
 - Manual test plan: [docs/AGENT_TOOLS_TESTING.md](./docs/AGENT_TOOLS_TESTING.md).
 
 ## Extraction Logic — Keep Two Files in Sync

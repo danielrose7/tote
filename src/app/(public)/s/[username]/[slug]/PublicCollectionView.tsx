@@ -1,10 +1,12 @@
 import Link from 'next/link';
+import styles from '@/app/(public)/view/[id]/page.module.css';
 import { PreFooterCta } from '@/components/PreFooterCta';
 import { PublicFooter } from '@/components/PublicFooter';
 import { StickyCtaBar } from '@/components/StickyCtaBar';
+import { SharedCollectionTools } from '@/components/WebMcpTools/SharedCollectionTools';
 import { formatPrice } from '@/lib/formatPrice';
 import type { PublishedCollection } from '@/lib/publishedCollectionsDb';
-import styles from '@/app/(public)/view/[id]/page.module.css';
+import { summarizePublishedCollection } from '@/lib/webmcp/sharedCollection';
 import { MakeCopyButton } from './MakeCopyButton';
 
 export function PublicCollectionView({
@@ -49,6 +51,9 @@ export function PublicCollectionView({
 
   return (
     <div className={styles.pageContainer}>
+      <SharedCollectionTools
+        summary={summarizePublishedCollection(collection, creatorUsername)}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

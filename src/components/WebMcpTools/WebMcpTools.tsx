@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { getModelContext } from '@/lib/webmcp/modelContext';
+import { registerTools } from '@/lib/webmcp/register';
 
 /**
  * Registers Tote's WebMCP tools for agents in the user's browser.
@@ -30,28 +31,19 @@ export function WebMcpTools() {
     const modelContext = getModelContext();
     if (!modelContext) return;
 
-    const controller = new AbortController();
-    const registered: string[] = [];
+    let unregister: (() => void) | undefined;
+    let cancelled = false;
     void import('@/lib/webmcp/tools')
       .then(({ createTools }) => {
-        if (controller.signal.aborted) return;
-        const tools = createTools({
-          queryClient,
-          userId: () => userIdRef.current ?? '',
-          navigate: (path) => routerRef.current.push(path),
-        });
-        for (const tool of tools) {
-          // Some implementations return a promise and some throw; either way
-          // one bad tool must not stop the rest from registering.
-          void Promise.resolve()
-            .then(() =>
-              modelContext.registerTool(tool, { signal: controller.signal }),
-            )
-            .catch((error: unknown) =>
-              console.error(`[Tote] WebMCP tool ${tool.name} failed`, error),
-            );
-          registered.push(tool.name);
-        }
+        if (cancelled) return;
+        unregister = registerTools(
+          modelContext,
+          createTools({
+            queryClient,
+            userId: () => userIdRef.current ?? '',
+            navigate: (path) => routerRef.current.push(path),
+          }),
+        );
       })
       .catch((error: unknown) => {
         // Agent tools are an enhancement; the page works without them.
@@ -59,16 +51,8 @@ export function WebMcpTools() {
       });
 
     return () => {
-      controller.abort();
-      // Drafts differ: some unregister through the abort signal above, some
-      // through unregisterTool. Either may already have removed the tool.
-      for (const name of registered) {
-        void Promise.resolve()
-          .then(() => modelContext.unregisterTool?.(name))
-          .catch((error: unknown) =>
-            console.debug(`[Tote] WebMCP tool ${name} already removed`, error),
-          );
-      }
+      cancelled = true;
+      unregister?.();
     };
   }, [isSignedIn, queryClient]);
 

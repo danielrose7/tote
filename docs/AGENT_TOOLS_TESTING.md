@@ -133,6 +133,19 @@ only for signed-in users, and only in browsers that support WebMCP.
 | 3.4.2 | Ask the agent to publish or share a collection, or change team members | It has no tool for this and says so |
 | 3.4.3 | Ask the agent to delete a whole collection | It has no tool for this |
 
+### 3.5 Shared collection pages (`/s/<username>/<slug>`, `/view/<id>`)
+
+Public pages register their own read-only tools, signed in or not.
+
+| # | Check | Expect |
+|---|-------|--------|
+| 3.5.1 | Open a published collection that **allows** copying | Tools: `get_shared_collection`, `save_copy` |
+| 3.5.2 | Open one that does **not** allow copying | Only `get_shared_collection` |
+| 3.5.3 | "Summarize this list and tell me the cheapest item" | Correct sections, items and prices; no network requests to `/api` |
+| 3.5.4 | Signed in: "Save a copy of this to my Tote" | Opens the copy flow and lands on the new private collection |
+| 3.5.5 | Signed out: same prompt | Sign-up/sign-in prompt, then the copy |
+| 3.5.6 | Owner's `/collections` tools are **not** present on public pages | Only the shared tools are listed |
+
 ## 4. `/api/extract` requires sign-in (step 3)
 
 | # | Check | Expect |
