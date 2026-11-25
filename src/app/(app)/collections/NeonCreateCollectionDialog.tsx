@@ -1,19 +1,12 @@
 'use client';
 
-import { useUser } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useState } from 'react';
 import dialogStyles from '@/components/CreateCollectionDialog/CreateCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
 import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
-import type { CreateCollectionMutation } from '@/lib/collections/client';
-import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
-import type { CollectionSummary } from '@/lib/collections/repository';
+import { useCreateCollection } from '@/lib/commands/collections/hooks';
 
 const presetColors = [
   '#6366f1',
@@ -36,45 +29,13 @@ export function NeonCreateCollectionDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const { user } = useUser();
   const { showToast } = useToast();
-  const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState(presetColors[0]);
   const [error, setError] = useState<string | null>(null);
-  const createCollection = useMutation<
-    { id: string; replayed: boolean },
-    Error,
-    CreateCollectionMutation,
-    { previous: CollectionSummary[] | undefined }
-  >({
-    mutationKey: collectionMutationKeys.create,
-    onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: collectionQueryKeys.all });
-      const previous = queryClient.getQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-      );
-      const optimisticCollection: CollectionSummary = {
-        id: input.id,
-        ownerUserId: user?.id ?? '',
-        name: input.name,
-        description: input.description ?? null,
-        color: input.color ?? null,
-        itemCount: 0,
-        legacyJazzId: null,
-        positionKey: input.positionKey,
-        updatedAt: new Date(),
-        role: 'owner',
-      };
-      queryClient.setQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-        (current = []) => [...current, optimisticCollection],
-      );
-      return { previous };
-    },
-    onError: (mutationError, _input, context) => {
-      queryClient.setQueryData(collectionQueryKeys.all, context?.previous);
+  const createCollection = useCreateCollection({
+    onError: (mutationError) => {
       setError(errorMessage(t, mutationError));
       showToast({
         title: t('collections.create.failedTitle'),

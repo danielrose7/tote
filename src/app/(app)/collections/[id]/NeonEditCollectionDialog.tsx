@@ -1,25 +1,17 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
 import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.module.css';
 import { useToast } from '@/components/ToastNotification';
 import { errorMessage } from '@/i18n/apiError';
 import { Trans, useTranslation } from '@/i18n/client';
-import type {
-  DeleteCollectionMutation,
-  UpdateCollectionMutation,
-} from '@/lib/collections/client';
+import type { CollectionDetail } from '@/lib/collections/repository';
 import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
-import type {
-  CollectionDetail,
-  CollectionSummary,
-} from '@/lib/collections/repository';
+  useDeleteCollection,
+  useUpdateCollection,
+} from '@/lib/commands/collections/hooks';
 
 const presetColors = [
   '#6366f1',
@@ -33,11 +25,6 @@ const presetColors = [
   '#3b82f6',
   '#06b6d4',
 ];
-type UpdateContext = {
-  previousDetail: CollectionDetail | undefined;
-  previousSummaries: CollectionSummary[] | undefined;
-};
-
 export function NeonEditCollectionDialog({
   detail,
   open,
@@ -49,7 +36,6 @@ export function NeonEditCollectionDialog({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { collection } = detail;
   const [name, setName] = useState(collection.name);
@@ -70,81 +56,8 @@ export function NeonEditCollectionDialog({
     setError(null);
   }, [open, collection.name, collection.description, collection.color]);
 
-  const updateCollection = useMutation<
-    { version: number; replayed: boolean },
-    Error,
-    UpdateCollectionMutation,
-    UpdateContext
-  >({
-    mutationKey: collectionMutationKeys.update,
-    scope: { id: `collection:${collection.id}` },
-    onMutate: async ({ input }) => {
-      await Promise.all([
-        queryClient.cancelQueries({
-          queryKey: collectionQueryKeys.detail(collection.id),
-        }),
-        queryClient.cancelQueries({ queryKey: collectionQueryKeys.all }),
-      ]);
-      const previousDetail = queryClient.getQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(collection.id),
-      );
-      const previousSummaries = queryClient.getQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-      );
-      const nextVersion = input.expectedVersion + 1;
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(collection.id),
-        (current) =>
-          current
-            ? {
-                ...current,
-                collection: {
-                  ...current.collection,
-                  name: input.name ?? current.collection.name,
-                  description:
-                    input.description === undefined
-                      ? current.collection.description
-                      : input.description,
-                  color:
-                    input.color === undefined
-                      ? current.collection.color
-                      : input.color,
-                  version: nextVersion,
-                  updatedAt: new Date(),
-                },
-              }
-            : current,
-      );
-      queryClient.setQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-        (current) =>
-          current?.map((summary) =>
-            summary.id === collection.id
-              ? {
-                  ...summary,
-                  name: input.name ?? summary.name,
-                  description:
-                    input.description === undefined
-                      ? summary.description
-                      : input.description,
-                  color:
-                    input.color === undefined ? summary.color : input.color,
-                  updatedAt: new Date(),
-                }
-              : summary,
-          ),
-      );
-      return { previousDetail, previousSummaries };
-    },
-    onError: (mutationError, _variables, context) => {
-      queryClient.setQueryData(
-        collectionQueryKeys.detail(collection.id),
-        context?.previousDetail,
-      );
-      queryClient.setQueryData(
-        collectionQueryKeys.all,
-        context?.previousSummaries,
-      );
+  const updateCollection = useUpdateCollection(collection.id, {
+    onError: (mutationError) => {
       setError(errorMessage(t, mutationError));
       showToast({
         title: t('dialogs.editCollection.updateFailed'),
@@ -154,30 +67,8 @@ export function NeonEditCollectionDialog({
     },
   });
 
-  const deleteCollection = useMutation<
-    { version: number; replayed: boolean },
-    Error,
-    DeleteCollectionMutation,
-    { previousSummaries: CollectionSummary[] | undefined }
-  >({
-    mutationKey: collectionMutationKeys.delete,
-    scope: { id: `collection:${collection.id}` },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: collectionQueryKeys.all });
-      const previousSummaries = queryClient.getQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-      );
-      queryClient.setQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-        (current) => current?.filter((summary) => summary.id !== collection.id),
-      );
-      return { previousSummaries };
-    },
-    onError: (mutationError, _variables, context) => {
-      queryClient.setQueryData(
-        collectionQueryKeys.all,
-        context?.previousSummaries,
-      );
+  const deleteCollection = useDeleteCollection(collection.id, {
+    onError: (mutationError) => {
       showToast({
         title: t('dialogs.editCollection.deleteFailed'),
         description: errorMessage(t, mutationError),
