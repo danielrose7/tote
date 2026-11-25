@@ -9,5 +9,7 @@ export const NODE_ADDED_VIA = [
   'import',
   'curator',
   'copy',
+  // Added by an AI agent through Tote's tools (WebMCP today, MCP later).
+  'agent',
 ] as const;
 export type NodeAddedVia = (typeof NODE_ADDED_VIA)[number];

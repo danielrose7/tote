@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
+import { WebMcpTools } from '@/components/WebMcpTools/WebMcpTools';
 import { loadResources } from '@/i18n/catalogs';
 import { I18nProvider } from '@/i18n/client';
 import { LocaleSync } from '@/i18n/LocaleSync';
@@ -32,6 +33,7 @@ export default async function AppLayout({
       <I18nProvider key={locale} locale={locale} resources={resources}>
         <Providers>
           <LocaleSync locale={locale} />
+          <WebMcpTools />
           <ErrorBoundary>{children}</ErrorBoundary>
         </Providers>
       </I18nProvider>
