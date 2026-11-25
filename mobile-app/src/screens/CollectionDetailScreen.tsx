@@ -1059,6 +1059,11 @@ function EditCollectionModal({
   );
 }
 
+function isCompleteUrl(value: string): boolean {
+  const match = /^https?:\/\/([^/\s]+)/i.exec(value.trim());
+  return !!match && match[1].includes('.');
+}
+
 function AddProductModal({
   visible,
   onClose,
@@ -1070,12 +1075,27 @@ function AddProductModal({
 }) {
   const [url, setUrl] = useState('');
 
-  function handleSubmit() {
-    const trimmed = url.trim();
+  function submitUrl(value: string) {
+    const trimmed = value.trim();
     if (!trimmed) return;
     onSubmit(trimmed);
     setUrl('');
     onClose();
+  }
+
+  function handleSubmit() {
+    submitUrl(url);
+  }
+
+  // A pasted (or autofilled) complete URL goes straight to the preview sheet,
+  // which reads the page's name, picture and price, so there is no extra tap.
+  function handleChangeText(next: string) {
+    const pasted = next.length - url.length > 1;
+    if (pasted && isCompleteUrl(next)) {
+      submitUrl(next);
+      return;
+    }
+    setUrl(next);
   }
 
   return (
@@ -1101,7 +1121,7 @@ function AddProductModal({
           <TextInput
             style={styles.fieldInput}
             value={url}
-            onChangeText={setUrl}
+            onChangeText={handleChangeText}
             placeholder="https://..."
             autoFocus
             autoCapitalize="none"

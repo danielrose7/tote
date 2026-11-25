@@ -174,6 +174,7 @@
       "fetching": "Wird abgerufen…",
       "fetch": "Abrufen",
       "imageUrl": "Bild-URL",
+      "price": "Preis",
       "imageUrlRequired": "Bild-URL *",
       "descriptionLabel": "Beschreibung",
       "body": "Text",

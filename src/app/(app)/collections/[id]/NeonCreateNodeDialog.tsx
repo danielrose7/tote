@@ -2,7 +2,13 @@
 
 import { useUser } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
-import { type FormEvent, useCallback, useEffect, useState } from 'react';
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import dialogStyles from '@/components/CreateCollectionDialog/CreateCollectionDialog.module.css';
 import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import { NeonSectionSelector } from '@/components/NeonSectionSelector/NeonSectionSelector';
@@ -32,6 +38,25 @@ const nodeTypes = [
 ] as const;
 type NodeType = (typeof nodeTypes)[number];
 
+/** Wait this long after the URL stops changing before reading the page. */
+const AUTO_FETCH_DELAY_MS = 700;
+
+type AutoFillable = 'title' | 'imageUrl' | 'description' | 'price';
+
+function parseFetchableUrl(value: string): URL | null {
+  try {
+    const parsed = new URL(value.trim());
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+    // Skip half-typed hosts like "https://amaz" so we don't read junk pages.
+    if (!parsed.hostname.includes('.')) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 const NODE_TYPE_LABEL = {
   product: 'dialogs.createNode.types.product',
   link: 'dialogs.createNode.types.link',
@@ -59,20 +84,40 @@ export function NeonCreateNodeDialog({
   const [url, setUrl] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
   const [showExtractionTip, setShowExtractionTip] = useState(false);
+  // Values we filled in from a page read. A later read may replace these, but
+  // never anything the user typed themselves.
+  const autoFilledRef = useRef<Partial<Record<AutoFillable, string>>>({});
+  // Only the newest read may write to the form; older ones are discarded.
+  const fetchSeqRef = useRef(0);
+  const lastFetchedUrlRef = useRef<string | null>(null);
+
+  const fillFromPage = (
+    field: AutoFillable,
+    value: string | undefined,
+    setter: (update: (prev: string) => string) => void,
+  ) => {
+    if (!value) return;
+    setter((prev) => {
+      if (prev && prev !== autoFilledRef.current[field]) return prev;
+      autoFilledRef.current[field] = value;
+      return value;
+    });
+  };
 
   const handleFetchUrl = async () => {
     const trimmed = url.trim();
     if (!trimmed) return;
-    try {
-      new URL(trimmed);
-    } catch {
+    if (!parseFetchableUrl(trimmed)) {
       setError(t('dialogs.createNode.invalidUrl'));
       return;
     }
+    const seq = ++fetchSeqRef.current;
+    lastFetchedUrlRef.current = trimmed;
     setIsFetchingUrl(true);
     setError(null);
     setShowExtractionTip(false);
@@ -100,10 +145,11 @@ export function NeonCreateNodeDialog({
         }
         metadata = (await response.json()) as ExtractedMetadata;
       }
-      if (metadata.title && !title) setTitle(metadata.title);
-      if (metadata.imageUrl && !imageUrl) setImageUrl(metadata.imageUrl);
-      if (metadata.description && !description)
-        setDescription(metadata.description);
+      if (seq !== fetchSeqRef.current) return;
+      fillFromPage('title', metadata.title, setTitle);
+      fillFromPage('imageUrl', metadata.imageUrl, setImageUrl);
+      fillFromPage('description', metadata.description, setDescription);
+      fillFromPage('price', metadata.price, setPrice);
       // Saving stays as before; we only suggest a better route when the
       // server-side read came back thin.
       if (
@@ -114,15 +160,35 @@ export function NeonCreateNodeDialog({
         setShowExtractionTip(true);
       }
     } catch (fetchError) {
+      if (seq !== fetchSeqRef.current) return;
+      // Let the user retry the same URL with the Fetch button.
+      lastFetchedUrlRef.current = null;
       setError(
         fetchError instanceof Error
           ? fetchError.message
           : t('dialogs.createNode.readFailed'),
       );
     } finally {
-      setIsFetchingUrl(false);
+      if (seq === fetchSeqRef.current) setIsFetchingUrl(false);
     }
   };
+
+  // Read the page as soon as a complete URL is typed or pasted, so name,
+  // picture and price fill in without pressing Fetch.
+  const handleFetchUrlRef = useRef(handleFetchUrl);
+  handleFetchUrlRef.current = handleFetchUrl;
+  const canAutoFetch = open && (type === 'product' || type === 'link');
+  useEffect(() => {
+    if (!canAutoFetch) return;
+    const trimmed = url.trim();
+    if (!parseFetchableUrl(trimmed)) return;
+    if (trimmed === lastFetchedUrlRef.current) return;
+    const timer = setTimeout(
+      () => void handleFetchUrlRef.current(),
+      AUTO_FETCH_DELAY_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [url, canAutoFetch]);
 
   // Merge prop sections with any sections created inline during this session
   const [extraSections, setExtraSections] = useState<CollectionNode[]>([]);
@@ -195,10 +261,14 @@ export function NeonCreateNodeDialog({
     setShowExtractionTip(false);
     setImageUrl('');
     setDescription('');
+    setPrice('');
     setBody('');
     setError(null);
     setExtraSections([]);
     setIsFetchingUrl(false);
+    autoFilledRef.current = {};
+    fetchSeqRef.current += 1;
+    lastFetchedUrlRef.current = null;
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -227,6 +297,7 @@ export function NeonCreateNodeDialog({
     if (url.trim()) properties.url = url.trim();
     if (imageUrl.trim()) properties.imageUrl = imageUrl.trim();
     if (description.trim()) properties.description = description.trim();
+    if (type === 'product' && price.trim()) properties.price = price.trim();
     if (body.trim()) properties.body = body.trim();
 
     createNode.mutate({
@@ -357,6 +428,34 @@ export function NeonCreateNodeDialog({
                   value={imageUrl}
                   onChange={(event) => setImageUrl(event.target.value)}
                   className={dialogStyles.input}
+                />
+                {parseFetchableUrl(imageUrl) && (
+                  <img
+                    src={imageUrl.trim()}
+                    alt=""
+                    style={{
+                      marginTop: '8px',
+                      maxHeight: '120px',
+                      maxWidth: '100%',
+                      objectFit: 'contain',
+                      borderRadius: '6px',
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {type === 'product' && (
+              <div className={dialogStyles.inputGroup}>
+                <label htmlFor="neon-node-price" className={dialogStyles.label}>
+                  {t('dialogs.createNode.price')}
+                </label>
+                <input
+                  id="neon-node-price"
+                  value={price}
+                  onChange={(event) => setPrice(event.target.value)}
+                  className={dialogStyles.input}
+                  inputMode="decimal"
                 />
               </div>
             )}
