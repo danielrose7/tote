@@ -5,10 +5,12 @@ import type {
   ReorderCollectionNodesMutation,
   UpdateCollectionNodeMutation,
 } from '@/lib/collections/client';
-import type {
-  CollectionDetail,
-  CollectionSummary,
-} from '@/lib/collections/repository';
+import type { CollectionSummary } from '@/lib/collections/repository';
+import type { CollectionCacheUpdate } from '../optimistic';
+
+/** Item commands always change the collection's detail. */
+type ItemCacheUpdate = CollectionCacheUpdate &
+  Required<Pick<CollectionCacheUpdate, 'detail'>>;
 
 /**
  * Optimistic cache effects for item commands, written once.
@@ -21,11 +23,6 @@ import type {
  * Each mirrors what the server does: `properties` is replaced, not merged, and
  * deleting a node removes its descendants.
  */
-
-export type CollectionCacheUpdate = {
-  detail: (current: CollectionDetail) => CollectionDetail;
-  summaries?: (current: CollectionSummary[]) => CollectionSummary[];
-};
 
 /** Node types that count toward a collection's `itemCount`. */
 export const ITEM_NODE_TYPES: ReadonlySet<CollectionNode['type']> = new Set([
@@ -72,7 +69,7 @@ function adjustSummary(
 export function createNodeUpdate(
   { collectionId, input }: CreateCollectionNodeMutation,
   { createdByUserId, now }: { createdByUserId: string; now: Date },
-): CollectionCacheUpdate {
+): ItemCacheUpdate {
   const itemDelta = ITEM_NODE_TYPES.has(input.type) ? 1 : 0;
   const node: CollectionNode = {
     id: input.id,
@@ -115,7 +112,7 @@ export function createNodeUpdate(
 export function updateNodeUpdate(
   { nodeId, input }: UpdateCollectionNodeMutation,
   { now }: { now: Date },
-): CollectionCacheUpdate {
+): ItemCacheUpdate {
   return {
     detail: (current) => ({
       ...current,
@@ -145,7 +142,7 @@ export function updateNodeUpdate(
 export function deleteNodeUpdate(
   { collectionId, nodeId }: DeleteCollectionNodeMutation,
   { now, nodes }: { now: Date; nodes: readonly CollectionNode[] },
-): CollectionCacheUpdate {
+): ItemCacheUpdate {
   const removedIds = descendantIds(nodes, nodeId);
   const removedItemCount = nodes.filter(
     (node) => removedIds.has(node.id) && ITEM_NODE_TYPES.has(node.type),
@@ -170,7 +167,7 @@ export function deleteNodeUpdate(
 export function reorderNodesUpdate(
   { input }: ReorderCollectionNodesMutation,
   { now }: { now: Date },
-): CollectionCacheUpdate {
+): ItemCacheUpdate {
   const nextPositions = new Map(
     input.nodes.map((node) => [node.id, node.positionKey]),
   );

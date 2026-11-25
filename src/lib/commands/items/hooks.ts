@@ -1,11 +1,7 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import {
-  type QueryClient,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   type CreateCollectionNodeMutation,
   createCollectionNodeMutation,
@@ -16,16 +12,13 @@ import {
   type UpdateCollectionNodeMutation,
   updateCollectionNodeMutation,
 } from '@/lib/collections/client';
+import { collectionMutationKeys } from '@/lib/collections/queryKeys';
 import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
-import type {
-  CollectionDetail,
-  CollectionSummary,
-} from '@/lib/collections/repository';
+  applyOptimistic,
+  type CacheSnapshot,
+  rollbackOptimistic,
+} from '../optimistic';
 import {
-  type CollectionCacheUpdate,
   createNodeUpdate,
   deleteNodeUpdate,
   reorderNodesUpdate,
@@ -46,65 +39,12 @@ import {
  * persisted mutations resume after a reload.
  */
 
-type Snapshot = {
-  previousDetail: CollectionDetail | undefined;
-  previousSummaries: CollectionSummary[] | undefined;
-};
-
 export type ItemCommandOptions = {
   onError?: (error: Error) => void;
 };
 
 function collectionScope(collectionId: string) {
   return { id: `collection:${collectionId}` };
-}
-
-async function applyOptimistic(
-  queryClient: QueryClient,
-  collectionId: string,
-  buildUpdate: (detail: CollectionDetail | undefined) => CollectionCacheUpdate,
-): Promise<Snapshot> {
-  const detailKey = collectionQueryKeys.detail(collectionId);
-  await Promise.all([
-    queryClient.cancelQueries({ queryKey: detailKey }),
-    queryClient.cancelQueries({
-      queryKey: collectionQueryKeys.all,
-      exact: true,
-    }),
-  ]);
-  const previousDetail = queryClient.getQueryData<CollectionDetail>(detailKey);
-  const previousSummaries = queryClient.getQueryData<CollectionSummary[]>(
-    collectionQueryKeys.all,
-  );
-  const update = buildUpdate(previousDetail);
-  queryClient.setQueryData<CollectionDetail>(detailKey, (current) =>
-    current ? update.detail(current) : current,
-  );
-  if (update.summaries) {
-    const applySummaries = update.summaries;
-    queryClient.setQueryData<CollectionSummary[]>(
-      collectionQueryKeys.all,
-      (current) => (current ? applySummaries(current) : current),
-    );
-  }
-  return { previousDetail, previousSummaries };
-}
-
-function rollback(
-  queryClient: QueryClient,
-  collectionId: string,
-  snapshot: Snapshot | undefined,
-) {
-  const detailKey = collectionQueryKeys.detail(collectionId);
-  if (snapshot) {
-    queryClient.setQueryData(detailKey, snapshot.previousDetail);
-    queryClient.setQueryData(
-      collectionQueryKeys.all,
-      snapshot.previousSummaries,
-    );
-  }
-  // Other commands may have landed since the snapshot; refetch to be exact.
-  void queryClient.invalidateQueries({ queryKey: detailKey });
 }
 
 export function useCreateItem(
@@ -117,7 +57,7 @@ export function useCreateItem(
     Awaited<ReturnType<typeof createCollectionNodeMutation>>,
     Error,
     CreateCollectionNodeMutation,
-    Snapshot
+    CacheSnapshot
   >({
     mutationKey: collectionMutationKeys.createNode,
     mutationFn: createCollectionNodeMutation,
@@ -130,7 +70,7 @@ export function useCreateItem(
         }),
       ),
     onError: (error, _variables, snapshot) => {
-      rollback(queryClient, collectionId, snapshot);
+      rollbackOptimistic(queryClient, collectionId, snapshot);
       onError?.(error);
     },
   });
@@ -145,7 +85,7 @@ export function useUpdateItem(
     Awaited<ReturnType<typeof updateCollectionNodeMutation>>,
     Error,
     UpdateCollectionNodeMutation,
-    Snapshot
+    CacheSnapshot
   >({
     mutationKey: collectionMutationKeys.updateNode,
     mutationFn: updateCollectionNodeMutation,
@@ -155,7 +95,7 @@ export function useUpdateItem(
         updateNodeUpdate(variables, { now: new Date() }),
       ),
     onError: (error, _variables, snapshot) => {
-      rollback(queryClient, collectionId, snapshot);
+      rollbackOptimistic(queryClient, collectionId, snapshot);
       onError?.(error);
     },
   });
@@ -170,7 +110,7 @@ export function useDeleteItem(
     Awaited<ReturnType<typeof deleteCollectionNodeMutation>>,
     Error,
     DeleteCollectionNodeMutation,
-    Snapshot
+    CacheSnapshot
   >({
     mutationKey: collectionMutationKeys.deleteNode,
     mutationFn: deleteCollectionNodeMutation,
@@ -183,7 +123,7 @@ export function useDeleteItem(
         }),
       ),
     onError: (error, _variables, snapshot) => {
-      rollback(queryClient, collectionId, snapshot);
+      rollbackOptimistic(queryClient, collectionId, snapshot);
       onError?.(error);
     },
   });
@@ -198,7 +138,7 @@ export function useReorderItems(
     Awaited<ReturnType<typeof reorderCollectionNodesMutation>>,
     Error,
     ReorderCollectionNodesMutation,
-    Snapshot
+    CacheSnapshot
   >({
     mutationKey: collectionMutationKeys.reorderNodes,
     mutationFn: reorderCollectionNodesMutation,
@@ -208,7 +148,7 @@ export function useReorderItems(
         reorderNodesUpdate(variables, { now: new Date() }),
       ),
     onError: (error, _variables, snapshot) => {
-      rollback(queryClient, collectionId, snapshot);
+      rollbackOptimistic(queryClient, collectionId, snapshot);
       onError?.(error);
     },
   });
