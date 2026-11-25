@@ -59,6 +59,24 @@ Rules for new mutations:
 
 Token auth: clients fetch scoped subscribe-only tokens from `/api/v2/realtime/token` using `ABLY_ROOT_KEY` (server-only, never `NEXT_PUBLIC_*`).
 
+## Commands and Agent Tools
+
+Collection and item writes are defined once in `src/lib/commands/` and shared by the UI,
+the `/api/v2` routes and agent tools. Add new operations there rather than writing
+`useMutation` or route boilerplate inline.
+
+- `command.ts` / `http.ts` — server: a command (name, agent-readable description,
+  readOnly/destructive hints, schemas, `run`) and `commandRoute()`, which handles auth,
+  validation and result → HTTP status for `/api/v2` routes.
+- `<domain>/server.ts` — the command definitions for collections and items.
+- `<domain>/cache.ts` — pure optimistic cache updates (unit tested).
+- `<domain>/mutations.ts` — TanStack mutation options; `hooks.ts` wraps them for React,
+  and WebMCP tools run the same options through `MutationObserver`.
+- `src/lib/webmcp/` — WebMCP site tools, registered by `WebMcpTools` in `(app)/layout.tsx`
+  only when the browser exposes `document.modelContext`. Keep the catalog small and every
+  tool's `annotations` set (some agents reject tools without them).
+- Manual test plan: [docs/AGENT_TOOLS_TESTING.md](./docs/AGENT_TOOLS_TESTING.md).
+
 ## Extraction Logic — Keep Two Files in Sync
 
 The extraction logic lives in two places and **must stay in sync**:
