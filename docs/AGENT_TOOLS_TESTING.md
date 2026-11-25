@@ -61,6 +61,25 @@ response bodies are unchanged.
 | 2.7 | As account B (viewer), open A's shared collection | Can view; edit controls hidden or refused with a "not allowed" message |
 | 2.8 | Signed out: `curl -i https://tote.tools/api/v2/collections` | `401` |
 
+## 2b. Team and publication routes (step 5)
+
+The team, invite and publication routes moved to the command layer too. Status
+codes are unchanged except that team conflicts now carry the `version_conflict`
+code, so they show the translated "changed elsewhere" message.
+
+| # | Do this | Expect |
+|---|---------|--------|
+| 2b.1 | As A, open Team → add an editor invite and a viewer invite | Links appear; copying works |
+| 2b.2 | As B (signed in), open the viewer invite link | Joins as viewer; collection shows in B's list |
+| 2b.3 | Open a revoked or made-up invite link | The specific "invite is no longer available" message, not a generic error |
+| 2b.4 | As A, revoke an unused invite | It disappears from the list; the link stops working |
+| 2b.5 | As A, change B from viewer to editor, then remove B | B's access changes accordingly (reload B's tab) |
+| 2b.6 | As A, transfer ownership of a throwaway collection to B (then back as B) | Roles swap; A becomes admin |
+| 2b.7 | Publish a collection with a custom URL slug | Public page loads at /s/&lt;username&gt;/&lt;slug&gt; |
+| 2b.8 | Publish a second collection with the **same** slug | "Already in use" error; nothing published |
+| 2b.9 | Change layout / allow copying, re-publish, then unpublish | Public page updates, then returns 404 |
+| 2b.10 | As B, copy a published collection that allows copying | Lands on B's new private copy |
+
 ## 3. WebMCP site tools (step 3)
 
 Tote registers 9 tools for agents running in the user's own browser. Tools exist

@@ -68,7 +68,9 @@ the `/api/v2` routes and agent tools. Add new operations there rather than writi
 - `command.ts` / `http.ts` — server: a command (name, agent-readable description,
   readOnly/destructive hints, schemas, `run`) and `commandRoute()`, which handles auth,
   validation and result → HTTP status for `/api/v2` routes.
-- `<domain>/server.ts` — the command definitions for collections and items.
+- `<domain>/server.ts` — the command definitions: collections, items, team, publications.
+  Every `/api/v2` route for these is a one-line `commandRoute()`; commands can declare
+  extra failure statuses or override one's HTTP mapping via `failures`.
 - `<domain>/cache.ts` — pure optimistic cache updates (unit tested).
 - `<domain>/mutations.ts` — TanStack mutation options; `hooks.ts` wraps them for React,
   and WebMCP tools run the same options through `MutationObserver`.

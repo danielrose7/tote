@@ -41,7 +41,7 @@ export const getCollectionCommand = defineCommand({
 export const createCollectionCommand = defineCommand({
   name: 'collections.create',
   description: 'Add a new, private collection owned by the signed-in user.',
-  annotations: {},
+  annotations: { idempotent: true },
   target: noTarget,
   input: createCollectionInputSchema,
   run: async ({ userId }, _target, input) => {
@@ -59,7 +59,7 @@ export const updateCollectionCommand = defineCommand({
   name: 'collections.update',
   description:
     "Change a collection's name, description, color, budget or display settings. Requires the collection's current version.",
-  annotations: {},
+  annotations: { idempotent: true },
   target: collectionTarget,
   input: updateCollectionInputSchema,
   run: ({ userId }, { collectionId }, input) =>
@@ -70,7 +70,7 @@ export const deleteCollectionCommand = defineCommand({
   name: 'collections.delete',
   description:
     "Delete a collection and everything in it. Requires the collection's current version.",
-  annotations: { destructive: true },
+  annotations: { destructive: true, idempotent: true },
   target: collectionTarget,
   input: deleteCollectionInputSchema,
   run: ({ userId }, { collectionId }, input) =>
@@ -81,7 +81,7 @@ export const copyCollectionCommand = defineCommand({
   name: 'collections.copy',
   description:
     'Copy a collection the user can access into a new collection they own.',
-  annotations: {},
+  annotations: { idempotent: true },
   target: collectionTarget,
   input: copyCollectionInputSchema,
   run: async ({ userId }, { collectionId }, input) => {

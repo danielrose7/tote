@@ -1,9 +1,12 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { parseJsonRequest } from '@/lib/collections/api';
 import { inferAddedVia } from '@/lib/collections/inferAddedVia';
-import type { MutationFailure } from '@/lib/collections/repository';
-import type { Command } from './command';
+import type {
+  MutationFailure,
+  MutationSuccess,
+} from '@/lib/collections/repository';
+import type { Command, CommandResult, FailureResponse } from './command';
 
 /**
  * Exposes a command as a Next.js route handler: Clerk auth, target and body
@@ -16,10 +19,7 @@ import type { Command } from './command';
  * Clients rely on the status and `code`, never on the `error` text.
  */
 
-const FAILURE_RESPONSES: Record<
-  MutationFailure['status'],
-  { status: number; body: { error: string; code?: string } }
-> = {
+const FAILURE_RESPONSES: Record<MutationFailure['status'], FailureResponse> = {
   not_found: { status: 404, body: { error: 'Not found' } },
   forbidden: { status: 403, body: { error: 'Forbidden' } },
   version_conflict: {
@@ -32,8 +32,20 @@ const FAILURE_RESPONSES: Record<
   },
 };
 
-export function commandRoute<Params, Target, Input, Output>(
-  command: Command<Target, Input, Output>,
+function succeeded<Output>(
+  result: CommandResult<Output, string>,
+): result is MutationSuccess<Output> {
+  return result.status === 'ok';
+}
+
+export function commandRoute<
+  Params,
+  Target,
+  Input,
+  Output,
+  Extra extends string = never,
+>(
+  command: Command<Target, Input, Output, Extra>,
   options: {
     /** Maps the route's URL params to the command's target. */
     target: (params: Params) => unknown;
@@ -77,18 +89,29 @@ export function commandRoute<Params, Target, Input, Output>(
       {
         userId,
         addedVia: (explicit) => inferAddedVia(request, explicit),
+        username: async () => (await currentUser())?.username ?? undefined,
       },
       target.data,
       input,
     );
 
-    if (result.status !== 'ok') {
-      const failure = FAILURE_RESPONSES[result.status];
+    if (!succeeded(result)) {
+      const failure =
+        command.failures?.[result.status] ??
+        FAILURE_RESPONSES[result.status as MutationFailure['status']];
+      if (!failure) {
+        console.error(
+          `[commands] ${command.name} returned unmapped status ${result.status}`,
+        );
+        return NextResponse.json({ error: 'Server error' }, { status: 500 });
+      }
       return NextResponse.json(failure.body, { status: failure.status });
     }
 
-    if (command.annotations.readOnly) {
-      return NextResponse.json(result.value);
+    if (!command.annotations.idempotent) {
+      return NextResponse.json(result.value, {
+        status: options.created ? 201 : 200,
+      });
     }
     const replayed = result.replayed ?? false;
     return NextResponse.json(
