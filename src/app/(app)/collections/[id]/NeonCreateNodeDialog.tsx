@@ -2,7 +2,6 @@
 
 import { useUser } from '@clerk/nextjs';
 import * as Dialog from '@radix-ui/react-dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import dialogStyles from '@/components/CreateCollectionDialog/CreateCollectionDialog.module.css';
 import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
@@ -11,18 +10,8 @@ import { useToast } from '@/components/ToastNotification';
 import type { CollectionNode } from '@/db/schema';
 import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
-import {
-  type CreateCollectionNodeMutation,
-  createCollectionNodeMutation,
-} from '@/lib/collections/client';
-import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
-import type {
-  CollectionDetail,
-  CollectionSummary,
-} from '@/lib/collections/repository';
+import type { CollectionDetail } from '@/lib/collections/repository';
+import { useCreateItem } from '@/lib/commands/items/hooks';
 import {
   checkExtensionAvailable,
   type ExtractedMetadata,
@@ -52,13 +41,6 @@ const NODE_TYPE_LABEL = {
   section: 'dialogs.createNode.types.section',
 } as const satisfies Record<NodeType, string>;
 
-const itemNodeTypes = new Set<NodeType>(['product', 'link', 'photo']);
-
-type CreateNodeContext = {
-  previousDetail: CollectionDetail | undefined;
-  previousSummaries: CollectionSummary[] | undefined;
-};
-
 export function NeonCreateNodeDialog({
   detail,
   open,
@@ -71,7 +53,6 @@ export function NeonCreateNodeDialog({
   const { t } = useTranslation();
   const { user } = useUser();
   const { showToast } = useToast();
-  const queryClient = useQueryClient();
   const [type, setType] = useState<NodeType>('product');
   const [title, setTitle] = useState('');
   const [parentId, setParentId] = useState('');
@@ -157,90 +138,8 @@ export function NeonCreateNodeDialog({
     }
   }, [type]);
 
-  const createNode = useMutation<
-    {
-      id: string;
-      version: number;
-      collectionVersion: number;
-      itemCount: number;
-      replayed: boolean;
-    },
-    Error,
-    CreateCollectionNodeMutation,
-    CreateNodeContext
-  >({
-    mutationKey: collectionMutationKeys.createNode,
-    mutationFn: createCollectionNodeMutation,
-    scope: { id: `collection:${detail.collection.id}` },
-    onMutate: async ({ input }) => {
-      await Promise.all([
-        queryClient.cancelQueries({
-          queryKey: collectionQueryKeys.detail(detail.collection.id),
-        }),
-        queryClient.cancelQueries({ queryKey: collectionQueryKeys.all }),
-      ]);
-      const previousDetail = queryClient.getQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-      );
-      const previousSummaries = queryClient.getQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-      );
-      const itemDelta = itemNodeTypes.has(input.type) ? 1 : 0;
-      const now = new Date();
-      const optimisticNode: CollectionNode = {
-        id: input.id,
-        collectionId: detail.collection.id,
-        parentId: input.parentId ?? null,
-        type: input.type,
-        title: input.title ?? null,
-        properties: input.properties ?? {},
-        positionKey: input.positionKey,
-        version: 1,
-        createdByUserId: user?.id ?? '',
-        createdAt: now,
-        updatedAt: now,
-        deletedAt: null,
-      };
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-        (current) =>
-          current
-            ? {
-                ...current,
-                collection: {
-                  ...current.collection,
-                  itemCount: current.collection.itemCount + itemDelta,
-                  version: current.collection.version + 1,
-                  updatedAt: now,
-                },
-                nodes: [...current.nodes, optimisticNode],
-              }
-            : current,
-      );
-      queryClient.setQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-        (current) =>
-          current?.map((summary) =>
-            summary.id === detail.collection.id
-              ? {
-                  ...summary,
-                  itemCount: summary.itemCount + itemDelta,
-                  updatedAt: now,
-                }
-              : summary,
-          ),
-      );
-      return { previousDetail, previousSummaries };
-    },
-    onError: (mutationError, _variables, context) => {
-      queryClient.setQueryData(
-        collectionQueryKeys.detail(detail.collection.id),
-        context?.previousDetail,
-      );
-      queryClient.setQueryData(
-        collectionQueryKeys.all,
-        context?.previousSummaries,
-      );
+  const createNode = useCreateItem(detail.collection.id, {
+    onError: (mutationError) => {
       setError(errorMessage(t, mutationError));
       showToast({
         title: t('dialogs.createNode.addFailed'),
@@ -267,15 +166,9 @@ export function NeonCreateNodeDialog({
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
+        addedVia: 'app',
       };
       setExtraSections((prev) => [...prev, optimisticSection]);
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-        (current) =>
-          current
-            ? { ...current, nodes: [...current.nodes, optimisticSection] }
-            : current,
-      );
       createNode.mutate({
         collectionId: detail.collection.id,
         input: {
@@ -291,7 +184,7 @@ export function NeonCreateNodeDialog({
       });
       return nodeId;
     },
-    [detail.collection.id, user?.id, queryClient, createNode],
+    [detail.collection.id, user?.id, createNode],
   );
 
   const reset = () => {

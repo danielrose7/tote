@@ -18,22 +18,16 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import * as Dialog from '@radix-ui/react-dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type Dispatch, useEffect, useState } from 'react';
 import { ExtractionTip } from '@/components/ExtractionTip/ExtractionTip';
 import type { CollectionNode } from '@/db/schema';
 import type { RefreshAction, RefreshState } from '@/hooks/useRefreshQueue';
 import { useFormat, useTranslation } from '@/i18n/client';
 import {
-  deleteCollectionNodeMutation,
-  reorderCollectionNodesMutation,
-  updateCollectionNodeMutation,
-} from '@/lib/collections/client';
-import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
-import type { CollectionDetail } from '@/lib/collections/repository';
+  useDeleteItem,
+  useReorderItems,
+  useUpdateItem,
+} from '@/lib/commands/items/hooks';
 import { checkExtensionAvailable } from '@/lib/extension';
 import {
   describeRefreshOutcome,
@@ -517,7 +511,6 @@ export function NeonSlotSection({
   >('delete');
   const [moveToSectionId, setMoveToSectionId] = useState('');
 
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
 
   const sensors = useSensors(
@@ -527,128 +520,23 @@ export function NeonSlotSection({
     }),
   );
 
-  const updateSection = useMutation({
-    mutationKey: collectionMutationKeys.updateNode,
-    mutationFn: updateCollectionNodeMutation,
-    onMutate: ({ input }) => {
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(collectionId),
-        (current) =>
-          current
-            ? {
-                ...current,
-                nodes: current.nodes.map((n) =>
-                  n.id === section.id
-                    ? {
-                        ...n,
-                        title: input.title ?? n.title,
-                        properties: input.properties
-                          ? { ...n.properties, ...input.properties }
-                          : n.properties,
-                        version: n.version + 1,
-                        updatedAt: new Date(),
-                      }
-                    : n,
-                ),
-              }
-            : current,
-      );
-    },
-    onError: (error) => {
-      showToast({
-        title: t('slots.toast.updateFailed'),
-        description: error.message,
-        variant: 'error',
-      });
-      void queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.detail(collectionId),
-      });
-    },
+  const toastFailure = (title: string) => (error: Error) =>
+    showToast({ title, description: error.message, variant: 'error' });
+  const updateSection = useUpdateItem(collectionId, {
+    onError: toastFailure(t('slots.toast.updateFailed')),
   });
-
-  const deleteSection = useMutation({
-    mutationKey: collectionMutationKeys.deleteNode,
-    mutationFn: deleteCollectionNodeMutation,
-    onMutate: () => {
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(collectionId),
-        (current) =>
-          current
-            ? {
-                ...current,
-                nodes: current.nodes.filter(
-                  (n) => n.id !== section.id && n.parentId !== section.id,
-                ),
-              }
-            : current,
-      );
-    },
-    onError: (error) => {
-      showToast({
-        title: t('slots.toast.deleteFailed'),
-        description: error.message,
-        variant: 'error',
-      });
-      void queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.detail(collectionId),
-      });
-    },
+  const deleteSection = useDeleteItem(collectionId, {
+    onError: toastFailure(t('slots.toast.deleteFailed')),
   });
-
-  const reorderProducts = useMutation({
-    mutationKey: collectionMutationKeys.reorderNodes,
-    mutationFn: reorderCollectionNodesMutation,
-    scope: { id: `collection:${collectionId}:section:${section.id}` },
-    onError: (error) => {
-      showToast({
-        title: t('slots.toast.reorderFailed'),
-        description: error.message,
-        variant: 'error',
-      });
-      void queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.detail(collectionId),
-      });
-    },
+  const reorderProducts = useReorderItems(collectionId, {
+    onError: toastFailure(t('slots.toast.reorderFailed')),
   });
-
-  const updateItem = useMutation({
-    mutationKey: collectionMutationKeys.updateNode,
-    mutationFn: updateCollectionNodeMutation,
-    onMutate: ({ nodeId, input }) => {
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(collectionId),
-        (current) =>
-          current
-            ? {
-                ...current,
-                nodes: current.nodes.map((n) =>
-                  n.id === nodeId
-                    ? {
-                        ...n,
-                        title: input.title ?? n.title,
-                        properties: input.properties
-                          ? { ...n.properties, ...input.properties }
-                          : n.properties,
-                        version: n.version + 1,
-                        updatedAt: new Date(),
-                      }
-                    : n,
-                ),
-              }
-            : current,
-      );
-    },
-    onError: (error) => {
-      showToast({
-        title: t('slots.toast.refreshFailed'),
-        description: error.message,
-        variant: 'error',
-      });
-      void queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.detail(collectionId),
-      });
-    },
+  const updateItem = useUpdateItem(collectionId, {
+    onError: toastFailure(t('slots.toast.refreshFailed')),
   });
+  // Used by the move-then-delete flow below, which reports its own failure.
+  const moveItem = useUpdateItem(collectionId);
+  const removeSection = useDeleteItem(collectionId);
 
   // Failures are toasts. The "get the extension" nudge is a dismissible inline
   // banner instead: it has links and the user may want to act on it, which a
@@ -885,30 +773,11 @@ export function NeonSlotSection({
     const targetParentId =
       deleteAction === 'section' ? moveToSectionId || null : null;
 
-    // Optimistically move items and remove section from cache
-    queryClient.setQueryData<CollectionDetail>(
-      collectionQueryKeys.detail(collectionId),
-      (current) => {
-        if (!current) return current;
-        const movedItemIds = new Set(items.map((n) => n.id));
-        return {
-          ...current,
-          nodes: current.nodes
-            .filter((n) => n.id !== section.id)
-            .map((n) =>
-              movedItemIds.has(n.id)
-                ? { ...n, parentId: targetParentId, version: n.version + 1 }
-                : n,
-            ),
-        };
-      },
-    );
-
     try {
-      // Move all items first (in parallel)
+      // Move all items first; the hooks update the cache optimistically.
       await Promise.all(
         items.map((item) =>
-          updateCollectionNodeMutation({
+          moveItem.mutateAsync({
             collectionId,
             nodeId: item.id,
             input: {
@@ -920,7 +789,7 @@ export function NeonSlotSection({
         ),
       );
       // Then delete the now-empty section
-      await deleteCollectionNodeMutation({
+      await removeSection.mutateAsync({
         collectionId,
         nodeId: section.id,
         input: {
@@ -934,9 +803,6 @@ export function NeonSlotSection({
         description:
           err instanceof Error ? err.message : t('slots.toast.unknownError'),
         variant: 'error',
-      });
-      void queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.detail(collectionId),
       });
     }
   };
@@ -960,34 +826,6 @@ export function NeonSlotSection({
       ({ node, positionKey }) => node.positionKey !== positionKey,
     );
     if (hasChanged) {
-      const nextPositions = new Map(
-        updates.map(({ node, positionKey }) => [node.id, positionKey]),
-      );
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(collectionId),
-        (current) =>
-          current
-            ? {
-                ...current,
-                collection: {
-                  ...current.collection,
-                  version: current.collection.version + updates.length,
-                  updatedAt: new Date(),
-                },
-                nodes: current.nodes.map((n) => {
-                  const positionKey = nextPositions.get(n.id);
-                  return positionKey
-                    ? {
-                        ...n,
-                        positionKey,
-                        version: n.version + 1,
-                        updatedAt: new Date(),
-                      }
-                    : n;
-                }),
-              }
-            : current,
-      );
       reorderProducts.mutate({
         collectionId,
         input: {

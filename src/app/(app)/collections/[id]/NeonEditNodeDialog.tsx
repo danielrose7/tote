@@ -1,7 +1,6 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.module.css';
 import { NeonSectionSelector } from '@/components/NeonSectionSelector/NeonSectionSelector';
@@ -9,27 +8,12 @@ import { useToast } from '@/components/ToastNotification';
 import type { CollectionNode } from '@/db/schema';
 import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
+import type { CollectionDetail } from '@/lib/collections/repository';
 import {
-  createCollectionNodeMutation,
-  type DeleteCollectionNodeMutation,
-  deleteCollectionNodeMutation,
-  type UpdateCollectionNodeMutation,
-  updateCollectionNodeMutation,
-} from '@/lib/collections/client';
-import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
-import type {
-  CollectionDetail,
-  CollectionSummary,
-} from '@/lib/collections/repository';
-
-const itemNodeTypes = new Set<CollectionNode['type']>([
-  'product',
-  'link',
-  'photo',
-]);
+  useCreateItem,
+  useDeleteItem,
+  useUpdateItem,
+} from '@/lib/commands/items/hooks';
 
 const EDIT_TITLE = {
   section: 'dialogs.editNode.title.section',
@@ -49,26 +33,6 @@ const DELETE_LABEL = {
   text: 'dialogs.editNode.delete.text',
 } as const satisfies Record<CollectionNode['type'], string>;
 
-type MutationContext = {
-  previousDetail: CollectionDetail | undefined;
-  previousSummaries: CollectionSummary[] | undefined;
-};
-
-function descendantIds(nodes: CollectionNode[], rootId: string): Set<string> {
-  const ids = new Set([rootId]);
-  let foundChild = true;
-  while (foundChild) {
-    foundChild = false;
-    for (const node of nodes) {
-      if (node.parentId && ids.has(node.parentId) && !ids.has(node.id)) {
-        ids.add(node.id);
-        foundChild = true;
-      }
-    }
-  }
-  return ids;
-}
-
 export function NeonEditNodeDialog({
   detail,
   node,
@@ -81,7 +45,6 @@ export function NeonEditNodeDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [title, setTitle] = useState('');
   const [parentId, setParentId] = useState('');
@@ -117,77 +80,8 @@ export function NeonEditNodeDialog({
     setError(null);
   }, [open, node]);
 
-  const updateNode = useMutation<
-    {
-      version: number;
-      collectionVersion: number;
-      itemCount: number;
-      replayed: boolean;
-    },
-    Error,
-    UpdateCollectionNodeMutation,
-    MutationContext
-  >({
-    mutationKey: collectionMutationKeys.updateNode,
-    mutationFn: updateCollectionNodeMutation,
-    scope: { id: `collection:${detail.collection.id}` },
-    onMutate: async ({ nodeId, input }) => {
-      await Promise.all([
-        queryClient.cancelQueries({
-          queryKey: collectionQueryKeys.detail(detail.collection.id),
-        }),
-        queryClient.cancelQueries({ queryKey: collectionQueryKeys.all }),
-      ]);
-      const previousDetail = queryClient.getQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-      );
-      const previousSummaries = queryClient.getQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-      );
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-        (current) =>
-          current
-            ? {
-                ...current,
-                collection: {
-                  ...current.collection,
-                  version: current.collection.version + 1,
-                  updatedAt: new Date(),
-                },
-                nodes: current.nodes.map((candidate) =>
-                  candidate.id === nodeId
-                    ? {
-                        ...candidate,
-                        parentId:
-                          input.parentId === undefined
-                            ? candidate.parentId
-                            : input.parentId,
-                        title:
-                          input.title === undefined
-                            ? candidate.title
-                            : input.title,
-                        properties: input.properties ?? candidate.properties,
-                        positionKey: input.positionKey ?? candidate.positionKey,
-                        version: candidate.version + 1,
-                        updatedAt: new Date(),
-                      }
-                    : candidate,
-                ),
-              }
-            : current,
-      );
-      return { previousDetail, previousSummaries };
-    },
-    onError: (mutationError, _variables, context) => {
-      queryClient.setQueryData(
-        collectionQueryKeys.detail(detail.collection.id),
-        context?.previousDetail,
-      );
-      queryClient.setQueryData(
-        collectionQueryKeys.all,
-        context?.previousSummaries,
-      );
+  const updateNode = useUpdateItem(detail.collection.id, {
+    onError: (mutationError) => {
       setError(errorMessage(t, mutationError));
       showToast({
         title: t('dialogs.editNode.updateFailed'),
@@ -197,83 +91,8 @@ export function NeonEditNodeDialog({
     },
   });
 
-  const deleteNode = useMutation<
-    {
-      deletedNodeCount: number;
-      collectionVersion: number;
-      itemCount: number;
-      replayed: boolean;
-    },
-    Error,
-    DeleteCollectionNodeMutation,
-    MutationContext
-  >({
-    mutationKey: collectionMutationKeys.deleteNode,
-    mutationFn: deleteCollectionNodeMutation,
-    scope: { id: `collection:${detail.collection.id}` },
-    onMutate: async ({ nodeId }) => {
-      await Promise.all([
-        queryClient.cancelQueries({
-          queryKey: collectionQueryKeys.detail(detail.collection.id),
-        }),
-        queryClient.cancelQueries({ queryKey: collectionQueryKeys.all }),
-      ]);
-      const previousDetail = queryClient.getQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-      );
-      const previousSummaries = queryClient.getQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-      );
-      const removedIds = descendantIds(detail.nodes, nodeId);
-      const removedItemCount = detail.nodes.filter(
-        (candidate) =>
-          removedIds.has(candidate.id) && itemNodeTypes.has(candidate.type),
-      ).length;
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-        (current) =>
-          current
-            ? {
-                ...current,
-                collection: {
-                  ...current.collection,
-                  itemCount: Math.max(
-                    0,
-                    current.collection.itemCount - removedItemCount,
-                  ),
-                  version: current.collection.version + removedIds.size,
-                  updatedAt: new Date(),
-                },
-                nodes: current.nodes.filter(
-                  (candidate) => !removedIds.has(candidate.id),
-                ),
-              }
-            : current,
-      );
-      queryClient.setQueryData<CollectionSummary[]>(
-        collectionQueryKeys.all,
-        (current) =>
-          current?.map((summary) =>
-            summary.id === detail.collection.id
-              ? {
-                  ...summary,
-                  itemCount: Math.max(0, summary.itemCount - removedItemCount),
-                  updatedAt: new Date(),
-                }
-              : summary,
-          ),
-      );
-      return { previousDetail, previousSummaries };
-    },
-    onError: (mutationError, _variables, context) => {
-      queryClient.setQueryData(
-        collectionQueryKeys.detail(detail.collection.id),
-        context?.previousDetail,
-      );
-      queryClient.setQueryData(
-        collectionQueryKeys.all,
-        context?.previousSummaries,
-      );
+  const deleteNode = useDeleteItem(detail.collection.id, {
+    onError: (mutationError) => {
       showToast({
         title: t('dialogs.editNode.deleteFailed'),
         description: errorMessage(t, mutationError),
@@ -281,6 +100,9 @@ export function NeonEditNodeDialog({
       });
     },
   });
+
+  // Rejections reach the section selector, which reports them itself.
+  const createSection = useCreateItem(detail.collection.id);
 
   const handleCreateSection = useCallback(
     async (name: string): Promise<string> => {
@@ -299,16 +121,10 @@ export function NeonEditNodeDialog({
         createdAt: now,
         updatedAt: now,
         deletedAt: null,
+        addedVia: 'app',
       };
       setExtraSections((prev) => [...prev, optimisticSection]);
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(detail.collection.id),
-        (current) =>
-          current
-            ? { ...current, nodes: [...current.nodes, optimisticSection] }
-            : current,
-      );
-      await createCollectionNodeMutation({
+      await createSection.mutateAsync({
         collectionId: detail.collection.id,
         input: {
           id: nodeId,
@@ -322,7 +138,7 @@ export function NeonEditNodeDialog({
       });
       return nodeId;
     },
-    [detail.collection.id, queryClient],
+    [detail.collection.id, createSection],
   );
 
   if (!node) return null;

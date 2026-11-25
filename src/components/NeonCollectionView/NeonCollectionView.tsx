@@ -17,7 +17,6 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Dispatch } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import pageStyles from '@/app/(app)/collections/[id]/NeonCollectionDetailPage.module.css';
@@ -29,17 +28,9 @@ import {
   useRefreshQueue,
 } from '@/hooks/useRefreshQueue';
 import { useFormat, useTranslation } from '@/i18n/client';
-import {
-  type ReorderCollectionNodesMutation,
-  reorderCollectionNodesMutation,
-  updateCollectionNodeMutation,
-} from '@/lib/collections/client';
 import { roleCan } from '@/lib/collections/permissions';
-import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
+import { useReorderItems, useUpdateItem } from '@/lib/commands/items/hooks';
 import { checkExtensionAvailable } from '@/lib/extension';
 import {
   describeRefreshOutcome,
@@ -480,7 +471,6 @@ export function NeonCollectionView({
   const [refresh, dispatchRefresh] = useRefreshQueue();
   const autoEnrichedIds = useRef(new Set<string>());
 
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { t } = useTranslation();
 
@@ -501,68 +491,22 @@ export function NeonCollectionView({
     }),
   );
 
-  const reorderNodes = useMutation<
-    {
-      nodeCount: number;
-      collectionVersion: number;
-      itemCount: number;
-      replayed: boolean;
-    },
-    Error,
-    ReorderCollectionNodesMutation
-  >({
-    mutationKey: collectionMutationKeys.reorderNodes,
-    mutationFn: reorderCollectionNodesMutation,
-    scope: { id: `collection:${collection.id}` },
-    onError: (error) => {
+  const reorderNodes = useReorderItems(collection.id, {
+    onError: (error) =>
       showToast({
         title: t('collections.view.reorderFailed'),
         description: error.message,
         variant: 'error',
-      });
-      void queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.detail(collection.id),
-      });
-    },
+      }),
   });
 
-  const updateRootNode = useMutation({
-    mutationKey: collectionMutationKeys.updateNode,
-    mutationFn: updateCollectionNodeMutation,
-    onMutate: ({ nodeId, input }) => {
-      queryClient.setQueryData<CollectionDetail>(
-        collectionQueryKeys.detail(collection.id),
-        (current) =>
-          current
-            ? {
-                ...current,
-                nodes: current.nodes.map((n) =>
-                  n.id === nodeId
-                    ? {
-                        ...n,
-                        title: input.title ?? n.title,
-                        properties: input.properties
-                          ? { ...n.properties, ...input.properties }
-                          : n.properties,
-                        version: n.version + 1,
-                        updatedAt: new Date(),
-                      }
-                    : n,
-                ),
-              }
-            : current,
-      );
-    },
-    onError: (error) => {
+  const updateRootNode = useUpdateItem(collection.id, {
+    onError: (error) =>
       showToast({
         title: t('collections.view.refreshFailed'),
         description: error.message,
         variant: 'error',
-      });
-      void queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.detail(collection.id),
-      });
-    },
+      }),
   });
 
   // Failures are toasts. The "get the extension" nudge is a dismissible inline
@@ -730,34 +674,6 @@ export function NeonCollectionView({
     );
     if (!hasChanged) return;
 
-    const nextPositions = new Map(
-      updates.map(({ node, positionKey }) => [node.id, positionKey]),
-    );
-    queryClient.setQueryData<CollectionDetail>(
-      collectionQueryKeys.detail(collection.id),
-      (current) =>
-        current
-          ? {
-              ...current,
-              collection: {
-                ...current.collection,
-                version: current.collection.version + updates.length,
-                updatedAt: new Date(),
-              },
-              nodes: current.nodes.map((n) => {
-                const positionKey = nextPositions.get(n.id);
-                return positionKey
-                  ? {
-                      ...n,
-                      positionKey,
-                      version: n.version + 1,
-                      updatedAt: new Date(),
-                    }
-                  : n;
-              }),
-            }
-          : current,
-    );
     reorderNodes.mutate({
       collectionId: collection.id,
       input: {
