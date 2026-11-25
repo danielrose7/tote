@@ -4,123 +4,54 @@ import { useUser } from '@clerk/nextjs';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   type CopyCollectionMutation,
-  type CreateCollectionMutation,
   copyCollectionMutation,
-  createCollectionMutation,
-  type DeleteCollectionMutation,
-  deleteCollectionMutation,
-  type UpdateCollectionMutation,
-  updateCollectionMutation,
 } from '@/lib/collections/client';
 import {
   collectionMutationKeys,
   collectionQueryKeys,
 } from '@/lib/collections/queryKeys';
 import {
-  applyOptimistic,
-  type CacheSnapshot,
-  rollbackOptimistic,
-} from '../optimistic';
-import {
-  createCollectionUpdate,
-  deleteCollectionUpdate,
-  updateCollectionUpdate,
-} from './cache';
+  type CollectionCommandOptions,
+  createCollectionOptions,
+  deleteCollectionOptions,
+  updateCollectionOptions,
+} from './mutations';
 
 /**
- * Collection commands: add, update, delete and copy.
- *
- * Each hook owns the optimistic lifecycle; callers add only what is specific
- * to them, usually a toast via `onError`. Writes to one collection share its
- * mutation scope so they reach the server in order. `providers.tsx` registers
- * the matching `mutationFn` and post-settle invalidation for each key, which
- * lets persisted mutations resume after a reload.
+ * Collection commands as React hooks: add, update, delete and copy. The
+ * mutation options live in `mutations.ts` so non-React callers share them;
+ * callers here only add what is specific to them, usually a toast.
  */
 
-export type CollectionCommandOptions = {
-  onError?: (error: Error) => void;
-};
+export type { CollectionCommandOptions };
 
-function collectionScope(collectionId: string) {
-  return { id: `collection:${collectionId}` };
-}
-
-/** Not scoped: the collection doesn't exist yet, so nothing can race it. */
-export function useCreateCollection({
-  onError,
-}: CollectionCommandOptions = {}) {
+export function useCreateCollection(options: CollectionCommandOptions = {}) {
   const queryClient = useQueryClient();
   const { user } = useUser();
-  return useMutation<
-    Awaited<ReturnType<typeof createCollectionMutation>>,
-    Error,
-    CreateCollectionMutation,
-    CacheSnapshot
-  >({
-    mutationKey: collectionMutationKeys.create,
-    mutationFn: createCollectionMutation,
-    onMutate: (variables) =>
-      applyOptimistic(queryClient, variables.id, () =>
-        createCollectionUpdate(variables, {
-          ownerUserId: user?.id ?? '',
-          now: new Date(),
-        }),
-      ),
-    onError: (error, variables, snapshot) => {
-      rollbackOptimistic(queryClient, variables.id, snapshot);
-      onError?.(error);
-    },
-  });
+  return useMutation(
+    createCollectionOptions(queryClient, {
+      ...options,
+      ownerUserId: user?.id ?? '',
+    }),
+  );
 }
 
 export function useUpdateCollection(
   collectionId: string,
-  { onError }: CollectionCommandOptions = {},
+  options: CollectionCommandOptions = {},
 ) {
-  const queryClient = useQueryClient();
-  return useMutation<
-    Awaited<ReturnType<typeof updateCollectionMutation>>,
-    Error,
-    UpdateCollectionMutation,
-    CacheSnapshot
-  >({
-    mutationKey: collectionMutationKeys.update,
-    mutationFn: updateCollectionMutation,
-    scope: collectionScope(collectionId),
-    onMutate: (variables) =>
-      applyOptimistic(queryClient, collectionId, () =>
-        updateCollectionUpdate(variables, { now: new Date() }),
-      ),
-    onError: (error, _variables, snapshot) => {
-      rollbackOptimistic(queryClient, collectionId, snapshot);
-      onError?.(error);
-    },
-  });
+  return useMutation(
+    updateCollectionOptions(useQueryClient(), collectionId, options),
+  );
 }
 
 export function useDeleteCollection(
   collectionId: string,
-  { onError }: CollectionCommandOptions = {},
+  options: CollectionCommandOptions = {},
 ) {
-  const queryClient = useQueryClient();
-  return useMutation<
-    Awaited<ReturnType<typeof deleteCollectionMutation>>,
-    Error,
-    DeleteCollectionMutation,
-    CacheSnapshot
-  >({
-    mutationKey: collectionMutationKeys.delete,
-    mutationFn: deleteCollectionMutation,
-    scope: collectionScope(collectionId),
-    onMutate: (variables) =>
-      applyOptimistic(queryClient, collectionId, () =>
-        deleteCollectionUpdate(variables),
-      ),
-    onError: (error, _variables, snapshot) => {
-      rollbackOptimistic(queryClient, collectionId, snapshot);
-      onError?.(error);
-    },
-  });
+  return useMutation(
+    deleteCollectionOptions(useQueryClient(), collectionId, options),
+  );
 }
 
 /**
