@@ -1,7 +1,6 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
 import editStyles from '@/components/EditCollectionDialog/EditCollectionDialog.module.css';
@@ -9,15 +8,8 @@ import { useToast } from '@/components/ToastNotification';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { errorMessage } from '@/i18n/apiError';
 import { useTranslation } from '@/i18n/client';
-import {
-  type CopyCollectionMutation,
-  copyCollectionMutation,
-} from '@/lib/collections/client';
-import {
-  collectionMutationKeys,
-  collectionQueryKeys,
-} from '@/lib/collections/queryKeys';
 import type { CollectionDetail } from '@/lib/collections/repository';
+import { useCopyCollection } from '@/lib/commands/collections/hooks';
 
 export function NeonCopyCollectionDialog({
   detail,
@@ -30,24 +22,14 @@ export function NeonCopyCollectionDialog({
 }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const online = useOnlineStatus();
   const [name, setName] = useState(
     t('dialogs.copy.defaultName', { name: detail.collection.name }),
   );
   const [error, setError] = useState<string | null>(null);
-  const copyCollection = useMutation<
-    { id: string; replayed: boolean },
-    Error,
-    CopyCollectionMutation
-  >({
-    mutationKey: collectionMutationKeys.copy,
-    mutationFn: copyCollectionMutation,
-    onSuccess: async ({ id }) => {
-      await queryClient.invalidateQueries({
-        queryKey: collectionQueryKeys.all,
-      });
+  const copyCollection = useCopyCollection({
+    onSuccess: ({ id }) => {
       showToast({
         title: t('dialogs.copy.copiedTitle'),
         description: t('dialogs.copy.copiedDescription'),

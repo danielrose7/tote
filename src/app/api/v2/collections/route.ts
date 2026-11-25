@@ -1,53 +1,12 @@
-import { auth } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
 import {
-  createCollectionInputSchema,
-  parseJsonRequest,
-} from '@/lib/collections/api';
-import {
-  createCollection,
-  listCollectionSummaries,
-} from '@/lib/collections/repository';
+  createCollectionCommand,
+  listCollectionsCommand,
+} from '@/lib/commands/collections/server';
+import { commandRoute } from '@/lib/commands/http';
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+export const GET = commandRoute(listCollectionsCommand, { target: () => ({}) });
 
-  const collections = await listCollectionSummaries(userId);
-  return NextResponse.json({ collections });
-}
-
-export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const body = await parseJsonRequest(request);
-  if (!body.success) {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
-
-  const parsed = createCollectionInputSchema.safeParse(body.data);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: 'Invalid collection', issues: parsed.error.issues },
-      { status: 400 },
-    );
-  }
-
-  const result = await createCollection(userId, parsed.data);
-  if (result.status === 'idempotency_conflict') {
-    return NextResponse.json(
-      { error: 'Mutation id was already used with different input' },
-      { status: 409 },
-    );
-  }
-
-  return NextResponse.json(
-    { id: result.id, replayed: result.status === 'replayed' },
-    { status: result.status === 'created' ? 201 : 200 },
-  );
-}
+export const POST = commandRoute(createCollectionCommand, {
+  target: () => ({}),
+  created: true,
+});
