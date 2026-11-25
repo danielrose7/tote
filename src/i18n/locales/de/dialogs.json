@@ -172,6 +172,7 @@
       "url": "URL *",
       "urlPlaceholder": "https://…",
       "fetching": "Wird abgerufen…",
+      "readingPage": "Seite wird gelesen: Name, Bild und Preis…",
       "fetch": "Abrufen",
       "imageUrl": "Bild-URL",
       "price": "Preis",

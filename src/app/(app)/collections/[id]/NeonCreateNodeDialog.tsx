@@ -27,6 +27,7 @@ import {
   isExtractionHintSnoozed,
   needsEnhancedExtraction,
 } from '@/lib/extractionHint';
+import styles from './NeonCreateNodeDialog.module.css';
 
 const nodeTypes = [
   'product',
@@ -178,6 +179,11 @@ export function NeonCreateNodeDialog({
   const handleFetchUrlRef = useRef(handleFetchUrl);
   handleFetchUrlRef.current = handleFetchUrl;
   const canAutoFetch = open && (type === 'product' || type === 'link');
+  // While reading, empty fields (or ones we filled earlier) are about to change.
+  const pendingClass = (value: string, field: AutoFillable) =>
+    isFetchingUrl && (!value || value === autoFilledRef.current[field])
+      ? ` ${styles.pending}`
+      : '';
   useEffect(() => {
     if (!canAutoFetch) return;
     const trimmed = url.trim();
@@ -355,7 +361,12 @@ export function NeonCreateNodeDialog({
                 id="neon-node-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                className={dialogStyles.input}
+                className={`${dialogStyles.input}${
+                  type === 'product' || type === 'link'
+                    ? pendingClass(title, 'title')
+                    : ''
+                }`}
+                aria-busy={isFetchingUrl}
                 maxLength={500}
               />
             </div>
@@ -407,6 +418,12 @@ export function NeonCreateNodeDialog({
                       : t('dialogs.createNode.fetch')}
                   </button>
                 </div>
+                {isFetchingUrl && (
+                  <output className={styles.fetchStatus}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    {t('dialogs.createNode.readingPage')}
+                  </output>
+                )}
                 {showExtractionTip && (
                   <ExtractionTip
                     onDismiss={() => setShowExtractionTip(false)}
@@ -427,7 +444,9 @@ export function NeonCreateNodeDialog({
                   type="url"
                   value={imageUrl}
                   onChange={(event) => setImageUrl(event.target.value)}
-                  className={dialogStyles.input}
+                  className={`${dialogStyles.input}${
+                    type === 'product' ? pendingClass(imageUrl, 'imageUrl') : ''
+                  }`}
                 />
                 {parseFetchableUrl(imageUrl) && (
                   <img
@@ -454,7 +473,7 @@ export function NeonCreateNodeDialog({
                   id="neon-node-price"
                   value={price}
                   onChange={(event) => setPrice(event.target.value)}
-                  className={dialogStyles.input}
+                  className={`${dialogStyles.input}${pendingClass(price, 'price')}`}
                   inputMode="decimal"
                 />
               </div>
@@ -472,7 +491,11 @@ export function NeonCreateNodeDialog({
                   id="neon-node-description"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
-                  className={dialogStyles.textarea}
+                  className={`${dialogStyles.textarea}${
+                    type === 'photo'
+                      ? ''
+                      : pendingClass(description, 'description')
+                  }`}
                   rows={3}
                 />
               </div>
