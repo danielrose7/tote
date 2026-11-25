@@ -5,16 +5,39 @@ import {
 } from '@tanstack/react-query';
 import { z } from 'zod';
 import {
+  type AgentToolSpec,
+  addCollectionTool,
+  addItemTool,
+  addSectionTool,
+  deleteItemTool,
+  describeInputError,
+  getCollectionTool,
+  getCurrentViewTool,
+  listCollectionsTool,
+  openCollectionTool,
+  updateItemTool,
+} from '@/lib/agentTools/catalog';
+import {
+  itemUpdateFields,
+  newItemFields,
+  positionKeyFor,
+} from '@/lib/agentTools/itemChanges';
+import {
+  collectionIdFrom,
+  resolveCollection,
+  resolveItem,
+  summarizeCollection,
+  summarizeItem,
+  ToolInputError,
+} from '@/lib/agentTools/resolve';
+import {
   CollectionRequestError,
   fetchCollectionDetail,
   fetchCollectionSummaries,
 } from '@/lib/collections/client';
 import { roleCan } from '@/lib/collections/permissions';
 import { collectionQueryKeys } from '@/lib/collections/queryKeys';
-import type {
-  CollectionDetail,
-  CollectionSummary,
-} from '@/lib/collections/repository';
+import type { CollectionDetail } from '@/lib/collections/repository';
 import { createCollectionOptions } from '@/lib/commands/collections/mutations';
 import {
   createItemOptions,
@@ -24,27 +47,16 @@ import {
 import { checkExtensionAvailable } from '@/lib/extension';
 import { extractItemMetadata } from '@/lib/extractItem';
 import type { ModelContextTool } from './modelContext';
-import {
-  collectionIdFrom,
-  resolveCollection,
-  resolveItem,
-  resolveSection,
-  summarizeCollection,
-  summarizeItem,
-  ToolInputError,
-} from './resolve';
 
 /**
  * Tote's WebMCP tools: what an agent in the user's browser (ChatGPT's
  * built-in browser, agent-browser, Brave Leo, ...) can do on this page.
+ * Names, descriptions and schemas come from the shared agent tool catalog.
  *
  * Every write goes through the same command options as the UI, so the user
  * sees the agent's change appear instantly, failures roll back, and writes to
  * one collection stay in order. The server still enforces permissions and
  * versions; the checks here only give the agent clearer errors.
- *
- * Keep the list short and the descriptions tight: some agents put the whole
- * catalog into the model's context on every page.
  */
 
 export type ToolEnvironment = {
@@ -100,10 +112,6 @@ function runMutation<Data, Variables, Context>(
   return new MutationObserver(queryClient, options).mutate(variables);
 }
 
-function positionKeyFor(id: string) {
-  return `${new Date().toISOString()}:${id}`;
-}
-
 function agentMessage(error: unknown): string {
   if (error instanceof ToolInputError) return error.message;
   if (error instanceof CollectionRequestError) {
@@ -122,20 +130,9 @@ function agentMessage(error: unknown): string {
   return 'Tote could not complete this. Try again, or ask the user to check the page.';
 }
 
-type ToolSpec<Schema extends z.ZodObject> = {
-  name: string;
-  description: string;
-  readOnly: boolean;
-  /** Output includes scraped or other-member content. */
-  untrustedContent?: boolean;
-  /** Hard to undo; agents should confirm first. */
-  consequential?: boolean;
-  input: Schema;
-  run: (input: z.infer<Schema>) => Promise<unknown>;
-};
-
 function toTool<Schema extends z.ZodObject>(
-  spec: ToolSpec<Schema>,
+  spec: AgentToolSpec<Schema>,
+  run: (input: z.infer<Schema>) => Promise<unknown>,
 ): ModelContextTool {
   const { $schema: _dialect, ...inputSchema } = z.toJSONSchema(spec.input, {
     io: 'input',
@@ -145,23 +142,15 @@ function toTool<Schema extends z.ZodObject>(
     description: spec.description,
     inputSchema,
     annotations: {
-      readOnlyHint: spec.readOnly,
-      untrustedContentHint: spec.untrustedContent ?? false,
-      consequentialHint: spec.consequential ?? false,
+      readOnlyHint: spec.hints.readOnly,
+      untrustedContentHint: spec.hints.untrustedContent,
+      consequentialHint: spec.hints.consequential,
     },
     execute: async (rawInput) => {
       const parsed = spec.input.safeParse(rawInput ?? {});
-      if (!parsed.success) {
-        throw new Error(
-          `Invalid input: ${parsed.error.issues
-            .map(
-              (issue) => `${issue.path.join('.') || 'input'} ${issue.message}`,
-            )
-            .join('; ')}`,
-        );
-      }
+      if (!parsed.success) throw new Error(describeInputError(parsed.error));
       try {
-        return await spec.run(parsed.data);
+        return await run(parsed.data);
       } catch (error) {
         throw new Error(agentMessage(error));
       }
@@ -169,305 +158,165 @@ function toTool<Schema extends z.ZodObject>(
   };
 }
 
-const collectionRef = z
-  .string()
-  .trim()
-  .min(1)
-  .max(500)
-  .describe('Collection id, Tote link, or exact name');
-
 export function createTools(env: ToolEnvironment): ModelContextTool[] {
   const { queryClient } = env;
   const origin = window.location.origin;
 
-  const currentCollectionId = () =>
-    collectionIdFrom(window.location.pathname) ?? undefined;
+  const findItem = async (collectionId: string, itemId: string) =>
+    (await loadDetail(queryClient, collectionId)).nodes.find(
+      (node) => node.id === itemId,
+    );
 
   return [
-    toTool({
-      name: 'get_current_view',
-      description:
-        'What the user is looking at in Tote right now: the collection list or one collection.',
-      readOnly: true,
-      untrustedContent: true,
-      input: z.strictObject({}),
-      run: async () => {
-        const collectionId = currentCollectionId();
-        if (!collectionId) {
-          return { view: 'other', path: window.location.pathname };
-        }
-        const detail = await loadDetail(queryClient, collectionId);
-        return { view: 'collection', ...summarizeCollection(detail, origin) };
-      },
+    toTool(getCurrentViewTool, async () => {
+      const collectionId = collectionIdFrom(window.location.pathname);
+      if (!collectionId) {
+        return { view: 'other', path: window.location.pathname };
+      }
+      const detail = await loadDetail(queryClient, collectionId);
+      return { view: 'collection', ...summarizeCollection(detail, origin) };
     }),
 
-    toTool({
-      name: 'list_collections',
-      description:
-        "List the user's collections with ids, names, item counts and the user's role.",
-      readOnly: true,
-      untrustedContent: true,
-      input: z.strictObject({}),
-      run: async () => {
-        const summaries: CollectionSummary[] = await loadSummaries(queryClient);
-        return {
-          collections: summaries.map((summary) => ({
-            id: summary.id,
-            name: summary.name,
-            description: summary.description,
-            itemCount: summary.itemCount,
-            role: summary.role,
-            url: `${origin}/collections/${summary.id}`,
-          })),
-        };
-      },
+    toTool(listCollectionsTool, async () => ({
+      collections: (await loadSummaries(queryClient)).map((summary) => ({
+        id: summary.id,
+        name: summary.name,
+        description: summary.description,
+        itemCount: summary.itemCount,
+        role: summary.role,
+        url: `${origin}/collections/${summary.id}`,
+      })),
+    })),
+
+    toTool(getCollectionTool, async ({ collection }) =>
+      summarizeCollection(
+        await loadCollection(queryClient, collection),
+        origin,
+      ),
+    ),
+
+    toTool(openCollectionTool, async ({ collection }) => {
+      const detail = await loadCollection(queryClient, collection);
+      env.navigate(`/collections/${detail.collection.id}`);
+      return { opened: `${origin}/collections/${detail.collection.id}` };
     }),
 
-    toTool({
-      name: 'get_collection',
-      description:
-        'Read one collection: its sections and items with ids, titles, links, prices and notes.',
-      readOnly: true,
-      untrustedContent: true,
-      input: z.strictObject({ collection: collectionRef }),
-      run: async ({ collection }) =>
-        summarizeCollection(
-          await loadCollection(queryClient, collection),
-          origin,
-        ),
+    toTool(addCollectionTool, async ({ name, description }) => {
+      const id = crypto.randomUUID();
+      await runMutation(
+        queryClient,
+        createCollectionOptions(queryClient, { ownerUserId: env.userId() }),
+        {
+          id,
+          mutationId: crypto.randomUUID(),
+          name,
+          description: description || undefined,
+          positionKey: positionKeyFor(id),
+        },
+      );
+      return { id, name, url: `${origin}/collections/${id}` };
     }),
 
-    toTool({
-      name: 'open_collection',
-      description: 'Show a collection on the page so the user can see it.',
-      readOnly: true,
-      input: z.strictObject({ collection: collectionRef }),
-      run: async ({ collection }) => {
-        const detail = await loadCollection(queryClient, collection);
-        env.navigate(`/collections/${detail.collection.id}`);
-        return { opened: `${origin}/collections/${detail.collection.id}` };
-      },
-    }),
-
-    toTool({
-      name: 'add_collection',
-      description: 'Add a new private collection for the user.',
-      readOnly: false,
-      input: z.strictObject({
-        name: z.string().trim().min(1).max(200),
-        description: z.string().trim().max(2000).optional(),
-      }),
-      run: async ({ name, description }) => {
-        const id = crypto.randomUUID();
-        await runMutation(
-          queryClient,
-          createCollectionOptions(queryClient, { ownerUserId: env.userId() }),
-          {
+    toTool(addSectionTool, async ({ collection, title }) => {
+      const detail = await loadCollection(queryClient, collection);
+      requireEdit(detail);
+      const id = crypto.randomUUID();
+      await runMutation(
+        queryClient,
+        createItemOptions(queryClient, detail.collection.id, {
+          createdByUserId: env.userId(),
+        }),
+        {
+          collectionId: detail.collection.id,
+          input: {
             id,
             mutationId: crypto.randomUUID(),
-            name,
-            description: description || undefined,
+            type: 'section',
+            title,
+            parentId: null,
+            properties: {},
             positionKey: positionKeyFor(id),
+            addedVia: 'agent',
           },
-        );
-        return { id, name, url: `${origin}/collections/${id}` };
-      },
+        },
+      );
+      return { id, title };
     }),
 
-    toTool({
-      name: 'add_section',
-      description: 'Add a section (a group of items) to a collection.',
-      readOnly: false,
-      input: z.strictObject({
-        collection: collectionRef,
-        title: z.string().trim().min(1).max(500),
-      }),
-      run: async ({ collection, title }) => {
-        const detail = await loadCollection(queryClient, collection);
-        requireEdit(detail);
-        const id = crypto.randomUUID();
-        await runMutation(
-          queryClient,
-          createItemOptions(queryClient, detail.collection.id, {
-            createdByUserId: env.userId(),
-          }),
-          {
-            collectionId: detail.collection.id,
-            input: {
-              id,
-              mutationId: crypto.randomUUID(),
-              type: 'section',
-              title,
-              parentId: null,
-              properties: {},
-              positionKey: positionKeyFor(id),
-              addedVia: 'agent',
-            },
+    toTool(addItemTool, async (input) => {
+      if (!input.url && !input.title) {
+        throw new ToolInputError('Provide a url, a title, or both.');
+      }
+      const detail = await loadCollection(queryClient, input.collection);
+      requireEdit(detail);
+      const metadata = input.url
+        ? (
+            await extractItemMetadata(
+              input.url,
+              await checkExtensionAvailable(),
+            )
+          ).metadata
+        : null;
+      const fields = newItemFields(input, detail.nodes, metadata);
+      const id = crypto.randomUUID();
+      await runMutation(
+        queryClient,
+        createItemOptions(queryClient, detail.collection.id, {
+          createdByUserId: env.userId(),
+        }),
+        {
+          collectionId: detail.collection.id,
+          input: {
+            id,
+            mutationId: crypto.randomUUID(),
+            ...fields,
+            positionKey: positionKeyFor(id),
+            addedVia: 'agent',
           },
-        );
-        return { id, title };
-      },
+        },
+      );
+      const created = await findItem(detail.collection.id, id);
+      return created ? summarizeItem(created) : { id, title: fields.title };
     }),
 
-    toTool({
-      name: 'add_item',
-      description:
-        'Add a product link (with url) or a note (title only) to a collection. Title, image and price are read from the url when available.',
-      readOnly: false,
-      untrustedContent: true,
-      input: z.strictObject({
-        collection: collectionRef,
-        url: z.url().max(2000).optional(),
-        title: z.string().trim().min(1).max(500).optional(),
-        note: z.string().trim().max(5000).optional(),
-        section: z
-          .string()
-          .trim()
-          .min(1)
-          .optional()
-          .describe('Section id or exact title'),
-      }),
-      run: async ({ collection, url, title, note, section }) => {
-        if (!url && !title) {
-          throw new ToolInputError('Provide a url, a title, or both.');
-        }
-        const detail = await loadCollection(queryClient, collection);
-        requireEdit(detail);
-        const parentId = section
-          ? resolveSection(section, detail.nodes).id
-          : null;
-
-        const properties: Record<string, unknown> = {};
-        let resolvedTitle = title;
-        if (url) {
-          properties.url = url;
-          const { metadata } = await extractItemMetadata(
-            url,
-            await checkExtensionAvailable(),
-          );
-          if (metadata?.imageUrl) properties.imageUrl = metadata.imageUrl;
-          if (metadata?.description) {
-            properties.description = metadata.description;
-          }
-          if (metadata?.price) properties.price = metadata.price;
-          resolvedTitle ??= metadata?.title ?? new URL(url).hostname;
-        }
-        if (note) properties.body = note;
-
-        const id = crypto.randomUUID();
-        await runMutation(
-          queryClient,
-          createItemOptions(queryClient, detail.collection.id, {
-            createdByUserId: env.userId(),
-          }),
-          {
-            collectionId: detail.collection.id,
-            input: {
-              id,
-              mutationId: crypto.randomUUID(),
-              type: url ? 'product' : 'note',
-              title: resolvedTitle,
-              parentId,
-              properties,
-              positionKey: positionKeyFor(id),
-              addedVia: 'agent',
-            },
+    toTool(updateItemTool, async (input) => {
+      const detail = await loadCollection(queryClient, input.collection);
+      requireEdit(detail);
+      const node = resolveItem(input.item, detail.nodes);
+      await runMutation(
+        queryClient,
+        updateItemOptions(queryClient, detail.collection.id),
+        {
+          collectionId: detail.collection.id,
+          nodeId: node.id,
+          input: {
+            expectedVersion: node.version,
+            mutationId: crypto.randomUUID(),
+            ...itemUpdateFields(node, input, detail.nodes),
           },
-        );
-        const created = (
-          await loadDetail(queryClient, detail.collection.id)
-        ).nodes.find((node) => node.id === id);
-        return created ? summarizeItem(created) : { id, title: resolvedTitle };
-      },
+        },
+      );
+      const updated = await findItem(detail.collection.id, node.id);
+      return updated ? summarizeItem(updated) : { id: node.id };
     }),
 
-    toTool({
-      name: 'update_item',
-      description:
-        "Change an item's title, link, price or note, or move it to a section (section: null removes it from its section). Fields left out stay as they are.",
-      readOnly: false,
-      untrustedContent: true,
-      input: z.strictObject({
-        collection: collectionRef,
-        item: z.string().trim().min(1).describe('Item id from get_collection'),
-        title: z.string().trim().min(1).max(500).optional(),
-        url: z.url().max(2000).optional(),
-        price: z.string().trim().max(50).optional(),
-        note: z.string().trim().max(5000).optional(),
-        section: z
-          .string()
-          .trim()
-          .min(1)
-          .nullable()
-          .optional()
-          .describe('Section id or exact title, or null'),
-      }),
-      run: async ({ collection, item, title, url, price, note, section }) => {
-        const detail = await loadCollection(queryClient, collection);
-        requireEdit(detail);
-        const node = resolveItem(item, detail.nodes);
-        // The server replaces properties, so start from what's there.
-        const properties = { ...(node.properties as Record<string, unknown>) };
-        if (url !== undefined) properties.url = url;
-        if (price !== undefined) properties.price = price || undefined;
-        if (note !== undefined) properties.body = note || undefined;
-        await runMutation(
-          queryClient,
-          updateItemOptions(queryClient, detail.collection.id),
-          {
-            collectionId: detail.collection.id,
-            nodeId: node.id,
-            input: {
-              expectedVersion: node.version,
-              mutationId: crypto.randomUUID(),
-              ...(title !== undefined ? { title } : {}),
-              ...(section !== undefined
-                ? {
-                    parentId:
-                      section === null
-                        ? null
-                        : resolveSection(section, detail.nodes).id,
-                  }
-                : {}),
-              properties,
-            },
+    toTool(deleteItemTool, async ({ collection, item }) => {
+      const detail = await loadCollection(queryClient, collection);
+      requireEdit(detail);
+      const node = resolveItem(item, detail.nodes);
+      await runMutation(
+        queryClient,
+        deleteItemOptions(queryClient, detail.collection.id),
+        {
+          collectionId: detail.collection.id,
+          nodeId: node.id,
+          input: {
+            expectedVersion: node.version,
+            mutationId: crypto.randomUUID(),
           },
-        );
-        const updated = (
-          await loadDetail(queryClient, detail.collection.id)
-        ).nodes.find((candidate) => candidate.id === node.id);
-        return updated ? summarizeItem(updated) : { id: node.id };
-      },
-    }),
-
-    toTool({
-      name: 'delete_item',
-      description:
-        'Delete one item from a collection. Sections and collections cannot be deleted with this tool.',
-      readOnly: false,
-      consequential: true,
-      input: z.strictObject({
-        collection: collectionRef,
-        item: z.string().trim().min(1).describe('Item id from get_collection'),
-      }),
-      run: async ({ collection, item }) => {
-        const detail = await loadCollection(queryClient, collection);
-        requireEdit(detail);
-        const node = resolveItem(item, detail.nodes);
-        await runMutation(
-          queryClient,
-          deleteItemOptions(queryClient, detail.collection.id),
-          {
-            collectionId: detail.collection.id,
-            nodeId: node.id,
-            input: {
-              expectedVersion: node.version,
-              mutationId: crypto.randomUUID(),
-            },
-          },
-        );
-        return { deleted: node.id, title: node.title };
-      },
+        },
+      );
+      return { deleted: node.id, title: node.title };
     }),
   ];
 }
