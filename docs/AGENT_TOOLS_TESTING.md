@@ -80,6 +80,19 @@ code, so they show the translated "changed elsewhere" message.
 | 2b.9 | Change layout / allow copying, re-publish, then unpublish | Public page updates, then returns 404 |
 | 2b.10 | As B, copy a published collection that allows copying | Lands on B's new private copy |
 
+## 2c. Clerk upgrade (`@clerk/nextjs` 7.8 → 7.10)
+
+Upgraded for MCP server auth. It touches every sign-in path, so check them all.
+
+| # | Do this | Expect |
+|---|---------|--------|
+| 2c.1 | Sign out, sign in on the web (email and Google) | Lands on /collections; no console errors |
+| 2c.2 | Chrome extension: sign out of the web app, sign back in, then save a page from the popup | Popup shows signed in and saves |
+| 2c.3 | /extension-auth page | Sign-in card renders and completes |
+| 2c.4 | iOS share extension: share a link into Tote | Saves (uses a Clerk API key) |
+| 2c.5 | Settings page and the user menu | Render; sign out works |
+| 2c.6 | Public pages signed out: home, /s/... shared page | Render with sign-up buttons |
+
 ## 3. WebMCP site tools (step 3)
 
 Tote registers 9 tools for agents running in the user's own browser. Tools exist
