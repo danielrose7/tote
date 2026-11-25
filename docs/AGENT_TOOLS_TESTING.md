@@ -183,13 +183,72 @@ The ChatGPT desktop browser and Brave Nightly don't need it.
 
 The trial runs through Chrome 162 (ends 30 March 2027).
 
-## 6. Later steps (add checks as they land)
+## 6. Remote MCP server (`/mcp`)
 
-- **Remote MCP server** (`/mcp`, Clerk OAuth): connect from Claude, ChatGPT,
-  Codex and Grok; consent screen; read vs write scopes; token revocation;
-  browser-session links.
-- **Team and publication commands**: move to the command layer; still not
-  exposed to agents.
+Lets people connect Tote to their own Claude, ChatGPT, Codex, Grok or other MCP
+client. Same tools as WebMCP minus the page-only ones (`get_current_view`,
+`open_collection`), running on the server as the user who approved the connection.
+
+### 6.1 One-time setup (production Clerk, do this first)
+
+1. Clerk Dashboard → **Agents → MCP servers → Add MCP server**, MCP URL
+   `https://tote.tools/mcp`. ⚠️ This turns on **audience (`aud`) claims** for the whole
+   instance; run section 2c (sign-in checks) again afterwards.
+2. In the same flow, select **Allow public clients to connect** (enables client ID
+   metadata documents, so Claude and ChatGPT need no pre-registration). Check
+   **OAuth applications → Settings** that dynamic client registration is allowed too.
+3. Keep the **Account Portal** enabled: it hosts the OAuth consent screen.
+4. Optional, read-only connections: create a custom scope (e.g. `collections:write`)
+   under **OAuth applications → Scopes**, add it to **Allowed scopes for dynamic
+   clients**, then set `MCP_WRITE_SCOPE=collections:write` on Vercel (Production) and
+   redeploy. Write tools then ask the user to approve that scope separately.
+
+Discovery checks (no sign-in needed):
+
+| # | Check | Expect |
+|---|-------|--------|
+| 6.1.1 | `curl -s https://tote.tools/.well-known/oauth-protected-resource/mcp` | `resource` is `https://tote.tools/mcp`, `authorization_servers` is `https://clerk.tote.tools` |
+| 6.1.2 | `curl -s https://tote.tools/mcp/server-card` | Card named `tools.tote/collections` |
+| 6.1.3 | `curl -si -X POST https://tote.tools/mcp -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_collections","arguments":{}}}'` | `401` with `WWW-Authenticate: Bearer resource_metadata=...` |
+
+### 6.2 Connect each client
+
+| Client | How | Expect |
+|--------|-----|--------|
+| **Claude** (claude.ai / desktop) | Settings → Connectors → Add custom connector → `https://tote.tools/mcp` → Connect | Clerk sign-in, then a consent screen naming the client; connector shows 7 tools |
+| **Claude Code** | `claude mcp add --transport http --scope user tote https://tote.tools/mcp`, then `/mcp` → Sign in | Browser opens Clerk sign-in; `/mcp` shows tote connected |
+| **ChatGPT** | Developer mode → add an app/connector with the URL (see OpenAI's plugin docs) | Sign-in, consent, tools listed |
+| **Codex** | `codex mcp add tote --url https://tote.tools/mcp` then `codex mcp login tote` | Signed in; tools listed |
+| **Grok CLI** | `grok mcp add --transport http tote https://tote.tools/mcp` | OAuth browser flow on first use |
+| **MCP Inspector** | `npx @modelcontextprotocol/inspector`, Streamable HTTP, the URL | Exercises CORS + the 401 challenge in a browser |
+
+### 6.3 Tool behavior (from any connected client)
+
+| # | Prompt | Expect |
+|---|--------|--------|
+| 6.3.1 | "List my Tote collections" | Matches the app |
+| 6.3.2 | "What's in QA: agent tools?" | Sections and items |
+| 6.3.3 | "Add <product URL> to the Pans section of QA: agent tools" | Item appears in the app within seconds (realtime), with title/image/price |
+| 6.3.4 | "Change its price to 49 and add a note" | Updated in the app; link and image untouched |
+| 6.3.5 | "Delete it" | Client asks to confirm (destructive hint), then it's gone |
+| 6.3.6 | As account B (viewer) connected: "Add a note to A's collection" | Refused: can view but not change |
+| 6.3.7 | Database (read-only): `added_via` of the new item | `agent` |
+| 6.3.8 | With `MCP_WRITE_SCOPE` set: connect, read, then ask for a write | Client asks the user to approve the extra scope first |
+
+### 6.4 Revocation and safety
+
+| # | Check | Expect |
+|---|-------|--------|
+| 6.4.1 | Clerk Dashboard → the user → OAuth grants (or the user's account settings): revoke the client | Next tool call fails with `invalid_token`; client asks to sign in again |
+| 6.4.2 | Prompt injection via an item description (as 3.4.1) | Agent doesn't follow it |
+| 6.4.3 | Ask to publish, share, change members or delete a collection | No tool for it; agent says to use the app |
+
+## 7. Later
+
+- **Browser sessions** (Clerk `create_browser_session`, beta): let an MCP client open
+  Tote signed in, so it can use the WebMCP tools on the page.
+- **`auth().agent` policies**: refuse specific commands during agent browser sessions.
+- **A "Connected apps" page** in Settings listing and revoking MCP grants.
 
 ## Results log
 

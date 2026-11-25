@@ -6,10 +6,12 @@ import {
 } from '@/lib/collections/api';
 import { copyCollection } from '@/lib/collections/copyRepository';
 import {
+  type CollectionDetail,
   createCollection,
   deleteCollection,
   getCollectionDetail,
   listCollectionSummaries,
+  type MutationResult,
   updateCollection,
 } from '@/lib/collections/repository';
 import { collectionTarget, defineCommand, noTarget } from '../command';
@@ -32,7 +34,10 @@ export const getCollectionCommand = defineCommand({
     'Get one collection with all of its sections and items, including versions needed for edits.',
   annotations: { readOnly: true },
   target: collectionTarget,
-  run: async ({ userId }, { collectionId }) => {
+  run: async (
+    { userId },
+    { collectionId },
+  ): Promise<MutationResult<CollectionDetail>> => {
     const detail = await getCollectionDetail(userId, collectionId);
     return detail ? { status: 'ok', value: detail } : { status: 'not_found' };
   },

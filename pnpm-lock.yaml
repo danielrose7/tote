@@ -26,6 +26,9 @@ importers:
       '@clerk/localizations':
         specifier: ~4.26.3
         version: 4.26.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@clerk/mcp-tools':
+        specifier: ~1.0.0
+        version: 1.0.0(@clerk/backend@3.32.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@clerk/nextjs@7.10.8(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@modelcontextprotocol/server@2.4.0)(mcp-handler@2.4.0(@modelcontextprotocol/server@2.4.0)(@opentelemetry/api@1.9.0)(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)))(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(pg@8.21.0)(zod@4.3.6)
       '@clerk/nextjs':
         specifier: ~7.10.8
         version: 7.10.8(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -38,6 +41,9 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.1.0)
+      '@modelcontextprotocol/server':
+        specifier: ~2.4.0
+        version: 2.4.0
       '@neondatabase/serverless':
         specifier: ^1.0.2
         version: 1.0.2
@@ -86,6 +92,9 @@ importers:
       inngest:
         specifier: ^4.1.2
         version: 4.1.2(@opentelemetry/core@2.6.1(@opentelemetry/api@1.9.0))(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(supports-color@10.2.2)(typescript@5.6.2)(zod@4.3.6)
+      mcp-handler:
+        specifier: ~2.4.0
+        version: 2.4.0(@modelcontextprotocol/server@2.4.0)(@opentelemetry/api@1.9.0)(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
       next:
         specifier: ^16.0.7
         version: 16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -1044,6 +1053,50 @@ packages:
   '@clerk/localizations@4.26.3':
     resolution: {integrity: sha512-qfuu/CJP7F0faOqsCexlV5rHTl6WPkxIuhR2lNajfEH0hDjo8DaOO6tMgu7i0QOadphMYtTSfRJPsPMVAa2M8Q==}
     engines: {node: '>=20.9.0'}
+
+  '@clerk/mcp-tools@1.0.0':
+    resolution: {integrity: sha512-X6LzFdk6TJodOR8J9USHtkKj2oJvi3E1EPUizuyLL53ZZ/5RGf0gvLJYEPQlPLRyM77bUENCA1LwwsN9w6+zrw==}
+    peerDependencies:
+      '@clerk/backend': ^3.19.0
+      '@clerk/express': ^2.1.70
+      '@clerk/nextjs': ^7.9.5
+      '@modelcontextprotocol/sdk': ^1.32.0
+      '@modelcontextprotocol/server': ^2.3.0
+      better-sqlite3: ^8.7.0
+      express: ^5.0.0
+      hono: ^4.0.0
+      mcp-handler: ^2.0.0
+      next: ^15.2.8 || ^15.3.8 || ^15.4.10 || ^15.5.9 || ^15.6.0-0 || ^16.0.10 || ^16.1.0-0
+      pg: ^8.11.0
+      redis: ^4.0.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@clerk/backend':
+        optional: true
+      '@clerk/express':
+        optional: true
+      '@clerk/nextjs':
+        optional: true
+      '@modelcontextprotocol/sdk':
+        optional: true
+      '@modelcontextprotocol/server':
+        optional: true
+      better-sqlite3:
+        optional: true
+      express:
+        optional: true
+      hono:
+        optional: true
+      mcp-handler:
+        optional: true
+      next:
+        optional: true
+      pg:
+        optional: true
+      redis:
+        optional: true
+      zod:
+        optional: true
 
   '@clerk/nextjs@7.10.8':
     resolution: {integrity: sha512-vxau5jVFTzq46hJoMsEJMGeuUD0y27ATrf2DoDE/SvCeBLdzc58s/2RZvzMJ39iZMiiqSS+3UqyxYCeXV+e/nA==}
@@ -2623,6 +2676,14 @@ packages:
 
   '@js-sdsl/ordered-map@4.4.2':
     resolution: {integrity: sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==}
+
+  '@modelcontextprotocol/core@2.4.0':
+    resolution: {integrity: sha512-z8QBKqdfXLPzkLQuG4xp8hrVEMm1PZ1IgxMN2sMbJiFiAKOWXnAzogXn2W4aqIBlP1ea6U5yiqVquvUNM1Cj6Q==}
+    engines: {node: '>=20'}
+
+  '@modelcontextprotocol/server@2.4.0':
+    resolution: {integrity: sha512-rgR9yxSaAJ+bcsi/XroT/S2AfPiIWloXAnrdfYSCms9ivVju0ishu/wW0J21Ho6+ZOR1r7RyeRbjiRuF87ix5Q==}
+    engines: {node: '>=20'}
 
   '@neondatabase/serverless@1.0.2':
     resolution: {integrity: sha512-I5sbpSIAHiB+b6UttofhrN/UJXII+4tZPAq1qugzwCwLIL8EZLV7F/JyHUrEIiGgQpEXzpnjlJ+zwcEhheGvCw==}
@@ -4791,6 +4852,10 @@ packages:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
 
+  commander@11.1.0:
+    resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
+    engines: {node: '>=16'}
+
   commander@12.1.0:
     resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
     engines: {node: '>=18'}
@@ -6230,6 +6295,23 @@ packages:
 
   marky@1.3.0:
     resolution: {integrity: sha512-ocnPZQLNpvbedwTy9kNrQEsknEfgvcLMvOtz3sFeWApDq1MXH1TqkCIx58xlpESsfwQOnuBO9beyQuNGzVvuhQ==}
+
+  mcp-handler@2.4.0:
+    resolution: {integrity: sha512-jJYsZ9lCswOiRQXaAtWuFLWGslw+O4+sLmnbiDBwSTBwR3fkbg0Ji/7/j7UvqJXo6QIQHxXybqZVSWm3NX/oFQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+    peerDependencies:
+      '@modelcontextprotocol/server': ^2.0.0
+      '@opentelemetry/api': ^1.9.0
+      '@vercel/otel': ^2.0.0
+      next: '>=13.0.0'
+    peerDependenciesMeta:
+      '@opentelemetry/api':
+        optional: true
+      '@vercel/otel':
+        optional: true
+      next:
+        optional: true
 
   mdn-data@2.12.2:
     resolution: {integrity: sha512-IEn+pegP1aManZuckezWCO+XZQDplx1366JoVhTpMpBB1sPey/SbveZQUosKiKiGYjg1wH4pMlNgXbCiYgihQA==}
@@ -8992,6 +9074,16 @@ snapshots:
       - react
       - react-dom
 
+  '@clerk/mcp-tools@1.0.0(@clerk/backend@3.32.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@clerk/nextjs@7.10.8(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@modelcontextprotocol/server@2.4.0)(mcp-handler@2.4.0(@modelcontextprotocol/server@2.4.0)(@opentelemetry/api@1.9.0)(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)))(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(pg@8.21.0)(zod@4.3.6)':
+    optionalDependencies:
+      '@clerk/backend': 3.32.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@clerk/nextjs': 7.10.8(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@modelcontextprotocol/server': 2.4.0
+      mcp-handler: 2.4.0(@modelcontextprotocol/server@2.4.0)(@opentelemetry/api@1.9.0)(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
+      next: 16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      pg: 8.21.0
+      zod: 4.3.6
+
   '@clerk/nextjs@7.10.8(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@clerk/backend': 3.32.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -10614,6 +10706,15 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@js-sdsl/ordered-map@4.4.2': {}
+
+  '@modelcontextprotocol/core@2.4.0':
+    dependencies:
+      zod: 4.3.6
+
+  '@modelcontextprotocol/server@2.4.0':
+    dependencies:
+      '@modelcontextprotocol/core': 2.4.0
+      zod: 4.3.6
 
   '@neondatabase/serverless@1.0.2':
     dependencies:
@@ -13537,6 +13638,8 @@ snapshots:
       color-convert: 2.0.1
       color-string: 1.9.1
 
+  commander@11.1.0: {}
+
   commander@12.1.0: {}
 
   commander@13.1.0: {}
@@ -15049,6 +15152,15 @@ snapshots:
       tmpl: 1.0.5
 
   marky@1.3.0: {}
+
+  mcp-handler@2.4.0(@modelcontextprotocol/server@2.4.0)(@opentelemetry/api@1.9.0)(next@16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)):
+    dependencies:
+      '@modelcontextprotocol/server': 2.4.0
+      chalk: 5.6.2
+      commander: 11.1.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
+      next: 16.1.1(@babel/core@7.28.5(supports-color@10.2.2))(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
 
   mdn-data@2.12.2: {}
 

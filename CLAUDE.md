@@ -78,6 +78,12 @@ the `/api/v2` routes and agent tools. Add new operations there rather than writi
   only when the browser exposes `document.modelContext`. Keep the catalog small and every
   tool's `annotations` set (some agents reject tools without them). Published pages
   register their own read-only tools (`SharedCollectionTools`, `sharedCollection.ts`).
+- `src/lib/agentTools/` — the shared agent tool catalog (names, descriptions, schemas, hints)
+  plus pure helpers; WebMCP and the remote MCP server both build from it.
+- `src/app/mcp/route.ts` + `src/lib/mcp/` — the remote MCP server (Streamable HTTP, Clerk
+  OAuth via `@clerk/mcp-tools`). Tools run server commands as the token's user. Needs the
+  endpoint registered in Clerk (Agents → MCP servers). `MCP_RESOURCE_URL` overrides the
+  URL locally; `MCP_WRITE_SCOPE` makes writes need a separately approved scope.
 - Manual test plan: [docs/AGENT_TOOLS_TESTING.md](./docs/AGENT_TOOLS_TESTING.md).
 
 ## Extraction Logic — Keep Two Files in Sync
