@@ -38,6 +38,7 @@ import {
   type RefreshOutcome,
 } from '@/lib/extractItem';
 import { isExtractionHintSnoozed } from '@/lib/extractionHint';
+import { normalizeCurrency, pagePriceProperties } from '@/lib/formatPrice';
 import {
   type ViewMode,
   ViewModeToggle,
@@ -54,6 +55,7 @@ type NodeProperties = {
   imageUrl?: string;
   description?: string;
   price?: string | number;
+  currency?: string;
   body?: string;
 };
 
@@ -297,7 +299,10 @@ function ItemNode({
         <span className={pageStyles.nodeListItemTitle}>{title}</span>
         {properties.price !== undefined && properties.price !== null && (
           <span className={pageStyles.nodeListItemPrice}>
-            {fmt.price(String(properties.price))}
+            {fmt.price(
+              String(properties.price),
+              normalizeCurrency(properties.currency),
+            )}
           </span>
         )}
       </div>
@@ -324,7 +329,10 @@ function ItemNode({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {fmt.price(String(properties.price))}
+                {fmt.price(
+                  String(properties.price),
+                  normalizeCurrency(properties.currency),
+                )}
               </span>
             </div>
           )}
@@ -347,7 +355,10 @@ function ItemNode({
           {properties.price !== undefined && properties.price !== null && (
             <div className={productCardStyles.priceOverlay}>
               <span className={productCardStyles.priceTag}>
-                {fmt.price(String(properties.price))}
+                {fmt.price(
+                  String(properties.price),
+                  normalizeCurrency(properties.currency),
+                )}
               </span>
             </div>
           )}
@@ -557,7 +568,7 @@ export function NeonCollectionView({
             ...(metadata.description
               ? { description: metadata.description }
               : {}),
-            ...(metadata.price ? { price: metadata.price } : {}),
+            ...pagePriceProperties(metadata),
           },
         },
       });
@@ -604,7 +615,7 @@ export function NeonCollectionView({
               ...(metadata.description
                 ? { description: metadata.description }
                 : {}),
-              ...(metadata.price ? { price: metadata.price } : {}),
+              ...pagePriceProperties(metadata),
             },
           },
         });

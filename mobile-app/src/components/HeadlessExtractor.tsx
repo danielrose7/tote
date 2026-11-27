@@ -11,6 +11,7 @@ import { StyleSheet, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import { updateNode } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
+import { normalizeCurrency } from '../lib/formatPrice';
 
 export type EnrichJob = {
   nodeId: string;
@@ -61,6 +62,9 @@ export function HeadlessExtractor({
               url: job.url,
               imageUrl: data.imageUrl ?? undefined,
               price: data.price ?? undefined,
+              currency: data.price
+                ? normalizeCurrency(data.currency)
+                : undefined,
               description: data.description ?? undefined,
             },
           });

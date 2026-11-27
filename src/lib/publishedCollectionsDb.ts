@@ -1,3 +1,4 @@
+import { normalizeCurrency } from './currency';
 import { sql } from './db';
 
 // Postgres 'infinity'/'-infinity' timestamps come back from the driver as the
@@ -15,6 +16,8 @@ export type PublishedProduct = {
   url: string | null;
   description: string | null;
   price: string | null;
+  /** ISO 4217, when the page that gave the price said. */
+  currency: string | null;
   imageUrl: string | null;
   brand: string | null;
   merchant: string | null;
@@ -267,6 +270,10 @@ async function loadCollectionWithBlocks(
       url: b.url as string | null,
       description: b.description as string | null,
       price: b.price as string | null,
+      currency:
+        normalizeCurrency(
+          (b.properties as Record<string, unknown> | null)?.currency,
+        ) ?? null,
       imageUrl: b.image_url as string | null,
       brand: b.brand as string | null,
       merchant: b.merchant as string | null,

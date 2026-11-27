@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { NODE_ADDED_VIA } from '../../db/schema/addedVia';
+import { normalizeCurrency } from '../currency';
 
 export const collectionIdSchema = z.uuid();
 export const mutationIdSchema = z.uuid();
@@ -61,7 +62,10 @@ export const deleteCollectionInputSchema = z.object({
 });
 
 // Provenance is advisory: a missing or unrecognised value must never block a save.
-export const addedViaSchema = z.enum(NODE_ADDED_VIA).catch('unknown').optional();
+export const addedViaSchema = z
+  .enum(NODE_ADDED_VIA)
+  .catch('unknown')
+  .optional();
 
 export const copyCollectionInputSchema = z.object({
   mutationId: mutationIdSchema,
@@ -202,6 +206,11 @@ export const saveCaptureInputSchema = z.object({
   imageUrl: z.url().max(4_000).optional(),
   images: z.array(z.url().max(4_000)).max(50).optional(),
   price: z.string().trim().max(200).optional(),
+  // ISO 4217. Anything else is dropped rather than failing the save.
+  currency: z
+    .string()
+    .optional()
+    .transform((value) => normalizeCurrency(value)),
   description: z.string().trim().max(10_000).optional(),
   addedVia: addedViaSchema,
 });

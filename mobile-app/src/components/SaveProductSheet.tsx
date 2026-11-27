@@ -25,7 +25,7 @@ import {
   getTokenWithRetry,
 } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
-import { formatPrice } from '../lib/formatPrice';
+import { formatPrice, normalizeCurrency } from '../lib/formatPrice';
 import { normalizeUrl } from '../lib/normalizeUrl';
 import { CollectionPicker } from './CollectionPicker';
 
@@ -164,6 +164,9 @@ export function SaveProductSheet({
         title: metadata.title,
         imageUrl: metadata.imageUrl,
         price: metadata.price,
+        currency: metadata.price
+          ? normalizeCurrency(metadata.currency)
+          : undefined,
         description: metadata.description,
       });
 
@@ -332,7 +335,7 @@ export function SaveProductSheet({
                   </Text>
                   {metadata.price && (
                     <Text style={styles.productPrice}>
-                      {formatPrice(metadata.price)}
+                      {formatPrice(metadata.price, metadata.currency)}
                     </Text>
                   )}
                 </View>

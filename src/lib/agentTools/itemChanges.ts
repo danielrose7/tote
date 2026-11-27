@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import type { CollectionNode } from '@/db/schema';
+import { normalizeCurrency } from '@/lib/currency';
 import type { addItemTool, updateItemTool } from './catalog';
 import { resolveSection, ToolInputError } from './resolve';
 
@@ -14,6 +15,7 @@ export type PageMetadata = {
   imageUrl?: string;
   description?: string;
   price?: string;
+  currency?: string;
 } | null;
 
 type AddItemInput = z.infer<typeof addItemTool.input>;
@@ -32,7 +34,11 @@ export function newItemFields(
     properties.url = url;
     if (metadata?.imageUrl) properties.imageUrl = metadata.imageUrl;
     if (metadata?.description) properties.description = metadata.description;
-    if (metadata?.price) properties.price = metadata.price;
+    if (metadata?.price) {
+      properties.price = metadata.price;
+      const currency = normalizeCurrency(metadata.currency);
+      if (currency) properties.currency = currency;
+    }
   }
   if (note) properties.body = note;
   return {

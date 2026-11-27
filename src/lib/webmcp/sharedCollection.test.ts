@@ -19,6 +19,7 @@ function product(
     url: `https://shop.test/${title}`,
     description: null,
     price: null,
+    currency: null,
     imageUrl: null,
     brand: null,
     merchant: null,

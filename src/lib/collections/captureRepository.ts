@@ -82,6 +82,7 @@ export type SaveCaptureInput = {
   imageUrl?: string;
   images?: string[];
   price?: string;
+  currency?: string;
   description?: string;
 };
 
@@ -127,6 +128,7 @@ export async function saveCapture(
         ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
         ...(input.images?.length ? { images: input.images } : {}),
         ...(input.price ? { price: input.price } : {}),
+        ...(input.price && input.currency ? { currency: input.currency } : {}),
         ...(input.description ? { description: input.description } : {}),
       },
       positionKey: `z:${new Date().toISOString()}:${input.id}`,

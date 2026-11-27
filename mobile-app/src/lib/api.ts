@@ -45,6 +45,8 @@ export type NodeProperties = {
   url?: string;
   imageUrl?: string;
   price?: string;
+  /** ISO 4217 code of `price`, when the page said. */
+  currency?: string;
   description?: string;
   notes?: string;
   body?: string;
@@ -277,6 +279,7 @@ export async function captureUrl(
     title?: string;
     imageUrl?: string;
     price?: string;
+    currency?: string;
     description?: string;
   },
 ): Promise<{ id: string; version: number }> {

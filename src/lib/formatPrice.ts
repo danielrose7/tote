@@ -1,5 +1,7 @@
 import { intlLocale } from '@/i18n/format';
 
+export { normalizeCurrency, pagePriceProperties } from './currency';
+
 const SYMBOL_TO_CURRENCY: [string, string][] = [
   ['A$', 'AUD'],
   ['C$', 'CAD'],

@@ -65,7 +65,7 @@ import {
   getTokenWithRetry,
 } from '../lib/api';
 import { extractorScript } from '../lib/extractorScript';
-import { formatPrice } from '../lib/formatPrice';
+import { formatPrice, normalizeCurrency } from '../lib/formatPrice';
 import {
   IDEAL_TILE_WIDTH,
   useGridLayout,
@@ -162,7 +162,11 @@ function ProductRefresher({
           ...item.properties,
           url,
           ...(d.imageUrl ? { imageUrl: d.imageUrl } : {}),
-          ...(d.price ? { price: d.price } : {}),
+          // A new price replaces the currency too, so a stale code never
+          // sits next to a price it wasn't read with.
+          ...(d.price
+            ? { price: d.price, currency: normalizeCurrency(d.currency) }
+            : {}),
           ...(d.description ? { description: d.description } : {}),
         };
         const updatedTitle = d.title || item.title;
@@ -333,7 +337,7 @@ function ProductRow({
             </Text>
             {item.properties.price ? (
               <Text style={styles.productPrice}>
-                {formatPrice(item.properties.price)}
+                {formatPrice(item.properties.price, item.properties.currency)}
               </Text>
             ) : null}
           </View>
@@ -758,7 +762,7 @@ function SelectionSwapSheet({
               </Text>
               {incoming.properties.price ? (
                 <Text style={styles.swapRowPrice}>
-                  {formatPrice(incoming.properties.price)}
+                  {formatPrice(incoming.properties.price, incoming.properties.currency)}
                 </Text>
               ) : null}
             </View>
@@ -800,7 +804,7 @@ function SelectionSwapSheet({
                     </Text>
                     {node.properties.price ? (
                       <Text style={styles.swapRowPrice}>
-                        {formatPrice(node.properties.price)}
+                        {formatPrice(node.properties.price, node.properties.currency)}
                       </Text>
                     ) : null}
                   </View>
@@ -1260,7 +1264,7 @@ function ProductGridCard({
         </Text>
         {item.properties.price ? (
           <Text style={styles.gridCardPrice}>
-            {formatPrice(item.properties.price)}
+            {formatPrice(item.properties.price, item.properties.currency)}
           </Text>
         ) : null}
       </View>
@@ -1288,7 +1292,7 @@ function ReorderProductRow({ item }: { item: ProductItem }) {
           </Text>
           {item.properties.price ? (
             <Text style={styles.reorderRowSubtitle}>
-              {formatPrice(item.properties.price)}
+              {formatPrice(item.properties.price, item.properties.currency)}
             </Text>
           ) : null}
         </View>
@@ -1325,7 +1329,7 @@ function ReorderGridCard({ item, size }: { item: ProductItem; size: number }) {
         <View style={styles.reorderGridFooter}>
           {item.properties.price ? (
             <Text style={styles.reorderGridPrice}>
-              {formatPrice(item.properties.price)}
+              {formatPrice(item.properties.price, item.properties.currency)}
             </Text>
           ) : (
             <View />

@@ -23,6 +23,7 @@ type SharedItem = {
   title: string | null;
   url?: string;
   price?: string;
+  currency?: string;
   brand?: string;
   store?: string;
   description?: string;
@@ -47,6 +48,7 @@ function summarizeProduct(product: PublishedProduct): SharedItem {
     title: product.title,
     url: product.url ?? undefined,
     price: product.price ?? undefined,
+    currency: product.currency ?? undefined,
     brand: product.brand ?? undefined,
     store: product.merchant ?? undefined,
     description: text(product.description),

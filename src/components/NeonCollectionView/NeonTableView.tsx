@@ -12,12 +12,14 @@ import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
 import type { CollectionNode } from '@/db/schema';
 import { useFormat, useTranslation } from '@/i18n/client';
+import { normalizeCurrency } from '@/lib/formatPrice';
 import tableStyles from '../CollectionView/TableView.module.css';
 
 type NodeProperties = {
   url?: string;
   imageUrl?: string;
   price?: string | number;
+  currency?: string;
 };
 
 function propertiesFor(node: CollectionNode): NodeProperties {
@@ -136,10 +138,11 @@ export function NeonTableView({
         header: t('collections.table.price'),
         size: 100,
         cell: (info) => {
-          const price = propertiesFor(info.row.original).price;
+          const properties = propertiesFor(info.row.original);
+          const price = properties.price;
           return price !== undefined && price !== null ? (
             <span className={tableStyles.price}>
-              {fmt.price(String(price))}
+              {fmt.price(String(price), normalizeCurrency(properties.currency))}
             </span>
           ) : (
             <span className={tableStyles.noValue}>-</span>

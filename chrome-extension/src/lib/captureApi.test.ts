@@ -140,9 +140,22 @@ describe("Neon capture client", () => {
 			imageUrl: undefined,
 			images: ["https://example.com/a.jpg"],
 			price: undefined,
+			currency: undefined,
 			description: undefined,
 			addedVia: "extension",
 		});
+	});
+
+	it("sends the currency with a price, and never without one", () => {
+		const build = (price: string | undefined, currency: string) =>
+			buildCapturePayload({
+				ids: CAPTURE_IDS,
+				collectionId: "40000000-0000-4000-8000-000000000001",
+				sectionId: null,
+				metadata: { title: "Lamp", url: "https://example.com/l", price, currency },
+			});
+		expect(build("49.00", " eur ").currency).toBe("EUR");
+		expect(build(undefined, "EUR").currency).toBeUndefined();
 	});
 
 	it("creates a collection without a position key", async () => {

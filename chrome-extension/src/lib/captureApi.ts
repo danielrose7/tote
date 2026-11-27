@@ -97,6 +97,9 @@ export function buildCapturePayload({
     imageUrl: validUrlOrUndefined(metadata.imageUrl),
     images: images?.length ? images : undefined,
     price: metadata.price?.trim() || undefined,
+    currency: metadata.price?.trim()
+      ? metadata.currency?.trim().toUpperCase() || undefined
+      : undefined,
     description: metadata.description?.trim() || undefined,
     addedVia: "extension" as const,
   };

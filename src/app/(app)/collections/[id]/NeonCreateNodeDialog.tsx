@@ -27,6 +27,7 @@ import {
   isExtractionHintSnoozed,
   needsEnhancedExtraction,
 } from '@/lib/extractionHint';
+import { normalizeCurrency } from '@/lib/formatPrice';
 import styles from './NeonCreateNodeDialog.module.css';
 
 const nodeTypes = [
@@ -96,6 +97,8 @@ export function NeonCreateNodeDialog({
   // Only the newest read may write to the form; older ones are discarded.
   const fetchSeqRef = useRef(0);
   const lastFetchedUrlRef = useRef<string | null>(null);
+  // Currency of the price the page read gave us, saved alongside it.
+  const pageCurrencyRef = useRef<string | undefined>(undefined);
 
   const fillFromPage = (
     field: AutoFillable,
@@ -151,6 +154,9 @@ export function NeonCreateNodeDialog({
       fillFromPage('imageUrl', metadata.imageUrl, setImageUrl);
       fillFromPage('description', metadata.description, setDescription);
       fillFromPage('price', metadata.price, setPrice);
+      if (metadata.price) {
+        pageCurrencyRef.current = normalizeCurrency(metadata.currency);
+      }
       // Saving stays as before; we only suggest a better route when the
       // server-side read came back thin.
       if (
@@ -273,6 +279,7 @@ export function NeonCreateNodeDialog({
     setExtraSections([]);
     setIsFetchingUrl(false);
     autoFilledRef.current = {};
+    pageCurrencyRef.current = undefined;
     fetchSeqRef.current += 1;
     lastFetchedUrlRef.current = null;
   };
@@ -303,7 +310,14 @@ export function NeonCreateNodeDialog({
     if (url.trim()) properties.url = url.trim();
     if (imageUrl.trim()) properties.imageUrl = imageUrl.trim();
     if (description.trim()) properties.description = description.trim();
-    if (type === 'product' && price.trim()) properties.price = price.trim();
+    if (type === 'product' && price.trim()) {
+      properties.price = price.trim();
+      // Only when the price came from the page: a price the user typed from
+      // scratch has no known currency.
+      if (autoFilledRef.current.price && pageCurrencyRef.current) {
+        properties.currency = pageCurrencyRef.current;
+      }
+    }
     if (body.trim()) properties.body = body.trim();
 
     createNode.mutate({

@@ -42,7 +42,7 @@ export function PublicCollectionView({
           offers: {
             '@type': 'Offer',
             price: product.price.replace(/[^0-9.]/g, ''),
-            priceCurrency: 'USD',
+            priceCurrency: product.currency ?? 'USD',
           },
         }),
       },
@@ -168,7 +168,9 @@ function ProductCard({
       <div className={styles.productInfo}>
         <h3 className={styles.productName}>{product.title}</h3>
         {product.price && (
-          <p className={styles.productPrice}>{formatPrice(product.price)}</p>
+          <p className={styles.productPrice}>
+            {formatPrice(product.price, product.currency)}
+          </p>
         )}
         {product.description && (
           <p className={styles.productDescription}>{product.description}</p>

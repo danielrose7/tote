@@ -199,6 +199,23 @@ describe('saveCaptureInputSchema', () => {
     });
   });
 
+  it('normalizes the currency and drops one that is not a code', () => {
+    const base = {
+      id: '40000000-0000-4000-8000-000000000901',
+      mutationId: '50000000-0000-4000-8000-000000000901',
+      collectionId: '40000000-0000-4000-8000-000000000902',
+      title: 'Task lamp',
+      url: 'https://example.com/lamp',
+      price: '129',
+    };
+    expect(
+      saveCaptureInputSchema.parse({ ...base, currency: ' eur ' }).currency,
+    ).toBe('EUR');
+    const junk = saveCaptureInputSchema.safeParse({ ...base, currency: '€' });
+    expect(junk.success).toBe(true);
+    expect(junk.data?.currency).toBeUndefined();
+  });
+
   it('rejects non-http capture URLs', () => {
     expect(
       saveCaptureInputSchema.safeParse({
